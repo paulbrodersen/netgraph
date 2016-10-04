@@ -51,8 +51,6 @@ p = 0.2
 c = np.random.rand(n,n) <= p
 w[~c] = np.nan
 
-# get decent positions for nodes
-
 # plot
 netgraph.draw(w)
 plt.show()
@@ -74,7 +72,7 @@ import matplotlib.cbook as cb
 from matplotlib.colors import colorConverter, Colormap
 from matplotlib.collections import LineCollection
 
-def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
+def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
 
@@ -113,7 +111,7 @@ def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
     if ax is None:
         ax = plt.gca()
 
-    if np.all(adjacency_matrix == adjacency_matrix.T): # i.e. directed
+    if not np.all(adjacency_matrix == adjacency_matrix.T): # i.e. directed
         kwargs.setdefault('draw_arrows', True)
 
     if len(np.unique(adjacency_matrix)) > 2: # i.e. more than 0s and 1s i.e. weighted
@@ -124,15 +122,15 @@ def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
         edge_zorder = np.argsort(np.abs(weights.ravel())).reshape(weights.shape)
 
         # apply edge_vmin, edge_vmax
-        edge_vmin = kwargs.get('edge_vmin', np.min(weights))
-        edge_vmax = kwargs.get('edge_vmax', np.max(weights))
+        edge_vmin = kwargs.get('edge_vmin', np.nanmin(weights))
+        edge_vmax = kwargs.get('edge_vmax', np.nanmax(weights))
         weights[weights<edge_vmin] = edge_vmin
         weights[weights>edge_vmax] = edge_vmax
 
         # rescale weights such that
         #  - the colormap midpoint is at zero-weight, and
         #  - negative and positive weights have comparable intensity values
-        weights /= np.max([np.max(abs(weights)), np.abs(edge_vmax), np.abs(edge_vmin)]) # [-1, 1]
+        weights /= np.nanmax([np.nanmax(abs(weights)), np.abs(edge_vmax), np.abs(edge_vmin)]) # [-1, 1]
         weights += 1. # [0, 2]
         weights /= 2. # [0, 1]
 
@@ -140,6 +138,8 @@ def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
         kwargs.setdefault('edge_vmin', 0.)
         kwargs.setdefault('edge_vmax', 1.)
         kwargs.setdefault('edge_cmap', 'RdGy')
+        kwargs.setdefault('edge_zorder', edge_zorder)
+
     if node_positions is None:
         node_positions = _get_positions(adjacency_matrix)
 
@@ -410,7 +410,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
 
 def draw_edges(adjacency_matrix,
                node_positions,
-               node_size=0.,
+               node_size=3.,
                edge_width=1.,
                edge_color='k',
                edge_cmap=None,
@@ -510,7 +510,7 @@ def draw_edges(adjacency_matrix,
                                         alpha=edge_alpha)
         edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
 
-    sources, targets = np.where(adjacency_matrix)
+    sources, targets = np.where(~np.isnan(adjacency_matrix))
     edge_list = zip(sources.tolist(), targets.tolist())
 
     # order if necessary
@@ -907,18 +907,44 @@ def _make_pretty(ax):
     ax.get_figure().canvas.draw()
     return
 
-"""
-    # if any weights are negative, spring_layout treats them as repulsive;
-    # although consistent, this is terribly un-intuitive and not very helpful
-    # to get good default positions;
-    # hence: create new graph with strictly positive weights and get positions from that
-    if pos is None and np.any(weights < 0):
-        weighted_edges = [(u, v, w) for (u,v), w in zip(edgelist, np.abs(weights))]
-        if G.is_directed():
-            Gpos = nx.DiGraph()
-        else:
-            Gpos = nx.Graph()
-        Gpos.add_weighted_edges_from(weighted_edges)
-        pos = nx.drawing.spring_layout(Gpos)  # default to spring layout
+# --------------------------------------------------------------------------------
 
-"""
+def test(n=20, p=0.15, ax=None, directed=True, **kwargs):
+    w = _get_random_weight_matrix(n, p, directed=directed, **kwargs)
+    ax = draw(w, ax=ax, directed=directed)
+    plt.show()
+    return ax
+
+def _get_random_weight_matrix(n, p,
+                              weighted=True,
+                              strictly_positive=False,
+                              directed=True,
+                              fully_bidirectional=False,
+                              dales_law=False):
+
+    if weighted:
+        w = np.random.randn(n, n)
+    else:
+        w = np.ones((n, n))
+
+    if strictly_positive:
+        w = np.abs(w)
+
+    if not directed:
+        w = np.triu(w)
+        w[np.tril_indices(n)] = np.nan
+
+    if directed and fully_bidirectional:
+        c = np.random.rand(n, n) <= p/2
+        c = np.logical_or(c, c.T)
+    else:
+        c = np.random.rand(n, n) <= p
+    w[~c] = np.nan
+
+    if dales_law and weighted and not strictly_positive:
+        w = np.abs(w) * np.sign(np.random.randn(n))[:,None]
+
+    return w
+
+if __name__ == "__main__":
+    test()
