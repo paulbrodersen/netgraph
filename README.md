@@ -23,13 +23,12 @@ import matplotlib.pyplot as plt
 import netgraph
 
 # construct sparse, directed, weighted graph
+# with positive and negative edges
 n = 20
 w = np.random.randn(n,n)
 p = 0.2
 c = np.random.rand(n,n) <= p
 w[~c] = np.nan
-
-# get decent positions for nodes
 
 # plot
 netgraph.draw(w)
