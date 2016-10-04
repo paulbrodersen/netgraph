@@ -45,6 +45,7 @@ import matplotlib.pyplot as plt
 import netgraph
 
 # construct sparse, directed, weighted graph
+# with positive and negative edges
 n = 20
 w = np.random.randn(n,n)
 p = 0.2
@@ -172,8 +173,8 @@ def _get_positions(w, **kwargs):
             (x, y) node positions
     """
 
-    # negative edges are handled as repulsive in spring layout
-    # usually not what we want
+    # negative edges are handled as repulsive in spring layout,
+    # which usually is not what we want
     w = np.abs(w)
 
     # re-scale weight matrix such that
