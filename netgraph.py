@@ -120,7 +120,8 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwa
         # reorder edges such that edges with large absolute weights are plotted last
         # and hence most prominent in the graph
         weights = adjacency_matrix.copy()
-        edge_zorder = np.argsort(np.abs(weights.ravel())).reshape(weights.shape)
+        edge_zorder = np.abs(weights) / np.float(np.nanmax(np.abs(weights)))
+        edge_zorder *= np.sum(~np.isnan(weights))
 
         # apply edge_vmin, edge_vmax
         edge_vmin = kwargs.get('edge_vmin', np.nanmin(weights))
