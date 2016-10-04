@@ -140,6 +140,8 @@ def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
         kwargs.setdefault('edge_vmin', 0.)
         kwargs.setdefault('edge_vmax', 1.)
         kwargs.setdefault('edge_cmap', 'RdGy')
+    if node_positions is None:
+        node_positions = _get_positions(adjacency_matrix)
 
     draw_edges(adjacency_matrix, node_positions, **kwargs)
     draw_nodes(node_positions, **kwargs)
@@ -151,6 +153,66 @@ def draw(adjacency_matrix, node_positions, node_labels=None, ax=None, **kwargs):
     _make_pretty(ax)
 
     return ax
+
+def _get_positions(w, **kwargs):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+    If neither igraph nor networkx are available, positions are chosen randomly.
+
+    Arguments:
+    ----------
+        w: (n, n) numpy.ndarray of floats
+            weight matrix, where rows index sources of edges, columns index targets;
+            edges with weights that are not NaN are interpreted as existing -- this includes edges with a weight of 0!
+        **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
+
+    Returns:
+    --------
+        positions: (n, 2) numpy.ndarray
+            (x, y) node positions
+    """
+
+    # negative edges are handled as repulsive in spring layout
+    # usually not what we want
+    w = np.abs(w)
+
+    # re-scale weight matrix such that
+    # edges exert approximately appropriate force in spring layout
+    w = w / np.nanmean(w)
+
+    # replace nans by zeros as
+    # networkx and igraph only treat edges with 0-weights as non-existent
+    w[np.isnan(w)] = 0.
+
+    # remove self-loops
+    w -= np.diag(np.diag(w))
+
+    # networkx / igraph are heavy dependencies -- only import them if the user actually needs them
+    try:
+        import networkx
+        graph = networkx.DiGraph(w, format='weighted_adjacency_matrix')
+        positions = networkx.layout.spring_layout(graph, **kwargs)
+        positions = np.array([positions[ii] for ii in range(w.shape[0])])
+
+    except ImportError:
+        import warnings
+        warnings.warn("Dependency networkx not available. Falling back to igraph.")
+
+        try:
+            import igraph
+            graph = igraph.Graph.Weighted_Adjacency(w.tolist(), loops=False, mode='directed')
+            positions = graph.layout_fruchterman_reingold(weights=graph.es.get_attribute_values('weight'))
+
+            # normalise to 0-1
+            positions = np.array(positions)
+            positions -= np.min(positions)
+            positions /= np.max(positions)
+
+        except ImportError:
+            warnings.warn("Neither networkx nor igraph available. Assigning random positions to nodes.")
+            positions = np.random.rand(w.shape[0], 2)
+
+    return positions
 
 def draw_nodes(node_positions,
                node_shape='o',
