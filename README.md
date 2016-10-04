@@ -34,3 +34,5 @@ w[~c] = np.nan
 netgraph.draw(w)
 plt.show()
 ```
+
+![alt tag](./example_1.png)
