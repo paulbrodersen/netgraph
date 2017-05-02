@@ -891,7 +891,7 @@ def _update_view(node_positions, node_size, ax):
     when matplotlib sets axis limits automatically.
     """
 
-    maxs = np.max(node_size)
+    maxs = np.max(node_size) * BASE_NODE_SIZE
     maxx, maxy = np.max(node_positions, axis=0)
     minx, miny = np.min(node_positions, axis=0)
 
