@@ -513,7 +513,8 @@ def draw_edges(adjacency_matrix,
         edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
 
     sources, targets = np.where(~np.isnan(adjacency_matrix))
-    edge_list = zip(sources.tolist(), targets.tolist())
+    # Force into a list, since zip became a generator in Pytohn 3, and thus can't be indexed below
+    edge_list = list(zip(sources.tolist(), targets.tolist()))
 
     # order if necessary
     if edge_zorder is None:
