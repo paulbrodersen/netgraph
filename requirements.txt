@@ -1,0 +1,2 @@
+numpy
+matplotlib >= 1.5
