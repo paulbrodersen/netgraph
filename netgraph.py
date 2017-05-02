@@ -73,6 +73,9 @@ import matplotlib.cbook as cb
 from matplotlib.colors import colorConverter, Colormap
 from matplotlib.collections import LineCollection
 
+BASE_NODE_SIZE = 1e-2
+BASE_EDGE_WIDTH = 1e-2
+
 def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
@@ -295,8 +298,8 @@ def draw_nodes(node_positions,
         node_edge_width = node_edge_width * np.ones((number_of_nodes))
 
     # rescale
-    node_size = node_size.astype(np.float) * 1e-2
-    node_edge_width = node_edge_width.astype(np.float) * 1e-2
+    node_size = node_size.astype(np.float) * BASE_NODE_SIZE
+    node_edge_width = node_edge_width.astype(np.float) * BASE_NODE_SIZE
 
     # circles made with plt.scatter scale with axis dimensions
     # which in practice makes it hard to have one consistent layout
@@ -489,8 +492,8 @@ def draw_edges(adjacency_matrix,
         edge_width = edge_width * np.ones_like(adjacency_matrix, dtype=np.float)
 
     # rescale
-    node_size = node_size.astype(np.float) * 1e-2
-    edge_width = edge_width.astype(np.float) * 1e-2
+    node_size = node_size.astype(np.float) * BASE_NODE_SIZE
+    edge_width = edge_width.astype(np.float) * BASE_EDGE_WIDTH
 
     if isinstance(edge_color, np.ndarray):
         if (edge_color.ndim == 3) and (edge_color.shape[-1] == 4): # i.e. full RGBA specification
