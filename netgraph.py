@@ -781,7 +781,7 @@ def draw_edge_labels(adjacency_matrix,
         ax = plt.gca()
 
     text_items = {}
-    for (n1, n2), label in labels.items():
+    for (n1, n2), label in edge_labels.items():
         (x1, y1) = node_positions[n1]
         (x2, y2) = node_positions[n2]
         (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
