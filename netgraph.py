@@ -76,7 +76,7 @@ from matplotlib.collections import LineCollection
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 
-def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwargs):
+def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=None, ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
 
@@ -153,6 +153,9 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwa
 
     if node_labels is not None:
         draw_node_labels(node_positions, node_labels, **kwargs)
+
+    if edge_labels is not None:
+        draw_edge_labels(adjacency_matrix, node_positions, edge_labels, **kwargs)
 
     _update_view(node_positions, node_size=3, ax=ax)
     _make_pretty(ax)
@@ -918,11 +921,20 @@ def _make_pretty(ax):
     ax.get_figure().canvas.draw()
     return
 
+def _adjacency_matrix_to_edge_list(adjacency_matrix):
+    sources, targets = np.where(~np.isnan(adjacency_matrix))
+    edge_list = list(zip(sources.tolist(), targets.tolist()))
+    return edge_list
+
+
 # --------------------------------------------------------------------------------
 
 def test(n=20, p=0.15, ax=None, directed=True, **kwargs):
     w = _get_random_weight_matrix(n, p, directed=directed, **kwargs)
-    ax = draw(w, ax=ax, directed=directed)
+    node_labels = {node: str(node) for node in range(n)}
+    edge_list = _adjacency_matrix_to_edge_list(w)
+    edge_labels = {edge: str(ii) for ii, edge in enumerate(edge_list)}
+    ax = draw(w, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     plt.show()
     return ax
 
