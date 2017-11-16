@@ -152,7 +152,7 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwa
     draw_nodes(node_positions, **kwargs)
 
     if node_labels is not None:
-        draw_node_labels(node_positions, node_labels)
+        draw_node_labels(node_positions, node_labels, **kwargs)
 
     _update_view(node_positions, node_size=3, ax=ax)
     _make_pretty(ax)
@@ -516,13 +516,11 @@ def draw_edges(adjacency_matrix,
         edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
 
     sources, targets = np.where(~np.isnan(adjacency_matrix))
-    # Force into a list, since zip became a generator in Pytohn 3, and thus can't be indexed below
+    # Force into a list, since zip became a generator in python 3, and thus can't be indexed below
     edge_list = list(zip(sources.tolist(), targets.tolist()))
 
     # order if necessary
-    if edge_zorder is None:
-        pass
-    else:
+    if not (edge_zorder is None):
         order = np.argsort(edge_zorder[sources, targets])
         edge_list = [edge_list[ii] for ii in order]
 
@@ -695,7 +693,7 @@ def draw_node_labels(node_positions,
     verticalalignment = kwargs.get('verticalalignment', 'center')
 
     artists = dict()  # there is no text collection so we'll fake one
-    for ii, label in node_labels.iteritems():
+    for ii, label in node_labels.items():
         x, y = node_positions[ii]
         text_object = ax.text(x, y,
                               label,
@@ -732,7 +730,8 @@ def draw_edge_labels(adjacency_matrix,
 
     Arguments
     ---------
-    adjacency_matrix :
+    adjacency_matrix: (n, n) ndarray
+        Adjacency or weight matrix of the network.
 
     node_positions : (n, 2) ndarray
         (x, y) node coordinates.
