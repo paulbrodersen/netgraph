@@ -724,6 +724,7 @@ def draw_edge_labels(adjacency_matrix,
                      clip_on=False,
                      ax=None,
                      rotate=True,
+                     edge_label_zorder=10000,
                      **kwds):
     """
     Draw edge labels.
@@ -760,6 +761,10 @@ def draw_edge_labels(adjacency_matrix,
 
     clip_on : bool
        Turn on clipping at axis boundaries (default=True)
+
+    edge_label_zorder : int
+        Set the zorder of edge labels. Choose a large number to ensure that the
+        labels are plotted on top of the edges.
 
     ax : matplotlib.axis instance or None (default None)
        Draw the graph in the specified Matplotlib axis.
@@ -822,7 +827,7 @@ def draw_edge_labels(adjacency_matrix,
                     rotation=trans_angle,
                     transform=ax.transData,
                     bbox=bbox,
-                    zorder=1,
+                    zorder=edge_label_zorder,
                     clip_on=True,
                     )
 
