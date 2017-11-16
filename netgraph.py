@@ -91,10 +91,10 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, ax=None, **kwa
 
     Arguments
     ----------
-    adjacency_matrix: (n, n) numpy.ndarray
+    adjacency_matrix: (n, n) ndarray
         Adjacency or weight matrix of the network.
 
-    node_positions : (n, 2) numpy.ndarray
+    node_positions : (n, 2) ndarray
         (x, y) node coordinates.
 
     ax : matplotlib.axis instance or None (default None)
@@ -166,14 +166,14 @@ def _get_positions(w, **kwargs):
 
     Arguments:
     ----------
-        w: (n, n) numpy.ndarray of floats
+        w: (n, n) ndarray of floats
             weight matrix, where rows index sources of edges, columns index targets;
             edges with weights that are not NaN are interpreted as existing -- this includes edges with a weight of 0!
         **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
 
     Returns:
     --------
-        positions: (n, 2) numpy.ndarray
+        positions: (n, 2) ndarray
             (x, y) node positions
     """
 
@@ -236,7 +236,7 @@ def draw_nodes(node_positions,
 
     Arguments
     ----------
-    node_positions : (n, 2) numpy.ndarray
+    node_positions : (n, 2) ndarray
         iterable of (x,y) node positions
 
     node_shape : string (default 'o')
@@ -432,41 +432,41 @@ def draw_edges(adjacency_matrix,
 
     Arguments
     ----------
-    adjacency_matrix: (n, n) numpy.ndarray
+    adjacency_matrix: (n, n) ndarray
         Adjacency or weight matrix of the network.
 
-    node_positions : (n, 2) numpy.ndarray
+    node_positions : (n, 2) ndarray
         (x, y) node coordinates
 
-    node_size : scalar or (n,) numpy.ndarray (default 0.)
+    node_size : scalar or (n,) ndarray (default 0.)
         Size (radius) of nodes. Used to offset edges when drawing arrow heads,
         such that the arrow heads are not occluded.
         Nota bene: in draw_nodes() the node_size default is 3.!
         If draw_nodes() and draw_edges() are called independently,
         make sure to set this variable to the same value.
 
-    edge_width : float, or (n, n) numpy.ndarray (default 1.)
+    edge_width : float, or (n, n) ndarray (default 1.)
         Line width of edges.
 
-    edge_color : color string, or (n, n) numpy.ndarray or (n, n, 4) numpy.ndarray (default: 'k')
+    edge_color : color string, or (n, n) ndarray or (n, n, 4) ndarray (default: 'k')
         Edge color. Can be a single color format string, or
         a numeric array with the first two dimensions matching the adjacency matrix.
         If a single float is specified for each edge, the values will be mapped to
         colors using the edge_cmap and edge_vmin,edge_vmax parameters.
-        If a (n, n, 4) numpy.ndarray is passed in, the last dimension is
+        If a (n, n, 4) ndarray is passed in, the last dimension is
         interpreted as an RGBA tuple, that requires no further parsing.
 
     edge_cmap : Matplotlib colormap or None (default None)
         Colormap for mapping intensities of edges.
-        Ignored if edge_color is a string or a (n, n, 4) numpy.ndarray.
+        Ignored if edge_color is a string or a (n, n, 4) ndarray.
 
     edge_vmin, edge_vmax : float, float (default None, None)
         Minimum and maximum for edge colormap scaling.
-        Ignored if edge_color is a string or a (n, n, 4) numpy.ndarray.
+        Ignored if edge_color is a string or a (n, n, 4) ndarray.
 
     edge_alpha : float (default 1.)
         The edge transparency,
-        Ignored if edge_color is a (n, n, 4) numpy.ndarray.
+        Ignored if edge_color is a (n, n, 4) ndarray.
 
     ax : matplotlib.axis instance or None (default None)
         Draw the graph in the specified Matplotlib axis.
@@ -646,7 +646,7 @@ def draw_node_labels(node_positions,
 
     Arguments
     ---------
-    node_positions : (n, 2) numpy.ndarray
+    node_positions : (n, 2) ndarray
         (x, y) node coordinates.
 
     node_labels : dict
@@ -734,7 +734,7 @@ def draw_edge_labels(adjacency_matrix,
     ---------
     adjacency_matrix :
 
-    node_positions : (n, 2) numpy.ndarray
+    node_positions : (n, 2) ndarray
         (x, y) node coordinates.
 
     edge_labels : dictionary
@@ -842,7 +842,7 @@ def _parse_color_input(number_of_elements, color_spec,
     number_of_elements: int
         Number (n) of elements to get a color for.
 
-    color_spec : color string, list of strings, a float, or a numpy.ndarray of floats
+    color_spec : color string, list of strings, a float, or a ndarray of floats
         Any valid matplotlib color specification.
         If numeric values are specified, they will be mapped to colors using the
         cmap and vmin/vmax arguments.
