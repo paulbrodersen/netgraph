@@ -717,7 +717,7 @@ def draw_node_labels(node_positions,
 
 def draw_edge_labels(adjacency_matrix,
                      node_positions,
-                     edge_labels=None,
+                     edge_labels,
                      font_size=10,
                      font_color='k',
                      font_family='sans-serif',
