@@ -292,8 +292,8 @@ def draw_nodes(node_positions,
     artists: dict
         Dictionary mapping node index to the node face artist and node edge artist,
         where both artists are instances of matplotlib.patches.
-        Node face artists are indexed with keys of the format (index, 'face'),
-        Node edge artists are indexed with keys (index, 'edge').
+        To access the node face of a node: artists[node]['face']
+        To access the node edge of a node: artists[node]['edge']
 
     """
 
@@ -315,15 +315,12 @@ def draw_nodes(node_positions,
         node_shape = {node:node_shape for node in nodes}
 
     # rescale
-
-    # circles made with plt.scatter scale with axis dimensions
-    # which in practice makes it hard to have one consistent layout
-    # -> use patches.Circle instead which creates circles that are in data coordinates
-    artists = dict(faces=dict(), edges=dict())
-    for node in node_positions.keys():
     node_size       = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
     node_edge_width = {node: width * BASE_NODE_SIZE for (node, width) in node_edge_width.items()}
 
+    artists = dict()
+    for node in nodes:
+        # create node edge artist:
         # simulate node edge by drawing a slightly larger node artist;
         # I wish there was a better way to do this,
         # but this seems to be the only way to guarantee constant proportions,
@@ -334,8 +331,6 @@ def draw_nodes(node_positions,
                                             size=node_size[node],
                                             facecolor=node_edge_color[node],
                                             zorder=2)
-        ax.add_artist(node_edge_artist)
-        artists['edges'][node] = node_edge_artist
 
         # create node artist
         node_artist = _get_node_artist(shape=node_shape[node],
@@ -343,8 +338,15 @@ def draw_nodes(node_positions,
                                        size=node_size[node] -node_edge_width[node],
                                        facecolor=node_color[node],
                                        zorder=2)
+
+        # add artists to axis
+        ax.add_artist(node_edge_artist)
         ax.add_artist(node_artist)
-        artists['faces'][node] = node_artist
+
+        # return handles to artists
+        artists[node] = dict()
+        artists[node]['edge'] = node_edge_artist
+        artists[node]['face'] = node_artist
 
     return artists
 
