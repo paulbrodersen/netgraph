@@ -281,8 +281,8 @@ def draw_nodes(node_positions,
     vmin, vmax : floats (default None)
        Minimum and maximum for node colormap scaling.
 
-    alpha : float (default 1.)
-       The node transparency.
+    node_alpha : float (default 1.)
+       The node transparency (node face and edge).
 
     ax : Matplotlib Axes object, optional
        Draw the graph in the specified Matplotlib axes.
@@ -780,8 +780,8 @@ def draw_node_labels(node_positions,
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
 
-    node_labels : dict
-       Dictionary mapping node indices to labels.
+    node_labels : dict key -> str
+       Dictionary mapping nodes to labels.
        Only nodes in the dictionary are labelled.
 
     font_size : int (default 12)
