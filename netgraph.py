@@ -766,8 +766,8 @@ class FancyArrow(Polygon):
         Polygon.__init__(self, list(map(tuple, verts)), closed=True, **kwargs)
 
 
-def draw_node_labels(node_positions,
-                     node_labels,
+def draw_node_labels(node_labels,
+                     node_positions,
                      font_size=8,
                      font_color='k',
                      font_family='sans-serif',
