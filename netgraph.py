@@ -97,8 +97,8 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
     adjacency_matrix: (n, n) ndarray
         Adjacency or weight matrix of the network.
 
-    node_positions : (n, 2) ndarray
-        (x, y) node coordinates.
+    node_positions : dict mapping key -> (float, float)
+        mapping of nodes to (x,y) positions
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -204,7 +204,6 @@ def _get_positions(w, **kwargs):
         import networkx
         graph = networkx.DiGraph(w, format='weighted_adjacency_matrix')
         positions = networkx.layout.spring_layout(graph, **kwargs)
-        positions = np.array([positions[ii] for ii in range(w.shape[0])])
 
     except ImportError:
         import warnings
@@ -220,9 +219,15 @@ def _get_positions(w, **kwargs):
             positions -= np.min(positions)
             positions /= np.max(positions)
 
+            # convert to dict
+            positions = {ii: (x, y) for ii, (x, y) in enumerate(positions)}
+
         except ImportError:
             warnings.warn("Neither networkx nor igraph available. Assigning random positions to nodes.")
             positions = np.random.rand(w.shape[0], 2)
+
+            # convert to dict
+            positions = {ii: (x, y) for ii, (x, y) in enumerate(positions)}
 
     return positions
 
@@ -244,16 +249,15 @@ def draw_nodes(node_positions,
 
     Arguments
     ----------
-    node_positions : (n, 2) ndarray
-        iterable of (x,y) node positions
+    node_positions : dict mapping key -> (float, float)
+        Mapping of nodes to (x,y) positions
 
     node_shape : string (default 'o')
        The shape of the node. Specification is as for matplotlib.scatter
        marker, one of 'so^>v<dph8'.
 
-    node_size : scalar or (n,) numpy array (default 3.)
-       Size (radius) of nodes.
-       A node size of 1 corresponds to a length of 0.01 in node position units.
+    node_size : scalar or (n,) or dict key -> float (default 3.)
+       Size (radius) of nodes in percent of axes space.
 
     node_edge_width : [scalar | sequence] (default 0.5)
        Line width of node marker border.
@@ -312,29 +316,29 @@ def draw_nodes(node_positions,
     # circles made with plt.scatter scale with axis dimensions
     # which in practice makes it hard to have one consistent layout
     # -> use patches.Circle instead which creates circles that are in data coordinates
-    artists = dict()
-    for ii in range(number_of_nodes):
+    artists = dict(faces=dict(), edges=dict())
+    for node in node_positions.keys():
         # simulate node edge by drawing a slightly larger node artist;
         # I wish there was a better way to do this,
         # but this seems to be the only way to guarantee constant proportions,
         # as linewidth argument in matplotlib.patches will not be proportional
         # to radius as it is in axis coordinates
         node_edge_artist = _get_node_artist(shape=node_shape,
-                                            position=node_positions[ii],
-                                            size=node_size[ii],
-                                            facecolor=node_edge_color[ii],
+                                            position=node_positions[node],
+                                            size=node_size[node],
+                                            facecolor=node_edge_color[node],
                                             zorder=2)
         ax.add_artist(node_edge_artist)
-        artists[(ii, 'edge')] = node_edge_artist
+        artists['edges'][node] = node_edge_artist
 
         # draw node
         node_artist = _get_node_artist(shape=node_shape,
-                                       position=node_positions[ii],
-                                       size=node_size[ii] -node_edge_width[ii],
-                                       facecolor=node_color[ii],
+                                       position=node_positions[node],
+                                       size=node_size[node] -node_edge_width[node],
+                                       facecolor=node_color[node],
                                        zorder=2)
         ax.add_artist(node_artist)
-        artists[(ii, 'face')] = node_artist
+        artists['faces'][node] = node_artist
 
     return artists
 
@@ -443,8 +447,8 @@ def draw_edges(adjacency_matrix,
     adjacency_matrix: (n, n) ndarray
         Adjacency or weight matrix of the network.
 
-    node_positions : (n, 2) ndarray
-        (x, y) node coordinates
+    node_positions : dict mapping key -> (float, float)
+        Mapping of nodes to (x,y) positions
 
     node_size : scalar or (n,) ndarray (default 0.)
         Size (radius) of nodes. Used to offset edges when drawing arrow heads,
@@ -763,8 +767,8 @@ def draw_node_labels(node_positions,
 
     Arguments
     ---------
-    node_positions : (n, 2) ndarray
-        (x, y) node coordinates.
+    node_positions : dict mapping key -> (float, float)
+        Mapping of nodes to (x,y) positions
 
     node_labels : dict
        Dictionary mapping node indices to labels.
@@ -853,8 +857,8 @@ def draw_edge_labels(adjacency_matrix,
     adjacency_matrix: (n, n) ndarray
         Adjacency or weight matrix of the network.
 
-    node_positions : (n, 2) ndarray
-        (x, y) node coordinates.
+    node_positions : dict mapping key -> (float, float)
+        Mapping of nodes to (x,y) positions
 
     edge_labels : dictionary
         Dictionary mapping edge specified by (source index, target index) to label.
@@ -1015,10 +1019,9 @@ def _update_view(node_positions, node_size, ax):
     Pad x and y limits as patches are not registered properly
     when matplotlib sets axis limits automatically.
     """
-
     maxs = np.max(node_size) * BASE_NODE_SIZE
-    maxx, maxy = np.max(node_positions, axis=0)
-    minx, miny = np.min(node_positions, axis=0)
+    maxx, maxy = np.max(node_positions.values(), axis=0)
+    minx, miny = np.min(node_positions.values(), axis=0)
 
     w = maxx-minx
     h = maxy-miny
