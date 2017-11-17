@@ -252,9 +252,10 @@ def draw_nodes(node_positions,
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
 
-    node_shape : string (default 'o')
+    node_shape : string or dict key->string (default 'o')
        The shape of the node. Specification is as for matplotlib.scatter
        marker, one of 'so^>v<dph8'.
+       If a single string is provided all nodes will have the same shape.
 
     node_size : scalar or (n,) or dict key -> float (default 3.)
        Size (radius) of nodes in percent of axes space.
@@ -308,6 +309,8 @@ def draw_nodes(node_positions,
         node_size = node_size * np.ones((number_of_nodes))
     if isinstance(node_edge_width, (int, float)):
         node_edge_width = node_edge_width * np.ones((number_of_nodes))
+    if isinstance(node_shape, str):
+        node_shape = {node:node_shape for node in nodes}
 
     # rescale
     node_size = node_size.astype(np.float) * BASE_NODE_SIZE
@@ -322,8 +325,8 @@ def draw_nodes(node_positions,
         # I wish there was a better way to do this,
         # but this seems to be the only way to guarantee constant proportions,
         # as linewidth argument in matplotlib.patches will not be proportional
-        # to radius as it is in axis coordinates
-        node_edge_artist = _get_node_artist(shape=node_shape,
+        # to a given node radius
+        node_edge_artist = _get_node_artist(shape=node_shape[node],
                                             position=node_positions[node],
                                             size=node_size[node],
                                             facecolor=node_edge_color[node],
@@ -331,8 +334,8 @@ def draw_nodes(node_positions,
         ax.add_artist(node_edge_artist)
         artists['edges'][node] = node_edge_artist
 
-        # draw node
-        node_artist = _get_node_artist(shape=node_shape,
+        # create node artist
+        node_artist = _get_node_artist(shape=node_shape[node],
                                        position=node_positions[node],
                                        size=node_size[node] -node_edge_width[node],
                                        facecolor=node_color[node],
