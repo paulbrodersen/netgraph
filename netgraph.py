@@ -46,14 +46,14 @@ import netgraph
 
 # construct sparse, directed, weighted graph
 # with positive and negative edges
-n = 20
-w = np.random.randn(n,n)
-p = 0.2
-c = np.random.rand(n,n) <= p
-w[~c] = np.nan
+total_nodes = 20
+total_edges = 40
+edges = np.random.randint(0, total_nodes, size=(total_edges, 2))
+weights = np.random.randn(total_edges)
+adjacency = np.concatenate([edges, weights[:,None]], axis=1)
 
 # plot
-netgraph.draw(w)
+netgraph.draw(adjacency)
 plt.show()
 """
 
@@ -79,7 +79,7 @@ BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0,
 BASE_EDGE_WIDTH = 1e-2 # i.e. edge widths are in percent of axis space (x,y <- [0, 1], [0,1])
 
 
-def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=None, ax=None, **kwargs):
+def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
 
@@ -94,8 +94,9 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
 
     Arguments
     ----------
-    adjacency_matrix: (n, n) ndarray
-        Adjacency or weight matrix of the network.
+    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
+        Adjacency of the network in sparse matrix format.
+        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
 
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
@@ -123,16 +124,16 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
     if ax is None:
         ax = plt.gca()
 
-    if not np.all(adjacency_matrix == adjacency_matrix.T): # i.e. directed
+    if _is_directed(adjacency):
         kwargs.setdefault('draw_arrows', True)
 
-    if len(np.unique(adjacency_matrix)) > 2: # i.e. more than 0s and 1s i.e. weighted
+    if _is_weighted(adjacency):
 
         # reorder edges such that edges with large absolute weights are plotted last
         # and hence most prominent in the graph
-        weights = adjacency_matrix.copy()
-        edge_zorder = np.abs(weights) / np.float(np.nanmax(np.abs(weights)))
-        edge_zorder *= np.sum(~np.isnan(weights))
+        weights = np.array([weight for (source, target, weight) in adjacency])
+        edge_zorder = np.argsort(weights)
+        edge_zorder = {(source, target): index for (source, target, weight), index in zip(adjacency, edge_zorder)}
 
         # apply edge_vmin, edge_vmax
         edge_vmin = kwargs.get('edge_vmin', np.nanmin(weights))
@@ -143,71 +144,86 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
         # rescale weights such that
         #  - the colormap midpoint is at zero-weight, and
         #  - negative and positive weights have comparable intensity values
-        weights /= np.nanmax([np.nanmax(abs(weights)), np.abs(edge_vmax), np.abs(edge_vmin)]) # [-1, 1]
+        weights /= np.nanmax([np.nanmax(np.abs(weights)), np.abs(edge_vmax), np.abs(edge_vmin)]) # [-1, 1]
         weights += 1. # [0, 2]
         weights /= 2. # [0, 1]
 
-        kwargs.setdefault('edge_color', weights)
+        # edge_color = {(edge[0], edge[1]): weight for (edge, weight) in zip(adjacency, weights)}
+        # kwargs.setdefault('edge_color', edge_color)
+
+        adjacency = [(source, target, new_weight) for (source, target, old_weight), new_weight in zip(adjacency, weights)]
+        adjacency_matrix = _edge_list_to_adjacency_matrix(adjacency)
+        kwargs.setdefault('edge_color', adjacency_matrix)
+
         kwargs.setdefault('edge_vmin', 0.)
         kwargs.setdefault('edge_vmax', 1.)
         kwargs.setdefault('edge_cmap', 'RdGy')
         kwargs.setdefault('edge_zorder', edge_zorder)
 
     if node_positions is None:
-        node_positions = _get_positions(adjacency_matrix)
+        node_positions = _get_positions(adjacency)
 
-    draw_edges(adjacency_matrix, node_positions, **kwargs)
+    draw_edges(adjacency, node_positions, **kwargs)
     draw_nodes(node_positions, **kwargs)
 
     if node_labels is not None:
-        draw_node_labels(node_positions, node_labels, **kwargs)
+        draw_node_labels(node_labels, node_positions, **kwargs)
 
     if edge_labels is not None:
-        draw_edge_labels(adjacency_matrix, node_positions, edge_labels, **kwargs)
+        draw_edge_labels(edge_labels, node_positions, **kwargs)
 
     _update_view(node_positions, node_size=3, ax=ax)
     _make_pretty(ax)
 
     return ax
 
+def _is_directed(adjacency):
+    # unpack to ensure that adjacency is a list of tuples
+    adjacency = set([(edge[0], edge[1]) for edge in adjacency])
 
-def _get_positions(w, **kwargs):
+    # test for bi-directional edges
+    for source, target in adjacency:
+        if (target, source) in adjacency:
+            return True
+
+    return False
+
+def _is_weighted(adjacency):
+    if len(adjacency[0]) > 2:
+        return True
+    else:
+        return False
+
+def _get_positions(adjacency, **kwargs):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
+    Weights are ignored as they typically do not result in a visually pleasing
+    arrangement of nodes.
+
     If neither igraph nor networkx are available, positions are chosen randomly.
 
     Arguments:
     ----------
-        w: (n, n) ndarray of floats
-            weight matrix, where rows index sources of edges, columns index targets;
-            edges with weights that are not NaN are interpreted as existing -- this includes edges with a weight of 0!
-        **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
+    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
+        Adjacency of the network in sparse matrix format.
+        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
+
+    **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
 
     Returns:
     --------
-        positions: (n, 2) ndarray
-            (x, y) node positions
+    node_positions : dict mapping key -> (float, float)
+        Mapping of nodes to (x,y) positions
+
     """
 
-    # negative edges are handled as repulsive in spring layout,
-    # which usually is not what we want
-    w = np.abs(w)
-
-    # re-scale weight matrix such that
-    # edges exert approximately appropriate force in spring layout
-    w = w / np.nanmean(w)
-
-    # replace nans by zeros as
-    # networkx and igraph only treat edges with 0-weights as non-existent
-    w[np.isnan(w)] = 0.
-
-    # remove self-loops
-    w -= np.diag(np.diag(w))
+    edges = [(edge[0], edge[1]) for edge in adjacency]
+    nodes = np.unique(edges)
 
     # networkx / igraph are heavy dependencies -- only import them if the user actually needs them
     try:
         import networkx
-        graph = networkx.DiGraph(w, format='weighted_adjacency_matrix')
+        graph = networkx.Graph(edges)
         positions = networkx.layout.spring_layout(graph, **kwargs)
 
     except ImportError:
@@ -216,8 +232,8 @@ def _get_positions(w, **kwargs):
 
         try:
             import igraph
-            graph = igraph.Graph.Weighted_Adjacency(w.tolist(), loops=False, mode='directed')
-            positions = graph.layout_fruchterman_reingold(weights=graph.es.get_attribute_values('weight'))
+            graph = igraph.Graph(edges=edges, loops=False)
+            positions = graph.layout_fruchterman_reingold()
 
             # normalise to 0-1
             positions = np.array(positions)
@@ -225,14 +241,14 @@ def _get_positions(w, **kwargs):
             positions /= np.max(positions)
 
             # convert to dict
-            positions = {ii: (x, y) for ii, (x, y) in enumerate(positions)}
+            positions = {node: (x, y) for node, (x, y) in zip(nodes, positions)}
 
         except ImportError:
             warnings.warn("Neither networkx nor igraph available. Assigning random positions to nodes.")
-            positions = np.random.rand(w.shape[0], 2)
+            positions = np.random.rand(len(nodes), 2)
 
             # convert to dict
-            positions = {ii: (x, y) for ii, (x, y) in enumerate(positions)}
+            positions = {node: (x, y) for node, (x, y) in zip(nodes, positions)}
 
     return positions
 
@@ -438,7 +454,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
     return artist
 
 
-def draw_edges(adjacency_matrix,
+def draw_edges(adjacency,
                node_positions,
                node_size=3.,
                edge_width=1.,
@@ -457,8 +473,9 @@ def draw_edges(adjacency_matrix,
 
     Arguments
     ----------
-    adjacency_matrix: (n, n) ndarray
-        Adjacency or weight matrix of the network.
+    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
+        Adjacency of the network in sparse matrix format.
+        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
 
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
@@ -470,7 +487,7 @@ def draw_edges(adjacency_matrix,
         If draw_nodes() and draw_edges() are called independently,
         make sure to set this variable to the same value.
 
-    edge_width : float, or (n, n) ndarray (default 1.)
+    edge_width : float or dictionary mapping (source, key) -> width (default 1.)
         Line width of edges.
 
     edge_color : color string, or (n, n) ndarray or (n, n, 4) ndarray (default: 'k')
@@ -493,6 +510,11 @@ def draw_edges(adjacency_matrix,
         The edge transparency,
         Ignored if edge_color is a (n, n, 4) ndarray.
 
+    edge_zorder: int or dictionary mapping (source, target) -> int (default None)
+        Order in which to plot the edges.
+        Graphs typically appear more visually pleasing if darker coloured edges
+        are plotted on top of lighter coloured edges.
+
     ax : matplotlib.axis instance or None (default None)
         Draw the graph in the specified Matplotlib axis.
 
@@ -514,19 +536,19 @@ def draw_edges(adjacency_matrix,
     number_of_nodes = len(nodes)
 
     if isinstance(edge_width, (int, float)):
-        edge_width = edge_width * np.ones_like(adjacency_matrix, dtype=np.float)
+        edge_width = {(edge[0], edge[1]): edge_width for edge in adjacency}
     if isinstance(node_size, (int, float)):
         node_size = {node:node_size for node in nodes}
 
     # rescale
-    node_size = {node: size * BASE_NODE_SIZE for (node, size) in node_size.items()}
-    edge_width = edge_width.astype(np.float) * BASE_EDGE_WIDTH
+    node_size  = {node: size  * BASE_NODE_SIZE  for (node, size)  in node_size.items()}
+    edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
 
     if isinstance(edge_color, np.ndarray):
         if (edge_color.ndim == 3) and (edge_color.shape[-1] == 4): # i.e. full RGBA specification
             pass
         else: # array of floats that need to parsed
-            edge_color = _parse_color_input(adjacency_matrix.size,
+            edge_color = _parse_color_input(len(adjacency),
                                             edge_color.ravel(),
                                             cmap=edge_cmap,
                                             vmin=edge_vmin,
@@ -534,7 +556,7 @@ def draw_edges(adjacency_matrix,
                                             alpha=edge_alpha)
             edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
     else: # single float or string
-        edge_color = _parse_color_input(adjacency_matrix.size,
+        edge_color = _parse_color_input(len(adjacency),
                                         edge_color,
                                         cmap=edge_cmap,
                                         vmin=edge_vmin,
@@ -542,17 +564,23 @@ def draw_edges(adjacency_matrix,
                                         alpha=edge_alpha)
         edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
 
-    sources, targets = np.where(~np.isnan(adjacency_matrix))
-    # Force into a list, since zip became a generator in python 3, and thus can't be indexed below
-    edge_list = list(zip(sources.tolist(), targets.tolist()))
+    # sources, targets = np.where(~np.isnan(adjacency_matrix))
+    # # Force into a list, since zip became a generator in python 3, and thus can't be indexed below
+    # edge_list = list(zip(sources.tolist(), targets.tolist()))
 
-    # order if necessary
+    # order edges if necessary
     if not (edge_zorder is None):
-        order = np.argsort(edge_zorder[sources, targets])
-        edge_list = [edge_list[ii] for ii in order]
+        adjacency = sorted(edge_zorder, key=lambda k: edge_zorder[k])
+
+    # TODO:
+    # Actually make use of zorder argument.
+    # At the moment, only the relative zorder is honoured, not the absolute value.
 
     artists = dict()
-    for (source, target) in edge_list:
+    for edge in adjacency:
+
+        source = edge[0]
+        target = edge[1]
 
         x1, y1 = node_positions[source]
         x2, y2 = node_positions[target]
@@ -560,10 +588,10 @@ def draw_edges(adjacency_matrix,
         dx = x2-x1
         dy = y2-y1
 
-        w = edge_width[source, target]
+        w = edge_width[(source, target)]
         color = edge_color[source, target]
 
-        bidirectional = (target, source) in edge_list
+        bidirectional = (target, source) in adjacency
 
         if draw_arrows and bidirectional:
             # shift edge to the right (looking along the arrow)
@@ -850,9 +878,8 @@ def draw_node_labels(node_labels,
     return artists
 
 
-def draw_edge_labels(adjacency_matrix,
+def draw_edge_labels(edge_labels,
                      node_positions,
-                     edge_labels,
                      font_size=10,
                      font_color='k',
                      font_family='sans-serif',
@@ -869,8 +896,6 @@ def draw_edge_labels(adjacency_matrix,
 
     Arguments
     ---------
-    adjacency_matrix: (n, n) ndarray
-        Adjacency or weight matrix of the network.
 
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
@@ -901,8 +926,8 @@ def draw_edge_labels(adjacency_matrix,
        Turn on clipping at axis boundaries (default=True)
 
     edge_label_zorder : int
-        Set the zorder of edge labels. Choose a large number to ensure that the
-        labels are plotted on top of the edges.
+        Set the zorder of edge labels.
+        Choose a large number to ensure that the labels are plotted on top of the edges.
 
     ax : matplotlib.axis instance or None (default None)
        Draw the graph in the specified Matplotlib axis.
@@ -1062,16 +1087,37 @@ def _make_pretty(ax):
 def _adjacency_matrix_to_edge_list(adjacency_matrix):
     sources, targets = np.where(~np.isnan(adjacency_matrix))
     edge_list = list(zip(sources.tolist(), targets.tolist()))
-    return edge_list
+    adjacency = [(source, target, adjacency_matrix[source, target]) for (source, target) in edge_list]
+    return adjacency
+
+
+def _edge_list_to_adjacency_matrix(adjacency, total_nodes=None):
+    edges = [(edge[0], edge[1]) for edge in adjacency]
+
+    if total_nodes is None:
+        nodes = np.unique(edges)
+        total_nodes = int(np.max(nodes) +1)
+
+    adjacency_matrix = np.full((total_nodes, total_nodes), np.nan)
+
+    if _is_weighted(adjacency):
+        for (source, target, weight) in adjacency:
+            adjacency_matrix[int(source), int(target)] = weight
+    else:
+        for source, target in adjacency:
+            adjacency_matrix[int(source), int(target)] = 1.
+
+    return adjacency_matrix
+
 
 # --------------------------------------------------------------------------------
 
 def test(n=20, p=0.15, ax=None, directed=True, **kwargs):
     w = _get_random_weight_matrix(n, p, directed=directed, **kwargs)
     node_labels = {node: str(node) for node in range(n)}
-    edge_list = _adjacency_matrix_to_edge_list(w)
-    edge_labels = {edge: str(ii) for ii, edge in enumerate(edge_list)}
-    ax = draw(w, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    adjacency = _adjacency_matrix_to_edge_list(w)
+    edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
+    ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     plt.show()
     return ax
 
