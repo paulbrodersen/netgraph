@@ -61,6 +61,7 @@ __version__ = 0.0
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
+
 import numpy as np
 import itertools
 import numbers
@@ -164,6 +165,7 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
 
     return ax
 
+
 def _get_positions(w, **kwargs):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
@@ -223,6 +225,7 @@ def _get_positions(w, **kwargs):
             positions = np.random.rand(w.shape[0], 2)
 
     return positions
+
 
 def draw_nodes(node_positions,
                node_shape='o',
@@ -611,6 +614,7 @@ def draw_edges(adjacency_matrix,
 
     return artists
 
+
 def _shift_edge(x1, y1, x2, y2, delta):
     # get orthogonal unit vector
     v = np.r_[x2-x1, y2-y1] # original
@@ -620,6 +624,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
     dx, dy = delta * v
     return x1+dx, y1+dy, x2+dx, y2+dy
 
+
 def _arrow(ax, x1, y1, dx, dy, offset, **kwargs):
     # offset to prevent occlusion of head from nodes
     r = np.sqrt(dx**2 + dy**2)
@@ -628,10 +633,12 @@ def _arrow(ax, x1, y1, dx, dy, offset, **kwargs):
 
     return _line(ax, x1, y1, dx, dy, **kwargs)
 
+
 def _line(ax, x1, y1, dx, dy, **kwargs):
     # use FancyArrow instead of e.g. LineCollection to ensure consistent scaling across elements;
     # return matplotlib.patches.FancyArrow(x1, y1, dx, dy, **kwargs)
     return FancyArrow(x1, y1, dx, dy, **kwargs)
+
 
 # This is a copy of matplotlib.patches.FancyArrow.
 # They messed up in matplotlib version 2.0.0.
@@ -738,6 +745,7 @@ class FancyArrow(Polygon):
             verts = np.dot(coords, M) + (x + dx, y + dy)
 
         Polygon.__init__(self, list(map(tuple, verts)), closed=True, **kwargs)
+
 
 def draw_node_labels(node_positions,
                      node_labels,
@@ -1033,7 +1041,6 @@ def _adjacency_matrix_to_edge_list(adjacency_matrix):
     sources, targets = np.where(~np.isnan(adjacency_matrix))
     edge_list = list(zip(sources.tolist(), targets.tolist()))
     return edge_list
-
 
 # --------------------------------------------------------------------------------
 
