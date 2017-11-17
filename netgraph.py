@@ -235,7 +235,7 @@ def draw_nodes(node_positions,
                vmax=None,
                node_alpha=1.0,
                ax=None,
-               **kwds):
+               **kwargs):
     """
     Draw node markers at specified positions.
 
@@ -430,7 +430,7 @@ def draw_edges(adjacency_matrix,
                edge_zorder=None,
                ax=None,
                draw_arrows=True,
-               **kwds):
+               **kwargs):
     """
 
     Draw the edges of the network.
@@ -836,7 +836,7 @@ def draw_edge_labels(adjacency_matrix,
                      ax=None,
                      rotate=True,
                      edge_label_zorder=10000,
-                     **kwds):
+                     **kwargs):
     """
     Draw edge labels.
 
@@ -924,8 +924,8 @@ def draw_edge_labels(adjacency_matrix,
                         )
 
         # set optional alignment
-        horizontalalignment = kwds.get('horizontalalignment', 'center')
-        verticalalignment = kwds.get('verticalalignment', 'center')
+        horizontalalignment = kwargs.get('horizontalalignment', 'center')
+        verticalalignment = kwargs.get('verticalalignment', 'center')
 
         t = ax.text(x, y,
                     label,
