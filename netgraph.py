@@ -260,7 +260,7 @@ def draw_nodes(node_positions,
     node_size : scalar or (n,) or dict key -> float (default 3.)
        Size (radius) of nodes in percent of axes space.
 
-    node_edge_width : [scalar | sequence] (default 0.5)
+    node_edge_width : scalar or (n,) or dict key -> float (default 0.5)
        Line width of node marker border.
 
     node_color : color string, or array of floats (default 'w')
@@ -300,27 +300,30 @@ def draw_nodes(node_positions,
     if ax is None:
         ax = plt.gca()
 
-    # convert all node properties that not iterable into iterable formats
-    number_of_nodes = len(node_positions)
+    # convert all inputs to dicts mapping node->property
+    nodes = node_positions.keys()
+    number_of_nodes = len(nodes)
+
     node_color = _parse_color_input(number_of_nodes, node_color, cmap, vmin, vmax, node_alpha)
     node_edge_color = _parse_color_input(number_of_nodes, node_edge_color, cmap, vmin, vmax, node_alpha)
 
     if isinstance(node_size, (int, float)):
-        node_size = node_size * np.ones((number_of_nodes))
+        node_size = {node:node_size for node in nodes}
     if isinstance(node_edge_width, (int, float)):
-        node_edge_width = node_edge_width * np.ones((number_of_nodes))
+        node_edge_width = {node: node_edge_width for node in nodes}
     if isinstance(node_shape, str):
         node_shape = {node:node_shape for node in nodes}
 
     # rescale
-    node_size = node_size.astype(np.float) * BASE_NODE_SIZE
-    node_edge_width = node_edge_width.astype(np.float) * BASE_NODE_SIZE
 
     # circles made with plt.scatter scale with axis dimensions
     # which in practice makes it hard to have one consistent layout
     # -> use patches.Circle instead which creates circles that are in data coordinates
     artists = dict(faces=dict(), edges=dict())
     for node in node_positions.keys():
+    node_size       = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
+    node_edge_width = {node: width * BASE_NODE_SIZE for (node, width) in node_edge_width.items()}
+
         # simulate node edge by drawing a slightly larger node artist;
         # I wish there was a better way to do this,
         # but this seems to be the only way to guarantee constant proportions,
@@ -453,10 +456,10 @@ def draw_edges(adjacency_matrix,
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
 
-    node_size : scalar or (n,) ndarray (default 0.)
-        Size (radius) of nodes. Used to offset edges when drawing arrow heads,
+    node_size : scalar or (n,) or dict key -> float (default 3.)
+        Size (radius) of nodes in percent of axes space.
+        Used to offset edges when drawing arrow heads,
         such that the arrow heads are not occluded.
-        Nota bene: in draw_nodes() the node_size default is 3.!
         If draw_nodes() and draw_edges() are called independently,
         make sure to set this variable to the same value.
 
@@ -500,14 +503,16 @@ def draw_edges(adjacency_matrix,
     if ax is None:
         ax = plt.gca()
 
-    number_of_nodes = len(node_positions)
-    if isinstance(node_size, (int, float)):
-        node_size = node_size * np.ones((number_of_nodes), dtype=np.float)
+    nodes = node_positions.keys()
+    number_of_nodes = len(nodes)
+
     if isinstance(edge_width, (int, float)):
         edge_width = edge_width * np.ones_like(adjacency_matrix, dtype=np.float)
+    if isinstance(node_size, (int, float)):
+        node_size = {node:node_size for node in nodes}
 
     # rescale
-    node_size = node_size.astype(np.float) * BASE_NODE_SIZE
+    node_size = {node: size * BASE_NODE_SIZE for (node, size) in node_size.items()}
     edge_width = edge_width.astype(np.float) * BASE_EDGE_WIDTH
 
     if isinstance(edge_color, np.ndarray):
