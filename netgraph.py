@@ -98,13 +98,18 @@ def draw(adjacency_matrix, node_positions=None, node_labels=None, edge_labels=No
         Adjacency or weight matrix of the network.
 
     node_positions : dict mapping key -> (float, float)
-        mapping of nodes to (x,y) positions
+        Mapping of nodes to (x,y) positions
+
+    node_labels : dict key -> str (default None)
+       Dictionary mapping nodes to labels.
+       Only nodes in the dictionary are labelled.
+
+    edge_labels : dictionary (default None)
+        Dictionary mapping edge specified by (source index, target index) to label.
+        Only edges in the dictionary are labelled.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-    Examples
-    --------
 
     See Also
     --------
