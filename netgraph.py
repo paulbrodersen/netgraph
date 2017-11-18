@@ -94,9 +94,17 @@ def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=
 
     Arguments
     ----------
-    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
-        Adjacency of the network in sparse matrix format.
-        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
+    graph: various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+            - Edge list:
+                Iterable of (source, target) or (source, target, weight) tuples,
+                or equivalent (m, 2) or (m, 3) ndarray.
+            - Adjacency matrix:
+                Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+                The absence of a connection is indicated by a zero.
+            - igraph.Graph object
+            - networkx.Graph object
 
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
@@ -123,6 +131,8 @@ def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=
 
     if ax is None:
         ax = plt.gca()
+    # Accept a variety of formats and convert to common denominator.
+    edge_list, edge_weight = _parse_graph(graph)
 
     if _is_directed(adjacency):
         kwargs.setdefault('draw_arrows', True)
@@ -161,9 +171,11 @@ def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=
         kwargs.setdefault('edge_zorder', edge_zorder)
 
     if node_positions is None:
-        node_positions = _get_positions(adjacency)
+        node_positions = _get_positions(edge_list)
 
-    draw_edges(adjacency, node_positions, **kwargs)
+
+    # Draw plot elements.
+    draw_edges(edge_list, node_positions, **kwargs)
     draw_nodes(node_positions, **kwargs)
 
     if node_labels is not None:
@@ -177,15 +189,106 @@ def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=
 
     return ax
 
-def _is_directed(adjacency):
-    # unpack to ensure that adjacency is a list of tuples
-    adjacency = set([(edge[0], edge[1]) for edge in adjacency])
 
+def _parse_graph(graph):
+    """
+    Arguments
+    ----------
+    graph: various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+            - Edge list:
+                Iterable of (source, target) or (source, target, weight) tuples,
+                or equivalent (m, 2) or (m, 3) ndarray.
+            - Adjacency matrix:
+                Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+                The absence of a connection is indicated by a zero.
+            - igraph.Graph object
+            - networkx.Graph object
+
+    Returns:
+    --------
+    edge_list: m-long list of 2-tuples
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
+
+    edge_weights: dict (source, target) : float or None
+        Edge weights. If the graph is unweighted, None is returned.
+
+    """
+
+    if isinstance(graph, (list, tuple, set)):
+        return _parse_sparse_matrix_format(graph)
+
+    elif isinstance(graph, np.ndarray):
+        rows, columns = graph.shape
+        if columns in (2, 3):
+            return _parse_sparse_matrix_format(graph)
+        else:
+            return _parse_adjacency_matrix(graph)
+
+    # this is terribly unsafe but we don't want to import igraph
+    # unless we already know that we need it
+    elif str(graph.__class__) == "<class 'igraph.Graph'>":
+        return _parse_igraph_graph(graph)
+
+    # ditto
+    elif str(graph.__class__) in ("<class 'networkx.classes.graph.Graph'>",
+                                  "<class 'networkx.classes.digraph.DiGraph'>",
+                                  "<class 'networkx.classes.multigraph.MultiGraph'>",
+                                  "<class 'networkx.classes.multidigraph.MultiDiGraph'>"):
+        return _parse_networkx_graph(graph)
+
+    else:
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph']
+        raise NotImplementedError("Input graph must be one of: {}".format("\n\n\t" + "\n\t".join(allowed)))
+
+
+def _parse_edge_list(edge_list):
+    # Edge list may be an array, or a list of lists.
+    # We want a list of tuples.
+    return [(source, target) for (source, target) in edge_list]
+
+
+def _parse_sparse_matrix_format(adjacency):
+    adjacency = np.array(adjacency)
+    rows, columns = adjacency.shape
+    if columns == 2:
+        return _parse_edge_list(adjacency), None
+    elif columns == 3:
+        edge_list = _parse_edge_list(adjacency[:,:2])
+        edge_weights = {(source, target) : weight for (source, target, weight) in adjacency}
+
+        if len(set(edge_weights.values())) > 1:
+            return edge_list, edge_weights
+        else:
+            return edge_list, None
+    else:
+        raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
+
+
+def _parse_adjacency_matrix(adjacency):
+    sources, targets = np.where(adjacency)
+    edge_list = list(zip(sources.tolist(), targets.tolist()))
+    edge_weights = {(source, target): adjacency[source, target] for (source, target) in edge_list}
+    if len(set(list(edge_weights.values()))) == 1:
+        return edge_list, None
+    return edge_list, edge_weights
+
+
+def _parse_networkx_graph(graph):
+    # TODO:
+    raise NotImplementedError
+
+
+def _parse_igraph_graph(graph):
+    # TODO:
+    raise NotImplementedError
+
+def _is_directed(edge_list):
     # test for bi-directional edges
-    for source, target in adjacency:
-        if (target, source) in adjacency:
+    for source, target in edge_list:
+        if (target, source) in edge_list:
             return True
-
     return False
 
 def _is_weighted(adjacency):
@@ -194,7 +297,7 @@ def _is_weighted(adjacency):
     else:
         return False
 
-def _get_positions(adjacency, **kwargs):
+def _get_positions(edge_list, **kwargs):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
     Weights are ignored as they typically do not result in a visually pleasing
@@ -204,9 +307,8 @@ def _get_positions(adjacency, **kwargs):
 
     Arguments:
     ----------
-    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
-        Adjacency of the network in sparse matrix format.
-        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
+    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
 
@@ -217,7 +319,7 @@ def _get_positions(adjacency, **kwargs):
 
     """
 
-    edges = [(edge[0], edge[1]) for edge in adjacency]
+    edges = _parse_edge_list(edge_list)
     nodes = np.unique(edges)
 
     # networkx / igraph are heavy dependencies -- only import them if the user actually needs them
@@ -454,7 +556,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
     return artist
 
 
-def draw_edges(adjacency,
+def draw_edges(edge_list,
                node_positions,
                node_size=3.,
                edge_width=1.,
@@ -473,9 +575,8 @@ def draw_edges(adjacency,
 
     Arguments
     ----------
-    adjacency: m-long iterable of 2-tuples or 3-tuples or equivalent (such as (m, 2) or (m, 3) ndarray)
-        Adjacency of the network in sparse matrix format.
-        Each tuple corresponds to an edge defined by (source, target) or (source, target, weight).
+    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     node_positions : dict mapping key -> (float, float)
         Mapping of nodes to (x,y) positions
@@ -532,13 +633,14 @@ def draw_edges(adjacency,
     if ax is None:
         ax = plt.gca()
 
+    edge_list = _parse_edge_list(edge_list)
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
-    if isinstance(edge_width, (int, float)):
-        edge_width = {(edge[0], edge[1]): edge_width for edge in adjacency}
     if isinstance(node_size, (int, float)):
         node_size = {node:node_size for node in nodes}
+    if isinstance(edge_width, (int, float)):
+        edge_width = {edge: edge_width for edge in edge_list}
 
     # rescale
     node_size  = {node: size  * BASE_NODE_SIZE  for (node, size)  in node_size.items()}
@@ -570,17 +672,14 @@ def draw_edges(adjacency,
 
     # order edges if necessary
     if not (edge_zorder is None):
-        adjacency = sorted(edge_zorder, key=lambda k: edge_zorder[k])
+       edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
 
     # TODO:
     # Actually make use of zorder argument.
     # At the moment, only the relative zorder is honoured, not the absolute value.
 
     artists = dict()
-    for edge in adjacency:
-
-        source = edge[0]
-        target = edge[1]
+    for (source, target) in edge_list:
 
         x1, y1 = node_positions[source]
         x2, y2 = node_positions[target]
@@ -591,7 +690,7 @@ def draw_edges(adjacency,
         w = edge_width[(source, target)]
         color = edge_color[source, target]
 
-        bidirectional = (target, source) in adjacency
+        bidirectional = (target, source) in edge_list
 
         if draw_arrows and bidirectional:
             # shift edge to the right (looking along the arrow)
@@ -1084,30 +1183,6 @@ def _make_pretty(ax):
     return
 
 
-def _adjacency_matrix_to_edge_list(adjacency_matrix):
-    sources, targets = np.where(~np.isnan(adjacency_matrix))
-    edge_list = list(zip(sources.tolist(), targets.tolist()))
-    adjacency = [(source, target, adjacency_matrix[source, target]) for (source, target) in edge_list]
-    return adjacency
-
-
-def _edge_list_to_adjacency_matrix(adjacency, total_nodes=None):
-    edges = [(edge[0], edge[1]) for edge in adjacency]
-
-    if total_nodes is None:
-        nodes = np.unique(edges)
-        total_nodes = int(np.max(nodes) +1)
-
-    adjacency_matrix = np.full((total_nodes, total_nodes), np.nan)
-
-    if _is_weighted(adjacency):
-        for (source, target, weight) in adjacency:
-            adjacency_matrix[int(source), int(target)] = weight
-    else:
-        for source, target in adjacency:
-            adjacency_matrix[int(source), int(target)] = 1.
-
-    return adjacency_matrix
 
 
 # --------------------------------------------------------------------------------
