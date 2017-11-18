@@ -687,22 +687,21 @@ def draw_edges(edge_list,
         dx = x2-x1
         dy = y2-y1
 
-        w = edge_width[(source, target)]
         color = edge_color[source, target]
 
         bidirectional = (target, source) in edge_list
 
         if draw_arrows and bidirectional:
             # shift edge to the right (looking along the arrow)
-            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*w)
+            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
             # plot half arrow
             patch = _arrow(ax,
                            x1, y1, dx, dy,
                            offset=node_size[target],
                            facecolor=color,
-                           width=w,
-                           head_length=2*w,
-                           head_width=3*w,
+                           width=width,
+                           head_length=2*width,
+                           head_width=3*width,
                            length_includes_head=True,
                            zorder=1,
                            edgecolor='none',
@@ -716,9 +715,9 @@ def draw_edges(edge_list,
                            x1, y1, dx, dy,
                            offset=node_size[target],
                            facecolor=color,
-                           width=w,
-                           head_length=2*w,
-                           head_width=3*w,
+                           width=width,
+                           head_length=2*width,
+                           head_width=3*width,
                            length_includes_head=True,
                            edgecolor='none',
                            linewidth=0.1,
@@ -728,11 +727,11 @@ def draw_edges(edge_list,
 
         elif not draw_arrows and bidirectional:
             # shift edge to the right (looking along the line)
-            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*w)
+            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
             patch = _line(ax,
                           x1, y1, dx, dy,
                           facecolor=color,
-                          width=w,
+                          width=width,
                           head_length=1e-10, # 0 throws error
                           head_width=1e-10, # 0 throws error
                           length_includes_head=False,
@@ -745,7 +744,7 @@ def draw_edges(edge_list,
             patch = _line(ax,
                           x1, y1, dx, dy,
                           facecolor=color,
-                          width=w,
+                          width=width,
                           head_length=1e-10, # 0 throws error
                           head_width=1e-10, # 0 throws error
                           length_includes_head=False,
