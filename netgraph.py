@@ -102,15 +102,17 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
             - igraph.Graph object
             - networkx.Graph object
 
-    node_positions : dict mapping key -> (float, float)
-        Mapping of nodes to (x,y) positions
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions.
+        If 'graph' is an adjacency matrix, nodes must be integers in range(n).
 
-    node_labels : dict key -> str (default None)
-       Dictionary mapping nodes to labels.
+    node_labels : dict node : str (default None)
+       Mapping of nodes to node labels.
        Only nodes in the dictionary are labelled.
+       If 'graph' is an adjacency matrix, nodes must be integers in range(n).
 
-    edge_labels : dictionary (default None)
-        Dictionary mapping edge specified by (source index, target index) to label.
+    edge_labels : dict (source, target) : str (default None)
+        Mapping of edges to edge labels.
         Only edges in the dictionary are labelled.
 
     ax : matplotlib.axis instance or None (default None)
@@ -337,8 +339,8 @@ def _get_positions(edge_list, **kwargs):
 
     Returns:
     --------
-    node_positions : dict mapping key -> (float, float)
-        Mapping of nodes to (x,y) positions
+    node_positions : dict mapping key : (float, float)
+        Mapping of nodes to (x, y) positions
 
     """
 
@@ -393,18 +395,18 @@ def draw_nodes(node_positions,
 
     Arguments
     ----------
-    node_positions : dict mapping key -> (float, float)
-        Mapping of nodes to (x,y) positions
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions
 
-    node_shape : string or dict key->string (default 'o')
+    node_shape : string or dict key : string (default 'o')
        The shape of the node. Specification is as for matplotlib.scatter
-       marker, one of 'so^>v<dph8'.
+       marker, i.e. one of 'so^>v<dph8'.
        If a single string is provided all nodes will have the same shape.
 
-    node_size : scalar or (n,) or dict key -> float (default 3.)
+    node_size : scalar or dict node : float (default 3.)
        Size (radius) of nodes in percent of axes space.
 
-    node_edge_width : scalar or (n,) or dict key -> float (default 0.5)
+    node_edge_width : scalar or dict key : float (default 0.5)
        Line width of node marker border.
 
     node_color : matplotlib color specification or dict node : color specification (default 'w')
@@ -416,17 +418,17 @@ def draw_nodes(node_positions,
     node_alpha : scalar or dict node : float (default 1.)
        The node transparency.
 
-    node_alpha : float (default 1.)
-       The node transparency (node face and edge).
+    node_edge_alpha : scalar or dict node : float (default 1.)
+       The node edge transparency.
 
-    ax : Matplotlib Axes object, optional
-       Draw the graph in the specified Matplotlib axes.
+    ax : matplotlib.axis instance or None (default None)
+       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
     Returns
     -------
-    artists: dict
-        Dictionary mapping node index to the node face artist and node edge artist,
-        where both artists are instances of matplotlib.patches.
+    artists: dict node : dict str : artist
+        Mapping of nodes to the node face artists and node edge artists,
+        where both types are instances of matplotlib.patches.
         To access the node face of a node: artists[node]['face']
         To access the node edge of a node: artists[node]['edge']
 
@@ -435,7 +437,7 @@ def draw_nodes(node_positions,
     if ax is None:
         ax = plt.gca()
 
-    # convert all inputs to dicts mapping node->property
+    # convert all inputs to dicts mapping node:property
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
@@ -604,17 +606,17 @@ def draw_edges(edge_list,
     edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
-    node_positions : dict mapping key -> (float, float)
+    node_positions : dict key : (float, float)
         Mapping of nodes to (x,y) positions
 
-    node_size : scalar or (n,) or dict key -> float (default 3.)
+    node_size : scalar or (n,) or dict key : float (default 3.)
         Size (radius) of nodes in percent of axes space.
         Used to offset edges when drawing arrow heads,
         such that the arrow heads are not occluded.
         If draw_nodes() and draw_edges() are called independently,
         make sure to set this variable to the same value.
 
-    edge_width : float or dictionary mapping (source, key) -> width (default 1.)
+    edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
 
     edge_color : matplotlib color specification or
@@ -624,22 +626,22 @@ def draw_edges(edge_list,
     edge_alpha : float or dict (source, target) : float (default 1.)
         The edge transparency,
 
-    edge_zorder: int or dictionary mapping (source, target) -> int (default None)
+    edge_zorder: int or dict (source, target) : int (default None)
         Order in which to plot the edges.
-        Graphs typically appear more visually pleasing if darker coloured edges
+        If None, the edges will be plotted in the order they appear in 'adjacency'.
+        Note: graphs typically appear more visually pleasing if darker coloured edges
         are plotted on top of lighter coloured edges.
-
-    ax : matplotlib.axis instance or None (default None)
-        Draw the graph in the specified Matplotlib axis.
 
     draw_arrows : bool, optional (default True)
         If True, draws edges with arrow heads.
 
+    ax : matplotlib.axis instance or None (default None)
+       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
     Returns
     -------
-    artists: dict
-        Dictionary mapping edges to matplotlib.patches.FancyArrow artists.
-        The dictionary keys are of the format: (source index, target index).
+    artists: dict (source, target) : artist
+        Mapping of edges to matplotlib.patches.FancyArrow artists.
 
     """
 
@@ -901,36 +903,37 @@ def draw_node_labels(node_labels,
 
     Arguments
     ---------
-    node_positions : dict mapping key -> (float, float)
-        Mapping of nodes to (x,y) positions
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions
 
-    node_labels : dict key -> str
-       Dictionary mapping nodes to labels.
+    node_labels : dict key : str
+       Mapping of nodes to labels.
        Only nodes in the dictionary are labelled.
 
     font_size : int (default 12)
        Font size for text labels
 
-    font_color : string (default 'k')
+    font_color : str (default 'k')
        Font color string
 
-    font_family : string (default='sans-serif')
+    font_family : str (default='sans-serif')
        Font family
 
-    font_weight : string (default='normal')
+    font_weight : str (default='normal')
        Font weight
 
     font_alpha : float (default 1.)
        Text transparency
 
-    bbox : Matplotlib bbox
+    bbox : matplotlib bbox instance
        Specify text box shape and colors.
 
     clip_on : bool
-       Turn on clipping at axis boundaries (default=False)
+       Turn on clipping at axis boundaries (default False)
 
     ax : matplotlib.axis instance or None (default None)
-       Draw the graph in the specified Matplotlib axis.
+       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
 
     Returns
     -------
@@ -988,23 +991,23 @@ def draw_edge_labels(edge_labels,
     Arguments
     ---------
 
-    node_positions : dict mapping key -> (float, float)
-        Mapping of nodes to (x,y) positions
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions
 
-    edge_labels : dictionary
-        Dictionary mapping edge specified by (source index, target index) to label.
+    edge_labels : dict (source, target) : str
+        Mapping of edges to edge labels.
         Only edges in the dictionary are labelled.
 
     font_size : int (default 12)
-       Font size for text labels
+       Font size
 
-    font_color : string (default 'k')
-       Font color string
+    font_color : str (default 'k')
+       Font color
 
-    font_family : string (default='sans-serif')
+    font_family : str (default='sans-serif')
        Font family
 
-    font_weight : string (default='normal')
+    font_weight : str (default='normal')
        Font weight
 
     font_alpha : float (default 1.)
@@ -1016,17 +1019,17 @@ def draw_edge_labels(edge_labels,
     clip_on : bool
        Turn on clipping at axis boundaries (default=True)
 
-    edge_label_zorder : int
+    edge_label_zorder : int (default 10000)
         Set the zorder of edge labels.
         Choose a large number to ensure that the labels are plotted on top of the edges.
 
     ax : matplotlib.axis instance or None (default None)
-       Draw the graph in the specified Matplotlib axis.
+       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
     Returns
     -------
-    artists: dict
-        Dictionary mapping (source index, target index) to text objects.
+    artists: dict (source, target) : text object
+        Mapping of edges to edge label artists.
 
     @reference
     Borrowed with minor modifications from networkx/drawing/nx_pylab.py
