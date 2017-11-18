@@ -356,7 +356,7 @@ def _get_positions(edge_list, **kwargs):
         try:
             import igraph
             graph = igraph.Graph(edges=edges, loops=False)
-            positions = graph.layout_fruchterman_reingold()
+            positions = graph.layout_fruchterman_reingold(**kwargs)
 
             # normalise to 0-1
             positions = np.array(positions)
