@@ -1135,19 +1135,56 @@ def _get_random_weight_matrix(n, p,
 
     if not directed:
         w = np.triu(w)
-        w[np.tril_indices(n)] = np.nan
 
     if directed and fully_bidirectional:
         c = np.random.rand(n, n) <= p/2
         c = np.logical_or(c, c.T)
     else:
         c = np.random.rand(n, n) <= p
-    w[~c] = np.nan
+    w[~c] = 0.
 
     if dales_law and weighted and not strictly_positive:
         w = np.abs(w) * np.sign(np.random.randn(n))[:,None]
 
     return w
 
+
+def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse_matrix_format', ax=None):
+    adjacency_matrix = _get_random_weight_matrix(n, p, directed=directed, weighted=weighted)
+
+    sources, targets = np.where(adjacency_matrix)
+    weights = adjacency_matrix[sources, targets]
+    adjacency = np.c_[sources, targets, weights]
+
+    node_labels = {node: str(node) for node in np.unique(adjacency[:,:2])}
+    edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
+
+    if test_format == "sparse_matrix_format":
+        ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    elif test_format == "adjacency_matrix":
+        ax = draw(adjacency_matrix, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+
+    return ax
+
+
 if __name__ == "__main__":
-    test()
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(directed=True,  ax=ax1)
+    test(directed=False, ax=ax2)
+    ax1.set_title('Directed')
+    ax2.set_title('Undirected')
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(weighted=True,  ax=ax1)
+    test(weighted=False, ax=ax2)
+    ax1.set_title('Weighted')
+    ax2.set_title('Unweighted')
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(test_format="sparse_matrix_format", ax=ax1)
+    test(test_format="adjacency_matrix",     ax=ax2)
+    ax1.set_title('Sparse matrix')
+    ax2.set_title('Full-rank adjacency matrix')
+
+    plt.show()
