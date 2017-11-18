@@ -63,12 +63,8 @@ __email__ = "paulbrodersen+netgraph@gmail.com"
 
 
 import numpy as np
-import itertools
-import numbers
-
 import matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.collections import LineCollection
 
 
 BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0, 1], [0,1])
@@ -127,13 +123,9 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     """
 
-    if ax is None:
-        ax = plt.gca()
     # Accept a variety of formats and convert to common denominator.
     edge_list, edge_weight = _parse_graph(graph)
 
-    if _is_directed(adjacency):
-        kwargs.setdefault('draw_arrows', True)
     if edge_weight:
 
         # If the graph is weighted, we want to visualise the weights using color.
@@ -149,9 +141,17 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         edge_zorder = _get_zorder(edge_color)
         kwargs.setdefault('edge_zorder', edge_zorder)
 
+    # Plot arrows if the graph has bi-directional edges.
+    if _is_directed(edge_list):
+        kwargs.setdefault('draw_arrows', True)
+
+    # Initialise node positions if none are given.
     if node_positions is None:
         node_positions = _get_positions(edge_list)
 
+    # Create axis if none is given.
+    if ax is None:
+        ax = plt.gca()
 
     # Draw plot elements.
     draw_edges(edge_list, node_positions, **kwargs)
@@ -316,11 +316,6 @@ def _is_directed(edge_list):
             return True
     return False
 
-def _is_weighted(adjacency):
-    if len(adjacency[0]) > 2:
-        return True
-    else:
-        return False
 
 def _get_positions(edge_list, **kwargs):
     """
@@ -441,12 +436,12 @@ def draw_nodes(node_positions,
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
+    if isinstance(node_shape, str):
+        node_shape = {node:node_shape for node in nodes}
     if isinstance(node_size, (int, float)):
         node_size = {node:node_size for node in nodes}
     if isinstance(node_edge_width, (int, float)):
         node_edge_width = {node: node_edge_width for node in nodes}
-    if isinstance(node_shape, str):
-        node_shape = {node:node_shape for node in nodes}
     if not isinstance(node_color, dict):
         node_color = {node:node_color for node in nodes}
     if not isinstance(node_edge_color, dict):
@@ -594,8 +589,8 @@ def draw_edges(edge_list,
                edge_color='k',
                edge_alpha=1.,
                edge_zorder=None,
-               ax=None,
                draw_arrows=True,
+               ax=None,
                **kwargs):
     """
 
@@ -760,7 +755,6 @@ def _shift_edge(x1, y1, x2, y2, delta):
     v = np.r_[x2-x1, y2-y1] # original
     v = np.r_[-v[1], v[0]] # orthogonal
     v = v / np.linalg.norm(v) # unit
-
     dx, dy = delta * v
     return x1+dx, y1+dy, x2+dx, y2+dy
 
@@ -770,7 +764,6 @@ def _arrow(ax, x1, y1, dx, dy, offset, **kwargs):
     r = np.sqrt(dx**2 + dy**2)
     dx *= (r-offset)/r
     dy *= (r-offset)/r
-
     return _line(ax, x1, y1, dx, dy, **kwargs)
 
 
@@ -786,7 +779,8 @@ def _line(ax, x1, y1, dx, dy, **kwargs):
 # coords = np.concatenate([left_half_arrow[:-1], right_half_arrow[-2::-1]])
 # when they should be:
 # coords = np.concatenate([left_half_arrow[:-1], right_half_arrow[-1::-1]])
-# TODO: Remove copy when they fix it.
+# TODO: Remove copy when they fix it, and matplotlib 2.0.0 is unlikely to be very prevalent any more.
+# At time of writing, still the default version for Ubuntu 16.04 LTS
 from matplotlib.patches import Polygon
 class FancyArrow(Polygon):
     """
@@ -953,8 +947,8 @@ def draw_node_labels(node_labels,
     verticalalignment = kwargs.get('verticalalignment', 'center')
 
     artists = dict()  # there is no text collection so we'll fake one
-    for ii, label in node_labels.items():
-        x, y = node_positions[ii]
+    for node, label in node_labels.items():
+        x, y = node_positions[node]
         text_object = ax.text(x, y,
                               label,
                               size=font_size,
@@ -967,7 +961,7 @@ def draw_node_labels(node_labels,
                               transform=ax.transData,
                               bbox=bbox,
                               clip_on=False)
-        artists[ii] = text_object
+        artists[node] = text_object
 
     return artists
 
@@ -1094,10 +1088,9 @@ def draw_edge_labels(edge_labels,
 
 
 def _update_view(node_positions, node_size, ax):
-    """
-    Pad x and y limits as patches are not registered properly
-    when matplotlib sets axis limits automatically.
-    """
+    # Pad x and y limits as patches are not registered properly
+    # when matplotlib sets axis limits automatically.
+    # Hence we need to set them manually.
     maxs = np.max(node_size) * BASE_NODE_SIZE
     maxx, maxy = np.max(node_positions.values(), axis=0)
     minx, miny = np.min(node_positions.values(), axis=0)
@@ -1110,7 +1103,6 @@ def _update_view(node_positions, node_size, ax):
     ax.update_datalim(corners)
     ax.autoscale_view()
     ax.get_figure().canvas.draw()
-    return
 
 
 def _make_pretty(ax):
@@ -1120,21 +1112,10 @@ def _make_pretty(ax):
     ax.get_figure().set_facecolor('w')
     ax.set_frame_on(False)
     ax.get_figure().canvas.draw()
-    return
-
-
 
 
 # --------------------------------------------------------------------------------
-
-def test(n=20, p=0.15, ax=None, directed=True, **kwargs):
-    w = _get_random_weight_matrix(n, p, directed=directed, **kwargs)
-    node_labels = {node: str(node) for node in range(n)}
-    adjacency = _adjacency_matrix_to_edge_list(w)
-    edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
-    ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
-    plt.show()
-    return ax
+# Test code
 
 
 def _get_random_weight_matrix(n, p,
