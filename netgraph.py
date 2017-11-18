@@ -68,10 +68,6 @@ import numbers
 
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.cm as cm
-import matplotlib.cbook as cb
-
-from matplotlib.colors import colorConverter, Colormap
 from matplotlib.collections import LineCollection
 
 
@@ -79,7 +75,7 @@ BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0,
 BASE_EDGE_WIDTH = 1e-2 # i.e. edge widths are in percent of axis space (x,y <- [0, 1], [0,1])
 
 
-def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=None, **kwargs):
+def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
 
@@ -136,38 +132,19 @@ def draw(adjacency, node_positions=None, node_labels=None, edge_labels=None, ax=
 
     if _is_directed(adjacency):
         kwargs.setdefault('draw_arrows', True)
+    if edge_weight:
 
-    if _is_weighted(adjacency):
+        # If the graph is weighted, we want to visualise the weights using color.
+        # Edge width is another popular choice when visualising weighted networks,
+        # but if the variance in weights is large, this typically results in less
+        # visually pleasing results.
+        edge_color  = _get_color(edge_weight, cmap=edge_cmap)
+        kwargs.setdefault('edge_color',  edge_color)
 
-        # reorder edges such that edges with large absolute weights are plotted last
-        # and hence most prominent in the graph
-        weights = np.array([weight for (source, target, weight) in adjacency])
-        edge_zorder = np.argsort(weights)
-        edge_zorder = {(source, target): index for (source, target, weight), index in zip(adjacency, edge_zorder)}
-
-        # apply edge_vmin, edge_vmax
-        edge_vmin = kwargs.get('edge_vmin', np.nanmin(weights))
-        edge_vmax = kwargs.get('edge_vmax', np.nanmax(weights))
-        weights[weights<edge_vmin] = edge_vmin
-        weights[weights>edge_vmax] = edge_vmax
-
-        # rescale weights such that
-        #  - the colormap midpoint is at zero-weight, and
-        #  - negative and positive weights have comparable intensity values
-        weights /= np.nanmax([np.nanmax(np.abs(weights)), np.abs(edge_vmax), np.abs(edge_vmin)]) # [-1, 1]
-        weights += 1. # [0, 2]
-        weights /= 2. # [0, 1]
-
-        # edge_color = {(edge[0], edge[1]): weight for (edge, weight) in zip(adjacency, weights)}
-        # kwargs.setdefault('edge_color', edge_color)
-
-        adjacency = [(source, target, new_weight) for (source, target, old_weight), new_weight in zip(adjacency, weights)]
-        adjacency_matrix = _edge_list_to_adjacency_matrix(adjacency)
-        kwargs.setdefault('edge_color', adjacency_matrix)
-
-        kwargs.setdefault('edge_vmin', 0.)
-        kwargs.setdefault('edge_vmax', 1.)
-        kwargs.setdefault('edge_cmap', 'RdGy')
+        # Plotting darker edges over lighter edges typically results in visually
+        # more pleasing results. Here we hence specify the relative order in
+        # which edges are plotted according to the color of the edge.
+        edge_zorder = _get_zorder(edge_color)
         kwargs.setdefault('edge_zorder', edge_zorder)
 
     if node_positions is None:
@@ -284,6 +261,52 @@ def _parse_igraph_graph(graph):
     # TODO:
     raise NotImplementedError
 
+
+def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+
+    keys = mydict.keys()
+    values = mydict.values()
+
+    # apply edge_vmin, edge_vmax
+    if vmin:
+        values[values<vmin] = vmin
+
+    if vmax:
+        values[values>vmax] = vmax
+
+    def abs(value):
+        try:
+            return np.abs(value)
+        except TypeError as e: # i is probably None
+            if isinstance(value, type(None)):
+                return 0
+            else:
+                raise e
+
+    # rescale values such that
+    #  - the colormap midpoint is at zero-value, and
+    #  - negative and positive values have comparable intensity values
+    values /= np.nanmax([np.nanmax(np.abs(values)), abs(vmax), abs(vmin)]) # [-1, 1]
+    values += 1. # [0, 2]
+    values /= 2. # [0, 1]
+
+    # convert value to color
+    mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
+    mapper.set_clim(vmin, vmax)
+    colors = mapper.to_rgba(values)
+
+    return {key: color for (key, color) in zip(keys, colors)}
+
+
+def _get_zorder(color_dict):
+    # reorder plot elements such that darker items are plotted last
+    # and hence most prominent in the graph
+    zorder = np.argsort(np.sum(color_dict.values(), axis=1)) # assumes RGB specification
+    zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
+    zorder = {key: index for key, index in zip(color_dict.keys(), zorder)}
+    return zorder
+
+
 def _is_directed(edge_list):
     # test for bi-directional edges
     for source, target in edge_list:
@@ -361,10 +384,8 @@ def draw_nodes(node_positions,
                node_edge_width=0.5,
                node_color='w',
                node_edge_color='k',
-               cmap=None,
-               vmin=None,
-               vmax=None,
                node_alpha=1.0,
+               node_edge_alpha=1.0,
                ax=None,
                **kwargs):
     """
@@ -386,23 +407,14 @@ def draw_nodes(node_positions,
     node_edge_width : scalar or (n,) or dict key -> float (default 0.5)
        Line width of node marker border.
 
-    node_color : color string, or array of floats (default 'w')
-       Node color. Can be a single color format string
-       or a sequence of colors with the same length as node_positions.
-       If numeric values are specified they will be mapped to
-       colors using the cmap and vmin/vmax parameters.
+    node_color : matplotlib color specification or dict node : color specification (default 'w')
+       Node color.
 
-    node_edge_color : color string, or array of floats (default 'k')
-       Node color. Can be a single color format string,
-       or a sequence of colors with the same length as node_positions.
-       If numeric values are specified they will be mapped to
-       colors using the cmap and vmin,vmax parameters.
+    node_edge_color : matplotlib color specification or dict node : color specification (default 'k')
+       Node edge color.
 
-    cmap : Matplotlib colormap (default None)
-       Colormap for mapping intensities of nodes.
-
-    vmin, vmax : floats (default None)
-       Minimum and maximum for node colormap scaling.
+    node_alpha : scalar or dict node : float (default 1.)
+       The node transparency.
 
     node_alpha : float (default 1.)
        The node transparency (node face and edge).
@@ -427,15 +439,20 @@ def draw_nodes(node_positions,
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
-    node_color = _parse_color_input(number_of_nodes, node_color, cmap, vmin, vmax, node_alpha)
-    node_edge_color = _parse_color_input(number_of_nodes, node_edge_color, cmap, vmin, vmax, node_alpha)
-
     if isinstance(node_size, (int, float)):
         node_size = {node:node_size for node in nodes}
     if isinstance(node_edge_width, (int, float)):
         node_edge_width = {node: node_edge_width for node in nodes}
     if isinstance(node_shape, str):
         node_shape = {node:node_shape for node in nodes}
+    if not isinstance(node_color, dict):
+        node_color = {node:node_color for node in nodes}
+    if not isinstance(node_edge_color, dict):
+        node_edge_color = {node:node_edge_color for node in nodes}
+    if isinstance(node_alpha, (int, float)):
+        node_alpha = {node:node_alpha for node in nodes}
+    if isinstance(node_edge_alpha, (int, float)):
+        node_edge_alpha = {node:node_edge_alpha for node in nodes}
 
     # rescale
     node_size       = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
@@ -453,6 +470,7 @@ def draw_nodes(node_positions,
                                             position=node_positions[node],
                                             size=node_size[node],
                                             facecolor=node_edge_color[node],
+                                            alpha=node_edge_alpha[node],
                                             zorder=2)
 
         # create node artist
@@ -460,6 +478,7 @@ def draw_nodes(node_positions,
                                        position=node_positions[node],
                                        size=node_size[node] -node_edge_width[node],
                                        facecolor=node_color[node],
+                                       alpha=node_alpha[node],
                                        zorder=2)
 
         # add artists to axis
@@ -474,11 +493,12 @@ def draw_nodes(node_positions,
     return artists
 
 
-def _get_node_artist(shape, position, size, facecolor, zorder=2):
+def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
     if shape == 'o': # circle
         artist = matplotlib.patches.Circle(xy=position,
                                            radius=size,
                                            facecolor=facecolor,
+                                           alpha=alpha,
                                            linewidth=0.,
                                            zorder=zorder)
     elif shape == '^': # triangle up
@@ -486,6 +506,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=3,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=0,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -494,6 +515,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=3,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=np.pi*0.5,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -502,6 +524,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=3,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=np.pi,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -510,6 +533,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=3,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=np.pi*1.5,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -518,6 +542,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=4,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=np.pi*0.25,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -526,6 +551,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=4,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    orientation=np.pi*0.5,
                                                    linewidth=0.,
                                                    zorder=zorder)
@@ -534,6 +560,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=5,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    linewidth=0.,
                                                    zorder=zorder)
     elif shape == 'h': # hexagon
@@ -541,6 +568,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=6,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    linewidth=0.,
                                                    zorder=zorder)
     elif shape == 8: # octagon
@@ -548,6 +576,7 @@ def _get_node_artist(shape, position, size, facecolor, zorder=2):
                                                    radius=size,
                                                    numVertices=8,
                                                    facecolor=facecolor,
+                                                   alpha=alpha,
                                                    linewidth=0.,
                                                    zorder=zorder)
     else:
@@ -561,9 +590,6 @@ def draw_edges(edge_list,
                node_size=3.,
                edge_width=1.,
                edge_color='k',
-               edge_cmap=None,
-               edge_vmin=None,
-               edge_vmax=None,
                edge_alpha=1.,
                edge_zorder=None,
                ax=None,
@@ -591,25 +617,12 @@ def draw_edges(edge_list,
     edge_width : float or dictionary mapping (source, key) -> width (default 1.)
         Line width of edges.
 
-    edge_color : color string, or (n, n) ndarray or (n, n, 4) ndarray (default: 'k')
-        Edge color. Can be a single color format string, or
-        a numeric array with the first two dimensions matching the adjacency matrix.
-        If a single float is specified for each edge, the values will be mapped to
-        colors using the edge_cmap and edge_vmin,edge_vmax parameters.
-        If a (n, n, 4) ndarray is passed in, the last dimension is
-        interpreted as an RGBA tuple, that requires no further parsing.
+    edge_color : matplotlib color specification or
+                 dict (source, target) : color specification (default 'k')
+       Edge color.
 
-    edge_cmap : Matplotlib colormap or None (default None)
-        Colormap for mapping intensities of edges.
-        Ignored if edge_color is a string or a (n, n, 4) ndarray.
-
-    edge_vmin, edge_vmax : float, float (default None, None)
-        Minimum and maximum for edge colormap scaling.
-        Ignored if edge_color is a string or a (n, n, 4) ndarray.
-
-    edge_alpha : float (default 1.)
+    edge_alpha : float or dict (source, target) : float (default 1.)
         The edge transparency,
-        Ignored if edge_color is a (n, n, 4) ndarray.
 
     edge_zorder: int or dictionary mapping (source, target) -> int (default None)
         Order in which to plot the edges.
@@ -641,42 +654,20 @@ def draw_edges(edge_list,
         node_size = {node:node_size for node in nodes}
     if isinstance(edge_width, (int, float)):
         edge_width = {edge: edge_width for edge in edge_list}
+    if not isinstance(edge_color, dict):
+        edge_color = {edge: edge_color for edge in edge_list}
+    if isinstance(edge_alpha, (int, float)):
+        edge_alpha = {edge: edge_alpha for edge in edge_list}
 
     # rescale
     node_size  = {node: size  * BASE_NODE_SIZE  for (node, size)  in node_size.items()}
     edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
 
-    if isinstance(edge_color, np.ndarray):
-        if (edge_color.ndim == 3) and (edge_color.shape[-1] == 4): # i.e. full RGBA specification
-            pass
-        else: # array of floats that need to parsed
-            edge_color = _parse_color_input(len(adjacency),
-                                            edge_color.ravel(),
-                                            cmap=edge_cmap,
-                                            vmin=edge_vmin,
-                                            vmax=edge_vmax,
-                                            alpha=edge_alpha)
-            edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
-    else: # single float or string
-        edge_color = _parse_color_input(len(adjacency),
-                                        edge_color,
-                                        cmap=edge_cmap,
-                                        vmin=edge_vmin,
-                                        vmax=edge_vmax,
-                                        alpha=edge_alpha)
-        edge_color = edge_color.reshape([number_of_nodes, number_of_nodes, 4])
-
-    # sources, targets = np.where(~np.isnan(adjacency_matrix))
-    # # Force into a list, since zip became a generator in python 3, and thus can't be indexed below
-    # edge_list = list(zip(sources.tolist(), targets.tolist()))
-
     # order edges if necessary
     if not (edge_zorder is None):
        edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
 
-    # TODO:
-    # Actually make use of zorder argument.
-    # At the moment, only the relative zorder is honoured, not the absolute value.
+    # NOTE: At the moment, only the relative zorder is honoured, not the absolute value.
 
     artists = dict()
     for (source, target) in edge_list:
@@ -687,7 +678,9 @@ def draw_edges(edge_list,
         dx = x2-x1
         dy = y2-y1
 
-        color = edge_color[source, target]
+        width = edge_width[(source, target)]
+        color = edge_color[(source, target)]
+        alpha = edge_alpha[(source, target)]
 
         bidirectional = (target, source) in edge_list
 
@@ -1095,61 +1088,6 @@ def draw_edge_labels(edge_labels,
         text_items[(n1, n2)] = t
 
     return text_items
-
-
-def _parse_color_input(number_of_elements, color_spec,
-                       cmap=None, vmin=None, vmax=None, alpha=1.):
-    """
-    Handle the mess that is matplotlib color specifications.
-    Return an RGBA array with specified number of elements.
-
-    Arguments
-    ---------
-    number_of_elements: int
-        Number (n) of elements to get a color for.
-
-    color_spec : color string, list of strings, a float, or a ndarray of floats
-        Any valid matplotlib color specification.
-        If numeric values are specified, they will be mapped to colors using the
-        cmap and vmin/vmax arguments.
-
-    cmap : matplotlib colormap (default None)
-        Color map to use if color_spec is not a string.
-
-    vmin, vmax : float, float (default None, None)
-        Minimum and maximum values for normalizing colors if a color mapping is used.
-
-    alpha : float or n-long iterable of floats (default 1.)
-        Alpha values to go with the colors.
-
-    Returns
-    -------
-    rgba_array : (n, 4) numpy ndarray
-        Array of RGBA color specifications.
-
-    """
-
-    # map color_spec to either a list of strings or
-    # an iterable of floats of the correct length,
-    # unless, of course, they already are either of these
-    if isinstance(color_spec, (float, int)):
-        color_spec = color_spec * np.ones((number_of_elements), dtype=np.float)
-    if isinstance(color_spec, str):
-        color_spec = number_of_elements * [color_spec]
-
-    # map numeric types using cmap, vmin, vmax
-    if isinstance(color_spec[0], (float, int)):
-        mapper = cm.ScalarMappable(cmap=cmap)
-        mapper.set_clim(vmin, vmax)
-        rgba_array = mapper.to_rgba(color_spec)
-    # convert string specification to colors
-    else:
-        rgba_array = np.array([colorConverter.to_rgba(c) for c in color_spec])
-
-    # Set the final column of the rgba_array to have the relevant alpha values.
-    rgba_array[:,-1] = alpha
-
-    return rgba_array
 
 
 def _update_view(node_positions, node_size, ax):
