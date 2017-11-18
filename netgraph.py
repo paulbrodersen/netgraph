@@ -46,14 +46,14 @@ import netgraph
 
 # construct sparse, directed, weighted graph
 # with positive and negative edges
-total_nodes = 20
-total_edges = 40
-edges = np.random.randint(0, total_nodes, size=(total_edges, 2))
-weights = np.random.randn(total_edges)
-adjacency = np.concatenate([edges, weights[:,None]], axis=1)
+n = 20
+w = np.random.randn(n,n)
+p = 0.2
+c = np.random.rand(n,n) <= p
+w[~c] = 0.
 
 # plot
-netgraph.draw(adjacency)
+netgraph.draw(w)
 plt.show()
 """
 
