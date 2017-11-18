@@ -154,15 +154,16 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         ax = plt.gca()
 
     # Draw plot elements.
-    draw_edges(edge_list, node_positions, **kwargs)
-    draw_nodes(node_positions, **kwargs)
+    draw_edges(edge_list, node_positions, ax=ax, **kwargs)
+    draw_nodes(node_positions, ax=ax, **kwargs)
 
     if node_labels is not None:
-        draw_node_labels(node_labels, node_positions, **kwargs)
+        draw_node_labels(node_labels, node_positions, ax=ax, **kwargs)
 
     if edge_labels is not None:
-        draw_edge_labels(edge_labels, node_positions, **kwargs)
+        draw_edge_labels(edge_labels, node_positions, ax=ax, **kwargs)
 
+    # Improve default layout of axis.
     _update_view(node_positions, node_size=3, ax=ax)
     _make_pretty(ax)
 
