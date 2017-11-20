@@ -1695,7 +1695,7 @@ class InteractiveGraph(Graph):
     """
     Notes:
     ------
-    Methods adapted with small modifications from:
+    Methods adapted with some modifications from:
     https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
     """
 
@@ -1727,10 +1727,9 @@ class InteractiveGraph(Graph):
 
     def on_press(self, event):
 
+        # reset rectangle
         self.x0 = event.xdata
         self.y0 = event.ydata
-
-        # reset rectangle
         self.x1 = event.xdata
         self.y1 = event.ydata
 
