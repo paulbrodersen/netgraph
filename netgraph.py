@@ -1896,22 +1896,19 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', ax=No
     edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
 
     if test_format == "sparse":
-        ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "dense":
-        ax = draw(adjacency_matrix, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return draw(adjacency_matrix, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "networkx":
         import networkx
         graph = networkx.from_numpy_array(adjacency_matrix, networkx.DiGraph)
-        ax = draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "igraph":
         import igraph
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
-        ax = draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "OOP":
-        graph_obj = Graph(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
-        ax = graph_obj.ax
-
-    return ax
+        return Graph(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
 
 
 if __name__ == "__main__":
