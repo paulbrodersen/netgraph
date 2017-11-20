@@ -255,14 +255,22 @@ def _parse_adjacency_matrix(adjacency):
     return edge_list, edge_weights
 
 
-def _parse_networkx_graph(graph):
-    # TODO:
-    raise NotImplementedError
+def _parse_networkx_graph(graph, attribute_name='weight'):
+    edge_list = list(graph.edges())
+    try:
+        edge_weights = {edge : graph.get_edge_data(*edge)[attribute_name] for edge in edge_list}
+    except KeyError: # no weights
+        edge_weights = None
+    return edge_list, edge_weights
 
 
 def _parse_igraph_graph(graph):
-    # TODO:
-    raise NotImplementedError
+    edge_list = [(edge.source, edge.target) for edge in graph.es()]
+    if graph.is_weighted():
+        edge_weights = {(edge.source, edge.target) : edge['weight'] for edge in graph.es()}
+    else:
+        edge_weights = None
+    return edge_list, edge_weights
 
 
 def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
@@ -1390,6 +1398,14 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse_matrix_
         ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "adjacency_matrix":
         ax = draw(adjacency_matrix, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    elif test_format == "networkx":
+        import networkx
+        graph = networkx.from_numpy_array(adjacency_matrix, networkx.DiGraph)
+        ax = draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    elif test_format == "igraph":
+        import igraph
+        graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
+        ax = draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
 
     return ax
 
@@ -1415,3 +1431,9 @@ if __name__ == "__main__":
     ax2.set_title('Full-rank adjacency matrix')
 
     plt.show()
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(test_format="networkx", ax=ax1)
+    test(test_format="igraph", ax=ax2)
+    ax1.set_title('Networkx DiGraph')
+    ax2.set_title('Igraph Graph')
+
