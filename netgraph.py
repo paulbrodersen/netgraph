@@ -1452,9 +1452,16 @@ class Graph(object):
 
         """
 
-        # Accept a variety of formats and convert to common denominator.
+        # Create axis if none is given.
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
+
+        # Accept a variety of formats for 'graph' and convert to common denominator.
         self.edge_list, self.edge_weight = _parse_graph(graph)
 
+        # Color and reorder edges for weighted graphs.
         if self.edge_weight:
 
             # If the graph is weighted, we want to visualise the weights using color.
@@ -1479,12 +1486,6 @@ class Graph(object):
             self.node_positions = _fruchterman_reingold_layout(self.edge_list)
         else:
             self.node_positions = node_positions
-
-        # Create axis if none is given.
-        if ax is None:
-            self.ax = plt.gca()
-        else:
-            self.ax = ax
 
         # Draw plot elements.
         self.edge_artists = draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
