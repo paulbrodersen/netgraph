@@ -1730,6 +1730,10 @@ class InteractiveGraph(Graph):
         self.x0 = event.xdata
         self.y0 = event.ydata
 
+        # reset rectangle
+        self.x1 = event.xdata
+        self.y1 = event.ydata
+
         # is the press over some artist
         is_on_artist = False
         for key, artist in self.node_face_artists.items():
@@ -1744,8 +1748,8 @@ class InteractiveGraph(Graph):
             self.offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self.selected_artists.items()}
         else:
             # start selecting
-            self.currently_selecting = True
             self.deseclect_artists()
+            self.currently_selecting = True
 
 
     def on_release(self, event):
@@ -1770,7 +1774,7 @@ class InteractiveGraph(Graph):
             elif self.currently_selecting:
                 self.x1 = event.xdata
                 self.y1 = event.ydata
-                #add rectangle for selection here
+                # add rectangle for selection here
                 self.selector_on()
                 self.fig.canvas.draw_idle()
 
