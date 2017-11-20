@@ -57,7 +57,7 @@ netgraph.draw(w)
 plt.show()
 """
 
-__version__ = 0.0
+__version__ = "1.0.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
