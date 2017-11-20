@@ -165,7 +165,10 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         draw_edge_labels(edge_labels, node_positions, ax=ax, **kwargs)
 
     # Improve default layout of axis.
-    _update_view(node_positions, node_size=3, ax=ax)
+    if 'node_size' in kwargs:
+        _update_view(node_positions, node_size=kwargs['node_size'], ax=ax)
+    else:
+        _update_view(node_positions, node_size=3., ax=ax)
     _make_pretty(ax)
 
     return ax
@@ -1496,7 +1499,11 @@ class Graph(object):
             self.edge_label_artists = draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
 
         # Improve default layout of axis.
-        _update_view(self.node_positions, node_size=3, ax=ax)
+        if 'node_size' in kwargs:
+            _update_view(self.node_positions, node_size=kwargs['node_size'], ax=ax)
+        else:
+            _update_view(self.node_positions, node_size=3., ax=ax)
+
         _make_pretty(self.ax)
 
 
