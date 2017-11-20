@@ -147,7 +147,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Initialise node positions if none are given.
     if node_positions is None:
-        node_positions = _get_positions(edge_list)
+        node_positions = _fruchterman_reingold_layout(edge_list)
 
     # Create axis if none is given.
     if ax is None:
@@ -316,64 +316,6 @@ def _is_directed(edge_list):
         if (target, source) in edge_list:
             return True
     return False
-
-
-def _get_positions(edge_list, **kwargs):
-    """
-    Position nodes using Fruchterman-Reingold force-directed algorithm.
-    Weights are ignored as they typically do not result in a visually pleasing
-    arrangement of nodes.
-
-    If neither igraph nor networkx are available, positions are chosen randomly.
-
-    Arguments:
-    ----------
-    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-    **kwargs: passed to networkx.layout.spring_layout() or fallback igraph.Graph.layout_fruchterman_reingold()
-
-    Returns:
-    --------
-    node_positions : dict mapping key : (float, float)
-        Mapping of nodes to (x, y) positions
-
-    """
-
-    edges = _parse_edge_list(edge_list)
-    nodes = np.unique(edges)
-
-    # networkx / igraph are heavy dependencies -- only import them if the user actually needs them
-    try:
-        import networkx
-        graph = networkx.Graph(edges)
-        positions = networkx.layout.spring_layout(graph, **kwargs)
-
-    except ImportError:
-        import warnings
-        warnings.warn("Dependency networkx not available. Falling back to igraph.")
-
-        try:
-            import igraph
-            graph = igraph.Graph(edges=edges, loops=False)
-            positions = graph.layout_fruchterman_reingold(**kwargs)
-
-            # normalise to 0-1
-            positions = np.array(positions)
-            positions -= np.min(positions)
-            positions /= np.max(positions)
-
-            # convert to dict
-            positions = {node: (x, y) for node, (x, y) in zip(nodes, positions)}
-
-        except ImportError:
-            warnings.warn("Neither networkx nor igraph available. Assigning random positions to nodes.")
-            positions = np.random.rand(len(nodes), 2)
-
-            # convert to dict
-            positions = {node: (x, y) for node, (x, y) in zip(nodes, positions)}
-
-    return positions
 
 
 def draw_nodes(node_positions,
@@ -1113,6 +1055,290 @@ def _make_pretty(ax):
     ax.get_figure().set_facecolor('w')
     ax.set_frame_on(False)
     ax.get_figure().canvas.draw()
+
+
+# --------------------------------------------------------------------------------
+# Spring layout
+
+
+def _fruchterman_reingold_layout(edge_list,
+                                 edge_weights=None,
+                                 k=None,
+                                 pos=None,
+                                 fixed=None,
+                                 iterations=50,
+                                 scale=1,
+                                 center=np.zeros((2)),
+                                 dim=2):
+    """
+    Position nodes using Fruchterman-Reingold force-directed algorithm.
+
+    Parameters
+    ----------
+    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
+
+    edge_weights: dict (source, target) : float or None (default=None)
+        Edge weights.
+
+    k : float (default=None)
+        Optimal distance between nodes.  If None the distance is set to
+        1/sqrt(n) where n is the number of nodes.  Increase this value
+        to move nodes farther apart.
+
+    pos : dict or None  optional (default=None)
+        Initial positions for nodes as a dictionary with node as keys
+        and values as a coordinate list or tuple.  If None, then use
+        random initial positions.
+
+    fixed : list or None  optional (default=None)
+        Nodes to keep fixed at initial position.
+
+    iterations : int  optional (default=50)
+        Number of iterations of spring-force relaxation
+
+    scale : number (default: 1)
+        Scale factor for positions. Only used if `fixed is None`.
+
+    center : array-like or None
+        Coordinate pair around which to center the layout.
+        Only used if `fixed is None`.
+
+    dim : int
+        Dimension of layout.
+
+    Returns
+    -------
+    pos : dict
+        A dictionary of positions keyed by node
+
+    Notes:
+    ------
+    Implementation taken with minor modifications from networkx.spring_layout().
+
+    """
+
+    nodes = np.unique(edge_list)
+    total_nodes = len(nodes)
+
+    # translate fixed node ID to position in node list
+    if fixed is not None:
+        node_to_idx = dict(zip(nodes, range(total_nodes)))
+        fixed = np.asarray([node_to_idx[v] for v in fixed])
+
+    if pos is not None:
+        # Determine size of existing domain to adjust initial positions
+        domain_size = max(coord for pos_tup in pos.values() for coord in pos_tup)
+        if domain_size == 0:
+            domain_size = 1
+        shape = (total_nodes, dim)
+        pos_arr = np.random.random(shape) * domain_size + center
+        for i, n in enumerate(nodes):
+            if n in pos:
+                pos_arr[i] = np.asarray(pos[n])
+    else:
+        pos_arr = None
+
+    if k is None and fixed is not None:
+        # We must adjust k by domain size for layouts not near 1x1
+        k = domain_size / np.sqrt(total_nodes)
+
+    A = _edge_list_to_sparse_matrix(edge_list, edge_weights)
+
+    if total_nodes > 500:  # sparse solver for large graphs
+        pos = _sparse_fruchterman_reingold(A, k, pos_arr, fixed, iterations, dim)
+    else:
+        pos = _dense_fruchterman_reingold(A.toarray(), k, pos_arr, fixed, iterations, dim)
+
+    if fixed is None:
+        pos = _rescale_layout(pos, scale=scale) + center
+
+    return dict(zip(nodes, pos))
+
+
+def _dense_fruchterman_reingold(A, k=None, pos=None, fixed=None,
+                                iterations=50, dim=2):
+    """
+    Position nodes in adjacency matrix A using Fruchterman-Reingold
+    """
+
+    nnodes, _ = A.shape
+
+    if pos is None:
+        # random initial positions
+        pos = np.asarray(np.random.random((nnodes, dim)), dtype=A.dtype)
+    else:
+        # make sure positions are of same type as matrix
+        pos = pos.astype(A.dtype)
+
+    # optimal distance between nodes
+    if k is None:
+        k = np.sqrt(1.0/nnodes)
+    # the initial "temperature"  is about .1 of domain area (=1x1)
+    # this is the largest step allowed in the dynamics.
+    # We need to calculate this in case our fixed positions force our domain
+    # to be much bigger than 1x1
+    t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1]))*0.1
+    # simple cooling scheme.
+    # linearly step down by dt on each iteration so last iteration is size dt.
+    dt = t/float(iterations+1)
+    delta = np.zeros((pos.shape[0], pos.shape[0], pos.shape[1]), dtype=A.dtype)
+    # the inscrutable (but fast) version
+    # this is still O(V^2)
+    # could use multilevel methods to speed this up significantly
+    for iteration in range(iterations):
+        # matrix of difference between points
+        delta = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]
+        # distance between points
+        distance = np.linalg.norm(delta, axis=-1)
+        # enforce minimum distance of 0.01
+        np.clip(distance, 0.01, None, out=distance)
+        # displacement "force"
+        displacement = np.einsum('ijk,ij->ik',
+                                 delta,
+                                 (k * k / distance**2 - A * distance / k))
+        # update positions
+        length = np.linalg.norm(displacement, axis=-1)
+        length = np.where(length < 0.01, 0.1, length)
+        delta_pos = np.einsum('ij,i->ij', displacement, t / length)
+        if fixed is not None:
+            # don't change positions of fixed nodes
+            delta_pos[fixed] = 0.0
+        pos += delta_pos
+        # cool temperature
+        t -= dt
+    return pos
+
+
+def _sparse_fruchterman_reingold(A, k=None, pos=None, fixed=None,
+                                 iterations=50, dim=2):
+    # Position nodes in adjacency matrix A using Fruchterman-Reingold
+    # Entry point for NetworkX graph is fruchterman_reingold_layout()
+    # Sparse version
+
+    nnodes, _ = A.shape
+
+    try:
+        from scipy.sparse import spdiags, coo_matrix
+    except ImportError:
+        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
+        raise ImportError(msg)
+
+    # make sure we have a list of lists representation
+    try:
+        A = A.tolil()
+    except:
+        A = (coo_matrix(A)).tolil()
+
+    if pos is None:
+        # random initial positions
+        pos = np.asarray(np.random.random((nnodes, dim)), dtype=A.dtype)
+    else:
+        # make sure positions are of same type as matrix
+        pos = pos.astype(A.dtype)
+
+    # no fixed nodes
+    if fixed is None:
+        fixed = []
+
+    # optimal distance between nodes
+    if k is None:
+        k = np.sqrt(1.0/nnodes)
+    # the initial "temperature"  is about .1 of domain area (=1x1)
+    # this is the largest step allowed in the dynamics.
+    t = 0.1
+    # simple cooling scheme.
+    # linearly step down by dt on each iteration so last iteration is size dt.
+    dt = t / float(iterations+1)
+
+    displacement = np.zeros((dim, nnodes))
+    for iteration in range(iterations):
+        displacement *= 0
+        # loop over rows
+        for i in range(A.shape[0]):
+            if i in fixed:
+                continue
+            # difference between this row's node position and all others
+            delta = (pos[i] - pos).T
+            # distance between points
+            distance = np.sqrt((delta**2).sum(axis=0))
+            # enforce minimum distance of 0.01
+            distance = np.where(distance < 0.01, 0.01, distance)
+            # the adjacency matrix row
+            Ai = np.asarray(A.getrowview(i).toarray())
+            # displacement "force"
+            displacement[:, i] +=\
+                (delta * (k * k / distance**2 - Ai * distance / k)).sum(axis=1)
+        # update positions
+        length = np.sqrt((displacement**2).sum(axis=0))
+        length = np.where(length < 0.01, 0.1, length)
+        pos += (displacement * t / length).T
+        # cool temperature
+        t -= dt
+    return pos
+
+
+def _rescale_layout(pos, scale=1):
+    """Return scaled position array to (-scale, scale) in all axes.
+
+    The function acts on NumPy arrays which hold position information.
+    Each position is one row of the array. The dimension of the space
+    equals the number of columns. Each coordinate in one column.
+
+    To rescale, the mean (center) is subtracted from each axis separately.
+    Then all values are scaled so that the largest magnitude value
+    from all axes equals `scale` (thus, the aspect ratio is preserved).
+    The resulting NumPy Array is returned (order of rows unchanged).
+
+    Parameters
+    ----------
+    pos : numpy array
+        positions to be scaled. Each row is a position.
+
+    scale : number (default: 1)
+        The size of the resulting extent in all directions.
+
+    Returns
+    -------
+    pos : numpy array
+        scaled positions. Each row is a position.
+
+    """
+    # Find max length over all dimensions
+    lim = 0  # max coordinate for all axes
+    for i in range(pos.shape[1]):
+        pos[:, i] -= pos[:, i].mean()
+        lim = max(abs(pos[:, i]).max(), lim)
+    # rescale to (-scale, scale) in all directions, preserves aspect
+    if lim > 0:
+        for i in range(pos.shape[1]):
+            pos[:, i] *= scale / lim
+    return pos
+
+
+def _edge_list_to_sparse_matrix(edge_list, edge_weights=None):
+
+    try:
+        from scipy.sparse import coo_matrix
+    except ImportError:
+        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
+        raise ImportError(msg)
+
+    nodes = np.unique(edge_list)
+    node_to_idx = dict(zip(nodes, range(len(nodes))))
+    sources = [node_to_idx[source] for source, _ in edge_list]
+    targets = [node_to_idx[target] for _, target in edge_list]
+
+    total_nodes = len(nodes)
+    shape = (total_nodes, total_nodes)
+
+    if edge_weights:
+        weights = [edge_weights[edge] for edge in edge_list]
+        arr = coo_matrix((weights, (sources, targets)), shape=shape)
+    else:
+        arr = coo_matrix((np.ones((len(sources))), (sources, targets)), shape=shape)
+
+    return arr
 
 
 # --------------------------------------------------------------------------------
