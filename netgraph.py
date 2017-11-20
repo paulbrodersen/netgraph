@@ -1384,7 +1384,7 @@ def _get_random_weight_matrix(n, p,
     return w
 
 
-def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse_matrix_format', ax=None):
+def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', ax=None):
     adjacency_matrix = _get_random_weight_matrix(n, p, directed=directed, weighted=weighted)
 
     sources, targets = np.where(adjacency_matrix)
@@ -1394,9 +1394,9 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse_matrix_
     node_labels = {node: str(node) for node in np.unique(adjacency[:,:2])}
     edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
 
-    if test_format == "sparse_matrix_format":
+    if test_format == "sparse":
         ax = draw(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
-    elif test_format == "adjacency_matrix":
+    elif test_format == "dense":
         ax = draw(adjacency_matrix, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "networkx":
         import networkx
@@ -1425,15 +1425,17 @@ if __name__ == "__main__":
     ax2.set_title('Unweighted')
 
     fig, (ax1, ax2) = plt.subplots(1,2)
-    test(test_format="sparse_matrix_format", ax=ax1)
-    test(test_format="adjacency_matrix",     ax=ax2)
+    test(test_format="sparse", ax=ax1)
+    test(test_format="dense", ax=ax2)
     ax1.set_title('Sparse matrix')
     ax2.set_title('Full-rank adjacency matrix')
 
-    plt.show()
     fig, (ax1, ax2) = plt.subplots(1,2)
     test(test_format="networkx", ax=ax1)
     test(test_format="igraph", ax=ax2)
     ax1.set_title('Networkx DiGraph')
     ax2.set_title('Igraph Graph')
 
+    plt.ion(); plt.show()
+    raw_input("Press any key to close figures...")
+    plt.close()
