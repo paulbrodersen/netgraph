@@ -1042,7 +1042,12 @@ def _update_view(node_positions, node_size, ax):
     # Pad x and y limits as patches are not registered properly
     # when matplotlib sets axis limits automatically.
     # Hence we need to set them manually.
-    maxs = np.max(node_size) * BASE_NODE_SIZE
+
+    if isinstance(node_size, dict):
+        maxs = np.max(node_size.values()) * BASE_NODE_SIZE
+    else:
+        maxs = node_size * BASE_NODE_SIZE
+
     maxx, maxy = np.max(node_positions.values(), axis=0)
     minx, miny = np.min(node_positions.values(), axis=0)
 
