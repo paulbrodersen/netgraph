@@ -1607,7 +1607,7 @@ class Graph(object):
 
         """
         artists = draw_edges(*args, **kwargs)
-        for edge, artist in artists.items:
+        for edge, artist in artists.items():
             self.edge_artists[edge] = artist
 
 
@@ -1719,17 +1719,33 @@ class Graph(object):
             self.edge_label_artists[edge] = artist
 
 
-class WindowSelect(object):
+class InteractiveGraph(Graph):
     """
+    Notes:
+    ------
+    Methods adapted with small modifications from:
     https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
     """
-    def __init__(self, artists):
-        self.artists = artists
-        self.alphas = [artist.get_alpha() for artist in self.artists]
 
-        # assume all artists are in the same figure, otherwise selection is meaningless
-        self.fig = self.artists[0].figure
-        self.ax = self.artists[0].axes
+    def __init__(self, *args, **kwargs):
+        # Initialise as before.
+        Graph.__init__(self, *args, **kwargs)
+
+        # Keep track of variables that impact edge drawing:
+        if _is_directed(self.edge_list):
+            kwargs.setdefault('draw_arrows', True)
+        self.draw_arrows = kwargs['draw_arrows']
+        if 'node_size' in kwargs:
+            self.node_size = kwargs['node_size']
+        else:
+            self.node_size = None
+        if 'edge_width' in kwargs:
+            self.edge_width = kwargs['edge_width']
+        else:
+            self.edge_width = None
+
+        self.fig = self.ax.get_figure()
+        self.alpha = {key: artist.get_alpha() for key, artist in self.node_face_artists.items()}
 
         self.fig.canvas.mpl_connect('button_press_event', self.on_press)
         self.fig.canvas.mpl_connect('button_release_event', self.on_release)
@@ -1737,8 +1753,8 @@ class WindowSelect(object):
 
         self.currently_selecting = False
         self.currently_dragging = False
-        self.selected_artists = []
-        self.offset = np.zeros((1,2))
+        self.selected_artists = {}
+        self.offset = {}
         self.rect = plt.Rectangle((0,0),1,1, linestyle="--",
                                   edgecolor="crimson", fill=False)
         self.ax.add_patch(self.rect)
@@ -1751,32 +1767,33 @@ class WindowSelect(object):
 
 
     def on_press(self, event):
-        # is the press over some artist
-        isonartist = False
-        for artist in self.artists:
-            if artist.contains(event)[0]:
-                isonartist = artist
+
         self.x0 = event.xdata
         self.y0 = event.ydata
-        if isonartist:
+
+        # is the press over some artist
+        is_on_artist = False
+        for key, artist in self.node_face_artists.items():
+            if artist.contains(event)[0]:
+                is_on_artist = True
+                self.select_artist(key, artist)
+
+        if is_on_artist:
             # add clicked artist to selection
-            self.select_artist(isonartist)
             # start dragging
             self.currently_dragging = True
-            ac = np.array([a.center for a in self.selected_artists])
-            ec = np.array([event.xdata, event.ydata])
-            self.offset = ac - ec
+            self.offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self.selected_artists.items()}
         else:
-            #start selecting
+            # start selecting
             self.currently_selecting = True
             self.deseclect_artists()
 
 
     def on_release(self, event):
         if self.currently_selecting:
-            for artist in self.artists:
+            for key, artist in self.node_face_artists.items():
                 if self.is_inside_rect(*artist.center):
-                    self.select_artist(artist)
+                    self.select_artist(key, artist)
             self.fig.canvas.draw_idle()
             self.currently_selecting = False
             self.rect.set_visible(False)
@@ -1786,17 +1803,17 @@ class WindowSelect(object):
 
 
     def on_motion(self, event):
-        if self.currently_dragging:
-            newcenters = np.array([event.xdata, event.ydata])+self.offset
-            for i, artist in enumerate(self.selected_artists):
-                artist.center = newcenters[i]
-            self.fig.canvas.draw_idle()
-        elif self.currently_selecting:
-            self.x1 = event.xdata
-            self.y1 = event.ydata
-            #add rectangle for selection here
-            self.selector_on()
-            self.fig.canvas.draw_idle()
+        if event.inaxes:
+            if self.currently_dragging:
+                self.update_nodes(event)
+                self.update_edges()
+                self.fig.canvas.draw_idle()
+            elif self.currently_selecting:
+                self.x1 = event.xdata
+                self.y1 = event.ydata
+                #add rectangle for selection here
+                self.selector_on()
+                self.fig.canvas.draw_idle()
 
 
     def is_inside_rect(self, x, y):
@@ -1808,17 +1825,17 @@ class WindowSelect(object):
             return False
 
 
-    def select_artist(self, artist):
-        if artist not in self.selected_artists:
+    def select_artist(self, key, artist):
+        if key not in self.selected_artists:
             alpha = artist.get_alpha()
             artist.set_alpha(0.5 * alpha)
-            self.selected_artists.append(artist)
+            self.selected_artists[key] = artist
 
 
     def deseclect_artists(self):
-        for artist, alpha in zip(self.artists, self.alphas):
-            artist.set_alpha(alpha)
-        self.selected_artists = []
+        for key, artist in self.selected_artists.items():
+            artist.set_alpha(self.alpha[key])
+        self.selected_artists = {}
 
 
     def selector_on(self):
@@ -1830,24 +1847,100 @@ class WindowSelect(object):
         self.rect.set_height(np.diff(ylim))
 
 
-class GridWindowSelect(WindowSelect):
+    def update_nodes(self, event):
+        for key in self.selected_artists.keys():
+            pos = np.array([event.xdata, event.ydata]) + self.offset[key]
+            self.move_node(key, pos)
+
+
+    def move_node(self, node, pos):
+        self.node_positions[node] = pos
+        self.node_edge_artists[node].center = pos
+        self.node_face_artists[node].center = pos
+        if self.node_label_artists:
+            self.node_label_artists[node].set_position(pos)
+
+
+    def update_edges(self):
+        # get edges that need to move
+        edges = []
+        for key in self.selected_artists.keys():
+            edges.extend([edge for edge in self.edge_list if key in edge]) # TODO: optimise
+        edges = list(set(edges))
+
+        # remove old edges
+        # but get edge properties beforehand
+        edge_color = dict()
+        edge_zorder = dict()
+        edge_alpha = dict()
+        for edge in edges:
+            artist = self.edge_artists[edge]
+            edge_color[edge] = artist.get_facecolor()
+            edge_zorder[edge] = artist.get_zorder()
+            edge_alpha[edge] = artist.get_alpha()
+            artist.remove()
+
+        kwargs = dict()
+        if self.edge_width:
+            kwargs['edge_width'] = self.edge_width
+        if self.node_size:
+            kwargs['node_size'] = self.node_size
+
+        # draw new edges
+        self.draw_edges(edges, self.node_positions,
+                        edge_color=edge_color,
+                        edge_zorder=edge_zorder,
+                        edge_alpha=edge_alpha,
+                        draw_arrows=self.draw_arrows,
+                        **kwargs)
+
+        # move edge labels
+        if self.edge_labels:
+            self.update_edge_label_positions(edges, self.node_positions)
+
+
+    def update_edge_label_positions(self, edges, node_positions, rotate=True): # TODO: 'rotate' properly
+
+        # draw labels centered on the midway point of the edge
+        label_pos = 0.5
+
+        for (n1, n2) in edges:
+            (x1, y1) = node_positions[n1]
+            (x2, y2) = node_positions[n2]
+            (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
+                      y1 * label_pos + y2 * (1.0 - label_pos))
+
+            if rotate:
+                angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
+                # make label orientation "right-side-up"
+                if angle > 90:
+                    angle -= 180
+                if angle < - 90:
+                    angle += 180
+                # transform data coordinate angle to screen coordinate angle
+                xy = np.array((x, y))
+                trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
+                                                                 xy.reshape((1, 2)))[0]
+            else:
+                trans_angle = 0.0
+
+            self.edge_label_artists[(n1, n2)].set_position((x, y))
+
+
+class InteractiveGrid(InteractiveGraph):
 
     def on_release(self, event):
 
         if self.currently_dragging:
-            snap_flag = True
-        else:
-            snap_flag = False
-
-        WindowSelect.on_release(self, event) # changes state of self.currently_dragging
-
-        if snap_flag:
-            for i, artist in enumerate(self.selected_artists):
-                x, y = artist.center
+            for key in self.selected_artists.keys():
+                x, y = self.node_positions[key]
                 x = np.int(np.round(x))
                 y = np.int(np.round(y))
-                artist.center = x, y
-            self.fig.canvas.draw_idle()
+                self.move_node(key, (x,y))
+
+            self.update_edges()
+
+        InteractiveGraph.on_release(self, event)
 
 
 # --------------------------------------------------------------------------------
@@ -1909,6 +2002,10 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', ax=No
         return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     elif test_format == "OOP":
         return Graph(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    elif test_format == "interactive":
+        return InteractiveGraph(adjacency, node_labels=node_labels, edge_labels=edge_labels, node_color='r', ax=ax)
+    elif test_format == "grid":
+        return InteractiveGrid(adjacency, node_labels=node_labels, edge_labels=edge_labels, node_color='r', ax=ax)
 
 
 if __name__ == "__main__":
