@@ -373,11 +373,87 @@ def draw_nodes(node_positions,
 
     Returns
     -------
-    artists: dict node : dict str : artist
-        Mapping of nodes to the node face artists and node edge artists,
-        where both types are instances of matplotlib.patches.
-        To access the node face of a node: artists[node]['face']
-        To access the node edge of a node: artists[node]['edge']
+    node_faces: dict node : artist
+        Mapping of nodes to the node face artists.
+
+    node_edges: dict node : artist
+        Mapping of nodes to the node edge artists.
+
+    """
+
+    if ax is None:
+        ax = plt.gca()
+
+    # convert all inputs to dicts mapping node:property
+    nodes = node_positions.keys()
+    number_of_nodes = len(nodes)
+
+    if isinstance(node_size, (int, float)):
+        node_size = {node:node_size for node in nodes}
+    if isinstance(node_edge_width, (int, float)):
+        node_edge_width = {node: node_edge_width for node in nodes}
+
+    # Simulate node edge by drawing a slightly larger node artist.
+    # I wish there was a better way to do this,
+    # but this seems to be the only way to guarantee constant proportions,
+    # as linewidth argument in matplotlib.patches will not be proportional
+    # to a given node radius.
+    node_edges = _draw_nodes(node_positions,
+                             node_shape=node_shape,
+                             node_size=node_size,
+                             node_color=node_edge_color,
+                             node_alpha=node_edge_alpha,
+                             ax=ax,
+                             **kwargs)
+
+    node_size = {node: node_size[node] - node_edge_width[node] for node in nodes}
+    node_faces = _draw_nodes(node_positions,
+                             node_shape=node_shape,
+                             node_size=node_size,
+                             node_color=node_color,
+                             node_alpha=node_alpha,
+                             ax=ax,
+                             **kwargs)
+
+    return node_faces, node_edges
+
+
+def _draw_nodes(node_positions,
+                node_shape='o',
+                node_size=3.,
+                node_color='r',
+                node_alpha=1.0,
+                ax=None,
+                **kwargs):
+    """
+    Draw node markers at specified positions.
+
+    Arguments
+    ----------
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions
+
+    node_shape : string or dict key : string (default 'o')
+       The shape of the node. Specification is as for matplotlib.scatter
+       marker, i.e. one of 'so^>v<dph8'.
+       If a single string is provided all nodes will have the same shape.
+
+    node_size : scalar or dict node : float (default 3.)
+       Size (radius) of nodes in percent of axes space.
+
+    node_color : matplotlib color specification or dict node : color specification (default 'w')
+       Node color.
+
+    node_alpha : scalar or dict node : float (default 1.)
+       The node transparency.
+
+    ax : matplotlib.axis instance or None (default None)
+       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
+    Returns
+    -------
+    artists: dict node : artist
+        Mapping of nodes to the artists,
 
     """
 
@@ -390,54 +466,28 @@ def draw_nodes(node_positions,
 
     if isinstance(node_shape, str):
         node_shape = {node:node_shape for node in nodes}
-    if isinstance(node_size, (int, float)):
-        node_size = {node:node_size for node in nodes}
-    if isinstance(node_edge_width, (int, float)):
-        node_edge_width = {node: node_edge_width for node in nodes}
     if not isinstance(node_color, dict):
         node_color = {node:node_color for node in nodes}
-    if not isinstance(node_edge_color, dict):
-        node_edge_color = {node:node_edge_color for node in nodes}
     if isinstance(node_alpha, (int, float)):
         node_alpha = {node:node_alpha for node in nodes}
-    if isinstance(node_edge_alpha, (int, float)):
-        node_edge_alpha = {node:node_edge_alpha for node in nodes}
 
     # rescale
-    node_size       = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
-    node_edge_width = {node: width * BASE_NODE_SIZE for (node, width) in node_edge_width.items()}
+    node_size = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
 
     artists = dict()
     for node in nodes:
-        # create node edge artist:
-        # simulate node edge by drawing a slightly larger node artist;
-        # I wish there was a better way to do this,
-        # but this seems to be the only way to guarantee constant proportions,
-        # as linewidth argument in matplotlib.patches will not be proportional
-        # to a given node radius
-        node_edge_artist = _get_node_artist(shape=node_shape[node],
-                                            position=node_positions[node],
-                                            size=node_size[node],
-                                            facecolor=node_edge_color[node],
-                                            alpha=node_edge_alpha[node],
-                                            zorder=2)
-
-        # create node artist
         node_artist = _get_node_artist(shape=node_shape[node],
                                        position=node_positions[node],
-                                       size=node_size[node] -node_edge_width[node],
+                                       size=node_size[node],
                                        facecolor=node_color[node],
                                        alpha=node_alpha[node],
                                        zorder=2)
 
         # add artists to axis
-        ax.add_artist(node_edge_artist)
         ax.add_artist(node_artist)
 
         # return handles to artists
-        artists[node] = dict()
-        artists[node]['edge'] = node_edge_artist
-        artists[node]['face'] = node_artist
+        artists[node] = node_artist
 
     return artists
 
