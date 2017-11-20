@@ -166,9 +166,9 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Improve default layout of axis.
     if 'node_size' in kwargs:
-        _update_view(node_positions, node_size=kwargs['node_size'], ax=ax)
+        _update_view(node_positions, ax=ax, node_size=kwargs['node_size'])
     else:
-        _update_view(node_positions, node_size=3., ax=ax)
+        _update_view(node_positions, ax=ax)
     _make_pretty(ax)
 
     return ax
@@ -1092,7 +1092,7 @@ def draw_edge_labels(edge_labels,
     return text_items
 
 
-def _update_view(node_positions, node_size, ax):
+def _update_view(node_positions, ax, node_size=3.):
     # Pad x and y limits as patches are not registered properly
     # when matplotlib sets axis limits automatically.
     # Hence we need to set them manually.
@@ -1502,7 +1502,7 @@ class Graph(object):
         if 'node_size' in kwargs:
             _update_view(self.node_positions, node_size=kwargs['node_size'], ax=ax)
         else:
-            _update_view(self.node_positions, node_size=3., ax=ax)
+            _update_view(self.node_positions, ax=ax)
 
         _make_pretty(self.ax)
 
