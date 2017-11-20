@@ -893,7 +893,7 @@ def draw_node_labels(node_labels,
                      font_family='sans-serif',
                      font_weight='normal',
                      font_alpha=1.,
-                     bbox=None,
+                     bbox=dict(alpha=0.),
                      clip_on=False,
                      ax=None,
                      **kwargs):
@@ -924,7 +924,7 @@ def draw_node_labels(node_labels,
     font_alpha : float (default 1.)
        Text transparency
 
-    bbox : matplotlib bbox instance
+    bbox : matplotlib bbox instance (default {'alpha': 0})
        Specify text box shape and colors.
 
     clip_on : bool
