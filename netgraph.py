@@ -1394,6 +1394,140 @@ def _edge_list_to_sparse_matrix(edge_list, edge_weights=None):
 
 
 # --------------------------------------------------------------------------------
+# interactive plotting
+
+class Graph(object):
+
+    def __init__(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
+        """
+        Convenience function that tries to do "the right thing".
+
+        For a full list of available arguments, and
+        for finer control of the individual draw elements,
+        please refer to the documentation of
+
+            draw_nodes()
+            draw_edges()
+            draw_node_labels()
+            draw_edge_labels()
+
+        Arguments
+        ----------
+        graph: various formats
+            Graph object to plot. Various input formats are supported.
+            In order of precedence:
+                - Edge list:
+                    Iterable of (source, target) or (source, target, weight) tuples,
+                    or equivalent (m, 2) or (m, 3) ndarray.
+                - Adjacency matrix:
+                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+                    The absence of a connection is indicated by a zero.
+                - igraph.Graph object
+                - networkx.Graph object
+
+        node_positions : dict node : (float, float)
+            Mapping of nodes to (x, y) positions.
+            If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+
+        node_labels : dict node : str (default None)
+           Mapping of nodes to node labels.
+           Only nodes in the dictionary are labelled.
+           If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+
+        edge_labels : dict (source, target) : str (default None)
+            Mapping of edges to edge labels.
+            Only edges in the dictionary are labelled.
+
+        ax : matplotlib.axis instance or None (default None)
+           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
+        See Also
+        --------
+        draw_nodes()
+        draw_edges()
+        draw_node_labels()
+        draw_edge_labels()
+
+        """
+
+        # Accept a variety of formats and convert to common denominator.
+        self.edge_list, self.edge_weight = _parse_graph(graph)
+
+        if self.edge_weight:
+
+            # If the graph is weighted, we want to visualise the weights using color.
+            # Edge width is another popular choice when visualising weighted networks,
+            # but if the variance in weights is large, this typically results in less
+            # visually pleasing results.
+            self.edge_color  = _get_color(self.edge_weight, cmap=edge_cmap)
+            kwargs.setdefault('edge_color', self.edge_color)
+
+            # Plotting darker edges over lighter edges typically results in visually
+            # more pleasing results. Here we hence specify the relative order in
+            # which edges are plotted according to the color of the edge.
+            self.edge_zorder = _get_zorder(self.edge_color)
+            kwargs.setdefault('edge_zorder', self.edge_zorder)
+
+        # Plot arrows if the graph has bi-directional edges.
+        if _is_directed(self.edge_list):
+            kwargs.setdefault('draw_arrows', True)
+
+        # Initialise node positions if none are given.
+        if node_positions is None:
+            self.node_positions = _fruchterman_reingold_layout(self.edge_list)
+        else:
+            self.node_positions = node_positions
+
+        # Create axis if none is given.
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
+
+        # Draw plot elements.
+        self.edge_artists = draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
+        self.node_face_artists, self.node_edge_artists = draw_nodes(self.node_positions, ax=self.ax, **kwargs)
+
+        if node_labels is not None:
+            self.node_labels = node_labels
+            self.node_label_artists = draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
+
+        if edge_labels is not None:
+            self.edge_labels = edge_labels
+            self.edge_label_artists = draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
+
+        # Improve default layout of axis.
+        _update_view(self.node_positions, node_size=3, ax=ax)
+        _make_pretty(self.ax)
+
+
+    def draw_nodes(self, *args, **kwargs):
+        node_faces, node_edges = draw_nodes(*args, **kwargs)
+        for node, artist in node_faces:
+            self.node_face_artists[node] = artist
+        for node, artist in node_edges:
+            self.node_edge_artists[node] = artist
+
+
+    def draw_edges(self, *args, **kwargs):
+        artists = draw_edges(*args, **kwargs)
+        for edge, artist in artists.items:
+            self.edge_artists[edge] = artist
+
+
+    def draw_node_labels(self, *args, **kwargs):
+        artists = draw_node_labels(*args, **kwargs)
+        for node, artist in artists:
+            self.node_label_artists[node] = artist
+
+
+    def draw_edge_labels(self, *args, **kwargs):
+        artists = draw_edge_labels(*args, **kwargs)
+        for edge, artist in artists:
+            self.edge_label_artists[edge] = artist
+
+
+# --------------------------------------------------------------------------------
 # Test code
 
 
@@ -1450,6 +1584,9 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', ax=No
         import igraph
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
         ax = draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+    elif test_format == "OOP":
+        graph_obj = Graph(adjacency, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        ax = graph_obj.ax
 
     return ax
 
