@@ -65,6 +65,7 @@ __email__ = "paulbrodersen+netgraph@gmail.com"
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
+from scipy.sparse import coo_matrix, spdiags
 
 
 BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0, 1], [0,1])
@@ -1231,12 +1232,6 @@ def _sparse_fruchterman_reingold(A, k=None, pos=None, fixed=None,
 
     nnodes, _ = A.shape
 
-    try:
-        from scipy.sparse import spdiags, coo_matrix
-    except ImportError:
-        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
-        raise ImportError(msg)
-
     # make sure we have a list of lists representation
     try:
         A = A.tolil()
@@ -1330,12 +1325,6 @@ def _rescale_layout(pos, scale=1):
 
 
 def _edge_list_to_sparse_matrix(edge_list, edge_weights=None):
-
-    try:
-        from scipy.sparse import coo_matrix
-    except ImportError:
-        msg = "_sparse_fruchterman_reingold() scipy numpy: http://scipy.org/ "
-        raise ImportError(msg)
 
     nodes = np.unique(edge_list)
     node_to_idx = dict(zip(nodes, range(len(nodes))))
