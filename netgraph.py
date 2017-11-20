@@ -1733,6 +1733,10 @@ class InteractiveGraph(Graph):
         self.x1 = event.xdata
         self.y1 = event.ydata
 
+        # reset rectangle
+        self.x1 = event.xdata
+        self.y1 = event.ydata
+
         # is the press over some artist
         is_on_artist = False
         for key, artist in self.node_face_artists.items():
