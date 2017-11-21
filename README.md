@@ -80,7 +80,7 @@ use the InteractiveGraph class:
 graph = netgraph.InteractiveGraph(w)
 ```
 
-![Demo of InteractiveGraph](http://gph.is/2zZCUkP)
+![Demo of InteractiveGraph](https://media.giphy.com/media/xUOxfk8zazlkWLYtlC/giphy.gif)
 
 The new node positions can afterwards be retrieved via:
 
