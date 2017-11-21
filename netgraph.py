@@ -299,7 +299,7 @@ def _parse_igraph_graph(graph):
 def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 
     keys = mydict.keys()
-    values = mydict.values()
+    values = np.array(mydict.values())
 
     # apply edge_vmin, edge_vmax
     if vmin:
@@ -326,7 +326,7 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 
     # convert value to color
     mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
-    mapper.set_clim(vmin, vmax)
+    mapper.set_clim(vmin=0., vmax=1.)
     colors = mapper.to_rgba(values)
 
     return {key: color for (key, color) in zip(keys, colors)}
