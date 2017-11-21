@@ -1950,6 +1950,8 @@ def test(n=20, p=0.15,
          strictly_positive=False,
          test_format='sparse',
          interactive=False,
+         show_node_labels=False,
+         show_edge_labels=False,
          ax=None):
 
     adjacency_matrix = _get_random_weight_matrix(n, p,
@@ -1961,8 +1963,15 @@ def test(n=20, p=0.15,
     weights = adjacency_matrix[sources, targets]
     adjacency = np.c_[sources, targets, weights]
 
-    node_labels = {node: str(node) for node in np.unique(adjacency[:,:2])}
-    edge_labels = {(edge[0], edge[1]): str(ii) for ii, edge in enumerate(adjacency)}
+    if show_node_labels:
+        node_labels = {node: str(int(node)) for node in np.unique(adjacency[:,:2])}
+    else:
+        node_labels = None
+
+    if show_edge_labels:
+        edge_labels = {(edge[0], edge[1]): str(int(ii)) for ii, edge in enumerate(adjacency)}
+    else:
+        edge_labels = None
 
     if test_format == "sparse":
         graph = adjacency
@@ -1994,6 +2003,12 @@ if __name__ == "__main__":
     test(weighted=False, ax=ax2)
     ax1.set_title('Weighted')
     ax2.set_title('Unweighted')
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(show_node_labels=True, ax=ax1)
+    test(show_edge_labels=True, ax=ax2)
+    ax1.set_title('With node labels')
+    ax2.set_title('With edge labels')
 
     fig, (ax1, ax2) = plt.subplots(1,2)
     test(test_format="sparse", ax=ax1)
