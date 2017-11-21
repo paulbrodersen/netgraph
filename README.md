@@ -94,7 +94,18 @@ the node positions interactively.
 ## Gallery
 
 <p float="left">
-  <img src="./figures/Directed.png"   width="400" title="Default for a directed, weighted network"/>
-  <img src="./figures/Undirected.png" width="400" title="Default for a weighted network"/> 
+  <img src="./figures/Directed.png"                   width="400" title="Default plot for a directed, weighted network."/>
+  <img src="./figures/Undirected.png"                 width="400" title="Default plot for an undirected, weighted network."/> 
+</p>                                                  
+                                                      
+<p float="left">                                      
+  <img src="./figures/Positive_edge_weights_only.png" width="400" title="Default plot for a directed network with striclty positive weights."/>
+  <img src="./figures/Unweighted.png"                 width="400" title="Default plot for an directed, unweighted network."/> 
 </p>
+
+<p float="left">
+  <img src="./figures/Show_node_labels.png"           width="400" title="Default plot with node labels."/>
+  <img src="./figures/Show_edge_labels.png"           width="400" title="Default plot with edge labels."/>
+</p>
+
 
