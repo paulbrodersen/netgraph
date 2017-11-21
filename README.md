@@ -111,10 +111,10 @@ A directed network with purely positive weights hence looks like this:
 Unweighted networks are drawn with uniformly black edges:
 ![Default plot for an directed, unweighted network.](./figures/Unweighted.png)
 
-Labels can be drawn on top of nodes...
+Labels can be drawn on top of nodes.
 ![Default plot with node labels.](./figures/Show_node_labels.png)
 
-... and edges.
+Labels can be drawn on top of edges:
 ![Default plot with edge labels.](./figures/Show_edge_labels.png)
 
 
