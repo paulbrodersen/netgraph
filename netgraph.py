@@ -669,53 +669,59 @@ def draw_edges(edge_list,
     if not (edge_zorder is None):
        edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
 
-    # NOTE: At the moment, only the relative zorder is honoured, not the absolute value.
+    # NOTE: At the moment, only the relative zorder is honored, not the absolute value.
 
     artists = dict()
     for (source, target) in edge_list:
 
-        x1, y1 = node_positions[source]
-        x2, y2 = node_positions[target]
+        if source != target:
 
-        dx = x2-x1
-        dy = y2-y1
+            x1, y1 = node_positions[source]
+            x2, y2 = node_positions[target]
 
-        width = edge_width[(source, target)]
-        color = edge_color[(source, target)]
-        alpha = edge_alpha[(source, target)]
+            dx = x2-x1
+            dy = y2-y1
 
-        if (target, source) in edge_list: # i.e. bidirectional
-            # shift edge to the right (looking along the arrow)
-            # x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
-            # plot half arrow / line
-            shape = 'right'
-        else:
-            shape = 'full'
+            width = edge_width[(source, target)]
+            color = edge_color[(source, target)]
+            alpha = edge_alpha[(source, target)]
 
-        if draw_arrows:
-            offset = node_size[target]
-            head_length = 2 * width
-            head_width = 3 * width
-            length_includes_head = True
-        else:
-            offset = None
-            head_length = 1e-10 # 0 throws error
-            head_width = 1e-10 # 0 throws error
-            length_includes_head = False
+            if (target, source) in edge_list: # i.e. bidirectional
+                # shift edge to the right (looking along the arrow)
+                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
+                # plot half arrow / line
+                shape = 'right'
+            else:
+                shape = 'full'
 
-        patch = FancyArrow(x1, y1, dx, dy,
-                           width=width,
-                           facecolor=color,
-                           head_length=head_length,
-                           head_width=head_width,
-                           length_includes_head=length_includes_head,
-                           zorder=1,
-                           edgecolor='none',
-                           linewidth=0.1,
-                           offset=offset,
-                           shape=shape)
-        ax.add_artist(patch)
-        artists[(source, target)] = patch
+            if draw_arrows:
+                offset = node_size[target]
+                head_length = 2 * width
+                head_width = 3 * width
+                length_includes_head = True
+            else:
+                offset = None
+                head_length = 1e-10 # 0 throws error
+                head_width = 1e-10 # 0 throws error
+                length_includes_head = False
+
+            patch = FancyArrow(x1, y1, dx, dy,
+                               width=width,
+                               facecolor=color,
+                               head_length=head_length,
+                               head_width=head_width,
+                               length_includes_head=length_includes_head,
+                               zorder=1,
+                               edgecolor='none',
+                               linewidth=0.1,
+                               offset=offset,
+                               shape=shape)
+            ax.add_artist(patch)
+            artists[(source, target)] = patch
+
+        else: # source == target, i.e. a self-loop
+            import warnings
+            warnings.warn("Plotting of self-loops not supported. Ignoring edge ({}, {}).".format(source, target))
 
     return artists
 
@@ -1014,51 +1020,58 @@ def draw_edge_labels(edge_labels,
 
     text_items = {}
     for (n1, n2), label in edge_labels.items():
-        (x1, y1) = node_positions[n1]
-        (x2, y2) = node_positions[n2]
-        (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
-                  y1 * label_pos + y2 * (1.0 - label_pos))
 
-        if rotate:
-            angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
-            # make label orientation "right-side-up"
-            if angle > 90:
-                angle -= 180
-            if angle < - 90:
-                angle += 180
-            # transform data coordinate angle to screen coordinate angle
-            xy = np.array((x, y))
-            trans_angle = ax.transData.transform_angles(np.array((angle,)),
-                                                        xy.reshape((1, 2)))[0]
-        else:
-            trans_angle = 0.0
+        if n1 != n2:
 
-        if bbox is None: # use default box of white with white border
-            bbox = dict(boxstyle='round',
-                        ec=(1.0, 1.0, 1.0),
-                        fc=(1.0, 1.0, 1.0),
+            (x1, y1) = node_positions[n1]
+            (x2, y2) = node_positions[n2]
+            (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
+                      y1 * label_pos + y2 * (1.0 - label_pos))
+
+            if rotate:
+                angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
+                # make label orientation "right-side-up"
+                if angle > 90:
+                    angle -= 180
+                if angle < - 90:
+                    angle += 180
+                # transform data coordinate angle to screen coordinate angle
+                xy = np.array((x, y))
+                trans_angle = ax.transData.transform_angles(np.array((angle,)),
+                                                            xy.reshape((1, 2)))[0]
+            else:
+                trans_angle = 0.0
+
+            if bbox is None: # use default box of white with white border
+                bbox = dict(boxstyle='round',
+                            ec=(1.0, 1.0, 1.0),
+                            fc=(1.0, 1.0, 1.0),
+                            )
+
+            # set optional alignment
+            horizontalalignment = kwargs.get('horizontalalignment', 'center')
+            verticalalignment = kwargs.get('verticalalignment', 'center')
+
+            t = ax.text(x, y,
+                        label,
+                        size=font_size,
+                        color=font_color,
+                        family=font_family,
+                        weight=font_weight,
+                        horizontalalignment=horizontalalignment,
+                        verticalalignment=verticalalignment,
+                        rotation=trans_angle,
+                        transform=ax.transData,
+                        bbox=bbox,
+                        zorder=edge_label_zorder,
+                        clip_on=True,
                         )
 
-        # set optional alignment
-        horizontalalignment = kwargs.get('horizontalalignment', 'center')
-        verticalalignment = kwargs.get('verticalalignment', 'center')
+            text_items[(n1, n2)] = t
 
-        t = ax.text(x, y,
-                    label,
-                    size=font_size,
-                    color=font_color,
-                    family=font_family,
-                    weight=font_weight,
-                    horizontalalignment=horizontalalignment,
-                    verticalalignment=verticalalignment,
-                    rotation=trans_angle,
-                    transform=ax.transData,
-                    bbox=bbox,
-                    zorder=edge_label_zorder,
-                    clip_on=True,
-                    )
-
-        text_items[(n1, n2)] = t
+        else: # n1 == n2, i.e. a self-loop
+            import warnings
+            warnings.warn("Plotting of edge labels for self-loops not supported. Ignoring edge with label: {}".format(label))
 
     return text_items
 
@@ -1834,6 +1847,10 @@ class InteractiveGraph(Graph):
             edges.extend([edge for edge in self.edge_list if key in edge])
         edges = list(set(edges))
 
+        # remove self-loops
+        edges = [(source, target) for source, target in edges if source != target]
+
+        # move edges to new positions
         for (source, target) in edges:
             x0, y0 = self.node_positions[source]
             x1, y1 = self.node_positions[target]
