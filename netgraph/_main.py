@@ -1,84 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# netgraph.py --- Plot weighted, directed graphs of medium size (10-100 nodes).
-
-# Copyright (C) 2016 Paul Brodersen <paulbrodersen+netgraph@gmail.com>
-
-# Author: Paul Brodersen <paulbrodersen+netgraph@gmail.com>
-
-# This program is free software; you can redistribute it and/or
-# modify it under the terms of the GNU General Public License
-# as published by the Free Software Foundation; either version 3
-# of the License, or (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
-
-"""
-Netgraph
-========
-
-Summary:
---------
-Module to plot weighted, directed graphs of medium size (10-100 nodes).
-Unweighted, undirected graphs will look perfectly fine, too, but this module
-might be overkill for such a use case.
-
-Raison d'etre:
---------------
-Existing draw routines for networks/graphs in python use fundamentally different
-length units for different plot elements. This makes it hard to
-    - provide a consistent layout for different axis / figure dimensions, and
-    - judge the relative sizes of elements a priori.
-This module amends these issues.
-
-Furthermore, this module allows to tweak node positions using the
-mouse after an initial draw.
-
-Example:
---------
-import numpy as np
-import matplotlib.pyplot as plt; plt.ion()
-import netgraph
-
-# construct sparse, directed, weighted graph
-# with positive and negative edges
-n = 20
-w = np.random.randn(n,n)
-p = 0.2
-c = np.random.rand(n,n) <= p
-w[~c] = 0.
-
-# plot
-netgraph.draw(w)
-
-# If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
-# netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
-# If you would like to manually tweak the node positions using the mouse after the initial draw,
-# use the InteractiveGraph class:
-
-graph = netgraph.InteractiveGraph(w)
-
-# The new node positions can afterwards be retrieved via:
-pos = graph.node_positions
-
-# IMPORTANT NOTE:
-# You must retain a reference to the InteractiveGraph instance at all times (here `graph`).
-# Otherwise, the object will be garbage collected and you won't be able to alter the node positions interactively.
-
-"""
-
-__version__ = "1.0.0"
-__author__ = "Paul Brodersen"
-__email__ = "paulbrodersen+netgraph@gmail.com"
-
-
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -142,7 +64,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     """
 
     # Accept a variety of formats and convert to common denominator.
-    edge_list, edge_weight = _parse_graph(graph)
+    edge_list, edge_weight = parse_graph(graph)
 
     if edge_weight:
 
@@ -150,7 +72,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         # Edge width is another popular choice when visualising weighted networks,
         # but if the variance in weights is large, this typically results in less
         # visually pleasing results.
-        edge_color  = _get_color(edge_weight, cmap=edge_cmap)
+        edge_color  = get_color(edge_weight, cmap=edge_cmap)
         kwargs.setdefault('edge_color',  edge_color)
 
         # Plotting darker edges over lighter edges typically results in visually
@@ -167,7 +89,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Initialise node positions if none are given.
     if node_positions is None:
-        node_positions = _fruchterman_reingold_layout(edge_list)
+        node_positions = fruchterman_reingold_layout(edge_list)
 
     # Create axis if none is given.
     if ax is None:
@@ -193,7 +115,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     return ax
 
 
-def _parse_graph(graph):
+def parse_graph(graph):
     """
     Arguments
     ----------
@@ -296,7 +218,32 @@ def _parse_igraph_graph(graph):
     return edge_list, edge_weights
 
 
-def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+    """
+    Map positive and negative floats to a diverging colormap,
+    such that
+        1) the midpoint of the colormap corresponds to a value of 0., and
+        2) values above and below the midpoint are mapped linearly and in equal measure
+           to increases in color intensity.
+
+    Arguments:
+    ----------
+    mydict: dict key : float
+        Mapping of graph element (node, edge) to a float.
+        For example (source, target) : edge weight.
+
+    cmap: str
+        Matplotlib colormap specification.
+
+    vmin, vmax: float
+        Minimum and maximum float corresponding to the dynamic range of the colormap.
+
+    Returns:
+    --------
+    newdict: dict key : (float, float, float, float)
+        Mapping of graph element to RGBA tuple.
+
+    """
 
     keys = mydict.keys()
     values = np.array(mydict.values())
@@ -1131,15 +1078,15 @@ def _make_pretty(ax):
 # Spring layout
 
 
-def _fruchterman_reingold_layout(edge_list,
-                                 edge_weights=None,
-                                 k=None,
-                                 pos=None,
-                                 fixed=None,
-                                 iterations=50,
-                                 scale=1,
-                                 center=np.zeros((2)),
-                                 dim=2):
+def fruchterman_reingold_layout(edge_list,
+                                edge_weights=None,
+                                k=None,
+                                pos=None,
+                                fixed=None,
+                                iterations=50,
+                                scale=1,
+                                center=np.zeros((2)),
+                                dim=2):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
 
@@ -1224,6 +1171,9 @@ def _fruchterman_reingold_layout(edge_list,
         pos = _rescale_layout(pos, scale=scale) + center
 
     return dict(zip(nodes, pos))
+
+
+spring_layout = fruchterman_reingold_layout
 
 
 def _dense_fruchterman_reingold(A, k=None, pos=None, fixed=None,
@@ -1463,7 +1413,7 @@ class Graph(object):
             self.ax = ax
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        self.edge_list, self.edge_weight = _parse_graph(graph)
+        self.edge_list, self.edge_weight = parse_graph(graph)
 
         # Color and reorder edges for weighted graphs.
         if self.edge_weight:
@@ -1472,7 +1422,7 @@ class Graph(object):
             # Edge width is another popular choice when visualising weighted networks,
             # but if the variance in weights is large, this typically results in less
             # visually pleasing results.
-            self.edge_color  = _get_color(self.edge_weight, cmap=edge_cmap)
+            self.edge_color  = get_color(self.edge_weight, cmap=edge_cmap)
             kwargs.setdefault('edge_color', self.edge_color)
 
             # Plotting darker edges over lighter edges typically results in visually
@@ -1489,7 +1439,7 @@ class Graph(object):
 
         # Initialise node positions if none are given.
         if node_positions is None:
-            self.node_positions = _fruchterman_reingold_layout(self.edge_list)
+            self.node_positions = fruchterman_reingold_layout(self.edge_list)
         else:
             self.node_positions = node_positions
 
