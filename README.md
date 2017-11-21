@@ -40,6 +40,35 @@ plt.show()
 
 ![alt tag](./example_1.png)
 
+`netgraph.draw` supports various formats for the `graph` argument (`w` in the example above).
+
+In order of precedence:
+    - Edge list:
+        Iterable of (source, target) or (source, target, weight) tuples,
+        or equivalent (m, 2) or (m, 3) ndarray.
+    - Adjacency matrix:
+        Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+        The absence of a connection is indicated by a zero.
+    - igraph.Graph object
+    - networkx.Graph object
+
+```python
+import networkx
+g = networkx.from_numpy_array(w, networkx.DiGraph)
+netgraph.draw(g)
+```
+
+There are many ways to customize the layout of your graph. For a full
+list of available arguments, please refer to the documentation of
+
+   -`draw()`
+   -`draw_nodes()`
+   -`draw_edges()`
+   -`draw_node_labels()`
+   -`draw_edge_labels()`
+
+## Interactive plotting
+
 If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
 netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
 If you would like to manually tweak the node positions using the mouse after the initial draw,
@@ -55,9 +84,8 @@ The new node positions can afterwards be retrieved via:
 pos = graph.node_positions
 ```
 
-## IMPORTANT NOTE:
-
-You must retain a reference to the InteractiveGraph
-instance at all times (i.e. `graph` in the example above).  Otherwise,
+**You must retain a reference to the InteractiveGraph
+instance at all times** (i.e. `graph` in the example above). Otherwise,
 the object will be garbage collected and you won't be able to alter
 the node positions interactively.
+
