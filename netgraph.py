@@ -311,7 +311,7 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     def abs(value):
         try:
             return np.abs(value)
-        except TypeError as e: # i is probably None
+        except TypeError as e: # value is probably None
             if isinstance(value, type(None)):
                 return 0
             else:
