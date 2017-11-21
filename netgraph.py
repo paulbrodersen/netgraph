@@ -162,6 +162,8 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     # Plot arrows if the graph has bi-directional edges.
     if _is_directed(edge_list):
         kwargs.setdefault('draw_arrows', True)
+    else:
+        kwargs.setdefault('draw_arrows', False)
 
     # Initialise node positions if none are given.
     if node_positions is None:
@@ -1482,6 +1484,8 @@ class Graph(object):
         # Plot arrows if the graph has bi-directional edges.
         if _is_directed(self.edge_list):
             kwargs.setdefault('draw_arrows', True)
+        else:
+            kwargs.setdefault('draw_arrows', False)
 
         # Initialise node positions if none are given.
         if node_positions is None:
