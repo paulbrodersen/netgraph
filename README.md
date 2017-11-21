@@ -93,8 +93,13 @@ the node positions interactively.
 
 ## Gallery
 
-<figure>
-  <figcaption>Directed versus undirected</figcaption>
-  <img src="./figures/Directed.png"   width="400" title="Directed"   />
+<figure float="left">
+  <figcaption>Directed</figcaption>
   <img src="./figures/Undirected.png" width="400" title="Undirected" /> 
 </figure>
+
+<figure float="left">
+  <figcaption>Undirected</figcaption>
+  <img src="./figures/Directed.png"   width="400" title="Directed"   />
+</figure>
+
