@@ -1376,8 +1376,9 @@ class Graph(object):
         """
         Initialises the Graph object.
         Upon initialisation, it will try to do "the right thing".
-        Use the class methods for finer control of the individual draw elements,
-        or to see a full list of available arguments.
+
+        For finer control of the individual draw elements,
+        and a complete list of keyword arguments, see the class methods:
 
             draw_nodes()
             draw_edges()
@@ -1514,12 +1515,12 @@ class Graph(object):
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-        Returns
+        Updates
         -------
-        node_faces: dict node : artist
+        self.node_face_artists: dict node : artist
             Mapping of nodes to the node face artists.
 
-        node_edges: dict node : artist
+        self.node_edge_artists: dict node : artist
             Mapping of nodes to the node edge artists.
 
         """
@@ -1572,9 +1573,9 @@ class Graph(object):
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-        Returns
+        Updates
         -------
-        artists: dict (source, target) : artist
+        self.edge_artists: dict (source, target) : artist
             Mapping of edges to matplotlib.patches.FancyArrow artists.
 
         """
@@ -1620,10 +1621,9 @@ class Graph(object):
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-
-        Returns
+        Updates
         -------
-        artists: dict
+        self.node_label_artists: dict
             Dictionary mapping node indices to text objects.
 
         @reference
@@ -1677,9 +1677,9 @@ class Graph(object):
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-        Returns
+        Updates
         -------
-        artists: dict (source, target) : text object
+        self.edge_label_artists: dict (source, target) : text object
             Mapping of edges to edge label artists.
 
         @reference
