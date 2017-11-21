@@ -37,7 +37,7 @@ w[~c] = np.nan
 netgraph.draw(w)
 ```
 
-![alt tag](./example_1.png)
+![Example plot](./example_1.png)
 
 `netgraph.draw` supports various formats for the `graph` argument (`w` in the example above).
 
@@ -93,19 +93,28 @@ the node positions interactively.
 
 ## Gallery
 
-<p float="left">
-  <img src="./figures/Directed.png"                   width="400" title="Default plot for a directed, weighted network."/>
-  <img src="./figures/Undirected.png"                 width="400" title="Default plot for an undirected, weighted network."/> 
-</p>                                                  
-                                                      
-<p float="left">                                      
-  <img src="./figures/Positive_edge_weights_only.png" width="400" title="Default plot for a directed network with striclty positive weights."/>
-  <img src="./figures/Unweighted.png"                 width="400" title="Default plot for an directed, unweighted network."/> 
-</p>
+The following images show the netgraph output when using the default
+settings, i.e. the output of `draw` in the absence of any arguments
+other than `graph`.
 
-<p float="left">
-  <img src="./figures/Show_node_labels.png"           width="400" title="Default plot with node labels."/>
-  <img src="./figures/Show_edge_labels.png"           width="400" title="Default plot with edge labels."/>
-</p>
+Default plot for a directed, weighted network:
+![Default plot for a directed, weighted network.](./figures/Directed.png)
+
+No arrows are drawn if the network appears undirected:
+![Default plot for an undirected, weighted network.](./figures/Undirected.png)
+
+Edge weights are mapped to edge colors using a diverging colormap, by default 'RdGy'.
+Negative weights are shown in red, positve weights are shown in gray.
+A directed network with purely positive weights hence looks like this:
+![Default plot for a directed network with striclty positive weights.](./figures/Positive_edge_weights_only.png)
+
+Unweighted networks are drawn with uniformly black edges:
+![Default plot for an directed, unweighted network.](./figures/Unweighted.png)
+
+Labels can be drawn on top of nodes...
+![Default plot with node labels.](./figures/Show_node_labels.png)
+
+... and edges.
+![Default plot with edge labels.](./figures/Show_edge_labels.png)
 
 
