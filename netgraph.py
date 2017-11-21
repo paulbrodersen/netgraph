@@ -1872,8 +1872,10 @@ class InteractiveGraph(Graph):
         self.node_positions[node] = pos
         self.node_edge_artists[node].center = pos
         self.node_face_artists[node].center = pos
-        if self.node_label_artists:
+        try:
             self.node_label_artists[node].set_position(pos)
+        except AttributeError: # no node labels
+            pass
 
 
     def _update_edges(self):
@@ -1900,8 +1902,10 @@ class InteractiveGraph(Graph):
             self.edge_artists[(source, target)].update_vertices(x0=x0, y0=y0, dx=x1-x0, dy=y1-y0)
 
         # move edge labels
-        if self.edge_labels:
+        try:
             self._update_edge_labels(edges, self.node_positions)
+        except AttributeError: # no edge labels
+            pass
 
 
     def _update_edge_labels(self, edges, node_positions, rotate=True): # TODO: pass 'rotate' properly
