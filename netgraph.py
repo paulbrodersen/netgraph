@@ -1716,123 +1716,119 @@ class InteractiveGraph(Graph):
         # Initialise as before.
         Graph.__init__(self, *args, **kwargs)
 
+        self._alpha = {key: artist.get_alpha() for key, artist in self.node_face_artists.items()}
+
         self.fig = self.ax.get_figure()
-        self.alpha = {key: artist.get_alpha() for key, artist in self.node_face_artists.items()}
+        self.fig.canvas.mpl_connect('button_press_event', self._on_press)
+        self.fig.canvas.mpl_connect('button_release_event', self._on_release)
+        self.fig.canvas.mpl_connect('motion_notify_event', self._on_motion)
 
-        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
-
-        self.currently_selecting = False
-        self.currently_dragging = False
-        self.selected_artists = {}
-        self.offset = {}
-        self.rect = plt.Rectangle((0,0),1,1, linestyle="--",
+        self._currently_selecting = False
+        self._currently_dragging = False
+        self._selected_artists = {}
+        self._offset = {}
+        self._rect = plt.Rectangle((0,0),1,1, linestyle="--",
                                   edgecolor="crimson", fill=False)
-        self.ax.add_patch(self.rect)
-        self.rect.set_visible(False)
+        self.ax.add_patch(self._rect)
+        self._rect.set_visible(False)
 
-        self.x0 = 0
-        self.y0 = 0
-        self.x1 = 0
-        self.y1 = 0
+        self._x0 = 0
+        self._y0 = 0
+        self._x1 = 0
+        self._y1 = 0
 
 
-    def on_press(self, event):
-
-        # reset rectangle
-        self.x0 = event.xdata
-        self.y0 = event.ydata
-        self.x1 = event.xdata
-        self.y1 = event.ydata
+    def _on_press(self, event):
 
         # reset rectangle
-        self.x1 = event.xdata
-        self.y1 = event.ydata
+        self._x0 = event.xdata
+        self._y0 = event.ydata
+        self._x1 = event.xdata
+        self._y1 = event.ydata
 
         # is the press over some artist
         is_on_artist = False
         for key, artist in self.node_face_artists.items():
             if artist.contains(event)[0]:
                 is_on_artist = True
-                self.select_artist(key, artist)
+                self._select_artist(key, artist)
 
         if is_on_artist:
             # add clicked artist to selection
             # start dragging
-            self.currently_dragging = True
-            self.offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self.selected_artists.items()}
+            self._currently_dragging = True
+            self._offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self._selected_artists.items()}
         else:
             # start selecting
-            self.deseclect_artists()
-            self.currently_selecting = True
+            self._deseclect_artists()
+            self._currently_selecting = True
 
 
-    def on_release(self, event):
-        if self.currently_selecting:
+    def _on_release(self, event):
+        if self._currently_selecting:
             for key, artist in self.node_face_artists.items():
-                if self.is_inside_rect(*artist.center):
-                    self.select_artist(key, artist)
+                if self._is_inside_rect(*artist.center):
+                    self._select_artist(key, artist)
             self.fig.canvas.draw_idle()
-            self.currently_selecting = False
-            self.rect.set_visible(False)
+            self._currently_selecting = False
+            self._rect.set_visible(False)
 
-        elif self.currently_dragging:
-            self.currently_dragging = False
+        elif self._currently_dragging:
+            self._currently_dragging = False
 
 
-    def on_motion(self, event):
+    def _on_motion(self, event):
         if event.inaxes:
-            if self.currently_dragging:
-                self.update_nodes(event)
-                self.update_edges()
+            if self._currently_dragging:
+                self._update_nodes(event)
+                self._update_edges()
                 self.fig.canvas.draw_idle()
-            elif self.currently_selecting:
-                self.x1 = event.xdata
-                self.y1 = event.ydata
+            elif self._currently_selecting:
+                self._x1 = event.xdata
+                self._y1 = event.ydata
                 # add rectangle for selection here
-                self.selector_on()
+                self._selector_on()
                 self.fig.canvas.draw_idle()
 
 
-    def is_inside_rect(self, x, y):
-        xlim = np.sort([self.x0, self.x1])
-        ylim = np.sort([self.y0, self.y1])
+    def _is_inside_rect(self, x, y):
+        xlim = np.sort([self._x0, self._x1])
+        ylim = np.sort([self._y0, self._y1])
         if (xlim[0]<=x) and (x<xlim[1]) and (ylim[0]<=y) and (y<ylim[1]):
             return True
         else:
             return False
 
 
-    def select_artist(self, key, artist):
-        if key not in self.selected_artists:
+    def _select_artist(self, key, artist):
+        if key not in self._selected_artists:
             alpha = artist.get_alpha()
             artist.set_alpha(0.5 * alpha)
-            self.selected_artists[key] = artist
+            self._selected_artists[key] = artist
 
 
-    def deseclect_artists(self):
-        for key, artist in self.selected_artists.items():
-            artist.set_alpha(self.alpha[key])
-        self.selected_artists = {}
+    def _deseclect_artists(self):
+        for key, artist in self._selected_artists.items():
+            artist.set_alpha(self._alpha[key])
+        self._selected_artists = {}
 
 
-    def selector_on(self):
-        self.rect.set_visible(True)
-        xlim = np.sort([self.x0, self.x1])
-        ylim = np.sort([self.y0, self.y1])
-        self.rect.set_xy((xlim[0],ylim[0] ) )
-        self.rect.set_width(np.diff(xlim))
-        self.rect.set_height(np.diff(ylim))
+    def _selector_on(self):
+        self._rect.set_visible(True)
+        xlim = np.sort([self._x0, self._x1])
+        ylim = np.sort([self._y0, self._y1])
+        self._rect.set_xy((xlim[0],ylim[0] ) )
+        self._rect.set_width(np.diff(xlim))
+        self._rect.set_height(np.diff(ylim))
 
 
-    def update_nodes(self, event):
-        for key in self.selected_artists.keys():
-            pos = np.array([event.xdata, event.ydata]) + self.offset[key]
-            self.move_node(key, pos)
+    def _update_nodes(self, event):
+        for key in self._selected_artists.keys():
+            pos = np.array([event.xdata, event.ydata]) + self._offset[key]
+            self._move_node(key, pos)
 
 
-    def move_node(self, node, pos):
+    def _move_node(self, node, pos):
         self.node_positions[node] = pos
         self.node_edge_artists[node].center = pos
         self.node_face_artists[node].center = pos
@@ -1840,10 +1836,10 @@ class InteractiveGraph(Graph):
             self.node_label_artists[node].set_position(pos)
 
 
-    def update_edges(self):
+    def _update_edges(self):
         # get edges that need to move
         edges = []
-        for key in self.selected_artists.keys():
+        for key in self._selected_artists.keys():
             edges.extend([edge for edge in self.edge_list if key in edge])
         edges = list(set(edges))
 
@@ -1865,10 +1861,10 @@ class InteractiveGraph(Graph):
 
         # move edge labels
         if self.edge_labels:
-            self.update_edge_label_positions(edges, self.node_positions)
+            self._update_edge_labels(edges, self.node_positions)
 
 
-    def update_edge_label_positions(self, edges, node_positions, rotate=True): # TODO: 'rotate' properly
+    def _update_edge_labels(self, edges, node_positions, rotate=True): # TODO: pass 'rotate' properly
 
         # draw labels centered on the midway point of the edge
         label_pos = 0.5
@@ -1898,18 +1894,18 @@ class InteractiveGraph(Graph):
 
 class InteractiveGrid(InteractiveGraph):
 
-    def on_release(self, event):
+    def _on_release(self, event):
 
-        if self.currently_dragging:
-            for key in self.selected_artists.keys():
+        if self._currently_dragging:
+            for key in self._selected_artists.keys():
                 x, y = self.node_positions[key]
                 x = np.int(np.round(x))
                 y = np.int(np.round(y))
-                self.move_node(key, (x,y))
+                self._move_node(key, (x,y))
 
-            self.update_edges()
+            self._update_edges()
 
-        InteractiveGraph.on_release(self, event)
+        InteractiveGraph._on_release(self, event)
 
 
 # --------------------------------------------------------------------------------
