@@ -18,6 +18,20 @@ This module amends these issues.
 Furthermore, this module allows to tweak node positions using the
 mouse after an initial draw.
 
+## Installation
+
+Easiest via pip.
+
+```
+pip install netgraph
+```
+
+For the newest and brightest (and probably buggiest) version:
+
+```
+pip install git+https://github.com/paulbrodersen/netgraph.git
+```
+
 ## Examples:
 
 ```python
