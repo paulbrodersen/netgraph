@@ -22,7 +22,7 @@ mouse after an initial draw.
 
 ```python
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt; plt.ion()
 import netgraph
 
 # construct sparse, directed, weighted graph
@@ -35,7 +35,6 @@ w[~c] = np.nan
 
 # plot
 netgraph.draw(w)
-plt.show()
 ```
 
 ![alt tag](./example_1.png)
@@ -43,14 +42,18 @@ plt.show()
 `netgraph.draw` supports various formats for the `graph` argument (`w` in the example above).
 
 In order of precedence:
-    - Edge list:
-        Iterable of (source, target) or (source, target, weight) tuples,
-        or equivalent (m, 2) or (m, 3) ndarray.
-    - Adjacency matrix:
-        Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
-        The absence of a connection is indicated by a zero.
-    - igraph.Graph object
-    - networkx.Graph object
+
+1. Edge list:
+
+   Iterable of (source, target) or (source, target, weight) tuples,
+   or equivalent (m, 2) or (m, 3) ndarray.
+   
+2. Adjacency matrix:
+
+   Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+   The absence of a connection is indicated by a zero.
+   
+3. igraph.Graph or networkx.Graph object
 
 ```python
 import networkx
@@ -61,11 +64,11 @@ netgraph.draw(g)
 There are many ways to customize the layout of your graph. For a full
 list of available arguments, please refer to the documentation of
 
-   -`draw()`
-   -`draw_nodes()`
-   -`draw_edges()`
-   -`draw_node_labels()`
-   -`draw_edge_labels()`
+-`draw()`
+-`draw_nodes()`
+-`draw_edges()`
+-`draw_node_labels()`
+-`draw_edge_labels()`
 
 ## Interactive plotting
 

@@ -44,7 +44,7 @@ mouse after an initial draw.
 Example:
 --------
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt; plt.ion()
 import netgraph
 
 # construct sparse, directed, weighted graph
@@ -57,7 +57,6 @@ w[~c] = 0.
 
 # plot
 netgraph.draw(w)
-plt.show()
 
 # If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
 # netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
