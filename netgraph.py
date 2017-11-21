@@ -1506,10 +1506,7 @@ class Graph(object):
             self.edge_label_artists = draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
 
         # Improve default layout of axis.
-        if 'node_size' in kwargs:
-            _update_view(self.node_positions, node_size=kwargs['node_size'], ax=ax)
-        else:
-            _update_view(self.node_positions, ax=ax)
+        self._update_view()
 
         _make_pretty(self.ax)
 
@@ -1723,6 +1720,28 @@ class Graph(object):
         artists = draw_edge_labels(*args, **kwargs)
         for edge, artist in artists:
             self.edge_label_artists[edge] = artist
+
+
+    def _update_view(self):
+        # Pad x and y limits as patches are not registered properly
+        # when matplotlib sets axis limits automatically.
+        # Hence we need to set them manually.
+
+        max_edge_radius = np.max([artist.radius for artist in self.node_edge_artists.values()])
+        max_face_radius = np.max([artist.radius for artist in self.node_face_artists.values()])
+        max_radius = np.max([max_edge_radius, max_face_radius])
+
+        maxx, maxy = np.max(self.node_positions.values(), axis=0)
+        minx, miny = np.min(self.node_positions.values(), axis=0)
+
+        w = maxx-minx
+        h = maxy-miny
+        padx, pady = 0.05*w + max_radius, 0.05*h + max_radius
+        corners = (minx-padx, miny-pady), (maxx+padx, maxy+pady)
+
+        self.ax.update_datalim(corners)
+        self.ax.autoscale_view()
+        self.ax.get_figure().canvas.draw()
 
 
 class InteractiveGraph(Graph):
