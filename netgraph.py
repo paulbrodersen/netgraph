@@ -2023,6 +2023,12 @@ def test(n=20, p=0.15,
 
 if __name__ == "__main__":
 
+    plt.ion()
+
+    fig, ax = plt.subplots(1,1)
+    graph = test(interactive=True, ax=ax)
+    ax.set_title('Interactive')
+
     fig, (ax1, ax2) = plt.subplots(1,2)
     test(directed=True,  ax=ax1)
     test(directed=False, ax=ax2)
@@ -2034,6 +2040,12 @@ if __name__ == "__main__":
     test(weighted=False, ax=ax2)
     ax1.set_title('Weighted')
     ax2.set_title('Unweighted')
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(strictly_positive=True, ax=ax1)
+    test(strictly_positive=False, ax=ax2)
+    ax1.set_title('Positive edge weights only')
+    ax2.set_title('Positive and negative edge weights')
 
     fig, (ax1, ax2) = plt.subplots(1,2)
     test(show_node_labels=True, ax=ax1)
@@ -2053,16 +2065,5 @@ if __name__ == "__main__":
     ax1.set_title('Networkx DiGraph')
     ax2.set_title('Igraph Graph')
 
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(strictly_positive=True, ax=ax1)
-    test(strictly_positive=False, ax=ax2)
-    ax1.set_title('Positive edge weights only')
-    ax2.set_title('Positive and negative edge weights')
-
-    fig, ax = plt.subplots(1,1)
-    graph = test(interactive=True, ax=ax)
-    ax.set_title('Interactive')
-
-    plt.ion(); plt.show()
     raw_input("Press any key to close figures...")
     plt.close('all')
