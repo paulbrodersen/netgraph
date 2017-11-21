@@ -63,16 +63,11 @@ netgraph.draw(g)
 
 There are many ways to customize the layout of your graph. For a full
 list of available arguments, please refer to the documentation of
-
--`draw`
-
--`draw_nodes`
-
--`draw_edges`
-
--`draw_node_labels`
-
--`draw_edge_labels`
+- `draw` 
+- `draw_nodes`
+- `draw_edges`
+- `draw_node_labels`
+- `draw_edge_labels`
 
 ## Interactive plotting
 
