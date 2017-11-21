@@ -1892,22 +1892,6 @@ class InteractiveGraph(Graph):
             self.edge_label_artists[(n1, n2)].set_position((x, y))
 
 
-class InteractiveGrid(InteractiveGraph):
-
-    def _on_release(self, event):
-
-        if self._currently_dragging:
-            for key in self._selected_artists.keys():
-                x, y = self.node_positions[key]
-                x = np.int(np.round(x))
-                y = np.int(np.round(y))
-                self._move_node(key, (x,y))
-
-            self._update_edges()
-
-        InteractiveGraph._on_release(self, event)
-
-
 # --------------------------------------------------------------------------------
 # Test code
 
