@@ -1927,8 +1927,18 @@ def _get_random_weight_matrix(n, p,
     return w
 
 
-def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', interactive=False, ax=None):
-    adjacency_matrix = _get_random_weight_matrix(n, p, directed=directed, weighted=weighted)
+def test(n=20, p=0.15,
+         directed=True,
+         weighted=True,
+         strictly_positive=False,
+         test_format='sparse',
+         interactive=False,
+         ax=None):
+
+    adjacency_matrix = _get_random_weight_matrix(n, p,
+                                                 directed=directed,
+                                                 strictly_positive=strictly_positive,
+                                                 weighted=weighted)
 
     sources, targets = np.where(adjacency_matrix)
     weights = adjacency_matrix[sources, targets]
@@ -1979,6 +1989,12 @@ if __name__ == "__main__":
     test(test_format="igraph", ax=ax2)
     ax1.set_title('Networkx DiGraph')
     ax2.set_title('Igraph Graph')
+
+    fig, (ax1, ax2) = plt.subplots(1,2)
+    test(strictly_positive=True, ax=ax1)
+    test(strictly_positive=False, ax=ax2)
+    ax1.set_title('Positive edge weights only')
+    ax2.set_title('Positive and negative edge weights')
 
     fig, ax = plt.subplots(1,1)
     graph = test(interactive=True, ax=ax)
