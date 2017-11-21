@@ -15,8 +15,8 @@ length units for different plot elements. This makes it hard to
     - judge the relative sizes of elements a priori.
 This module amends these issues. 
 
-Furthermore, this module allows to tweak node positions after an
-initial draw with the mouse.
+Furthermore, this module allows to tweak node positions using the
+mouse after an initial draw.
 
 ## Example:
 
@@ -40,10 +40,10 @@ plt.show()
 
 ![alt tag](./example_1.png)
 
-If no node positions are explicitly provided (`node_positions`),
-netgraph uses a spring layout to position nodes (Fruchtermann-Reingold
-algorithm). If you would like to manually tweak the node positions
-with the mouse after the initial draw, use the InteractiveGraph class:
+If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
+netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
+If you would like to manually tweak the node positions using the mouse after the initial draw,
+use the InteractiveGraph class:
 
 ```python
 graph = netgraph.InteractiveGraph(w)
