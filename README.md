@@ -94,12 +94,12 @@ the node positions interactively.
 ## Gallery
 
 <figure float="left">
-  <figcaption>Directed</figcaption>
-  <img src="./figures/Undirected.png" width="400" title="Undirected" /> 
+  <figcaption align="center"> Directed </figcaption>
+  <img src="./figures/Undirected.png" width="200" title="Undirected" /> 
 </figure>
 
 <figure float="left">
-  <figcaption>Undirected</figcaption>
-  <img src="./figures/Directed.png"   width="400" title="Directed"   />
+  <figcaption align="center"> Undirected </figcaption>
+  <img src="./figures/Directed.png"   width="200" title="Directed"   />
 </figure>
 
