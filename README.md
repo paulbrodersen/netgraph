@@ -37,7 +37,7 @@ w[~c] = np.nan
 netgraph.draw(w)
 ```
 
-![Example plot](./example_1.png)
+![Example plot](./figures/example_1.png)
 
 `netgraph.draw` supports various formats for the `graph` argument (`w` in the example above).
 
