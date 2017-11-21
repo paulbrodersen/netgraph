@@ -74,7 +74,7 @@ pos = graph.node_positions
 
 """
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
@@ -88,7 +88,8 @@ from ._main import (draw,
                     fruchterman_reingold_layout,
                     spring_layout,
                     Graph,
-                    InteractiveGraph)
+                    InteractiveGraph,
+                    test)
 
 __all__ = ['draw',
            'draw_nodes',
@@ -100,4 +101,5 @@ __all__ = ['draw',
            'fruchterman_reingold_layout',
            'spring_layout',
            'Graph',
-           'InteractiveGraph']
+           'InteractiveGraph',
+           'test']
