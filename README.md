@@ -93,13 +93,8 @@ the node positions interactively.
 
 ## Gallery
 
-<figure float="left">
-  <figcaption align="center"> Directed </figcaption>
-  <img src="./figures/Undirected.png" width="200" title="Undirected" /> 
-</figure>
-
-<figure float="left">
-  <figcaption align="center"> Undirected </figcaption>
-  <img src="./figures/Directed.png"   width="200" title="Directed"   />
-</figure>
+<p float="left">
+  <img src="./figures/Directed.png"   width="400" title="Default for a directed, weighted network"/>
+  <img src="./figures/Undirected.png" width="400" title="Default for a weighted network"/> 
+</p>
 
