@@ -1967,7 +1967,7 @@ def test(n=20, p=0.15, directed=True, weighted=True, test_format='sparse', inter
     if not interactive:
         return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     else:
-        return InteractiveGraph(graph, node_labels=node_labels, edge_labels=edge_labels, node_color='r', ax=ax)
+        return InteractiveGraph(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
 
 
 if __name__ == "__main__":
@@ -1996,6 +1996,10 @@ if __name__ == "__main__":
     ax1.set_title('Networkx DiGraph')
     ax2.set_title('Igraph Graph')
 
+    fig, ax = plt.subplots(1,1)
+    graph = test(interactive=True, ax=ax)
+    ax.set_title('Interactive')
+
     plt.ion(); plt.show()
     raw_input("Press any key to close figures...")
-    plt.close()
+    plt.close('all')
