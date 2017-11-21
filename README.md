@@ -18,7 +18,7 @@ This module amends these issues.
 Furthermore, this module allows to tweak node positions using the
 mouse after an initial draw.
 
-## Example:
+## Examples:
 
 ```python
 import numpy as np
@@ -91,3 +91,9 @@ instance at all times** (i.e. `graph` in the example above). Otherwise,
 the object will be garbage collected and you won't be able to alter
 the node positions interactively.
 
+## Gallery
+
+<p float="left">
+  <img src="../figures/Directed.png" width="100" />
+  <img src="../figures/Undirected.png" width="100" /> 
+</p>
