@@ -1945,6 +1945,7 @@ def _get_random_weight_matrix(n, p,
                               strictly_positive=False,
                               directed=True,
                               fully_bidirectional=False,
+                              allow_self_loops=False,
                               dales_law=False):
 
     if weighted:
@@ -1967,6 +1968,9 @@ def _get_random_weight_matrix(n, p,
 
     if dales_law and weighted and not strictly_positive:
         w = np.abs(w) * np.sign(np.random.randn(n))[:,None]
+
+    if not allow_self_loops:
+        w -= np.diag(np.diag(w))
 
     return w
 
