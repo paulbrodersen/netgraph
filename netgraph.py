@@ -343,8 +343,8 @@ def _get_zorder(color_dict):
 
 def _is_directed(edge_list):
     # test for bi-directional edges
-    for source, target in edge_list:
-        if (target, source) in edge_list:
+    for (source, target) in edge_list:
+        if ((target, source) in edge_list) and (source != target):
             return True
     return False
 
