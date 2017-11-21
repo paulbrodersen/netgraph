@@ -884,7 +884,7 @@ class FancyArrow(matplotlib.patches.Polygon):
 
 def draw_node_labels(node_labels,
                      node_positions,
-                     font_size=8,
+                     font_size=12,
                      font_color='k',
                      font_family='sans-serif',
                      font_weight='normal',
