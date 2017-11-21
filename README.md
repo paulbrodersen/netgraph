@@ -13,7 +13,10 @@ Existing draw routines for networks/graphs in python use fundamentally different
 length units for different plot elements. This makes it hard to
     - provide a consistent layout for different axis / figure dimensions, and
     - judge the relative sizes of elements a priori.
-This module amends these issues (while sacrificing speed).
+This module amends these issues. 
+
+Furthermore, this module allows to tweak node positions after an
+initial draw with the mouse.
 
 ## Example:
 
@@ -36,3 +39,25 @@ plt.show()
 ```
 
 ![alt tag](./example_1.png)
+
+If no node positions are explicitly provided (`node_positions`),
+netgraph uses a spring layout to position nodes (Fruchtermann-Reingold
+algorithm). If you would like to manually tweak the node positions
+with the mouse after the initial draw, use the InteractiveGraph class:
+
+```python
+graph = netgraph.InteractiveGraph(w)
+```
+
+The new node positions can afterwards be retrieved via:
+
+```python
+pos = graph.node_positions
+```
+
+## IMPORTANT NOTE:
+
+You must retain a reference to the InteractiveGraph
+instance at all times (i.e. `graph` in the example above).  Otherwise,
+the object will be garbage collected and you won't be able to alter
+the node positions interactively.
