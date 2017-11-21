@@ -94,6 +94,6 @@ the node positions interactively.
 ## Gallery
 
 <p float="left">
-  <img src="../figures/Directed.png" width="100" />
-  <img src="../figures/Undirected.png" width="100" /> 
+  <img src="./figures/Directed.png"   width="200" title="Directed"   />
+  <img src="./figures/Undirected.png" width="200" title="Undirected" /> 
 </p>
