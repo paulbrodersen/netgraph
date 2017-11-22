@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import itertools
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-from scipy.sparse import coo_matrix, spdiags
 
+from scipy.sparse import coo_matrix, spdiags
+from collections import OrderedDict
 
 BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0, 1], [0,1])
 BASE_EDGE_WIDTH = 1e-2 # i.e. edge widths are in percent of axis space (x,y <- [0, 1], [0,1])
@@ -1973,47 +1975,25 @@ def test(n=20, p=0.15,
 
 if __name__ == "__main__":
 
-    plt.ion()
+    # create a figure for each possible combination of inputs
 
-    fig, ax = plt.subplots(1,1)
-    graph = test(interactive=True, ax=ax)
-    ax.set_title('Interactive')
+    arguments = OrderedDict(directed=(True, False),
+                            strictly_positive=(True, False),
+                            weighted=(True, False),
+                            show_node_labels=(True,False),
+                            show_edge_labels=(True, False),
+                            test_format=('sparse', 'dense', 'networkx', 'igraph'),
+                            interactive=(True, False))
 
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(directed=True,  ax=ax1)
-    test(directed=False, ax=ax2)
-    ax1.set_title('Directed')
-    ax2.set_title('Undirected')
+    combinations = itertools.product(*arguments.values())
 
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(weighted=True,  ax=ax1)
-    test(weighted=False, ax=ax2)
-    ax1.set_title('Weighted')
-    ax2.set_title('Unweighted')
-
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(strictly_positive=True, ax=ax1)
-    test(strictly_positive=False, ax=ax2)
-    ax1.set_title('Positive edge weights only')
-    ax2.set_title('Positive and negative edge weights')
-
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(show_node_labels=True, ax=ax1)
-    test(show_edge_labels=True, ax=ax2)
-    ax1.set_title('With node labels')
-    ax2.set_title('With edge labels')
-
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(test_format="sparse", ax=ax1)
-    test(test_format="dense", ax=ax2)
-    ax1.set_title('Sparse matrix')
-    ax2.set_title('Full-rank adjacency matrix')
-
-    fig, (ax1, ax2) = plt.subplots(1,2)
-    test(test_format="networkx", ax=ax1)
-    test(test_format="igraph", ax=ax2)
-    ax1.set_title('Networkx DiGraph')
-    ax2.set_title('Igraph Graph')
-
-    raw_input("Press any key to close figures...")
-    plt.close('all')
+    for combination in combinations:
+        fig, ax = plt.subplots(1, 1, figsize=(16,16))
+        kwargs = dict(zip(arguments.keys(), combination))
+        graph = test(ax=ax, **kwargs)
+        title = ''.join(['{}: {}, '.format(key, value) for (key, value) in kwargs.items()])
+        filename = ''.join(['{}-{}_'.format(key, value) for (key, value) in kwargs.items()])
+        filename = filename[:-1] # remove trailing underscore
+        ax.set_title(title)
+        fig.savefig('{}.pdf'.format(filename))
+        plt.close()
