@@ -4,6 +4,9 @@
 # flymd files
 flymd*
 
+# back-up files
+backup.*
+
 # Setuptools distribution folder.
 /dist/
 
