@@ -1,59 +1,61 @@
 # netgraph
-Fork of networkx drawing utilities for publication quality plots of networks
 
-## Summary:
+Python module to make publication quality plots of weighted, directed
+graphs of medium size (10-100 nodes). Unweighted, undirected graphs
+will look perfectly fine, too. The node positions can be tweaked using
+the mouse (after an initial draw). It only depends on numpy, scipy, and
+matplotlib.
 
-Module to plot weighted, directed graphs of medium size (10-100 nodes).
-Unweighted, undirected graphs will look perfectly fine, too, but this module
-might be overkill for such a use case.
+![Weighted directed and unweighted, undirected graph](./figures/example_2.png)
 
 ## Raison d'etre:
 
-Existing draw routines for networks/graphs in python use fundamentally different
-length units for different plot elements. This makes it hard to
-    - provide a consistent layout for different axis / figure dimensions, and
-    - judge the relative sizes of elements a priori.
+Existing draw routines for networks/graphs in python (networkx, igraph) use
+fundamentally different length units for different plot elements. This makes it hard to
+- provide a consistent layout for different axis / figure dimensions, and
+- judge the relative sizes of elements a priori.
+
 This module amends these issues. 
 
-Furthermore, this module allows to tweak node positions using the
-mouse after an initial draw.
+Furthermore, algorithmically finding a visually pleasing layout of
+node positions is, in general, difficult. This is demonstrated by the
+plethora of different algorithms in use (if graph layout was a solved
+problem, there would only be one algorithm). To ameliorate this
+problem, this module contains an `InteractiveGraph` class, which allows
+node positions to be tweaked with the mouse (after an initial draw).
 
-## Installation
+![Demo of InteractiveGraph](https://media.giphy.com/media/xUOxfk8zazlkWLYtlC/giphy.gif)
 
-Easiest via pip.
-
-```
-pip install netgraph
-```
-
-For the newest and brightest (and probably buggiest) version:
-
-```
-pip install git+https://github.com/paulbrodersen/netgraph.git
-```
-
-## Examples:
+## Code example
 
 ```python
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 import netgraph
 
-# construct sparse, directed, weighted graph
-# with positive and negative edges
-n = 20
-w = np.random.randn(n,n)
-p = 0.2
-c = np.random.rand(n,n) <= p
-w[~c] = np.nan
+# Construct sparse, directed, weighted graph
+# with positive and negative edges:
+total_nodes = 20
+weights = np.random.randn(total_nodes, total_nodes)
+connection_probability = 0.2
+is_connected = np.random.rand(total_nodes, total_nodes) <= connection_probability
+graph = np.zeros((total_nodes, total_nodes))
+graph[is_connected] = weights[is_connected]
 
-# plot
-netgraph.draw(w)
+# Make a standard plot:
+netgraph.draw(graph)
+
+# Create an interactive plot.
+# NOTE: you must retain a reference to the object instance!
+# Otherwise the whole thing will be garbage collected after the initial draw
+# and you won't be able to move the plot elements around.
+plot_instance = netgraph.InteractiveGraph(graph)
+
+# Access new node positions: 
+pos = plot_instance.node_positions
 ```
 
-![Example plot](./figures/example_1.png)
-
-`netgraph.draw` supports various formats for the `graph` argument (`w` in the example above).
+`netgraph.draw` supports various formats for the `graph` argument. 
 
 In order of precedence:
 
@@ -71,7 +73,7 @@ In order of precedence:
 
 ```python
 import networkx
-g = networkx.from_numpy_array(w, networkx.DiGraph)
+g = networkx.from_numpy_array(graph, networkx.DiGraph)
 netgraph.draw(g)
 ```
 
@@ -83,29 +85,19 @@ list of available arguments, please refer to the documentation of
 - `draw_node_labels`
 - `draw_edge_labels`
 
-## Interactive plotting
+## Installation
 
-If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
-netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
-If you would like to manually tweak the node positions using the mouse after the initial draw,
-use the InteractiveGraph class:
+Easiest via pip:
 
-```python
-graph = netgraph.InteractiveGraph(w)
+```
+pip install netgraph
 ```
 
-![Demo of InteractiveGraph](https://media.giphy.com/media/xUOxfk8zazlkWLYtlC/giphy.gif)
+For the newest and brightest (and probably buggiest) version:
 
-The new node positions can afterwards be retrieved via:
-
-```python
-pos = graph.node_positions
 ```
-
-**You must retain a reference to the InteractiveGraph
-instance at all times** (i.e. `graph` in the example above). Otherwise,
-the object will be garbage collected and you won't be able to alter
-the node positions interactively.
+pip install git+https://github.com/paulbrodersen/netgraph.git
+```
 
 ## Gallery
 
