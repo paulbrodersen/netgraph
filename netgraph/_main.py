@@ -1415,6 +1415,61 @@ class Graph(object):
 
         """
 
+        self.draw(graph, node_positions, node_labels, edge_labels, edge_cmap, ax, **kwargs)
+
+
+    def draw(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
+        """
+        Initialises / redraws the Graph object.
+        Upon initialisation, it will try to do "the right thing".
+
+        For finer control of the individual draw elements,
+        and a complete list of keyword arguments, see the class methods:
+
+            draw_nodes()
+            draw_edges()
+            draw_node_labels()
+            draw_edge_labels()
+
+        Arguments
+        ----------
+        graph: various formats
+            Graph object to plot. Various input formats are supported.
+            In order of precedence:
+                - Edge list:
+                    Iterable of (source, target) or (source, target, weight) tuples,
+                    or equivalent (m, 2) or (m, 3) ndarray.
+                - Adjacency matrix:
+                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+                    The absence of a connection is indicated by a zero.
+                - igraph.Graph object
+                - networkx.Graph object
+
+        node_positions : dict node : (float, float)
+            Mapping of nodes to (x, y) positions.
+            If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+
+        node_labels : dict node : str (default None)
+           Mapping of nodes to node labels.
+           Only nodes in the dictionary are labelled.
+           If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+
+        edge_labels : dict (source, target) : str (default None)
+            Mapping of edges to edge labels.
+            Only edges in the dictionary are labelled.
+
+        ax : matplotlib.axis instance or None (default None)
+           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
+        See Also
+        --------
+        draw_nodes()
+        draw_edges()
+        draw_node_labels()
+        draw_edge_labels()
+
+        """
+
         # Create axis if none is given.
         if ax is None:
             self.ax = plt.gca()
