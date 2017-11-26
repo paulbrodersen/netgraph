@@ -1659,29 +1659,36 @@ class Graph(object):
            Mapping of nodes to labels.
            Only nodes in the dictionary are labelled.
 
-        font_size : int (default 12)
+        node_label_font_size : int (default 12)
            Font size for text labels
 
-        font_color : str (default 'k')
+        node_label_font_color : str (default 'k')
            Font color string
 
-        font_family : str (default='sans-serif')
+        node_label_font_family : str (default='sans-serif')
            Font family
 
-        font_weight : str (default='normal')
+        node_label_font_weight : str (default='normal')
            Font weight
 
-        font_alpha : float (default 1.)
+        node_label_font_alpha : float (default 1.)
            Text transparency
 
-        bbox : matplotlib bbox instance
+        node_label_bbox : matplotlib bbox instance (default {'alpha': 0})
            Specify text box shape and colors.
 
-        clip_on : bool
-           Turn on clipping at axis boundaries (default False)
+        node_label_horizontalalignment: str
+            Horizontal label alignment inside bbox.
+
+        node_label_verticalalignment: str
+            Vertical label alignment inside bbox.
+
+        clip_on : bool (default False)
+           Turn on clipping at axis boundaries.
 
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
 
         Updates
         -------
@@ -1715,26 +1722,32 @@ class Graph(object):
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
 
-        font_size : int (default 12)
+        edge_label_font_size : int (default 12)
            Font size
 
-        font_color : str (default 'k')
+        edge_label_font_color : str (default 'k')
            Font color
 
-        font_family : str (default='sans-serif')
+        edge_label_font_family : str (default='sans-serif')
            Font family
 
-        font_weight : str (default='normal')
+        edge_label_font_weight : str (default='normal')
            Font weight
 
-        font_alpha : float (default 1.)
+        edge_label_font_alpha : float (default 1.)
            Text transparency
 
-        bbox : Matplotlib bbox
+        edge_label_bbox : Matplotlib bbox
            Specify text box shape and colors.
 
-        clip_on : bool
-           Turn on clipping at axis boundaries (default=True)
+        edge_label_horizontalalignment: str
+            Horizontal label alignment inside bbox.
+
+        edge_label_verticalalignment: str
+            Vertical label alignment inside bbox.
+
+        clip_on : bool (default=False)
+           Turn on clipping at axis boundaries.
 
         edge_label_zorder : int (default 10000)
             Set the zorder of edge labels.
