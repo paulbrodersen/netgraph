@@ -833,12 +833,14 @@ class FancyArrow(matplotlib.patches.Polygon):
 
 def draw_node_labels(node_labels,
                      node_positions,
-                     font_size=12,
-                     font_color='k',
-                     font_family='sans-serif',
-                     font_weight='normal',
-                     font_alpha=1.,
-                     bbox=dict(alpha=0.),
+                     node_label_font_size=12,
+                     node_label_font_color='k',
+                     node_label_font_family='sans-serif',
+                     node_label_font_weight='normal',
+                     node_label_font_alpha=1.,
+                     node_label_bbox=dict(alpha=0.),
+                     node_label_horizontalalignment='center',
+                     node_label_verticalalignment='center',
                      clip_on=False,
                      ax=None,
                      **kwargs):
@@ -854,26 +856,32 @@ def draw_node_labels(node_labels,
        Mapping of nodes to labels.
        Only nodes in the dictionary are labelled.
 
-    font_size : int (default 12)
+    node_label_font_size : int (default 12)
        Font size for text labels
 
-    font_color : str (default 'k')
+    node_label_font_color : str (default 'k')
        Font color string
 
-    font_family : str (default='sans-serif')
+    node_label_font_family : str (default='sans-serif')
        Font family
 
-    font_weight : str (default='normal')
+    node_label_font_weight : str (default='normal')
        Font weight
 
-    font_alpha : float (default 1.)
+    node_label_font_alpha : float (default 1.)
        Text transparency
 
-    bbox : matplotlib bbox instance (default {'alpha': 0})
+    node_label_bbox : matplotlib bbox instance (default {'alpha': 0})
        Specify text box shape and colors.
 
-    clip_on : bool
-       Turn on clipping at axis boundaries (default False)
+    node_label_horizontalalignment: str
+        Horizontal label alignment inside bbox.
+
+    node_label_verticalalignment: str
+        Vertical label alignment inside bbox.
+
+    clip_on : bool (default False)
+       Turn on clipping at axis boundaries.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -892,25 +900,21 @@ def draw_node_labels(node_labels,
     if ax is None:
         ax = plt.gca()
 
-    # set optional alignment
-    horizontalalignment = kwargs.get('horizontalalignment', 'center')
-    verticalalignment = kwargs.get('verticalalignment', 'center')
-
     artists = dict()  # there is no text collection so we'll fake one
     for node, label in node_labels.items():
         x, y = node_positions[node]
         text_object = ax.text(x, y,
                               label,
-                              size=font_size,
-                              color=font_color,
-                              alpha=font_alpha,
-                              family=font_family,
-                              weight=font_weight,
-                              horizontalalignment=horizontalalignment,
-                              verticalalignment=verticalalignment,
+                              size=node_label_font_size,
+                              color=node_label_font_color,
+                              alpha=node_label_font_alpha,
+                              family=node_label_font_family,
+                              weight=node_label_font_weight,
+                              bbox=node_label_bbox,
+                              horizontalalignment=node_label_horizontalalignment,
+                              verticalalignment=node_label_verticalalignment,
                               transform=ax.transData,
-                              bbox=bbox,
-                              clip_on=False)
+                              clip_on=clip_on)
         artists[node] = text_object
 
     return artists
@@ -918,12 +922,14 @@ def draw_node_labels(node_labels,
 
 def draw_edge_labels(edge_labels,
                      node_positions,
-                     font_size=10,
-                     font_color='k',
-                     font_family='sans-serif',
-                     font_weight='normal',
-                     font_alpha=1.,
-                     bbox=None,
+                     edge_label_font_size=10,
+                     edge_label_font_color='k',
+                     edge_label_font_family='sans-serif',
+                     edge_label_font_weight='normal',
+                     edge_label_font_alpha=1.,
+                     edge_label_bbox=None,
+                     edge_label_horizontalalignment='center',
+                     edge_label_verticalalignment='center',
                      clip_on=False,
                      ax=None,
                      rotate=True,
@@ -942,26 +948,32 @@ def draw_edge_labels(edge_labels,
         Mapping of edges to edge labels.
         Only edges in the dictionary are labelled.
 
-    font_size : int (default 12)
+    edge_label_font_size : int (default 12)
        Font size
 
-    font_color : str (default 'k')
+    edge_label_font_color : str (default 'k')
        Font color
 
-    font_family : str (default='sans-serif')
+    edge_label_font_family : str (default='sans-serif')
        Font family
 
-    font_weight : str (default='normal')
+    edge_label_font_weight : str (default='normal')
        Font weight
 
-    font_alpha : float (default 1.)
+    edge_label_font_alpha : float (default 1.)
        Text transparency
 
-    bbox : Matplotlib bbox
+    edge_label_bbox : Matplotlib bbox
        Specify text box shape and colors.
 
-    clip_on : bool
-       Turn on clipping at axis boundaries (default=True)
+    edge_label_horizontalalignment: str
+        Horizontal label alignment inside bbox.
+
+    edge_label_verticalalignment: str
+        Vertical label alignment inside bbox.
+
+    clip_on : bool (default=False)
+       Turn on clipping at axis boundaries.
 
     edge_label_zorder : int (default 10000)
         Set the zorder of edge labels.
@@ -1010,29 +1022,24 @@ def draw_edge_labels(edge_labels,
             else:
                 trans_angle = 0.0
 
-            if bbox is None: # use default box of white with white border
-                bbox = dict(boxstyle='round',
-                            ec=(1.0, 1.0, 1.0),
-                            fc=(1.0, 1.0, 1.0),
-                            )
-
-            # set optional alignment
-            horizontalalignment = kwargs.get('horizontalalignment', 'center')
-            verticalalignment = kwargs.get('verticalalignment', 'center')
+            if edge_label_bbox is None: # use default box of white with white border
+                edge_label_bbox = dict(boxstyle='round',
+                                       ec=(1.0, 1.0, 1.0),
+                                       fc=(1.0, 1.0, 1.0))
 
             t = ax.text(x, y,
                         label,
-                        size=font_size,
-                        color=font_color,
-                        family=font_family,
-                        weight=font_weight,
-                        horizontalalignment=horizontalalignment,
-                        verticalalignment=verticalalignment,
+                        size=edge_label_font_size,
+                        color=edge_label_font_color,
+                        family=edge_label_font_family,
+                        weight=edge_label_font_weight,
+                        bbox=edge_label_bbox,
+                        horizontalalignment=edge_label_horizontalalignment,
+                        verticalalignment=edge_label_verticalalignment,
                         rotation=trans_angle,
                         transform=ax.transData,
-                        bbox=bbox,
                         zorder=edge_label_zorder,
-                        clip_on=True,
+                        clip_on=clip_on,
                         )
 
             text_items[(n1, n2)] = t
