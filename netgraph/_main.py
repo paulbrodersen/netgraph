@@ -1501,22 +1501,32 @@ class Graph(object):
         else:
             kwargs.setdefault('draw_arrows', False)
 
-        # Initialise node positions if none are given.
-        if node_positions is None:
-            self.node_positions = fruchterman_reingold_layout(self.edge_list)
+        # Initialise node positions if none are given or already present.
+        if node_positions:
+            if not hasattr(self, 'node_positions'):
+                self.node_positions = node_positions
+            else:
+                self.node_positions.update(node_positions)
         else:
-            self.node_positions = node_positions
+            if not hasattr(self, 'node_positions'):
+                self.node_positions = fruchterman_reingold_layout(self.edge_list)
 
         # Draw plot elements.
         self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
         self.draw_nodes(self.node_positions, ax=self.ax, **kwargs)
 
-        if node_labels is not None:
-            self.node_labels = node_labels
+        if node_labels:
+            if not hasattr(self, 'node_labels'):
+                self.node_labels = node_labels
+            else:
+                self.node_labels.update(node_labels)
             self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
 
-        if edge_labels is not None:
-            self.edge_labels = edge_labels
+        if edge_labels:
+            if not hasattr(self, 'edge_labels'):
+                self.edge_labels = edge_labels
+            else:
+                self.edge_labels.update(edge_labels)
             self.draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
 
         # Improve default layout of axis.
