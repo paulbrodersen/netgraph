@@ -7,6 +7,9 @@ InteractiveGraph variants.
 
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
+
+from functools import partial
 from matplotlib.patches import Rectangle
 
 from _main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
@@ -138,8 +141,171 @@ def demo_InteractiveGrid():
     return g
 
 
+class InteractiveHypergraph(InteractiveGraph):
+
+    def __init__(self, *args, **kwargs):
+
+        super(InteractiveHypergraph, self).__init__(*args, **kwargs)
+
+        # bookkeeping
+        self.hypernode_to_nodes = dict()
+
+        # for redrawing after fusion
+        self.kwargs = kwargs
+
+        # set up ability to trigger fusion by key-press
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key)
+
+
+    def _on_key(self, event):
+
+        if hasattr(super(InteractiveHypergraph, self), '_on_key'):
+            super(InteractiveHypergraph, self)._on_key(event)
+
+        if event.key == 'c':
+            self._fuse(self._selected_artists.keys())
+
+
+    def _fuse(self, nodes, fuse_properties=partial(np.mean, axis=0)):
+
+        # create hypernode ID
+        hypernode = _find_unused_int(self.edge_list)
+
+        # bookkeeping
+        self.hypernode_to_nodes[hypernode] = nodes
+
+        self._deselect_artists()
+
+        # combine node / node artist properties
+        pos             = fuse_properties([self.node_positions[node]                    for node in nodes])
+        node_size       = fuse_properties([self.node_edge_artists[node].radius          for node in nodes])
+        node_edge_width = fuse_properties([self.node_face_artists[node].radius          for node in nodes]); node_edge_width = node_size - node_edge_width
+        node_color      = fuse_properties([self.node_face_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
+        node_edge_color = fuse_properties([self.node_edge_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
+        node_alpha      = fuse_properties([self.node_face_artists[node].get_alpha()     for node in nodes])
+        node_edge_alpha = fuse_properties([self.node_edge_artists[node].get_alpha()     for node in nodes])
+
+        # draw hypernode
+        self.draw_nodes({hypernode: pos},
+                        node_size=node_size / BASE_NODE_SIZE,
+                        node_edge_width=node_edge_width / BASE_NODE_SIZE,
+                        node_color=node_color,
+                        node_edge_color=node_edge_color,
+                        node_alpha=node_alpha,
+                        node_edge_alpha=node_edge_alpha,
+                        ax=self.ax)
+
+        self._alpha[hypernode] = node_alpha
+        self.node_positions[hypernode] = pos
+
+        if hasattr(self, 'node_labels'):
+            self.node_labels[hypernode] = hypernode
+            self.draw_node_labels(dict(hypernode=hypernode)) # TODO: pass in kwargs
+
+        # update edge list
+        new_edge_list = _fuse_nodes_into_hypernode(self.edge_list, nodes, hypernode)
+        new_edges = [edge for edge in new_edge_list if not edge in self.edge_list]
+        old_edges = [edge for edge in self.edge_list if not edge in new_edge_list]
+
+        # find edges that are being fused
+        hyperedge_to_edges = dict()
+        for new_edge, old_edge in zip(new_edges, old_edges):
+            try:
+                hyperedge_to_edges[new_edge].append(old_edge)
+            except KeyError:
+                hyperedge_to_edges[new_edge] = [old_edge]
+
+        # combine edge properties
+        edge_width = dict()
+        edge_color = dict()
+        edge_alpha = dict()
+        for new_edge, duplicates in hyperedge_to_edges.items():
+            # filter duplicates: self-loops have no edge artists
+            duplicates = [(source, target) for (source, target) in duplicates if source != target]
+            # combine properties
+            edge_width[new_edge] = fuse_properties([self.edge_artists[edge].width           for edge in duplicates])  / BASE_EDGE_WIDTH
+            edge_color[new_edge] = fuse_properties([self.edge_artists[edge].get_facecolor() for edge in duplicates]) # NB: this only makes sense for a gray cmap; combine weights instead?
+            # edge_alpha[new_edge] = fuse_properties([self.edge_artists[edge].get_alpha()     for edge in duplicates]) # TODO: .get_alpha() returns None?
+
+        # zorder = _get_zorder(self.edge_color) # TODO: fix, i.e. get all edge colors, determine order
+
+        # remove duplicates in new_edges
+        new_edges = hyperedge_to_edges.keys()
+
+        # don't plot self-loops
+        new_edges = [(source, target) for (source, target) in new_edges if source != target]
+
+        self.draw_edges(new_edges,
+                        node_positions=self.node_positions,
+                        edge_width=edge_width,
+                        edge_color=edge_color,
+                        # edge_alpha=edge_alpha,
+                        ax=self.ax)
+
+        # update self.edge_list
+        self.edge_list = list(set(new_edge_list))
+
+        # clean up
+        old_edges = [(source, target) for (source, target) in old_edges if source != target] # self-loops have no edge artist
+        for edge in old_edges:
+            self.edge_artists[edge].remove()
+            del self.edge_artists[edge]
+            # del self.edge_weight[edge]            # TODO: get / set for hyperedges; otherwise these raises KeyError
+            # del self.edge_color[edge]             # TODO: get / set for hyperedges; otherwise these raises KeyError
+            # del self.edge_zorder[edge]            # TODO: get / set for hyperedges; otherwise these raises KeyError
+
+            # if hasattr(self, 'edge_labels'):
+            #     del self.edge_labels[edge]        # TODO: get / set for hyperedges; otherwise these raises KeyError
+            #     edge_label_artists[edge].remove() # TODO: get / set for hyperedges; otherwise these raises KeyError
+            #     del self.edge_label_artists[edge] # TODO: get / set for hyperedges; otherwise these raises KeyError
+
+        for node in nodes:
+            del self.node_positions[node]
+            self.node_face_artists[node].remove()
+            del self.node_face_artists[node]
+            self.node_edge_artists[node].remove()
+            del self.node_edge_artists[node]
+
+            if hasattr(self, 'node_labels'):
+                self.node_label_artist[node].remove()
+                del self.node_label_artist[node]
+                del self.node_labels[node]
+
+        self.fig.canvas.draw()
+
+
+def _find_unused_int(iterable):
+    unique = np.unique(iterable)
+    for ii in itertools.count():
+        if not (ii in unique):
+            break
+    return ii
+
+
+def _fuse_nodes_into_hypernode(edge_list, nodes, hypernode):
+    """
+    TODO: rename
+
+    Note:
+    - does not remove self-loops
+    - may contain duplicate edges after fusion
+    """
+
+    # replace nodes in `nodes` with hypernode
+    new_edge_list = []
+    for (source, target) in edge_list:
+        if source in nodes:
+            source = hypernode
+        if target in nodes:
+            target = hypernode
+        new_edge_list.append((source, target))
+
+    return new_edge_list
+
+
 if __name__ == '__main__':
 
     from _main import test
     g = test(InteractiveClass=InteractiveGrid)
+    g = test(InteractiveClass=InteractiveHypergraph)
     plt.show()
