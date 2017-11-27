@@ -2031,9 +2031,9 @@ def test(n=20, p=0.15,
          weighted=True,
          strictly_positive=False,
          test_format='sparse',
-         interactive=False,
          show_node_labels=False,
          show_edge_labels=False,
+         InteractiveClass=False,
          ax=None):
 
     adjacency_matrix = _get_random_weight_matrix(n, p,
@@ -2066,10 +2066,10 @@ def test(n=20, p=0.15,
         import igraph
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
 
-    if not interactive:
+    if not InteractiveClass:
         return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
     else:
-        return InteractiveGraph(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return InteractiveClass(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
 
 
 if __name__ == "__main__":
@@ -2082,7 +2082,7 @@ if __name__ == "__main__":
                             show_node_labels=(True,False),
                             show_edge_labels=(True, False),
                             test_format=('sparse', 'dense', 'networkx', 'igraph'),
-                            interactive=(True, False))
+                            InteractiveGraph=(None, InteractiveGraph))
 
     combinations = itertools.product(*arguments.values())
 
