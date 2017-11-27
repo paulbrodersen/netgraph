@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix, spdiags
 from collections import OrderedDict
 
-BASE_NODE_SIZE = 1e-2 # i.e. node sizes are in percent of axes space (x,y <- [0, 1], [0,1])
-BASE_EDGE_WIDTH = 1e-2 # i.e. edge widths are in percent of axis space (x,y <- [0, 1], [0,1])
+BASE_NODE_SIZE = 1e-2
+BASE_EDGE_WIDTH = 1e-2
 
 
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
@@ -314,7 +314,7 @@ def draw_nodes(node_positions,
     Arguments
     ----------
     node_positions : dict node : (float, float)
-        Mapping of nodes to (x, y) positions
+        Mapping of nodes to (x, y) positions.
 
     node_shape : string or dict key : string (default 'o')
        The shape of the node. Specification is as for matplotlib.scatter
@@ -322,7 +322,7 @@ def draw_nodes(node_positions,
        If a single string is provided all nodes will have the same shape.
 
     node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes in percent of axes space.
+       Size (radius) of nodes.
 
     node_edge_width : scalar or dict key : float (default 0.5)
        Line width of node marker border.
@@ -410,7 +410,7 @@ def _draw_nodes(node_positions,
        If a single string is provided all nodes will have the same shape.
 
     node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes in percent of axes space.
+       Size (radius) of nodes.
 
     node_color : matplotlib color specification or dict node : color specification (default 'w')
        Node color.
@@ -578,7 +578,7 @@ def draw_edges(edge_list,
         Mapping of nodes to (x,y) positions
 
     node_size : scalar or (n,) or dict key : float (default 3.)
-        Size (radius) of nodes in percent of axes space.
+        Size (radius) of nodes.
         Used to offset edges when drawing arrow heads,
         such that the arrow heads are not occluded.
         If draw_nodes() and draw_edges() are called independently,
@@ -1555,7 +1555,7 @@ class Graph(object):
            If a single string is provided all nodes will have the same shape.
 
         node_size : scalar or dict node : float (default 3.)
-           Size (radius) of nodes in percent of axes space.
+           Size (radius) of nodes.
 
         node_edge_width : scalar or dict key : float (default 0.5)
            Line width of node marker border.
@@ -1609,7 +1609,7 @@ class Graph(object):
             Mapping of nodes to (x,y) positions
 
         node_size : scalar or (n,) or dict key : float (default 3.)
-            Size (radius) of nodes in percent of axes space.
+            Size (radius) of nodes.
             Used to offset edges when drawing arrow heads,
             such that the arrow heads are not occluded.
             If draw_nodes() and draw_edges() are called independently,
