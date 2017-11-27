@@ -163,18 +163,44 @@ class InteractiveHypergraph(InteractiveGraph):
             super(InteractiveHypergraph, self)._on_key(event)
 
         if event.key == 'c':
-            self._fuse(self._selected_artists.keys())
+            nodes = self._selected_artists.keys()
+            self._deselect_artists()
+            self._fuse(nodes)
 
 
-    def _fuse(self, nodes, fuse_properties=partial(np.mean, axis=0)):
+    def _fuse(self, nodes):
 
         # create hypernode ID
         hypernode = _find_unused_int(self.edge_list)
 
-        # bookkeeping
-        self.hypernode_to_nodes[hypernode] = nodes
+        # create hypernode
+        self._create_hypernode(nodes, hypernode)
 
-        self._deselect_artists()
+        # create corresponding edges
+        new_edge_list = _fuse_nodes_into_hypernode(self.edge_list, nodes, hypernode)
+        new_edges = [edge for edge in new_edge_list if not edge in self.edge_list]
+        old_edges = [edge for edge in self.edge_list if not edge in new_edge_list]
+        self._create_hypernode_edges(old_edges, new_edges)
+
+        # update graph structure
+        self.edge_list = list(set(new_edge_list))
+
+        # clean up data structures and remove obsolote artists
+        for edge in old_edges:
+            self._delete_edge(edge)
+
+        for node in nodes:
+            self._delete_node(node)
+
+        # draw new state
+        self.fig.canvas.draw_idle()
+
+
+    def _create_hypernode(self, nodes, hypernode, fuse_properties=partial(np.mean, axis=0)):
+        """
+        Combine properties of nodes that will form hypernode.
+        Draw hypernode.
+        """
 
         # combine node / node artist properties
         pos             = fuse_properties([self.node_positions[node]                    for node in nodes])
@@ -184,6 +210,10 @@ class InteractiveHypergraph(InteractiveGraph):
         node_edge_color = fuse_properties([self.node_edge_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
         node_alpha      = fuse_properties([self.node_face_artists[node].get_alpha()     for node in nodes])
         node_edge_alpha = fuse_properties([self.node_edge_artists[node].get_alpha()     for node in nodes])
+
+        # update data
+        self.node_positions[hypernode] = pos
+        self._alpha[hypernode] = node_alpha
 
         # draw hypernode
         self.draw_nodes({hypernode: pos},
@@ -195,42 +225,54 @@ class InteractiveHypergraph(InteractiveGraph):
                         node_edge_alpha=node_edge_alpha,
                         ax=self.ax)
 
-        self._alpha[hypernode] = node_alpha
-        self.node_positions[hypernode] = pos
-
         if hasattr(self, 'node_labels'):
             self.node_labels[hypernode] = hypernode
             self.draw_node_labels(dict(hypernode=hypernode)) # TODO: pass in kwargs
 
-        # update edge list
-        new_edge_list = _fuse_nodes_into_hypernode(self.edge_list, nodes, hypernode)
-        new_edges = [edge for edge in new_edge_list if not edge in self.edge_list]
-        old_edges = [edge for edge in self.edge_list if not edge in new_edge_list]
+
+    def _delete_node(self, node):
+        del self.node_positions[node]
+        self.node_face_artists[node].remove()
+        del self.node_face_artists[node]
+        self.node_edge_artists[node].remove()
+        del self.node_edge_artists[node]
+
+        if hasattr(self, 'node_labels'):
+            self.node_label_artist[node].remove()
+            del self.node_label_artist[node]
+            del self.node_labels[node]
+
+
+    def _create_hypernode_edges(self, old_edges, new_edges, fuse_properties=partial(np.mean, axis=0)):
+        """
+        For each unique new edge, take corresponding old edges.
+        Create new edge artists based on properties of corresponding old edge artists.
+        """
 
         # find edges that are being fused
-        hyperedge_to_edges = dict()
+        new_to_old = dict()
         for new_edge, old_edge in zip(new_edges, old_edges):
             try:
-                hyperedge_to_edges[new_edge].append(old_edge)
+                new_to_old[new_edge].append(old_edge)
             except KeyError:
-                hyperedge_to_edges[new_edge] = [old_edge]
+                new_to_old[new_edge] = [old_edge]
 
         # combine edge properties
         edge_width = dict()
         edge_color = dict()
         edge_alpha = dict()
-        for new_edge, duplicates in hyperedge_to_edges.items():
-            # filter duplicates: self-loops have no edge artists
-            duplicates = [(source, target) for (source, target) in duplicates if source != target]
+        for new_edge, old_edges in new_to_old.items():
+            # filter old_edges: self-loops have no edge artists
+            old_edges = [(source, target) for (source, target) in old_edges if source != target]
             # combine properties
-            edge_width[new_edge] = fuse_properties([self.edge_artists[edge].width           for edge in duplicates])  / BASE_EDGE_WIDTH
-            edge_color[new_edge] = fuse_properties([self.edge_artists[edge].get_facecolor() for edge in duplicates]) # NB: this only makes sense for a gray cmap; combine weights instead?
-            # edge_alpha[new_edge] = fuse_properties([self.edge_artists[edge].get_alpha()     for edge in duplicates]) # TODO: .get_alpha() returns None?
+            edge_width[new_edge] = fuse_properties([self.edge_artists[edge].width           for edge in old_edges])  / BASE_EDGE_WIDTH
+            edge_color[new_edge] = fuse_properties([self.edge_artists[edge].get_facecolor() for edge in old_edges]) # NB: this only makes sense for a gray cmap; combine weights instead?
+            # edge_alpha[new_edge] = fuse_properties([self.edge_artists[edge].get_alpha()     for edge in old_edges]) # TODO: .get_alpha() returns None?
 
         # zorder = _get_zorder(self.edge_color) # TODO: fix, i.e. get all edge colors, determine order
 
         # remove duplicates in new_edges
-        new_edges = hyperedge_to_edges.keys()
+        new_edges = new_to_old.keys()
 
         # don't plot self-loops
         new_edges = [(source, target) for (source, target) in new_edges if source != target]
@@ -242,36 +284,22 @@ class InteractiveHypergraph(InteractiveGraph):
                         # edge_alpha=edge_alpha,
                         ax=self.ax)
 
-        # update self.edge_list
-        self.edge_list = list(set(new_edge_list))
 
-        # clean up
-        old_edges = [(source, target) for (source, target) in old_edges if source != target] # self-loops have no edge artist
-        for edge in old_edges:
+    def _delete_edge(self, edge):
+
+        # del self.edge_weight[edge]            # TODO: get / set property for hyperedges; otherwise these raises KeyError
+        # del self.edge_color[edge]             # TODO: get / set property for hyperedges; otherwise these raises KeyError
+        # del self.edge_zorder[edge]            # TODO: get / set property for hyperedges; otherwise these raises KeyError
+
+        source, target = edge
+        if source != target: # i.e. skip self-loops as they have no corresponding artist
             self.edge_artists[edge].remove()
             del self.edge_artists[edge]
-            # del self.edge_weight[edge]            # TODO: get / set for hyperedges; otherwise these raises KeyError
-            # del self.edge_color[edge]             # TODO: get / set for hyperedges; otherwise these raises KeyError
-            # del self.edge_zorder[edge]            # TODO: get / set for hyperedges; otherwise these raises KeyError
 
             # if hasattr(self, 'edge_labels'):
-            #     del self.edge_labels[edge]        # TODO: get / set for hyperedges; otherwise these raises KeyError
-            #     edge_label_artists[edge].remove() # TODO: get / set for hyperedges; otherwise these raises KeyError
-            #     del self.edge_label_artists[edge] # TODO: get / set for hyperedges; otherwise these raises KeyError
-
-        for node in nodes:
-            del self.node_positions[node]
-            self.node_face_artists[node].remove()
-            del self.node_face_artists[node]
-            self.node_edge_artists[node].remove()
-            del self.node_edge_artists[node]
-
-            if hasattr(self, 'node_labels'):
-                self.node_label_artist[node].remove()
-                del self.node_label_artist[node]
-                del self.node_labels[node]
-
-        self.fig.canvas.draw()
+            #     del self.edge_labels[edge]        # TODO: get / set property for hyperedges; otherwise these raises KeyError
+            #     edge_label_artists[edge].remove() # TODO: get / set property for hyperedges; otherwise these raises KeyError
+            #     del self.edge_label_artists[edge] # TODO: get / set property for hyperedges; otherwise these raises KeyError
 
 
 def _find_unused_int(iterable):
