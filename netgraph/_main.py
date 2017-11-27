@@ -1470,6 +1470,9 @@ class Graph(object):
 
         """
 
+        # --------------------------------------------------------------------------------
+        # TODO: split off / move to __init__ (potentially)
+
         # Create axis if none is given.
         if ax is None:
             self.ax = plt.gca()
@@ -1494,6 +1497,8 @@ class Graph(object):
             # which edges are plotted according to the color of the edge.
             self.edge_zorder = _get_zorder(self.edge_color)
             kwargs.setdefault('edge_zorder', self.edge_zorder)
+
+        # --------------------------------------------------------------------------------
 
         # Plot arrows if the graph has bi-directional edges.
         if _is_directed(self.edge_list):
