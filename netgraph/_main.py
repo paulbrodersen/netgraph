@@ -1851,7 +1851,7 @@ class InteractiveGraph(Graph):
             self._offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self._selected_artists.items()}
         else:
             # start selecting
-            self._deseclect_artists()
+            self._deselect_artists()
             self._currently_selecting = True
 
 
@@ -1898,7 +1898,7 @@ class InteractiveGraph(Graph):
             self._selected_artists[key] = artist
 
 
-    def _deseclect_artists(self):
+    def _deselect_artists(self):
         for key, artist in self._selected_artists.items():
             artist.set_alpha(self._alpha[key])
         self._selected_artists = {}
