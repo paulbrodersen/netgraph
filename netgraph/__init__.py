@@ -30,7 +30,7 @@ Module to plot weighted, directed graphs of medium size (10-100 nodes).
 Unweighted, undirected graphs will look perfectly fine, too, but this module
 might be overkill for such a use case.
 
-Raison d'etre:
+Raison d'être:
 --------------
 Existing draw routines for networks/graphs in python use fundamentally different
 length units for different plot elements. This makes it hard to

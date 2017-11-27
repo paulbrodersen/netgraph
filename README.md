@@ -8,7 +8,7 @@ matplotlib.
 
 ![Weighted directed and unweighted, undirected graph](./figures/example_2.png)
 
-## Raison d'etre:
+## Raison d'être:
 
 Existing draw routines for networks/graphs in python (networkx, igraph) use
 fundamentally different length units for different plot elements. This makes it hard to
