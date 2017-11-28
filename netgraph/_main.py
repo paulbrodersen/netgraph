@@ -248,7 +248,7 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     """
 
     keys = mydict.keys()
-    values = np.array(mydict.values())
+    values = np.array(list(mydict.values()))
 
     # apply edge_vmin, edge_vmax
     if vmin:
@@ -284,7 +284,7 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 def _get_zorder(color_dict):
     # reorder plot elements such that darker items are plotted last
     # and hence most prominent in the graph
-    zorder = np.argsort(np.sum(color_dict.values(), axis=1)) # assumes RGB specification
+    zorder = np.argsort(np.sum(list(color_dict.values()), axis=1)) # assumes RGB specification
     zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
     zorder = {key: index for key, index in zip(color_dict.keys(), zorder)}
     return zorder
@@ -1061,12 +1061,12 @@ def _update_view(node_positions, ax, node_size=3.):
     # Hence we need to set them manually.
 
     if isinstance(node_size, dict):
-        maxs = np.max(node_size.values()) * BASE_NODE_SIZE
+        maxs = np.max(list(node_size.values())) * BASE_NODE_SIZE
     else:
         maxs = node_size * BASE_NODE_SIZE
 
-    maxx, maxy = np.max(node_positions.values(), axis=0)
-    minx, miny = np.min(node_positions.values(), axis=0)
+    maxx, maxy = np.max(list(node_positions.values()), axis=0)
+    minx, miny = np.min(list(node_positions.values()), axis=0)
 
     w = maxx-minx
     h = maxy-miny
@@ -1793,8 +1793,8 @@ class Graph(object):
         max_face_radius = np.max([artist.radius for artist in self.node_face_artists.values()])
         max_radius = np.max([max_edge_radius, max_face_radius])
 
-        maxx, maxy = np.max(self.node_positions.values(), axis=0)
-        minx, miny = np.min(self.node_positions.values(), axis=0)
+        maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
+        minx, miny = np.min(list(self.node_positions.values()), axis=0)
 
         w = maxx-minx
         h = maxy-miny
