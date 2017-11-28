@@ -12,8 +12,8 @@ import itertools
 from functools import partial
 from matplotlib.patches import Rectangle
 
-from _main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
-from _line_supercover import line_supercover
+from ._main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
+from ._line_supercover import line_supercover
 
 
 class InteractiveGrid(InteractiveGraph):
@@ -333,7 +333,7 @@ def _fuse_nodes_into_hypernode(edge_list, nodes, hypernode):
 
 if __name__ == '__main__':
 
-    from _main import test
+    from ._main import test
     g = test(InteractiveClass=InteractiveGrid)
     g = test(InteractiveClass=InteractiveHypergraph)
     plt.show()
