@@ -16,7 +16,7 @@
    id="svg219"
    sodipodi:docname="example.svg"
    inkscape:version="0.92.1 r15371"
-   inkscape:export-filename="/home/paul/src/netgraph/figures/example_2.png"
+   inkscape:export-filename="/home/paul/src/netgraph/figures/example_3.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96">
   <metadata
@@ -48,8 +48,8 @@
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="40"
-     inkscape:zoom="1"
-     inkscape:cx="1005.8173"
+     inkscape:zoom="0.47363281"
+     inkscape:cx="968.40699"
      inkscape:cy="650.93061"
      inkscape:window-x="0"
      inkscape:window-y="48"
@@ -1186,6 +1186,13 @@
          style="stroke-linecap:butt;stroke-linejoin:round" />
     </clipPath>
   </defs>
+  <rect
+     style="opacity:1;fill:#ffffff;stroke:#000000;stroke-width:6.15118074;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;fill-opacity:1"
+     id="rect5033"
+     width="1885.9547"
+     height="1060.9485"
+     x="-28.503094"
+     y="-23.775761" />
   <g
      style="stroke-linecap:butt;stroke-linejoin:round"
      id="axes_1"
