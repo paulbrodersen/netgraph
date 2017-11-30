@@ -174,7 +174,9 @@ class InteractiveHypergraph(InteractiveGraph):
     def _fuse(self, nodes):
 
         # create hypernode ID
-        hypernode = _find_unused_int(self.edge_list)
+        # hypernode = _find_unused_int(self.edge_list)
+        hypernode = set(nodes)
+        print hypernode
 
         # create hypernode
         self._create_hypernode(nodes, hypernode)
