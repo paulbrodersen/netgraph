@@ -8,7 +8,17 @@ Examples for netgraph
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
 
+try:
+    reload         # Python 2
+except NameError:  # Python 3
+    from importlib import reload 
+
 import netgraph; reload(netgraph)
+
+try:
+    raw_input      # Python 2
+except NameError:  # Python 3
+    raw_input = input
 
 FDIR = "./figures/"
 
