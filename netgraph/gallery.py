@@ -7,8 +7,7 @@ Examples for netgraph
 
 import numpy as np
 import matplotlib.pyplot as plt; plt.ion()
-
-import netgraph; reload(netgraph)
+import netgraph
 
 FDIR = "./figures/"
 
@@ -17,7 +16,6 @@ def plot(title, **kwargs):
     graph = netgraph.test(ax=ax, **kwargs)
     fig.tight_layout()
     fig.canvas.draw()
-    raw_input(title)
     graph._update_view()
     fig.savefig(FDIR + title.replace(' ', '_') + '.pdf')
     fig.savefig(FDIR + title.replace(' ', '_') + '.svg')
