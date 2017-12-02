@@ -175,8 +175,7 @@ class InteractiveHypergraph(InteractiveGraph):
 
         # create hypernode ID
         # hypernode = _find_unused_int(self.edge_list)
-        hypernode = set(nodes)
-        print hypernode
+        hypernode = tuple(set(nodes))
 
         # create hypernode
         self._create_hypernode(nodes, hypernode)
