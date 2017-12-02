@@ -163,7 +163,7 @@ class InteractiveHypergraph(InteractiveGraph):
             super(InteractiveHypergraph, self)._on_key(event)
 
         if event.key == 'c':
-            if len(selected_artists) > 1:
+            if len(self._selected_artists) > 1:
                 nodes = self._selected_artists.keys()
                 self._deselect_artists()
                 self._fuse(nodes)
