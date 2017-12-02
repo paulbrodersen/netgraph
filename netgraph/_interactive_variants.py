@@ -182,7 +182,7 @@ class InteractiveHypergraph(InteractiveGraph):
         self._create_hypernode(nodes, hypernode)
 
         # create corresponding edges
-        new_edge_list = _fuse_nodes_into_hypernode(self.edge_list, nodes, hypernode)
+        new_edge_list = self._transfer_edges_to_hypernode(self.edge_list, nodes, hypernode)
         new_edges = [edge for edge in new_edge_list if not edge in self.edge_list]
         old_edges = [edge for edge in self.edge_list if not edge in new_edge_list]
         self._create_hypernode_edges(old_edges, new_edges)
@@ -246,6 +246,25 @@ class InteractiveHypergraph(InteractiveGraph):
             self.node_label_artist[node].remove()
             del self.node_label_artist[node]
             del self.node_labels[node]
+
+
+    def _transfer_edges_to_hypernode(self, edge_list, nodes, hypernode):
+        """
+        Note:
+        - does not remove self-loops
+        - may contain duplicate edges after fusion
+        """
+
+        # replace nodes in `nodes` with hypernode
+        new_edge_list = []
+        for (source, target) in edge_list:
+            if source in nodes:
+                source = hypernode
+            if target in nodes:
+                target = hypernode
+            new_edge_list.append((source, target))
+
+        return new_edge_list
 
 
     def _create_hypernode_edges(self, old_edges, new_edges, fuse_properties=partial(np.mean, axis=0)):
@@ -315,30 +334,10 @@ def _find_unused_int(iterable):
     return ii
 
 
-def _fuse_nodes_into_hypernode(edge_list, nodes, hypernode):
-    """
-    TODO: rename
-
-    Note:
-    - does not remove self-loops
-    - may contain duplicate edges after fusion
-    """
-
-    # replace nodes in `nodes` with hypernode
-    new_edge_list = []
-    for (source, target) in edge_list:
-        if source in nodes:
-            source = hypernode
-        if target in nodes:
-            target = hypernode
-        new_edge_list.append((source, target))
-
-    return new_edge_list
 
 
 if __name__ == '__main__':
 
-    from ._main import test
-    g = test(InteractiveClass=InteractiveGrid)
+    # g = test(InteractiveClass=InteractiveGrid)
     g = test(InteractiveClass=InteractiveHypergraph)
     plt.show()
