@@ -193,6 +193,14 @@ def _parse_sparse_matrix_format(adjacency):
         raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
 
 
+def _flatten(nested_list):
+    return [item for sublist in nested_list for item in sublist]
+
+
+def _get_unique_nodes(edge_list):
+    return list(set(_flatten(edge_list)))
+
+
 def _parse_adjacency_matrix(adjacency):
     sources, targets = np.where(adjacency)
     edge_list = list(zip(sources.tolist(), targets.tolist()))
@@ -1148,7 +1156,7 @@ def fruchterman_reingold_layout(edge_list,
 
     """
 
-    nodes = np.unique(edge_list)
+    nodes = _get_unique_nodes(edge_list)
     total_nodes = len(nodes)
 
     # translate fixed node ID to position in node list
@@ -1345,7 +1353,7 @@ def _rescale_layout(pos, scale=1):
 
 def _edge_list_to_sparse_matrix(edge_list, edge_weights=None):
 
-    nodes = np.unique(edge_list)
+    nodes = _get_unique_nodes(edge_list)
     node_to_idx = dict(zip(nodes, range(len(nodes))))
     sources = [node_to_idx[source] for source, _ in edge_list]
     targets = [node_to_idx[target] for _, target in edge_list]
