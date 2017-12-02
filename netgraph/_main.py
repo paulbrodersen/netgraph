@@ -185,6 +185,14 @@ def _parse_sparse_matrix_format(adjacency):
         edge_list = _parse_edge_list(adjacency[:,:2])
         edge_weights = {(source, target) : weight for (source, target, weight) in adjacency}
 
+        # In a sparse adjacency format with weights,
+        # the type of nodes is promoted to the same type as weights,
+        # which is commonly a float. If all nodes can safely be demoted to ints,
+        # then we probably want to do that.
+        tmp = [(_save_cast_float_to_int(source), _save_cast_float_to_int(target)) for (source, target) in edge_list]
+        if np.all([isinstance(num, int) for num in _flatten(tmp)]):
+            edge_list = tmp
+
         if len(set(edge_weights.values())) > 1:
             return edge_list, edge_weights
         else:
@@ -193,11 +201,22 @@ def _parse_sparse_matrix_format(adjacency):
         raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
 
 
+def _save_cast_float_to_int(num):
+    if np.isclose(num, int(num)):
+        return int(num)
+    else:
+        return num
+
+
 def _flatten(nested_list):
     return [item for sublist in nested_list for item in sublist]
 
 
 def _get_unique_nodes(edge_list):
+    """
+    Using numpy.unique promotes nodes to numpy.float/numpy.int/numpy.str,
+    and breaks for nodes that have a more complicated type such as a tuple.
+    """
     return list(set(_flatten(edge_list)))
 
 
