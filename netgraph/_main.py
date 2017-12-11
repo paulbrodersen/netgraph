@@ -2084,7 +2084,7 @@ def test(n=20, p=0.15,
          show_node_labels=False,
          show_edge_labels=False,
          InteractiveClass=False,
-         ax=None):
+         **kwargs):
 
     adjacency_matrix = _get_random_weight_matrix(n, p,
                                                  directed=directed,
@@ -2117,9 +2117,9 @@ def test(n=20, p=0.15,
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
 
     if not InteractiveClass:
-        return draw(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return draw(graph, node_labels=node_labels, edge_labels=edge_labels, **kwargs)
     else:
-        return InteractiveClass(graph, node_labels=node_labels, edge_labels=edge_labels, ax=ax)
+        return InteractiveClass(graph, node_labels=node_labels, edge_labels=edge_labels, **kwargs)
 
 
 if __name__ == "__main__":
