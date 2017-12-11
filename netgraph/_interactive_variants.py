@@ -29,6 +29,45 @@ class InteractiveGrid(InteractiveGraph):
 
         self.fig.canvas.mpl_connect('key_press_event', self._on_key)
 
+    def _get_node_positions(self, edge_list, **kwargs):
+        """
+        Initialise node positions to be on a grid with unit spacing.
+        Prevent two points from occupying the same position.
+        """
+
+        node_positions = super(InteractiveGrid, self)._get_node_positions(edge_list, **kwargs)
+
+        if len(kwargs) == 0: # i.e. using defaults
+
+            # check if any two points will occupy the same grid point
+            unique_grid_positions = set([(int(x), int(y)) for (x, y) in node_positions.values()])
+
+            if len(unique_grid_positions) < len(node_positions):
+                # rescale node positions such that each node occupies it's own grid point;
+
+                keys = node_positions.keys()
+                values = np.array(node_positions.values())
+
+                distances = np.sqrt(np.sum(np.power(values[None,:,:] - values[:,None,:], 2), axis=-1))
+                distances = np.triu(distances, 1)
+                sources, targets = np.where(distances)
+                distances = distances[sources, targets]
+
+                order = np.argsort(distances)
+                for ii in order:
+                    s = keys[sources[ii]]
+                    t = keys[targets[ii]]
+                    ps = node_positions[s]
+                    pt = node_positions[t]
+                    if np.all(np.isclose(ps.astype(np.int), pt.astype(np.int))):
+                        minium_difference = np.min(np.abs(ps-pt))
+                        scale = 1./minium_difference
+                        break
+
+                node_positions = {k : (v * scale).astype(np.int) for k,v in node_positions.items()}
+
+        return node_positions
+
     def _on_release(self, event):
 
         if self._currently_dragging:
