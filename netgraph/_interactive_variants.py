@@ -381,16 +381,9 @@ class InteractiveHypergraph(InteractiveGraph):
             #     del self.edge_label_artists[edge] # TODO: get / set property for hyperedges; otherwise these raises KeyError
 
 
-class InteractiveGridHypergraph(InteractiveHypergraph, InteractiveGrid):
-    """
-    Combination of InteractiveGrid and InteractiveHyperGraph.
-    """
-    pass
-
 
 if __name__ == '__main__':
 
     g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
     g = test(InteractiveClass=InteractiveHypergraph)
-    g = test(InteractiveClass=InteractiveGridHypergraph)
     plt.show()
