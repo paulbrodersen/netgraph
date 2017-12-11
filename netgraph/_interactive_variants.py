@@ -12,8 +12,12 @@ import itertools
 from functools import partial
 from matplotlib.patches import Rectangle
 
-from ._main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
-from ._line_supercover import line_supercover
+try:
+    from ._main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE, test
+    from ._line_supercover import line_supercover
+except ValueError:
+    from _main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE, test
+    from _line_supercover import line_supercover
 
 
 class InteractiveGrid(InteractiveGraph):
