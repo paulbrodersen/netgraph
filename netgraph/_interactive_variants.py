@@ -376,14 +376,6 @@ class InteractiveHypergraph(InteractiveGraph):
             #     del self.edge_label_artists[edge] # TODO: get / set property for hyperedges; otherwise these raises KeyError
 
 
-def _find_unused_int(iterable):
-    unique = np.unique(iterable)
-    for ii in itertools.count():
-        if not (ii in unique):
-            break
-    return ii
-
-
 class InteractiveGridHypergraph(InteractiveHypergraph, InteractiveGrid):
     """
     Combination of InteractiveGrid and InteractiveHyperGraph.
