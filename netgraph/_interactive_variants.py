@@ -390,7 +390,7 @@ class InteractiveGridHypergraph(InteractiveHypergraph, InteractiveGrid):
 
 if __name__ == '__main__':
 
-    g = test(InteractiveClass=InteractiveGrid)
+    g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
     g = test(InteractiveClass=InteractiveHypergraph)
     g = test(InteractiveClass=InteractiveGridHypergraph)
     plt.show()
