@@ -154,13 +154,10 @@ class InteractiveHypergraph(InteractiveGraph):
         self.kwargs = kwargs
 
         # set up ability to trigger fusion by key-press
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key)
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_2)
 
 
-    def _on_key(self, event):
-
-        if hasattr(super(InteractiveHypergraph, self), '_on_key'):
-            super(InteractiveHypergraph, self)._on_key(event)
+    def _on_key_2(self, event):
 
         if event.key == 'c':
             if len(self._selected_artists) > 1:
@@ -333,10 +330,13 @@ def _find_unused_int(iterable):
     return ii
 
 
+class InteractiveGridHypergraph(InteractiveHypergraph, InteractiveGrid):
+    pass
 
 
 if __name__ == '__main__':
 
-    # g = test(InteractiveClass=InteractiveGrid)
+    g = test(InteractiveClass=InteractiveGrid)
     g = test(InteractiveClass=InteractiveHypergraph)
+    g = test(InteractiveClass=InteractiveGridHypergraph)
     plt.show()
