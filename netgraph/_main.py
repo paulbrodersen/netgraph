@@ -2096,7 +2096,7 @@ def test(n=20, p=0.15,
     adjacency = np.c_[sources, targets, weights]
 
     if show_node_labels:
-        node_labels = {node: str(int(node)) for node in np.unique(adjacency[:,:2])}
+        node_labels = {node: str(int(node)) for node in np.r_[sources, targets]}
     else:
         node_labels = None
 
