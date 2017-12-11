@@ -29,8 +29,12 @@ class InteractiveGrid(InteractiveGraph):
 
     NOTE:
     -----
-    The default netgraph node size and edge width are probably far too small for a medium sized graph.
-    In my experience, For a graph with 20-50 nodes, a node size of 45 and an edge width of 15 tend to work well.
+    For this class, the default netgraph node size and edge width are probably far too small for a medium sized graph.
+    In my experience, for a graph with 20-50 nodes, a node size of 45 and an edge width of 15 tend to work well.
+    Change your code accordingly. For example:
+
+    g = InteractiveGrid(graph, node_size=45, edge_width=15)
+
     """
 
     def __init__(self, *args, **kwargs):
