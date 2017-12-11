@@ -1,5 +1,8 @@
 # TODO:
 
+- figure out relative imports
+- autmatic testing 
+- get rid of scipy dependency
 - determine all valid color assignments in draw_nodes and draw_edges; improve docs
 - expand node selection with Alt + mouse click
 - add edges interactively
