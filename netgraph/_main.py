@@ -91,7 +91,9 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Initialise node positions if none are given.
     if node_positions is None:
-        node_positions = fruchterman_reingold_layout(edge_list)
+        node_positions = fruchterman_reingold_layout(edge_list, **kwargs)
+    elif len(node_positions) < len(_get_unique_nodes(edge_list)): # some positions are given but not all
+        node_positions = fruchterman_reingold_layout(edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
 
     # Create axis if none is given.
     if ax is None:
@@ -1126,7 +1128,8 @@ def fruchterman_reingold_layout(edge_list,
                                 iterations=50,
                                 scale=1,
                                 center=np.zeros((2)),
-                                dim=2):
+                                dim=2,
+                                **kwargs):
     """
     Position nodes using Fruchterman-Reingold force-directed algorithm.
 
@@ -1537,15 +1540,16 @@ class Graph(object):
         else:
             kwargs.setdefault('draw_arrows', False)
 
-        # Initialise node positions if none are given or already present.
-        if node_positions:
-            if not hasattr(self, 'node_positions'):
-                self.node_positions = node_positions
-            else:
-                self.node_positions.update(node_positions)
+        # Initialise node positions.
+        if node_positions is None:
+            # If none are given, initialise all.
+            self.node_positions = self._get_node_positions(self.edge_list)
+        elif len(node_positions) < len(_get_unique_nodes(edge_list)):
+            # If some are given, keep those fixed and initialise remaining.
+            self.node_positions = self._get_node_positions(self.edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
         else:
-            if not hasattr(self, 'node_positions'):
-                self.node_positions = fruchterman_reingold_layout(self.edge_list)
+            # If all are given, don't do anything.
+            self.node_positions = node_positions
 
         # Draw plot elements.
         self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
@@ -1569,6 +1573,14 @@ class Graph(object):
         self._update_view()
 
         _make_pretty(self.ax)
+
+
+    def _get_node_positions(self, *args, **kwargs):
+        """
+        Ultra-thin wrapper around fruchterman_reingold_layout.
+        Allows method to be overwritten by derived classes.
+        """
+        return fruchterman_reingold_layout(*args, **kwargs)
 
 
     def draw_nodes(self, *args, **kwargs):
