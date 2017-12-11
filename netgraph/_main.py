@@ -846,7 +846,7 @@ class FancyArrow(matplotlib.patches.Polygon):
                     coords = np.concatenate([left_half_arrow[:-1],
                                              right_half_arrow[-1::-1]])
                 else:
-                    raise ValueError("Got unknown shape: %s" % shape)
+                    raise ValueError("Got unknown shape: %s" % self.shape)
             if distance != 0:
                 cx = float(dx) / distance
                 sx = float(dy) / distance
