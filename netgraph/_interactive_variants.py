@@ -26,6 +26,11 @@ class InteractiveGrid(InteractiveGraph):
 
     Pressing 'g' will show the grid lines.
     Pressing 't' will show all tiles occupied by a node or crossed over by an egde.
+
+    NOTE:
+    -----
+    The default netgraph node size and edge width are probably far too small for a medium sized graph.
+    In my experience, For a graph with 20-50 nodes, a node size of 45 and an edge width of 15 tend to work well.
     """
 
     def __init__(self, *args, **kwargs):
