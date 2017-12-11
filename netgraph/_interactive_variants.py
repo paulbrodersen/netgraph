@@ -21,6 +21,12 @@ except ValueError:
 
 
 class InteractiveGrid(InteractiveGraph):
+    """
+    As InteractiveGraph, but node positions are fixed to a grid with unit spacing.
+
+    Pressing 'g' will show the grid lines.
+    Pressing 't' will show all tiles occupied by a node or crossed over by an egde.
+    """
 
     def __init__(self, *args, **kwargs):
 
@@ -185,6 +191,11 @@ def demo_InteractiveGrid():
 
 
 class InteractiveHypergraph(InteractiveGraph):
+    """
+    As InteractiveGraph, but nodes can be combined into a hypernode.
+
+    Pressing 'c' will fuse selected node artists into a single node.
+    """
 
     def __init__(self, *args, **kwargs):
 
@@ -374,6 +385,9 @@ def _find_unused_int(iterable):
 
 
 class InteractiveGridHypergraph(InteractiveHypergraph, InteractiveGrid):
+    """
+    Combination of InteractiveGrid and InteractiveHyperGraph.
+    """
     pass
 
 
