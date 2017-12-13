@@ -225,7 +225,7 @@ class InteractiveHypergraph(InteractiveGraph):
         if event.key == 'c':
             if len(self._selected_artists) > 1:
                 nodes = self._selected_artists.keys()
-                self._deselect_artists()
+                self._deselect_all_artists()
                 self._fuse(nodes)
             else:
                 print("Only a single artist selected! Nothing to combine.")

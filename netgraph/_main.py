@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import itertools
+import time
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -11,6 +12,8 @@ from collections import OrderedDict
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
+
+MAX_CLICK_LENGTH = 0.1 # seconds
 
 
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
@@ -1851,6 +1854,11 @@ class InteractiveGraph(Graph):
     ------
     Methods adapted with some modifications from:
     https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+
+    TODO:
+    -----
+    - assert that if in axes when on_press is triggered
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -1860,14 +1868,20 @@ class InteractiveGraph(Graph):
         self._alpha = {key: artist.get_alpha() for key, artist in self.node_face_artists.items()}
 
         self.fig = self.ax.get_figure()
-        self.fig.canvas.mpl_connect('button_press_event', self._on_press)
+        self.fig.canvas.mpl_connect('button_press_event',   self._on_press)
         self.fig.canvas.mpl_connect('button_release_event', self._on_release)
-        self.fig.canvas.mpl_connect('motion_notify_event', self._on_motion)
+        self.fig.canvas.mpl_connect('motion_notify_event',  self._on_motion)
+        self.fig.canvas.mpl_connect('key_press_event',      self._on_key_press)
+        self.fig.canvas.mpl_connect('key_release_event',    self._on_key_release)
 
+        self._clicked_key = None
+        self._clicked_artist = None
+        self._time_on_key_press = -np.inf
+        self._control_is_held = False
         self._currently_selecting = False
         self._currently_dragging = False
-        self._selected_artists = {}
-        self._offset = {}
+        self._selected_artists = dict()
+        self._offset = dict()
         self._rect = plt.Rectangle((0,0),1,1, linestyle="--",
                                   edgecolor="crimson", fill=False)
         self.ax.add_patch(self._rect)
@@ -1881,40 +1895,89 @@ class InteractiveGraph(Graph):
 
     def _on_press(self, event):
 
-        # reset rectangle
-        self._x0 = event.xdata
-        self._y0 = event.ydata
-        self._x1 = event.xdata
-        self._y1 = event.ydata
+        if event.inaxes:
 
-        # is the press over some artist
-        is_on_artist = False
-        for key, artist in self.node_face_artists.items():
-            if artist.contains(event)[0]:
-                is_on_artist = True
-                self._select_artist(key, artist)
+            # reset rectangle
+            self._x0 = event.xdata
+            self._y0 = event.ydata
+            self._x1 = event.xdata
+            self._y1 = event.ydata
 
-        if is_on_artist:
-            # add clicked artist to selection
-            # start dragging
-            self._currently_dragging = True
-            self._offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self._selected_artists.items()}
+            self._clicked_key = None
+            self._clicked_artist = None
+
+            # is the press over some artist
+            is_on_artist = False
+            for key, artist in self.node_face_artists.items():
+                if artist.contains(event)[0]:
+                    is_on_artist = True
+                    break
+
+            if is_on_artist:
+
+                if key in self._selected_artists:
+                    # print("Clicked on previously selected artist.")
+                    # Some artists are already selected,
+                    # and the user clicked on an already selected artist.
+                    # It remains to be seen if the user wants to
+                    # 1) start dragging, or
+                    # 2) deselect everything else and select only the last selected artist.
+                    # Hence we will defer decision until the user releases mouse button.
+                    self._clicked_key = key
+                    self._clicked_artist = artist
+                    self._time_on_key_press = time.time()
+
+                else:
+                    # print("Clicked on new artist.")
+                    # the user wants to select artist and drag
+                    if not self._control_is_held:
+                        self._deselect_all_artists()
+                    self._select_artist(key, artist)
+
+                # start dragging
+                self._currently_dragging = True
+                self._offset = {key : artist.center - np.array([event.xdata, event.ydata]) for key, artist in self._selected_artists.items()}
+
+            else:
+                # print("Did not click on artist.")
+                if not self._control_is_held:
+                    self._deselect_all_artists()
+
+                # start window select
+                self._currently_selecting = True
+
         else:
-            # start selecting
-            self._deselect_artists()
-            self._currently_selecting = True
+            print("Warning: clicked outside axis limits!")
 
 
     def _on_release(self, event):
+
         if self._currently_selecting:
+
+            # select artists inside window
             for key, artist in self.node_face_artists.items():
                 if self._is_inside_rect(*artist.center):
-                    self._select_artist(key, artist)
-            self.fig.canvas.draw_idle()
+                    if self._control_is_held:                    # if/else probably superfluouos
+                        self._toggle_select_artist(key, artist)  # as no artists will be selected
+                    else:                                        # if control is not held previously
+                        self._select_artist(key, artist)         #
+
+            # stop window selection and draw new state
             self._currently_selecting = False
             self._rect.set_visible(False)
+            self.fig.canvas.draw_idle()
 
         elif self._currently_dragging:
+
+            # If there was just short 'click and release' not a 'click and hold' indicating a drag motion,
+            # we need to (toggle) select the clicked artist and deselect everything else.
+            if ((time.time() - self._time_on_key_press) < MAX_CLICK_LENGTH) and (self._clicked_key is not None):
+                if self._control_is_held:
+                    self._toggle_select_artist(self._clicked_key, self._clicked_artist)
+                else:
+                    self._deselect_all_artists()
+                    self._select_artist(self._clicked_key, self._clicked_artist)
+
             self._currently_dragging = False
 
 
@@ -1932,6 +1995,16 @@ class InteractiveGraph(Graph):
                 self.fig.canvas.draw_idle()
 
 
+    def _on_key_press(self, event):
+       if event.key == 'control':
+           self._control_is_held = True
+
+
+    def _on_key_release(self, event):
+       if event.key == 'control':
+           self._control_is_held = False
+
+
     def _is_inside_rect(self, x, y):
         xlim = np.sort([self._x0, self._x1])
         ylim = np.sort([self._y0, self._y1])
@@ -1941,17 +2014,33 @@ class InteractiveGraph(Graph):
             return False
 
 
+    def _toggle_select_artist(self, key, artist):
+        if key in self._selected_artists:
+            self._deselect_artist(key, artist)
+        else:
+            self._select_artist(key, artist)
+
+
     def _select_artist(self, key, artist):
-        if key not in self._selected_artists:
+        if (key not in self._selected_artists):
             alpha = artist.get_alpha()
             artist.set_alpha(0.5 * alpha)
             self._selected_artists[key] = artist
+            self.fig.canvas.draw_idle()
 
 
-    def _deselect_artists(self):
+    def _deselect_artist(self, key, artist):
+        if key in self._selected_artists:
+            artist.set_alpha(self._alpha[key])
+            del self._selected_artists[key]
+            self.fig.canvas.draw_idle()
+
+
+    def _deselect_all_artists(self):
         for key, artist in self._selected_artists.items():
             artist.set_alpha(self._alpha[key])
-        self._selected_artists = {}
+        self._selected_artists = dict()
+        self.fig.canvas.draw_idle()
 
 
     def _selector_on(self):
