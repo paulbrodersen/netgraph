@@ -92,8 +92,7 @@ from ._main import (draw,
                     test)
 
 from ._interactive_variants import (InteractiveGrid,
-                                    InteractiveHypergraph,
-                                    InteractiveGridHypergraph)
+                                    InteractiveHypergraph)
 
 __all__ = ['draw',
            'draw_nodes',
@@ -108,5 +107,4 @@ __all__ = ['draw',
            'InteractiveGraph',
            'InteractiveGrid',
            'InteractiveHypergraph',
-           'InteractiveGridHypergraph'
            'test']
