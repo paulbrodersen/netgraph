@@ -13,7 +13,7 @@ from collections import OrderedDict
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 
-MAX_CLICK_LENGTH = 0.1 # seconds
+MAX_CLICK_LENGTH = 0.1 # in seconds; anything longer is a drag motion
 
 
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
