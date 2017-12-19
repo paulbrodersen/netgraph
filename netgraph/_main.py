@@ -877,6 +877,7 @@ def draw_node_labels(node_labels,
                      node_label_bbox=dict(alpha=0.),
                      node_label_horizontalalignment='center',
                      node_label_verticalalignment='center',
+                     node_label_offset=(0., 0.),
                      clip_on=False,
                      ax=None,
                      **kwargs):
@@ -916,12 +917,14 @@ def draw_node_labels(node_labels,
     node_label_verticalalignment: str
         Vertical label alignment inside bbox.
 
+    node_label_offset: 2-tuple or equivalent iterable (default (0.,0.))
+        (x, y) offset from node centre of label position.
+
     clip_on : bool (default False)
        Turn on clipping at axis boundaries.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
 
     Returns
     -------
@@ -936,9 +939,13 @@ def draw_node_labels(node_labels,
     if ax is None:
         ax = plt.gca()
 
+    dx, dy = node_label_offset
+
     artists = dict()  # there is no text collection so we'll fake one
     for node, label in node_labels.items():
         x, y = node_positions[node]
+        x += dx
+        y += dy
         text_object = ax.text(x, y,
                               label,
                               size=node_label_font_size,
