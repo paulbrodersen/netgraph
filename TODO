@@ -1,7 +1,6 @@
 # TODO:
 
 - autmatic testing 
-- get rid of scipy dependency
 - determine all valid color assignments in draw_nodes and draw_edges; improve docs
 - add edges interactively
 - add nodes interactively
