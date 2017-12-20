@@ -19,5 +19,5 @@ setup(
     ],
     platforms=['Platform Independent'],
     packages=find_packages(),
-    install_requires=['numpy', 'scipy', 'matplotlib'],
+    install_requires=['numpy', 'matplotlib'],
 )
