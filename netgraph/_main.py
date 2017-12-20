@@ -1939,6 +1939,7 @@ class InteractiveGraph(Graph):
         self.fig.canvas.mpl_connect('motion_notify_event',  self._on_motion)
         self.fig.canvas.mpl_connect('key_press_event',      self._on_key_press)
         self.fig.canvas.mpl_connect('key_release_event',    self._on_key_release)
+        self.fig.canvas.mpl_connect('resize_event',         self._on_resize)
 
         self._clicked_key = None
         self._clicked_artist = None
@@ -2190,6 +2191,11 @@ class InteractiveGraph(Graph):
                 trans_angle = 0.0
 
             self.edge_label_artists[(n1, n2)].set_position((x, y))
+
+    def _on_resize(self, event):
+        if hasattr(self, 'node_labels'):
+            self.node_label_font_size = _get_font_size(self.ax, self.node_labels) * 0.9 # conservative fudge factor
+            self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
 
 
 # --------------------------------------------------------------------------------
