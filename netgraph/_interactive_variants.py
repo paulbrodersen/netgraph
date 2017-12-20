@@ -290,8 +290,19 @@ class InteractiveHypergraph(InteractiveGraph):
                         ax=self.ax)
 
         if hasattr(self, 'node_labels'):
-            self.node_labels[hypernode] = hypernode
-            self.draw_node_labels(dict(hypernode=hypernode)) # TODO: pass in kwargs
+
+            # TODO: `input` results in unresponse plot and terminal; fix / find workaround
+            # hypernode_label = input("Please provide a new label for the hypernode and press enter (default {}):\n".format(hypernode))
+            # if hypernode_label == '':
+            #     hypernode_label = str(hypernode)
+            hypernode_label = hypernode
+
+            self.node_labels[hypernode] = hypernode_label
+
+            if hasattr(self, 'node_label_font_size'):
+                self.draw_node_labels(dict(hypernode=hypernode_label), dict(hypernode=pos), node_label_font_size=self.node_label_font_size)
+            else:
+                self.draw_node_labels(dict(hypernode=hypernode_label), dict(hypernode=pos))
 
 
     def _delete_node(self, node):
@@ -388,6 +399,6 @@ class InteractiveHypergraph(InteractiveGraph):
 
 if __name__ == '__main__':
 
-    g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
+    # g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
     g = test(InteractiveClass=InteractiveHypergraph)
     plt.show()
