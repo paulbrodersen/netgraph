@@ -106,19 +106,25 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     draw_edges(edge_list, node_positions, ax=ax, **kwargs)
     draw_nodes(node_positions, ax=ax, **kwargs)
 
+    # This function needs to be called before any font sizes are adjusted.
+    if 'node_size' in kwargs:
+        _update_view(node_positions, ax=ax, node_size=kwargs['node_size'])
+    else:
+        _update_view(node_positions, ax=ax)
+
     if node_labels is not None:
-        draw_node_labels(node_labels, node_positions, ax=ax, **kwargs)
+        if not 'node_label_font_size' in kwargs:
+            # set font size such that even the largest label fits inside node label face artist
+            font_size = _get_font_size(ax, node_labels, **kwargs) * 0.9 # conservative fudge factor
+            draw_node_labels(node_labels, node_positions, node_label_font_size=font_size, ax=ax, **kwargs)
+        else:
+            draw_node_labels(node_labels, node_positions, ax=ax, **kwargs)
 
     if edge_labels is not None:
         draw_edge_labels(edge_labels, node_positions, ax=ax, **kwargs)
 
     # Improve default layout of axis.
-    if 'node_size' in kwargs:
-        _update_view(node_positions, ax=ax, node_size=kwargs['node_size'])
-    else:
-        _update_view(node_positions, ax=ax)
     _make_pretty(ax)
-
     return ax
 
 
@@ -328,6 +334,89 @@ def _is_directed(edge_list):
         if ((target, source) in edge_list) and (source != target):
             return True
     return False
+
+
+def _find_renderer(fig):
+    """
+    https://stackoverflow.com/questions/22667224/matplotlib-get-text-bounding-box-independent-of-backend
+    """
+
+    if hasattr(fig.canvas, "get_renderer"):
+        #Some backends, such as TkAgg, have the get_renderer method, which
+        #makes this easy.
+        renderer = fig.canvas.get_renderer()
+    else:
+        #Other backends do not have the get_renderer method, so we have a work
+        #around to find the renderer.  Print the figure to a temporary file
+        #object, and then grab the renderer that was used.
+        #(I stole this trick from the matplotlib backend_bases.py
+        #print_figure() method.)
+        import io
+        fig.canvas.print_pdf(io.BytesIO())
+        renderer = fig._cachedRenderer
+    return(renderer)
+
+
+def _get_text_object_dimenstions(ax, string, *args, **kwargs):
+    text_object = ax.text(0., 0., string, *args, **kwargs)
+    renderer = _find_renderer(text_object.get_figure())
+    bbox_in_display_coordinates = text_object.get_window_extent(renderer)
+    bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(ax.transData.inverted())
+    w, h = bbox_in_data_coordinates.width, bbox_in_data_coordinates.height
+    text_object.remove()
+    return w, h
+
+
+def _get_font_size(ax, node_labels, **kwargs):
+    """
+    Determine the maximum font size that results in labels that still all fit inside the node face artist.
+
+    TODO:
+    -----
+    - add font / fontfamily as optional argument
+    - potentially, return a dictionary of font sizes instead; then rescale font sizes individually on a per node basis
+    """
+
+    # check if there are node sizes or edge widths in kwargs
+    if 'node_size' in kwargs:
+        node_size = kwargs['node_size']
+    else:
+        node_size = 3. # default
+
+    if 'node_edge_width' in kwargs:
+        node_edge_width = kwargs['node_edge_width']
+    else:
+        node_edge_width = 0.5 # default
+
+    # initialise base values for font size and rescale factor
+    default_font_size = 12.
+    rescale_factor = np.nan
+    widest = 0.
+
+    # find widest node label; use its rescale factor to set font size for all labels
+    for key, label in node_labels.items():
+
+        if isinstance(node_size, (int, float)):
+            r = node_size
+        elif isinstance(node_size, dict):
+            r = node_size[key]
+
+        if isinstance(node_edge_width, (int, float)):
+            e = node_edge_width
+        elif isinstance(node_edge_width, dict):
+            e = node_edge_width[key]
+
+        d = 2 * (r-e) * BASE_NODE_SIZE
+
+        width, height = _get_text_object_dimenstions(ax, label, size=default_font_size)
+
+        if width > widest:
+            widest = width
+            rescale_factor = d / np.sqrt(width**2 + height**2)
+
+    font_size = default_font_size * rescale_factor
+
+    return font_size
 
 
 def draw_nodes(node_positions,
@@ -1565,12 +1654,23 @@ class Graph(object):
         self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
         self.draw_nodes(self.node_positions, ax=self.ax, **kwargs)
 
+        # Improve default layout of axis.
+        # This function needs to be called before any font sizes are adjusted,
+        # as the axis dimensions affect the effective font size.
+        self._update_view()
+
         if node_labels:
             if not hasattr(self, 'node_labels'):
                 self.node_labels = node_labels
             else:
                 self.node_labels.update(node_labels)
-            self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
+
+            if not 'node_label_font_size' in kwargs:
+                # set font size such that even the largest label fits inside node label face artist
+                font_size = _get_font_size(ax, node_labels, **kwargs) * 0.9 # conservative fudge factor
+                self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=font_size, ax=self.ax, **kwargs)
+            else:
+                self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
 
         if edge_labels:
             if not hasattr(self, 'edge_labels'):
@@ -1578,9 +1678,6 @@ class Graph(object):
             else:
                 self.edge_labels.update(edge_labels)
             self.draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
-
-        # Improve default layout of axis.
-        self._update_view()
 
         _make_pretty(self.ax)
 
@@ -2172,6 +2269,21 @@ def _get_random_weight_matrix(n, p,
     return w
 
 
+def _get_random_length_node_labels(total_nodes, m=8, sd=4):
+
+    lengths = m + sd * np.random.randn(total_nodes)
+    lengths = lengths.astype(np.int)
+    lengths[lengths < 1] = 1
+
+    # https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
+    import random
+    import string
+    def string_generator(size, chars=string.ascii_lowercase):
+        return ''.join(random.choice(chars) for _ in range(size))
+
+    return {ii : string_generator(lengths[ii]) for ii in range(total_nodes)}
+
+
 def test(n=20, p=0.15,
          directed=True,
          weighted=True,
@@ -2192,7 +2304,8 @@ def test(n=20, p=0.15,
     adjacency = np.c_[sources, targets, weights]
 
     if show_node_labels:
-        node_labels = {node: str(int(node)) for node in np.r_[sources, targets]}
+        # node_labels = {node: str(int(node)) for node in np.r_[sources, targets]}
+        node_labels = _get_random_length_node_labels(n)
     else:
         node_labels = None
 
