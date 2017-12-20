@@ -1673,12 +1673,24 @@ class Graph(object):
         node_faces, node_edges = draw_nodes(*args, **kwargs)
 
         if not hasattr(self, 'node_face_artists'):
-            self.node_face_artists = dict()
-        if not hasattr(self, 'node_edge_artists'):
-            self.node_edge_artists = dict()
+            self.node_face_artists = node_faces
+        else:
+            for key, artist in node_faces.items():
+                if key in self.node_face_artists:
+                    # remove old artist
+                    self.node_face_artists[key].remove()
+                # assign new one
+                self.node_face_artists[key] = artist
 
-        self.node_face_artists.update(node_faces)
-        self.node_edge_artists.update(node_edges)
+        if not hasattr(self, 'node_edge_artists'):
+            self.node_edge_artists = node_edges
+        else:
+            for key, artist in node_edges.items():
+                if key in self.node_edge_artists:
+                    # remove old artist
+                    self.node_edge_artists[key].remove()
+                # assign new one
+                self.node_edge_artists[key] = artist
 
 
     def draw_edges(self, *args, **kwargs):
@@ -1733,9 +1745,14 @@ class Graph(object):
         artists = draw_edges(*args, **kwargs)
 
         if not hasattr(self, 'edge_artists'):
-            self.edge_artists = dict()
-
-        self.edge_artists.update(artists)
+            self.edge_artists = artists
+        else:
+            for key, artist in artists.items():
+                if key in self.edge_artists:
+                    # remove old artist
+                    self.edge_artists[key].remove()
+                # assign new one
+                self.edge_artists[key] = artist
 
 
     def draw_node_labels(self, *args, **kwargs):
@@ -1795,9 +1812,14 @@ class Graph(object):
         artists = draw_node_labels(*args, **kwargs)
 
         if not hasattr(self, 'node_label_artists'):
-            self.node_label_artists = dict()
-
-        self.node_label_artists.update(artists)
+            self.node_label_artists = artists
+        else:
+            for key, artist in artists.items():
+                if key in self.node_label_artists:
+                    # remove old artist
+                    self.node_label_artists[key].remove()
+                # assign new one
+                self.node_label_artists[key] = artist
 
 
     def draw_edge_labels(self, *args, **kwargs):
@@ -1860,9 +1882,14 @@ class Graph(object):
         artists = draw_edge_labels(*args, **kwargs)
 
         if not hasattr(self, 'edge_label_artists'):
-            self.edge_label_artists = dict()
-
-        self.edge_label_artists.update(artists)
+            self.edge_label_artists = artists
+        else:
+            for key, artist in artists.items():
+                if key in self.edge_label_artists:
+                    # remove old artist
+                    self.edge_label_artists[key].remove()
+                # assign new one
+                self.edge_label_artists[key] = artist
 
 
     def _update_view(self):
