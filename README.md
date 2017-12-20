@@ -3,7 +3,7 @@
 Python module to make publication quality plots of weighted, directed
 graphs of medium size (10-100 nodes). Unweighted, undirected graphs
 will look perfectly fine, too. The node positions can be tweaked using
-the mouse (after an initial draw). It only depends on numpy, scipy, and
+the mouse (after an initial draw). It only depends on numpy and
 matplotlib.
 
 ![Weighted directed and unweighted, undirected graph](./figures/example_2.png)

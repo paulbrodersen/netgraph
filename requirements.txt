@@ -1,3 +1,2 @@
 numpy
-scipy
 matplotlib >= 1.5
