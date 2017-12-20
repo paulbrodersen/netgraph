@@ -280,7 +280,7 @@ class InteractiveHypergraph(InteractiveGraph):
         self._alpha[hypernode] = node_alpha
 
         # draw hypernode
-        self.draw_nodes(dict(hypernode=pos),
+        self.draw_nodes({hypernode:pos}, # has to be {} not dict()!
                         node_size=node_size / BASE_NODE_SIZE,
                         node_edge_width=node_edge_width / BASE_NODE_SIZE,
                         node_color=node_color,
@@ -300,9 +300,9 @@ class InteractiveHypergraph(InteractiveGraph):
             self.node_labels[hypernode] = hypernode_label
 
             if hasattr(self, 'node_label_font_size'):
-                self.draw_node_labels(dict(hypernode=hypernode_label), dict(hypernode=pos), node_label_font_size=self.node_label_font_size)
+                self.draw_node_labels({hypernode:hypernode_label}, {hypernode:pos}, node_label_font_size=self.node_label_font_size) # has to be {} not dict()!
             else:
-                self.draw_node_labels(dict(hypernode=hypernode_label), dict(hypernode=pos))
+                self.draw_node_labels({hypernode:hypernode_label}, {hypernode:pos})                                                 # has to be {} not dict()!
 
 
     def _delete_node(self, node):
