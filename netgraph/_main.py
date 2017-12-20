@@ -1602,8 +1602,8 @@ class Graph(object):
 
             if not 'node_label_font_size' in kwargs:
                 # set font size such that even the largest label fits inside node label face artist
-                font_size = _get_font_size(ax, node_labels, **kwargs) * 0.9 # conservative fudge factor
-                self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=font_size, ax=self.ax, **kwargs)
+                self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **kwargs) * 0.9 # conservative fudge factor
+                self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax, **kwargs)
             else:
                 self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
 

@@ -302,8 +302,8 @@ class InteractiveHypergraph(InteractiveGraph):
         del self.node_edge_artists[node]
 
         if hasattr(self, 'node_labels'):
-            self.node_label_artist[node].remove()
-            del self.node_label_artist[node]
+            self.node_label_artists[node].remove()
+            del self.node_label_artists[node]
             del self.node_labels[node]
 
 
