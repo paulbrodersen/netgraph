@@ -280,7 +280,7 @@ class InteractiveHypergraph(InteractiveGraph):
         self._alpha[hypernode] = node_alpha
 
         # draw hypernode
-        self.draw_nodes({hypernode: pos},
+        self.draw_nodes(dict(hypernode=pos),
                         node_size=node_size / BASE_NODE_SIZE,
                         node_edge_width=node_edge_width / BASE_NODE_SIZE,
                         node_color=node_color,
