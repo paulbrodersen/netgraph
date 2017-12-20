@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-# from scipy.sparse import coo_matrix
 from collections import OrderedDict
 
 BASE_NODE_SIZE = 1e-2
@@ -1302,13 +1301,7 @@ def fruchterman_reingold_layout(edge_list,
         # We must adjust k by domain size for layouts not near 1x1
         k = domain_size / np.sqrt(total_nodes)
 
-    # A = _edge_list_to_sparse_matrix(edge_list, edge_weights)
     A = _edge_list_to_adjacency(edge_list, edge_weights)
-
-    # if total_nodes > 500:  # sparse solver for large graphs
-    #     pos = _sparse_fruchterman_reingold(A, k, pos_arr, fixed, iterations, dim)
-    # else:
-    #     pos = _dense_fruchterman_reingold(A.toarray(), k, pos_arr, fixed, iterations, dim)
     pos = _dense_fruchterman_reingold(A, k, pos_arr, fixed, iterations, dim)
 
     if fixed is None:
@@ -1378,72 +1371,6 @@ def _dense_fruchterman_reingold(A, k=None, pos=None, fixed=None,
     return pos
 
 
-# def _sparse_fruchterman_reingold(A, k=None, pos=None, fixed=None,
-#                                  iterations=50, dim=2):
-#     # Position nodes in adjacency matrix A using Fruchterman-Reingold
-#     # Entry point for NetworkX graph is fruchterman_reingold_layout()
-#     # Sparse version
-
-#     nnodes, _ = A.shape
-
-#     # make sure we have a list of lists representation
-#     try:
-#         A = A.tolil()
-#     except:
-#         A = (coo_matrix(A)).tolil()
-
-#     # if pos is None:
-#     #     # random initial positions
-#     #     pos = np.asarray(np.random.random((nnodes, dim)), dtype=A.dtype)
-#     # else:
-#     #     # make sure positions are of same type as matrix
-#     #     pos = pos.astype(A.dtype)
-
-#     if pos is None:
-#         # random initial positions
-#         pos = np.random.rand(nnodes, dim)
-
-#     # no fixed nodes
-#     if fixed is None:
-#         fixed = []
-
-#     # optimal distance between nodes
-#     if k is None:
-#         k = np.sqrt(1.0/nnodes)
-#     # the initial "temperature"  is about .1 of domain area (=1x1)
-#     # this is the largest step allowed in the dynamics.
-#     t = 0.1
-#     # simple cooling scheme.
-#     # linearly step down by dt on each iteration so last iteration is size dt.
-#     dt = t / float(iterations+1)
-
-#     displacement = np.zeros((dim, nnodes))
-#     for iteration in range(iterations):
-#         displacement *= 0
-#         # loop over rows
-#         for i in range(A.shape[0]):
-#             if i in fixed:
-#                 continue
-#             # difference between this row's node position and all others
-#             delta = (pos[i] - pos).T
-#             # distance between points
-#             distance = np.sqrt((delta**2).sum(axis=0))
-#             # enforce minimum distance of 0.01
-#             distance = np.where(distance < 0.01, 0.01, distance)
-#             # the adjacency matrix row
-#             Ai = np.asarray(A.getrowview(i).toarray())
-#             # displacement "force"
-#             displacement[:, i] +=\
-#                 (delta * (k * k / distance**2 - Ai * distance / k)).sum(axis=1)
-#         # update positions
-#         length = np.sqrt((displacement**2).sum(axis=0))
-#         length = np.where(length < 0.01, 0.1, length)
-#         pos += (displacement * t / length).T
-#         # cool temperature
-#         t -= dt
-#     return pos
-
-
 def _rescale_layout(pos, scale=1):
     """Return scaled position array to (-scale, scale) in all axes.
 
@@ -1481,23 +1408,6 @@ def _rescale_layout(pos, scale=1):
             pos[:, i] *= scale / lim
     return pos
 
-# def _edge_list_to_sparse_matrix(edge_list, edge_weights=None):
-
-#     nodes = _get_unique_nodes(edge_list)
-#     node_to_idx = dict(zip(nodes, range(len(nodes))))
-#     sources = [node_to_idx[source] for source, _ in edge_list]
-#     targets = [node_to_idx[target] for _, target in edge_list]
-
-#     total_nodes = len(nodes)
-#     shape = (total_nodes, total_nodes)
-
-#     if edge_weights:
-#         weights = [edge_weights[edge] for edge in edge_list]
-#         arr = coo_matrix((weights, (sources, targets)), shape=shape)
-#     else:
-#         arr = coo_matrix((np.ones((len(sources))), (sources, targets)), shape=shape)
-
-#     return arr
 
 def _edge_list_to_adjacency(edge_list, edge_weights=None):
 
