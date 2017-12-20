@@ -291,7 +291,7 @@ class InteractiveHypergraph(InteractiveGraph):
 
         if hasattr(self, 'node_labels'):
 
-            # TODO: `input` results in unresponse plot and terminal; fix / find workaround
+            # TODO: call to `input` results in unresponsive plot and terminal; fix / find workaround
             # hypernode_label = input("Please provide a new label for the hypernode and press enter (default {}):\n".format(hypernode))
             # if hypernode_label == '':
             #     hypernode_label = str(hypernode)
