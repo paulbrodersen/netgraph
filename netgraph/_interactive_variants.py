@@ -87,26 +87,32 @@ class InteractiveGrid(InteractiveGraph):
 
         return node_positions
 
+
     def _on_release(self, event):
 
         if self._currently_dragging:
-            for key in self._selected_artists.keys():
-                x, y = self.node_positions[key]
+
+            nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+            # set node positions to nearest grid point
+            for node in nodes:
+                x, y = self.node_positions[node]
                 x = np.int(np.round(x))
                 y = np.int(np.round(y))
-                self._move_node(key, (x,y))
+                self.node_positions[node] = (x, y)
 
-            self._update_edges()
+            self._update_nodes(nodes)
+            self._update_edges(nodes)
 
             if self.show_grid:
                 self._draw_grid()
-
             if self.show_tiles:
                 self._draw_tiles(color='b', alpha=0.1)
 
+            self.fig.canvas.draw_idle()
+
         super(InteractiveGrid, self)._on_release(event)
 
-        self.fig.canvas.draw_idle()
 
     def _draw_grid(self):
         xlim = [np.int(x) for x in self.ax.get_xlim()]
@@ -224,12 +230,11 @@ class InteractiveHypergraph(InteractiveGraph):
 
         if event.key == 'c':
             if len(self._selected_artists) > 1:
-                nodes = self._selected_artists.keys()
+                nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
                 self._deselect_all_artists()
                 self._combine(nodes)
             else:
                 print("Only a single artist selected! Nothing to combine.")
-
 
 
     def _combine(self, nodes):
