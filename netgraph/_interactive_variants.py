@@ -48,6 +48,7 @@ class InteractiveGrid(InteractiveGraph):
 
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_toggle)
 
+
     def _get_node_positions(self, edge_list, **kwargs):
         """
         Initialise node positions to be on a grid with unit spacing.
@@ -125,10 +126,12 @@ class InteractiveGrid(InteractiveGraph):
             line = self.ax.axhline(y, color='k', alpha=0.1, linestyle='--')
             self.gridlines.append(line)
 
+
     def _remove_grid(self):
         for line in self.gridlines:
             line.remove()
         self.gridlines = []
+
 
     def _get_tile_positions(self):
         # find tiles through which a each edge crosses using the line supercover
@@ -150,6 +153,7 @@ class InteractiveGrid(InteractiveGraph):
         tile_positions = list(set(tile_positions))
         return tile_positions
 
+
     def _draw_tiles(self, *args, **kwargs):
         # remove old tiles:
         # TODO: only remove tiles that are no longer in the set of positions
@@ -165,10 +169,12 @@ class InteractiveGrid(InteractiveGraph):
             self.tiles.append(rect)
             self.ax.add_artist(rect)
 
+
     def _remove_tiles(self):
         for tile in self.tiles:
             tile.remove()
         self.tiles = []
+
 
     def _on_key_toggle(self, event):
         # print('you pressed', event.key, event.xdata, event.ydata)
@@ -286,7 +292,7 @@ class InteractiveHypergraph(InteractiveGraph):
 
         # update data
         self.node_positions[hypernode] = pos
-        self._alpha[hypernode] = node_alpha
+        self._base_alpha[hypernode] = node_alpha
 
         # draw hypernode
         self.draw_nodes({hypernode:pos}, # has to be {} not dict()!
@@ -297,6 +303,13 @@ class InteractiveHypergraph(InteractiveGraph):
                         node_alpha=node_alpha,
                         node_edge_alpha=node_edge_alpha,
                         ax=self.ax)
+
+        # add to draggable artists
+        hypernode_artist = self.node_face_artists[hypernode]
+        self._draggable_artists.append(hypernode_artist)
+        self._node_to_draggable_artist[hypernode] = hypernode_artist
+        self._draggable_artist_to_node[hypernode_artist] = hypernode
+        self._base_alpha[hypernode_artist] = hypernode_artist.get_alpha()
 
         if hasattr(self, 'node_labels'):
 
@@ -315,17 +328,27 @@ class InteractiveHypergraph(InteractiveGraph):
                 self.draw_node_labels({hypernode:hypernode_label}, {hypernode:pos})                                                 # has to be {} not dict()!
 
 
+    # def _delete_node(self, node):
+    #     del self.node_positions[node]
+    #     self.node_face_artists[node].remove()
+    #     del self.node_face_artists[node]
+    #     self.node_edge_artists[node].remove()
+    #     del self.node_edge_artists[node]
+
+    #     if hasattr(self, 'node_labels'):
+    #         self.node_label_artists[node].remove()
+    #         del self.node_label_artists[node]
+    #         del self.node_labels[node]
     def _delete_node(self, node):
-        del self.node_positions[node]
-        self.node_face_artists[node].remove()
-        del self.node_face_artists[node]
-        self.node_edge_artists[node].remove()
-        del self.node_edge_artists[node]
+        self.node_face_artists[node].set_visible(False)
+        self.node_edge_artists[node].set_visible(False)
 
         if hasattr(self, 'node_labels'):
-            self.node_label_artists[node].remove()
-            del self.node_label_artists[node]
-            del self.node_labels[node]
+            self.node_label_artists[node].set_visible(False)
+
+        artist = self._node_to_draggable_artist[node]
+        del self._draggable_artist_to_node[artist]
+        del self._node_to_draggable_artist[node]
 
 
     def _transfer_edges_to_hypernode(self, edge_list, nodes, hypernode):

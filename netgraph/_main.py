@@ -2130,6 +2130,7 @@ class InteractiveGraph(Graph, DraggableArtists):
         Graph.__init__(self, *args, **kwargs)
         DraggableArtists.__init__(self, self.node_face_artists.values())
 
+        self._node_to_draggable_artist = self.node_face_artists
         self._draggable_artist_to_node = dict(zip(self.node_face_artists.values(), self.node_face_artists.keys()))
 
         # trigger resize of labels when canvas size changes
