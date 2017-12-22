@@ -46,7 +46,7 @@ class InteractiveGrid(InteractiveGraph):
         self.gridlines = []
         self.show_grid = False
 
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key)
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_toggle)
 
     def _get_node_positions(self, edge_list, **kwargs):
         """
@@ -164,7 +164,7 @@ class InteractiveGrid(InteractiveGraph):
             tile.remove()
         self.tiles = []
 
-    def _on_key(self, event):
+    def _on_key_toggle(self, event):
         # print('you pressed', event.key, event.xdata, event.ydata)
         if event.key is 't':
             if self.show_tiles is False:
@@ -217,21 +217,22 @@ class InteractiveHypergraph(InteractiveGraph):
         self.kwargs = kwargs
 
         # set up ability to trigger fusion by key-press
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_2)
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_group_ungroup)
 
 
-    def _on_key_2(self, event):
+    def _on_key_group_ungroup(self, event):
 
         if event.key == 'c':
             if len(self._selected_artists) > 1:
                 nodes = self._selected_artists.keys()
                 self._deselect_all_artists()
-                self._fuse(nodes)
+                self._combine(nodes)
             else:
                 print("Only a single artist selected! Nothing to combine.")
 
 
-    def _fuse(self, nodes):
+
+    def _combine(self, nodes):
 
         # create hypernode ID
         # hypernode = _find_unused_int(self.edge_list)
@@ -260,20 +261,20 @@ class InteractiveHypergraph(InteractiveGraph):
         self.fig.canvas.draw_idle()
 
 
-    def _create_hypernode(self, nodes, hypernode, fuse_properties=partial(np.mean, axis=0)):
+    def _create_hypernode(self, nodes, hypernode, combine_properties=partial(np.mean, axis=0)):
         """
         Combine properties of nodes that will form hypernode.
         Draw hypernode.
         """
 
         # combine node / node artist properties
-        pos             = fuse_properties([self.node_positions[node]                    for node in nodes])
-        node_size       = fuse_properties([self.node_edge_artists[node].radius          for node in nodes])
-        node_edge_width = fuse_properties([self.node_face_artists[node].radius          for node in nodes]); node_edge_width = node_size - node_edge_width
-        node_color      = fuse_properties([self.node_face_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
-        node_edge_color = fuse_properties([self.node_edge_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
-        node_alpha      = fuse_properties([self.node_face_artists[node].get_alpha()     for node in nodes])
-        node_edge_alpha = fuse_properties([self.node_edge_artists[node].get_alpha()     for node in nodes])
+        pos             = combine_properties([self.node_positions[node]                    for node in nodes])
+        node_size       = combine_properties([self.node_edge_artists[node].radius          for node in nodes])
+        node_edge_width = combine_properties([self.node_face_artists[node].radius          for node in nodes]); node_edge_width = node_size - node_edge_width
+        node_color      = combine_properties([self.node_face_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
+        node_edge_color = combine_properties([self.node_edge_artists[node].get_facecolor() for node in nodes]) # NB: this only makes sense for a gray cmap
+        node_alpha      = combine_properties([self.node_face_artists[node].get_alpha()     for node in nodes])
+        node_edge_alpha = combine_properties([self.node_edge_artists[node].get_alpha()     for node in nodes])
 
         # update data
         self.node_positions[hypernode] = pos
@@ -337,13 +338,13 @@ class InteractiveHypergraph(InteractiveGraph):
         return new_edge_list
 
 
-    def _create_hypernode_edges(self, old_edges, new_edges, fuse_properties=partial(np.mean, axis=0)):
+    def _create_hypernode_edges(self, old_edges, new_edges, combine_properties=partial(np.mean, axis=0)):
         """
         For each unique new edge, take corresponding old edges.
         Create new edge artists based on properties of corresponding old edge artists.
         """
 
-        # find edges that are being fused
+        # find edges that are being combined
         new_to_old = dict()
         for new_edge, old_edge in zip(new_edges, old_edges):
             try:
@@ -359,9 +360,9 @@ class InteractiveHypergraph(InteractiveGraph):
             # filter old_edges: self-loops have no edge artists
             old_edges = [(source, target) for (source, target) in old_edges if source != target]
             # combine properties
-            edge_width[new_edge] = fuse_properties([self.edge_artists[edge].width           for edge in old_edges])  / BASE_EDGE_WIDTH
-            edge_color[new_edge] = fuse_properties([self.edge_artists[edge].get_facecolor() for edge in old_edges]) # NB: this only makes sense for a gray cmap; combine weights instead?
-            # edge_alpha[new_edge] = fuse_properties([self.edge_artists[edge].get_alpha()     for edge in old_edges]) # TODO: .get_alpha() returns None?
+            edge_width[new_edge] = combine_properties([self.edge_artists[edge].width           for edge in old_edges])  / BASE_EDGE_WIDTH
+            edge_color[new_edge] = combine_properties([self.edge_artists[edge].get_facecolor() for edge in old_edges]) # NB: this only makes sense for a gray cmap; combine weights instead?
+            # edge_alpha[new_edge] = combine_properties([self.edge_artists[edge].get_alpha()     for edge in old_edges]) # TODO: .get_alpha() returns None?
 
         # zorder = _get_zorder(self.edge_color) # TODO: fix, i.e. get all edge colors, determine order
 
