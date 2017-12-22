@@ -292,11 +292,12 @@ class InteractiveHypergraph(InteractiveGraph):
 
         if hasattr(self, 'node_labels'):
 
-            # TODO: call to `input` results in unresponsive plot and terminal; fix / find workaround
+            # # TODO: call to `input` results in unresponsive plot and terminal; fix / find workaround
             # hypernode_label = input("Please provide a new label for the hypernode and press enter (default {}):\n".format(hypernode))
             # if hypernode_label == '':
             #     hypernode_label = str(hypernode)
-            hypernode_label = hypernode
+            hypernode_label = [self.node_label[node] for node in nodes]
+            hypernode_label = ',\n'.join(hypernode_label)
 
             self.node_labels[hypernode] = hypernode_label
 
