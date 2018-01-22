@@ -2351,5 +2351,5 @@ if __name__ == "__main__":
         filename = ''.join(['{}-{}_'.format(key, value) for (key, value) in kwargs.items()])
         filename = filename[:-1] # remove trailing underscore
         ax.set_title(title)
-        fig.savefig('{}.pdf'.format(filename))
+        fig.savefig('../figures/{}.pdf'.format(filename))
         plt.close()
