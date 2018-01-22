@@ -1037,7 +1037,11 @@ def draw_node_labels(node_labels,
 
     artists = dict()  # there is no text collection so we'll fake one
     for node, label in node_labels.items():
-        x, y = node_positions[node]
+        try:
+            x, y = node_positions[node]
+        except KeyError:
+            print("Cannot draw node label for node with ID {}. The node has no position assigned to it.".format(node))
+            continue
         x += dx
         y += dy
         text_object = ax.text(x, y,
