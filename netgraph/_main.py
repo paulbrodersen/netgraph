@@ -2321,7 +2321,7 @@ def test(n=20, p=0.15,
         graph = adjacency_matrix
     elif test_format == "networkx":
         import networkx
-        graph = networkx.from_numpy_array(adjacency_matrix, networkx.DiGraph)
+        graph = networkx.DiGraph(adjacency_matrix)
     elif test_format == "igraph":
         import igraph
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
