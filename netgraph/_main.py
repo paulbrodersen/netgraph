@@ -917,10 +917,10 @@ class FancyArrow(matplotlib.patches.Polygon):
             # start by drawing horizontal arrow, point at (0,0)
             hw, hl, hs, lw = self.head_width, self.head_length, self.overhang, self.width
             left_half_arrow = np.array([
-                [0.0, 0.0],                  # tip
+                [0.0, 0.0],                   # tip
                 [-hl, -hw / 2.0],             # leftmost
                 [-hl * (1 - hs), -lw / 2.0],  # meets stem
-                [-length, -lw / 2.0],          # bottom left
+                [-length, -lw / 2.0],         # bottom left
                 [-length, 0],
             ])
             # if we're not including the head, shift up by head length
@@ -2321,7 +2321,7 @@ def test(n=20, p=0.15,
         graph = adjacency_matrix
     elif test_format == "networkx":
         import networkx
-        graph = networkx.from_numpy_array(adjacency_matrix, networkx.DiGraph)
+        graph = networkx.DiGraph(adjacency_matrix)
     elif test_format == "igraph":
         import igraph
         graph = igraph.Graph.Weighted_Adjacency(adjacency_matrix.tolist())
