@@ -68,7 +68,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     """
 
     # Accept a variety of formats and convert to common denominator.
-    edge_list, edge_weight = parse_graph(graph)
+    edge_list, edge_weight, is_directed = parse_graph(graph)
 
     if edge_weight:
 
@@ -86,7 +86,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         kwargs.setdefault('edge_zorder', edge_zorder)
 
     # Plot arrows if the graph has bi-directional edges.
-    if _is_directed(edge_list):
+    if is_directed:
         kwargs.setdefault('draw_arrows', True)
     else:
         kwargs.setdefault('draw_arrows', False)
@@ -151,6 +151,10 @@ def parse_graph(graph):
     edge_weights: dict (source, target) : float or None
         Edge weights. If the graph is unweighted, None is returned.
 
+    is_directed: bool
+        True, if the graph appears to be directed due to
+            - the graph object class being passed in (networkx.DiGraph), or
+            - the existence of bi-directional edges.
     """
 
     if isinstance(graph, (list, tuple, set)):
@@ -190,7 +194,8 @@ def _parse_sparse_matrix_format(adjacency):
     adjacency = np.array(adjacency)
     rows, columns = adjacency.shape
     if columns == 2:
-        return _parse_edge_list(adjacency), None
+        edge_list = _parse_edge_list(adjacency)
+        return edge_list, None, _is_directed(edge_list)
     elif columns == 3:
         edge_list = _parse_edge_list(adjacency[:,:2])
         edge_weights = {(source, target) : weight for (source, target, weight) in adjacency}
@@ -204,9 +209,9 @@ def _parse_sparse_matrix_format(adjacency):
             edge_list = tmp
 
         if len(set(edge_weights.values())) > 1:
-            return edge_list, edge_weights
+            return edge_list, edge_weights, _is_directed(edge_list)
         else:
-            return edge_list, None
+            return edge_list, None, _is_directed(edge_list)
     else:
         raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
 
@@ -236,7 +241,7 @@ def _parse_adjacency_matrix(adjacency):
     edge_weights = {(source, target): adjacency[source, target] for (source, target) in edge_list}
     if len(set(list(edge_weights.values()))) == 1:
         return edge_list, None
-    return edge_list, edge_weights
+    return edge_list, edge_weights, _is_directed(edge_list)
 
 
 def _parse_networkx_graph(graph, attribute_name='weight'):
@@ -245,7 +250,7 @@ def _parse_networkx_graph(graph, attribute_name='weight'):
         edge_weights = {edge : graph.get_edge_data(*edge)[attribute_name] for edge in edge_list}
     except KeyError: # no weights
         edge_weights = None
-    return edge_list, edge_weights
+    return edge_list, edge_weights, graph.is_directed()
 
 
 def _parse_igraph_graph(graph):
@@ -254,7 +259,7 @@ def _parse_igraph_graph(graph):
         edge_weights = {(edge.source, edge.target) : edge['weight'] for edge in graph.es()}
     else:
         edge_weights = None
-    return edge_list, edge_weights
+    return edge_list, edge_weights, graph.is_directed()
 
 
 def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
@@ -1548,7 +1553,7 @@ class Graph(object):
             self.ax = ax
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        self.edge_list, self.edge_weight = parse_graph(graph)
+        self.edge_list, self.edge_weight, is_directed = parse_graph(graph)
 
         # Color and reorder edges for weighted graphs.
         if self.edge_weight:
@@ -1569,7 +1574,7 @@ class Graph(object):
         # --------------------------------------------------------------------------------
 
         # Plot arrows if the graph has bi-directional edges.
-        if _is_directed(self.edge_list):
+        if is_directed:
             kwargs.setdefault('draw_arrows', True)
         else:
             kwargs.setdefault('draw_arrows', False)
