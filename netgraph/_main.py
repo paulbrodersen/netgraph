@@ -2342,7 +2342,8 @@ if __name__ == "__main__":
 
     combinations = itertools.product(*arguments.values())
 
-    for combination in combinations:
+    for ii, combination in enumerate(combinations):
+        print(ii, zip(arguments.keys(), combination))
         fig, ax = plt.subplots(1, 1, figsize=(16,16))
         kwargs = dict(zip(arguments.keys(), combination))
         graph = test(ax=ax, **kwargs)
