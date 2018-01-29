@@ -1588,7 +1588,7 @@ class Graph(object):
         if node_positions is None:
             # If none are given, initialise all.
             self.node_positions = self._get_node_positions(self.edge_list)
-        elif len(node_positions) < len(_get_unique_nodes(edge_list)):
+        elif len(node_positions) < len(_get_unique_nodes(self.edge_list)):
             # If some are given, keep those fixed and initialise remaining.
             self.node_positions = self._get_node_positions(self.edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
         else:
