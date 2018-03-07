@@ -217,7 +217,7 @@ def _parse_sparse_matrix_format(adjacency):
 
 
 def _save_cast_float_to_int(num):
-    if np.isclose(num, int(num)):
+    if isinstance(num, float) and np.isclose(num, int(num)):
         return int(num)
     else:
         return num
