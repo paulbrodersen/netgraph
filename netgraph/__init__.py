@@ -74,7 +74,7 @@ pos = graph.node_positions
 
 """
 
-__version__ = "2.0.9"
+__version__ = "3.0.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
