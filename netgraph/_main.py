@@ -120,7 +120,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
             draw_node_labels(node_labels, node_positions, ax=ax, **kwargs)
 
     if edge_labels is not None:
-        draw_edge_labels(edge_labels, node_positions, ax=ax, **kwargs)
+        draw_edge_labels(edge_list, edge_labels, node_positions, ax=ax, **kwargs)
 
     # Improve default layout of axis.
     _make_pretty(ax)
@@ -1061,8 +1061,10 @@ def draw_node_labels(node_labels,
     return artists
 
 
-def draw_edge_labels(edge_labels,
+def draw_edge_labels(edge_list,
+                     edge_labels,
                      node_positions,
+                     edge_label_position=0.5,
                      edge_label_font_size=10,
                      edge_label_font_color='k',
                      edge_label_font_family='sans-serif',
@@ -1072,6 +1074,7 @@ def draw_edge_labels(edge_labels,
                      edge_label_horizontalalignment='center',
                      edge_label_verticalalignment='center',
                      clip_on=False,
+                     edge_width=1.,
                      ax=None,
                      rotate=True,
                      edge_label_zorder=10000,
@@ -1082,12 +1085,21 @@ def draw_edge_labels(edge_labels,
     Arguments
     ---------
 
-    node_positions : dict node : (float, float)
-        Mapping of nodes to (x, y) positions
+    edge_list: m-long list of 2-tuples
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     edge_labels : dict (source, target) : str
         Mapping of edges to edge labels.
         Only edges in the dictionary are labelled.
+
+    node_positions : dict node : (float, float)
+        Mapping of nodes to (x, y) positions
+
+    edge_label_position : float
+        Relative position along the edge where the label is placed.
+            head   : 0.
+            centre : 0.5 (default)
+            tail   : 1.
 
     edge_label_font_size : int (default 12)
        Font size
@@ -1120,6 +1132,10 @@ def draw_edge_labels(edge_labels,
         Set the zorder of edge labels.
         Choose a large number to ensure that the labels are plotted on top of the edges.
 
+    edge_width : float or dict (source, key) : width (default 1.)
+        Line width of edges.
+        NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
+
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
@@ -1133,11 +1149,13 @@ def draw_edge_labels(edge_labels,
 
     """
 
-    # draw labels centered on the midway point of the edge
-    label_pos = 0.5
-
     if ax is None:
         ax = plt.gca()
+
+    if isinstance(edge_width, (int, float)):
+        edge_width = {edge: edge_width for edge in edge_list}
+
+    edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
 
     text_items = {}
     for (n1, n2), label in edge_labels.items():
@@ -1146,8 +1164,12 @@ def draw_edge_labels(edge_labels,
 
             (x1, y1) = node_positions[n1]
             (x2, y2) = node_positions[n2]
-            (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
-                      y1 * label_pos + y2 * (1.0 - label_pos))
+
+            if (n2, n1) in edge_list: # i.e. bidirectional edge --> need to shift label to stay on edge
+                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.*edge_width[(n1, n2)])
+
+            (x, y) = (x1 * edge_label_position + x2 * (1.0 - edge_label_position),
+                      y1 * edge_label_position + y2 * (1.0 - edge_label_position))
 
             if rotate:
                 angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
@@ -1622,7 +1644,7 @@ class Graph(object):
                 self.edge_labels = edge_labels
             else:
                 self.edge_labels.update(edge_labels)
-            self.draw_edge_labels(self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
+            self.draw_edge_labels(self.edge_list, self.edge_labels, self.node_positions, ax=self.ax, **kwargs)
 
         _make_pretty(self.ax)
 
@@ -1839,12 +1861,21 @@ class Graph(object):
         Arguments
         ---------
 
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x, y) positions
+        edge_list: m-long list of 2-tuples
+            List of edges. Each tuple corresponds to an edge defined by (source, target).
 
         edge_labels : dict (source, target) : str
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
+
+        node_positions : dict node : (float, float)
+            Mapping of nodes to (x, y) positions
+
+        edge_label_position : float
+            Relative position along the edge where the label is placed.
+                head   : 0.
+                center : 0.5 (default)
+                tail   : 1.
 
         edge_label_font_size : int (default 12)
            Font size
@@ -1876,6 +1907,10 @@ class Graph(object):
         edge_label_zorder : int (default 10000)
             Set the zorder of edge labels.
             Choose a large number to ensure that the labels are plotted on top of the edges.
+
+        edge_width : float or dict (source, key) : width (default 1.)
+            Line width of edges.
+            NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
 
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -2197,16 +2232,17 @@ class InteractiveGraph(Graph, DraggableArtists):
             pass
 
 
-    def _update_edge_labels(self, edges, node_positions, rotate=True): # TODO: pass 'rotate' properly
-
-        # draw labels centered on the midway point of the edge
-        label_pos = 0.5
+    def _update_edge_labels(self, edges, node_positions, edge_label_position=0.5, rotate=True): # TODO: pass 'rotate' properly
 
         for (n1, n2) in edges:
             (x1, y1) = node_positions[n1]
             (x2, y2) = node_positions[n2]
-            (x, y) = (x1 * label_pos + x2 * (1.0 - label_pos),
-                      y1 * label_pos + y2 * (1.0 - label_pos))
+
+            if (n2, n1) in edges: # i.e. bidirectional edge
+                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.5*self.edge_artists[(source, target)].width)
+
+            (x, y) = (x1 * edge_label_position + x2 * (1.0 - edge_label_position),
+                      y1 * edge_label_position + y2 * (1.0 - edge_label_position))
 
             if rotate:
                 angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
