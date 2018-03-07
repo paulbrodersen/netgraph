@@ -5,4 +5,4 @@
 - add edges interactively
 - add nodes interactively
 - set artist attributes interactively
- 
+- in `draw_edge_labels` the angle calculation is only correct if the the edge_label_position is 0.5  
