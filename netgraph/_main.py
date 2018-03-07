@@ -153,7 +153,7 @@ def parse_graph(graph):
 
     is_directed: bool
         True, if the graph appears to be directed due to
-            - the graph object class being passed in (networkx.DiGraph), or
+            - the graph object class being passed in (e.g. a networkx.DiGraph), or
             - the existence of bi-directional edges.
     """
 
@@ -700,7 +700,7 @@ def draw_edges(edge_list,
 
     Arguments
     ----------
-    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     node_positions : dict key : (float, float)
@@ -724,7 +724,7 @@ def draw_edges(edge_list,
     edge_alpha : float or dict (source, target) : float (default 1.)
         The edge transparency,
 
-    edge_zorder: int or dict (source, target) : int (default None)
+    edge_zorder : int or dict (source, target) : int (default None)
         Order in which to plot the edges.
         If None, the edges will be plotted in the order they appear in 'adjacency'.
         Note: graphs typically appear more visually pleasing if darker coloured edges
