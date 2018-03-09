@@ -429,9 +429,203 @@ class InteractiveHypergraph(InteractiveGraph):
             #     del self.edge_label_artists[edge] # TODO: get / set property for hyperedges; otherwise these raises KeyError
 
 
+class InteractivelyConstructDestroyGraph(InteractiveGraph):
+    """
+    Interactively add and remove nodes and edges.
+
+    Pressing 'A' will add a node to the graph.
+    Pressing 'D' will remove a selected node.
+    Pressing 'a' will add edges between all selected nodes.
+    Pressing 'd' will remove edges between all selected nodes.
+    Pressing 'r' will reverse the direction of edges between all selected nodes.
+
+    See also:
+    ---------
+    InteractiveGraph, Graph, draw
+
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        super(InteractivelyConstructDestroyGraph, self).__init__(*args, **kwargs)
+
+        # link node/edge construction/destruction to key presses
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
+
+
+    def _on_key_add_or_destroy(self, event):
+        if event.key == 'A':
+            self._add_node(event)
+        elif event.key == 'a':
+            self._add_edges()
+        elif event.key == 'D':
+            self._delete_nodes()
+        elif event.key == 'd':
+            self._delete_edges()
+        elif event.key == 'r':
+            self._reverse_edges()
+        else:
+            pass
+
+        self.fig.canvas.draw_idle()
+
+
+    def _add_node(self, event):
+
+        # create node ID; use smallest unused int
+        node = 0
+        while node in self.node_positions.keys():
+            node += 1
+
+        # get position of cursor place node at cursor position
+        pos = event.xdata, event.ydata
+        self.node_positions[node] = pos
+
+        # draw node
+        self.draw_nodes({node:pos}, **self.kwargs)
+
+        # add to draggable artists
+        node_artist = self.node_face_artists[node]
+        self._draggable_artists.append(node_artist)
+        self._node_to_draggable_artist[node] = node_artist
+        self._draggable_artist_to_node[node_artist] = node
+        self._base_alpha[node_artist] = node_artist.get_alpha()
+
+
+    def _add_edges(self):
+
+        # translate selected artists into nodes
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+        # iterate over all pairs of selected nodes and create edges between nodes that are not already connected
+        # new_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source != target) and (not (source, target) in self.edge_list)] # bidirectional
+        new_edges = [(source, target) for source, target in itertools.combinations(nodes, 2) if (source != target) and (not (source, target) in self.edge_list)] # unidirectional
+
+        # add new edges to edge_list and corresponding artists to canvas
+        self.edge_list.extend(new_edges)
+        self.draw_edges(self.edge_list, node_positions=self.node_positions, **self.kwargs)
+
+
+    def _delete_nodes(self):
+        # translate selected artists into nodes
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+        # delete edges to and from selected nodes
+        for (source, target) in self.edge_list:
+            if (source in nodes) or (target in nodes):
+                self._delete_edge((source, target))
+
+        # delete nodes
+        for node in nodes:
+            self._delete_node(node)
+
+
+    def _delete_node(self, node):
+        # c.f. InteractiveHypergraph !
+        print('Delete node {}'.format(node))
+
+        if hasattr(self, 'node_labels'):
+            self.node_label_artists[node].remove()
+            del self.node_label_artists[node]
+
+        artist = self._node_to_draggable_artist[node]
+        del self._draggable_artist_to_node[artist]
+
+        # del self._node_to_draggable_artist[node] # -> self.node_face_artists[node].remove()
+        self.node_face_artists[node].remove()
+        self.node_edge_artists[node].remove()
+        del self.node_face_artists[node]
+        del self.node_edge_artists[node]
+
+
+    def _delete_edges(self):
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+        # delete edges between selected nodes
+        for (source, target) in self.edge_list:
+            if (source in nodes) and (target in nodes):
+                self._delete_edge((source, target))
+
+
+    def _delete_edge(self, edge):
+        # c.f. InteractiveHypergraph !
+
+        # delete attributes of edge
+        if hasattr(self, 'edge_weight'):
+            if isinstance(self.edge_weight, dict):
+                if edge in self.edge_weight:
+                    del self.edge_weight[edge]
+
+        if hasattr(self, 'edge_color'):
+            if isinstance(self.edge_color, dict):
+                if edge in self.edge_color:
+                    del self.edge_color[edge]
+
+        if hasattr(self, 'edge_zorder'):
+            if isinstance(self.edge_zorder, dict):
+                if edge in self.edge_zorder:
+                    del self.edge_zorder[edge]
+
+        # delete artists
+        source, target = edge
+        if source != target: # i.e. skip self-loops as they have no corresponding artist
+            self.edge_artists[edge].remove()
+            del self.edge_artists[edge]
+
+            if hasattr(self, 'edge_labels'):
+                del self.edge_labels[edge]
+                self.edge_label_artists[edge].remove()
+                del self.edge_label_artists[edge]
+
+        # delete edge
+        self.edge_list.remove(edge)
+
+
+    def _reverse_edges(self):
+        # translate selected artists into nodes
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+        # grab all edges between selected nodes
+        old_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edge_list]
+
+        # reverse edges
+        new_edges = [edge[::-1] for edge in old_edges]
+
+        # copy attributes
+        for old_edge, new_edge in zip(old_edges, new_edges):
+            self._copy_edge_attributes(old_edge, new_edge)
+
+        # remove edges that are being replaced
+        for edge in old_edges:
+            self._delete_edge(edge)
+
+        # add new edges to edge_list and corresponding artists to canvas
+        self.edge_list.extend(new_edges)
+        self.draw_edges(self.edge_list, node_positions=self.node_positions, **self.kwargs)
+
+
+    def _copy_edge_attributes(self, source, target):
+        if hasattr(self, 'edge_weight'):
+            if isinstance(self.edge_weight, dict):
+                if source in self.edge_weight:
+                    self.edge_weight[target] = self.edge_weight[source]
+
+        if hasattr(self, 'edge_color'):
+            if isinstance(self.edge_color, dict):
+                if source in self.edge_color:
+                    self.edge_color[target] = self.edge_color[source]
+
+        if hasattr(self, 'edge_zorder'):
+            if isinstance(self.edge_zorder, dict):
+                if source in self.edge_zorder:
+                    self.edge_zorder[target] = self.edge_zorder[source]
+
 
 if __name__ == '__main__':
 
     # g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
-    g = test(InteractiveClass=InteractiveHypergraph)
-    plt.show()
+    # g = test(InteractiveClass=InteractiveHypergraph)
+    # g = test(InteractiveClass=InteractivelyConstructDestroyGraph)
+    # plt.show()
+
+    pass
