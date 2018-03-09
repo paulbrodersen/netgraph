@@ -511,9 +511,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
         # delete edges to and from selected nodes
-        for (source, target) in self.edge_list:
-            if (source in nodes) or (target in nodes):
-                self._delete_edge((source, target))
+        edges = [(source, target) for (source, target) in self.edge_list if ((source in nodes) or (target in nodes))]
+        for edge in edges:
+            self._delete_edge(edge)
 
         # delete nodes
         for node in nodes:
@@ -542,9 +542,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
         # delete edges between selected nodes
-        for (source, target) in self.edge_list:
-            if (source in nodes) and (target in nodes):
-                self._delete_edge((source, target))
+        edges = [(source, target) for (source, target) in self.edge_list if ((source in nodes) and (target in nodes))]
+        for edge in edges:
+            self._delete_edge(edge)
 
 
     def _delete_edge(self, edge):
