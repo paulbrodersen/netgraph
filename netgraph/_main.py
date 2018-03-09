@@ -1624,13 +1624,16 @@ class Graph(object):
             self.edge_zorder = _get_zorder(self.edge_color)
             kwargs.setdefault('edge_zorder', self.edge_zorder)
 
-        # --------------------------------------------------------------------------------
-
         # Plot arrows if the graph has bi-directional edges.
         if is_directed:
             kwargs.setdefault('draw_arrows', True)
         else:
             kwargs.setdefault('draw_arrows', False)
+
+        # keep track of kwargs
+        self.kwargs = kwargs
+
+        # --------------------------------------------------------------------------------
 
         # Initialise node positions.
         if node_positions is None:
