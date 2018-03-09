@@ -522,7 +522,6 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
     def _delete_node(self, node):
         # c.f. InteractiveHypergraph !
-        print('Delete node {}'.format(node))
 
         if hasattr(self, 'node_labels'):
             self.node_label_artists[node].remove()
