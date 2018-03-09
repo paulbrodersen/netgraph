@@ -750,22 +750,41 @@ def draw_edges(edge_list,
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
-    if isinstance(node_size, (int, float)):
+    # convert node and edge to dictionaries if they are not already;
+    # if dictionaries are provided, make sure that they are complete
+    if not isinstance(node_size, dict):
         node_size = {node:node_size for node in nodes}
-    if isinstance(edge_width, (int, float)):
+    else:
+        for node in nodes:
+            node_size.setdefault(node, 3.)
+
+    if not isinstance(edge_width, dict):
         edge_width = {edge: edge_width for edge in edge_list}
+    else:
+        for edge in edge_list:
+            edge_width.setdefault(edge, 1.)
+
     if not isinstance(edge_color, dict):
         edge_color = {edge: edge_color for edge in edge_list}
-    if isinstance(edge_alpha, (int, float)):
+    else:
+        for edge in edge_list:
+            edge_color.setdefault(edge, 'k')
+
+    if not isinstance(edge_alpha, dict):
         edge_alpha = {edge: edge_alpha for edge in edge_list}
+    else:
+        for edge in edge_list:
+            edge_alpha.setdefault(edge, 1.)
 
     # rescale
     node_size  = {node: size  * BASE_NODE_SIZE  for (node, size)  in node_size.items()}
     edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
 
     # order edges if necessary
-    if not (edge_zorder is None):
-       edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
+    if edge_zorder:
+        for edge in edge_list:
+            edge_zorder.setdefault(edge, max(edge_zorder.values()))
+        edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
 
     # NOTE: At the moment, only the relative zorder is honored, not the absolute value.
 
