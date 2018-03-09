@@ -2252,10 +2252,8 @@ class InteractiveGraph(Graph, DraggableArtists):
             self.edge_artists[(source, target)].update_vertices(x0=x0, y0=y0, dx=x1-x0, dy=y1-y0)
 
         # move edge labels
-        try:
+        if hasattr(self, 'edge_label_artists'):
             self._update_edge_labels(edges, self.node_positions)
-        except AttributeError: # no edge labels
-            pass
 
 
     def _update_edge_labels(self, edges, node_positions, edge_label_position=0.5, rotate=True): # TODO: pass 'rotate' properly
