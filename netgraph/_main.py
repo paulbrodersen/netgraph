@@ -2268,20 +2268,6 @@ class InteractiveGraph(Graph, DraggableArtists):
             (x, y) = (x1 * edge_label_position + x2 * (1.0 - edge_label_position),
                       y1 * edge_label_position + y2 * (1.0 - edge_label_position))
 
-            if rotate:
-                angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
-                # make label orientation "right-side-up"
-                if angle > 90:
-                    angle -= 180
-                if angle < - 90:
-                    angle += 180
-                # transform data coordinate angle to screen coordinate angle
-                xy = np.array((x, y))
-                trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
-                                                                 xy.reshape((1, 2)))[0]
-            else:
-                trans_angle = 0.0
-
             self.edge_label_artists[(n1, n2)].set_position((x, y))
 
 
