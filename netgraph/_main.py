@@ -2262,13 +2262,14 @@ class InteractiveGraph(Graph, DraggableArtists):
             (x1, y1) = node_positions[n1]
             (x2, y2) = node_positions[n2]
 
-            if (n2, n1) in edges: # i.e. bidirectional edge
-                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.5*self.edge_artists[(source, target)].width)
+            if (n1, n2) in edges: # i.e. bidirectional edge
+                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.5*self.edge_artists[(n1, n2)].width)
 
             (x, y) = (x1 * edge_label_position + x2 * (1.0 - edge_label_position),
                       y1 * edge_label_position + y2 * (1.0 - edge_label_position))
 
             self.edge_label_artists[(n1, n2)].set_position((x, y))
+            # TODO: adjust angle of label
 
 
     def _on_resize(self, event):
