@@ -62,9 +62,18 @@ However, so far, only unweighted graphs are properly supported.
 ![Demo of InteractivelyCreateDestroyGraph](https://media.giphy.com/media/3ICKutOjeWxRf1Wmeh/giphy.gif)
 
 ```python
+import netgraph
+import matplotlib.pyplot as plt; plt.ion()
 
-# Create an interactive plot.
-plot_instance = netgraph.InteractivelyCreateDestroyGraph(graph, draw_arrows=True)
+# Initialise figure and set size of axis to draw on.
+fig, ax = plt.subplots(1, 1)
+ax.set(xlim=[-2, 2], ylim=[-2, 2])
+
+# Define a graph. Here we start with a single edge:
+graph = [(0, 1)]
+
+# Initialise plot: 
+plot_instance = netgraph.InteractivelyCreateDestroyGraph(graph, draw_arrows=True, ax=ax)
 
 # As before, the node layout can be changed by selecting the nodes and moving them around
 # using the mouse. The graph itself can be manipulated using the following hotkeys:
