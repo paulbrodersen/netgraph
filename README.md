@@ -114,7 +114,7 @@ interactive_graph = netgraph.InteractivelyCreateDestroyGraph(graph)
 # Do stuff such as moving nodes around, or adding and deleting nodes or edges.
 ...
 
-# Access current graph
+# Access current graph:
 edge_list = interactive_graph.edge_list
 
 # Access current node_positions (and nodes):
@@ -140,7 +140,33 @@ What constitutes the "right thing", however, is a matter of taste, and hence net
 Please refer to the documentation of these functions for a list of all available arguments to customize the layout of your graph. 
 
 Furthermore, all of these functions return containers of standard matplotlib objects, which can thus also be manipulated directly. 
-In general, these containers are dictionaries, mapping the graph elements (node / edge) to their respective matplotlib artists (or text objects in the case of labels). Accessing and manipulating a specific plot element is hence trivial. 
+In general, these containers are dictionaries, mapping the graph elements (node / edge) to their respective matplotlib artists (or text objects in the case of labels).
+Accessing and manipulating a specific plot element after the initial draw is hence straightforward. 
+
+```python
+import netgraph
+import matplotlib.pyplot as plt; plt.ion()
+
+# define graph and initial layout
+edge_list = [(0, 1), (1, 2)]
+node_positions = {0 : (0, 0), 1 : (1, 1), 2 : (1, 2)}
+
+# plot graph
+fig, ax = plt.subplots(1,1)
+ax.set(xlim=[-1, 3], ylim=[-1, 3])
+node_to_artist = netgraph.draw_nodes(node_positions, ax=ax)
+edge_to_artist = netgraph.draw_edges(edge_list, node_positions, ax=ax)
+
+# make some changes after the draw by setting matplotlib artist properties
+special_edge = (0, 1)
+special_artist = edge_to_artist[special_edge]
+special_artist.set_facecolor('red')
+fig.canvas.draw_idle()
+
+# the same effect could have achieved by passing in the edge color argument:
+edge_color = {(0, 1): 'k', (1, 2) : 'r'} 
+edge_to_artist = netgraph.draw_edges(edge_list, node_positions, edge_color=edge_color, ax=ax)
+```
 
 ## Installation
 
