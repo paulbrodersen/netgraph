@@ -26,7 +26,6 @@ node positions to be tweaked with the mouse (after an initial draw).
 
 ![Demo of InteractiveGraph](https://media.giphy.com/media/xUOxfk8zazlkWLYtlC/giphy.gif)
 
-## Code example
 
 ```python
 import numpy as np
@@ -51,11 +50,40 @@ netgraph.draw(graph)
 # and you won't be able to move the plot elements around.
 plot_instance = netgraph.InteractiveGraph(graph)
 
-# Access new node positions: 
-pos = plot_instance.node_positions
+# The position of the nodes can be adjusted with the mouse. 
+# To access the new node positions: 
+node_positions = plot_instance.node_positions
 ```
 
-`netgraph.draw` supports various formats for the `graph` argument. 
+Finally, it is sometimes convenient to change the graph itself "on the fly" (not just the layout).
+To that end, the class `InteractivelyCreateDestroyGraph` supports addition and deletion of nodes and edges.
+However, so far, only unweighted graphs are properly supported.  
+
+![Demo of InteractivelyCreateDestroyGraph](https://media.giphy.com/media/3ICKutOjeWxRf1Wmeh/giphy.gif)
+
+```python
+
+# Create an interactive plot.
+plot_instance = netgraph.InteractivelyCreateDestroyGraph(graph, draw_arrows=True)
+
+# As before, the node layout can be changed by selecting the nodes and moving them around
+# using the mouse. The graph itself can be manipulated using the following hotkeys:
+#   Pressing 'A' will add a node to the graph at the current cursor position.
+#   Pressing 'D' will remove a selected node.
+#   Pressing 'a' will add edges between all selected nodes.
+#   Pressing 'd' will remove edges between all selected nodes.
+#   Pressing 'r' will reverse the direction of edges between all selected nodes.
+
+# To access the new node positions: 
+node_positions = plot_instance.node_positions
+
+# The new graph can be accessed via the edge list:
+edge_list = plot_instance.edge_list
+```
+
+## Integration with other network analysis libraries
+
+To facilitate interoperability, `netgraph.draw` supports various input formats for the `graph` argument. 
 
 In order of precedence:
 
@@ -77,13 +105,42 @@ g = networkx.from_numpy_array(graph, networkx.DiGraph)
 netgraph.draw(g)
 ```
 
-There are many ways to customize the layout of your graph. For a full
-list of available arguments, please refer to the documentation of
-- `draw` 
+Conversely, `networkx.Graph` and `igraph.Graph` objects can be easily instantiated from a `netgraph.InteractiveGraph` object (and derived classes):
+
+```python
+# Instantiate an interactive graph from some other graph object:
+interactive_graph = netgraph.InteractivelyCreateDestroyGraph(graph)
+
+# Do stuff such as moving nodes around, or adding and deleting nodes or edges.
+...
+
+# Access current graph
+edge_list = interactive_graph.edge_list
+
+# Access current node_positions (and nodes):
+node_positions = interactive_graph.node_positions
+nodes = node_positions.keys()
+positions = node_positions.values()
+
+# Create igraph.Graph or networkx.Graph objects: 
+igraph_graph = igraph.Graph(edge_list)
+networkx_graph = networkx.from_edgelist(edge_list)
+```
+
+## Customizability 
+
+Similar to `networkx`, netgraph provides a convenience function `draw` that "tries to do the right thing".
+What constitutes the "right thing", however, is a matter of taste, and hence netgraph also provides direct access to the four core plotting routines wrapped by `draw`:
+
 - `draw_nodes`
 - `draw_edges`
 - `draw_node_labels`
 - `draw_edge_labels`
+
+Please refer to the documentation of these functions for a list of all available arguments to customize the layout of your graph. 
+
+Furthermore, all of these functions return containers of standard matplotlib objects, which can thus also be manipulated directly. 
+In general, these containers are dictionaries, mapping the graph elements (node / edge) to their respective matplotlib artists (or text objects in the case of labels). Accessing and manipulating a specific plot element is hence trivial. 
 
 ## Installation
 
