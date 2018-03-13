@@ -382,7 +382,10 @@ def _get_font_size(ax, node_labels, **kwargs):
     - potentially, return a dictionary of font sizes instead; then rescale font sizes individually on a per node basis
     """
 
-    # check if there are node sizes or edge widths in kwargs
+    # check if there are relevant parameters in kwargs:
+    #   - node size,
+    #   - edge width, or
+    #   - node_label_font_size
     if 'node_size' in kwargs:
         node_size = kwargs['node_size']
     else:
@@ -750,8 +753,9 @@ def draw_edges(edge_list,
     nodes = node_positions.keys()
     number_of_nodes = len(nodes)
 
-    # convert node and edge to dictionaries if they are not already;
-    # if dictionaries are provided, make sure that they are complete
+    # convert node and edge to dictionaries if they are not dictionaries already;
+    # if dictionaries are provided, make sure that they are complete;
+    # fill any missing entries with the default values
     if not isinstance(node_size, dict):
         node_size = {node:node_size for node in nodes}
     else:
