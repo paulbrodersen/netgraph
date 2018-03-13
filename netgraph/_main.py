@@ -396,12 +396,14 @@ def _get_font_size(ax, node_labels, **kwargs):
     else:
         node_edge_width = 0.5 # default
 
-    # initialise base values for font size and rescale factor
-    default_font_size = 12.
-    rescale_factor = np.nan
-    widest = 0.
+    if 'node_label_font_size' in kwargs:
+        node_label_font_size = kwargs['node_label_font_size']
+    else:
+        node_label_font_size = 12. # default
 
     # find widest node label; use its rescale factor to set font size for all labels
+    widest = 0.
+    rescale_factor = np.nan
     for key, label in node_labels.items():
 
         if isinstance(node_size, (int, float)):
@@ -414,16 +416,15 @@ def _get_font_size(ax, node_labels, **kwargs):
         elif isinstance(node_edge_width, dict):
             e = node_edge_width[key]
 
-        d = 2 * (r-e) * BASE_NODE_SIZE
+        node_diameter = 2 * (r-e) * BASE_NODE_SIZE
 
-        width, height = _get_text_object_dimenstions(ax, label, size=default_font_size)
+        width, height = _get_text_object_dimenstions(ax, label, size=node_label_font_size)
 
         if width > widest:
             widest = width
-            rescale_factor = d / np.sqrt(width**2 + height**2)
+            rescale_factor = node_diameter / np.sqrt(width**2 + height**2)
 
-    font_size = default_font_size * rescale_factor
-
+    font_size = node_label_font_size * rescale_factor
     return font_size
 
 
@@ -2281,9 +2282,10 @@ class InteractiveGraph(Graph, DraggableArtists):
 
 
     def _on_resize(self, event):
-        if hasattr(self, 'node_labels'):
-            self.node_label_font_size = _get_font_size(self.ax, self.node_labels) * 0.9 # conservative fudge factor
+        if hasattr(self, 'node_labels') and not ('node_label_font_size' in self.kwargs):
+            self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **self.kwargs) * 0.9 # conservative fudge factor
             self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
+            print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
 
 
 # --------------------------------------------------------------------------------
