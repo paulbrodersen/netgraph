@@ -347,15 +347,15 @@ def _find_renderer(fig):
     """
 
     if hasattr(fig.canvas, "get_renderer"):
-        #Some backends, such as TkAgg, have the get_renderer method, which
-        #makes this easy.
+        # Some backends, such as TkAgg, have the get_renderer method, which
+        # makes this easy.
         renderer = fig.canvas.get_renderer()
     else:
-        #Other backends do not have the get_renderer method, so we have a work
-        #around to find the renderer.  Print the figure to a temporary file
-        #object, and then grab the renderer that was used.
-        #(I stole this trick from the matplotlib backend_bases.py
-        #print_figure() method.)
+        # Other backends do not have the get_renderer method, so we have a work
+        # around to find the renderer. Print the figure to a temporary file
+        # object, and then grab the renderer that was used.
+        # (I stole this trick from the matplotlib backend_bases.py
+        # print_figure() method.)
         import io
         fig.canvas.print_pdf(io.BytesIO())
         renderer = fig._cachedRenderer
