@@ -1493,6 +1493,14 @@ def _edge_list_to_adjacency(edge_list, edge_weights=None):
 # --------------------------------------------------------------------------------
 # interactive plotting
 
+
+def _add_doc(value):
+    def _doc(func):
+        func.__doc__ = value
+        return func
+    return _doc
+
+
 class Graph(object):
 
     def __init__(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
@@ -1550,57 +1558,8 @@ class Graph(object):
         self.draw(graph, node_positions, node_labels, edge_labels, edge_cmap, ax, **kwargs)
 
 
+    @_add_doc(draw.__doc__)
     def draw(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
-        """
-        Initialises / redraws the Graph object.
-        Upon initialisation, it will try to do "the right thing".
-
-        For finer control of the individual draw elements,
-        and a complete list of keyword arguments, see the class methods:
-
-            draw_nodes()
-            draw_edges()
-            draw_node_labels()
-            draw_edge_labels()
-
-        Arguments
-        ----------
-        graph: various formats
-            Graph object to plot. Various input formats are supported.
-            In order of precedence:
-                - Edge list:
-                    Iterable of (source, target) or (source, target, weight) tuples,
-                    or equivalent (m, 2) or (m, 3) ndarray.
-                - Adjacency matrix:
-                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
-                    The absence of a connection is indicated by a zero.
-                - igraph.Graph object
-                - networkx.Graph object
-
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x, y) positions.
-            If 'graph' is an adjacency matrix, nodes must be integers in range(n).
-
-        node_labels : dict node : str (default None)
-           Mapping of nodes to node labels.
-           Only nodes in the dictionary are labelled.
-           If 'graph' is an adjacency matrix, nodes must be integers in range(n).
-
-        edge_labels : dict (source, target) : str (default None)
-            Mapping of edges to edge labels.
-            Only edges in the dictionary are labelled.
-
-        ax : matplotlib.axis instance or None (default None)
-           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-        See Also
-        --------
-        draw_nodes()
-        draw_edges()
-        draw_node_labels()
-        draw_edge_labels()
-
-        """
 
         # --------------------------------------------------------------------------------
         # TODO: split off / move to __init__ (potentially)
@@ -1692,51 +1651,9 @@ class Graph(object):
         return fruchterman_reingold_layout(*args, **kwargs)
 
 
+    @_add_doc(draw_nodes.__doc__)
     def draw_nodes(self, *args, **kwargs):
-        """
-        Draw node markers at specified positions.
 
-        Arguments
-        ----------
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x, y) positions
-
-        node_shape : string or dict key : string (default 'o')
-           The shape of the node. Specification is as for matplotlib.scatter
-           marker, i.e. one of 'so^>v<dph8'.
-           If a single string is provided all nodes will have the same shape.
-
-        node_size : scalar or dict node : float (default 3.)
-           Size (radius) of nodes.
-           NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
-
-        node_edge_width : scalar or dict key : float (default 0.5)
-           Line width of node marker border.
-
-        node_color : matplotlib color specification or dict node : color specification (default 'w')
-           Node color.
-
-        node_edge_color : matplotlib color specification or dict node : color specification (default 'k')
-           Node edge color.
-
-        node_alpha : scalar or dict node : float (default 1.)
-           The node transparency.
-
-        node_edge_alpha : scalar or dict node : float (default 1.)
-           The node edge transparency.
-
-        ax : matplotlib.axis instance or None (default None)
-           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-        Updates
-        -------
-        self.node_face_artists: dict node : artist
-            Mapping of nodes to the node face artists.
-
-        self.node_edge_artists: dict node : artist
-            Mapping of nodes to the node edge artists.
-
-        """
         node_faces, node_edges = draw_nodes(*args, **kwargs)
 
         if not hasattr(self, 'node_face_artists'):
@@ -1760,55 +1677,9 @@ class Graph(object):
                 self.node_edge_artists[key] = artist
 
 
+    @_add_doc(draw_edges.__doc__)
     def draw_edges(self, *args, **kwargs):
-        """
 
-        Draw the edges of the network.
-
-        Arguments
-        ----------
-        edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-            List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-        node_positions : dict key : (float, float)
-            Mapping of nodes to (x,y) positions
-
-        node_size : scalar or (n,) or dict key : float (default 3.)
-            Size (radius) of nodes.
-            Used to offset edges when drawing arrow heads,
-            such that the arrow heads are not occluded.
-            If draw_nodes() and draw_edges() are called independently,
-            make sure to set this variable to the same value.
-
-        edge_width : float or dict (source, key) : width (default 1.)
-            Line width of edges.
-            NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
-
-        edge_color : matplotlib color specification or
-                     dict (source, target) : color specification (default 'k')
-           Edge color.
-
-        edge_alpha : float or dict (source, target) : float (default 1.)
-            The edge transparency,
-
-        edge_zorder: int or dict (source, target) : int (default None)
-            Order in which to plot the edges.
-            If None, the edges will be plotted in the order they appear in 'adjacency'.
-            Note: graphs typically appear more visually pleasing if darker coloured edges
-            are plotted on top of lighter coloured edges.
-
-        draw_arrows : bool, optional (default True)
-            If True, draws edges with arrow heads.
-
-        ax : matplotlib.axis instance or None (default None)
-           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-        Updates
-        -------
-        self.edge_artists: dict (source, target) : artist
-            Mapping of edges to matplotlib.patches.FancyArrow artists.
-
-        """
         artists = draw_edges(*args, **kwargs)
 
         if not hasattr(self, 'edge_artists'):
@@ -1822,59 +1693,8 @@ class Graph(object):
                 self.edge_artists[key] = artist
 
 
+    @_add_doc(draw_node_labels.__doc__)
     def draw_node_labels(self, *args, **kwargs):
-        """
-        Draw node labels.
-
-        Arguments
-        ---------
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x, y) positions
-
-        node_labels : dict key : str
-           Mapping of nodes to labels.
-           Only nodes in the dictionary are labelled.
-
-        node_label_font_size : int (default 12)
-           Font size for text labels
-
-        node_label_font_color : str (default 'k')
-           Font color string
-
-        node_label_font_family : str (default='sans-serif')
-           Font family
-
-        node_label_font_weight : str (default='normal')
-           Font weight
-
-        node_label_font_alpha : float (default 1.)
-           Text transparency
-
-        node_label_bbox : matplotlib bbox instance (default {'alpha': 0})
-           Specify text box shape and colors.
-
-        node_label_horizontalalignment: str
-            Horizontal label alignment inside bbox.
-
-        node_label_verticalalignment: str
-            Vertical label alignment inside bbox.
-
-        clip_on : bool (default False)
-           Turn on clipping at axis boundaries.
-
-        ax : matplotlib.axis instance or None (default None)
-           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-
-        Updates
-        -------
-        self.node_label_artists: dict
-            Dictionary mapping node indices to text objects.
-
-        @reference
-        Borrowed with minor modifications from networkx/drawing/nx_pylab.py
-
-        """
 
         artists = draw_node_labels(*args, **kwargs)
 
@@ -1889,76 +1709,9 @@ class Graph(object):
                 self.node_label_artists[key] = artist
 
 
+    @_add_doc(draw_edge_labels.__doc__)
     def draw_edge_labels(self, *args, **kwargs):
-        """
-        Draw edge labels.
 
-        Arguments
-        ---------
-
-        edge_list: m-long list of 2-tuples
-            List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-        edge_labels : dict (source, target) : str
-            Mapping of edges to edge labels.
-            Only edges in the dictionary are labelled.
-
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x, y) positions
-
-        edge_label_position : float
-            Relative position along the edge where the label is placed.
-                head   : 0.
-                center : 0.5 (default)
-                tail   : 1.
-
-        edge_label_font_size : int (default 12)
-           Font size
-
-        edge_label_font_color : str (default 'k')
-           Font color
-
-        edge_label_font_family : str (default='sans-serif')
-           Font family
-
-        edge_label_font_weight : str (default='normal')
-           Font weight
-
-        edge_label_font_alpha : float (default 1.)
-           Text transparency
-
-        edge_label_bbox : Matplotlib bbox
-           Specify text box shape and colors.
-
-        edge_label_horizontalalignment: str
-            Horizontal label alignment inside bbox.
-
-        edge_label_verticalalignment: str
-            Vertical label alignment inside bbox.
-
-        clip_on : bool (default=False)
-           Turn on clipping at axis boundaries.
-
-        edge_label_zorder : int (default 10000)
-            Set the zorder of edge labels.
-            Choose a large number to ensure that the labels are plotted on top of the edges.
-
-        edge_width : float or dict (source, key) : width (default 1.)
-            Line width of edges.
-            NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
-
-        ax : matplotlib.axis instance or None (default None)
-           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-        Updates
-        -------
-        self.edge_label_artists: dict (source, target) : text object
-            Mapping of edges to edge label artists.
-
-        @reference
-        Borrowed with minor modifications from networkx/drawing/nx_pylab.py
-
-        """
         artists = draw_edge_labels(*args, **kwargs)
 
         if not hasattr(self, 'edge_label_artists'):
