@@ -2,12 +2,7 @@
 
 - autmatic testing 
 - determine all valid color assignments in draw_nodes and draw_edges; improve docs
-- interactive graph construction (and destruction)
-  - add nodes (a)
-  - add edges (A)
-  - remove nodes (d)
-  - remove edges (D)
-  - print graph (p)
-  - save graph (s) 
 - set artist attributes interactively
 - (potential) bug fix: in `draw_edge_labels` the angle calculation seems only to be correct if the the edge_label_position is 0.5  
+- position node labels better:
+  https://stackoverflow.com/questions/11946005/label-nodes-outside-with-minimum-overlap-with-other-nodes-edges-in-networkx
