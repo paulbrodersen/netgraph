@@ -596,6 +596,16 @@ def _draw_nodes(node_positions,
     return artists
 
 
+class RegularPolygon(matplotlib.patches.RegularPolygon):
+    """
+    The API for matplotlib.patches.Circle and matplotlib.patches.RegularPolygon in matplotlib differ substantially.
+    This class tries to bridge some of these gaps by translating Circle methods into RegularPolygon methods.
+    """
+
+    center = property(matplotlib.patches.RegularPolygon._get_xy,
+                      matplotlib.patches.RegularPolygon._set_xy)
+
+
 def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
     if shape == 'o': # circle
         artist = matplotlib.patches.Circle(xy=position,
@@ -605,83 +615,83 @@ def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
                                            linewidth=0.,
                                            zorder=zorder)
     elif shape == '^': # triangle up
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=3,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=0,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=3,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=0,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == '<': # triangle left
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=3,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=np.pi*0.5,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=3,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=np.pi*0.5,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 'v': # triangle down
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=3,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=np.pi,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=3,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=np.pi,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == '>': # triangle right
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=3,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=np.pi*1.5,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=3,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=np.pi*1.5,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 's': # square
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=4,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=np.pi*0.25,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=4,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=np.pi*0.25,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 'd': # diamond
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=4,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   orientation=np.pi*0.5,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=4,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                orientation=np.pi*0.5,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 'p': # pentagon
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=5,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=5,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 'h': # hexagon
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=6,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=6,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                linewidth=0.,
+                                zorder=zorder)
     elif shape == 8: # octagon
-        artist = matplotlib.patches.RegularPolygon(xy=position,
-                                                   radius=size,
-                                                   numVertices=8,
-                                                   facecolor=facecolor,
-                                                   alpha=alpha,
-                                                   linewidth=0.,
-                                                   zorder=zorder)
+        artist = RegularPolygon(xy=position,
+                                radius=size,
+                                numVertices=8,
+                                facecolor=facecolor,
+                                alpha=alpha,
+                                linewidth=0.,
+                                zorder=zorder)
     else:
         raise ValueError("Node shape one of: ''so^>v<dph8'. Current shape:{}".format(shape))
 
@@ -2145,6 +2155,8 @@ def test(n=20, p=0.15,
 if __name__ == "__main__":
 
     # create a figure for each possible combination of inputs
+    # TODO:
+    # - test node properties such as node_color, node_size, node_shape, etc.
 
     arguments = OrderedDict(directed=(True, False),
                             strictly_positive=(True, False),
