@@ -291,7 +291,7 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     """
 
     keys = mydict.keys()
-    values = np.array(list(mydict.values()))
+    values = np.array(list(mydict.values()), dtype=np.float64)
 
     # apply edge_vmin, edge_vmax
     if vmin:
