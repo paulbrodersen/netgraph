@@ -870,7 +870,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
 
 class FancyArrow(matplotlib.patches.Polygon):
     """
-    This is an expansion of of matplotlib.patches.FancyArrow.
+    This is an expansion of matplotlib.patches.FancyArrow.
     """
 
     _edge_default = True
