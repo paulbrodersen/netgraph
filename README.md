@@ -56,8 +56,8 @@ node_positions = plot_instance.node_positions
 ```
 
 Finally, it is sometimes convenient to change the graph itself "on the fly" (not just the layout).
-To that end, the class `InteractivelyCreateDestroyGraph` supports addition and deletion of nodes and edges.
-However, so far, only unweighted graphs are properly supported.  
+To that end, the class `InteractivelyConstructDestroyGraph` supports addition and deletion of nodes and edges.
+However, so far, only unweighted graphs are properly supported.
 
 ![Demo of InteractivelyCreateDestroyGraph](https://media.giphy.com/media/3ICKutOjeWxRf1Wmeh/giphy.gif)
 
@@ -73,7 +73,7 @@ ax.set(xlim=[-2, 2], ylim=[-2, 2])
 graph = [(0, 1)]
 
 # Initialise plot: 
-plot_instance = netgraph.InteractivelyCreateDestroyGraph(graph, draw_arrows=True, ax=ax)
+plot_instance = netgraph.InteractivelyConstructDestroyGraph(graph, draw_arrows=True, ax=ax)
 
 # As before, the node layout can be changed by selecting the nodes and moving them around
 # using the mouse. The graph itself can be manipulated using the following hotkeys:
