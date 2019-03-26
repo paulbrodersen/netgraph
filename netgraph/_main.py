@@ -1488,7 +1488,8 @@ def _edge_list_to_adjacency(edge_list, edge_weights=None):
 
     # map nodes to consecutive integers
     nodes = sources + targets
-    unique, indices = np.unique(nodes, return_inverse=True)
+    unique = np.unique(nodes)
+    indices = range(len(unique))
     node_to_idx = dict(zip(unique, indices))
     source_indices = [node_to_idx[source] for source in sources]
     target_indices = [node_to_idx[target] for target in targets]
@@ -1496,6 +1497,9 @@ def _edge_list_to_adjacency(edge_list, edge_weights=None):
     total_nodes = len(unique)
     adjacency_matrix = np.zeros((total_nodes, total_nodes))
     adjacency_matrix[source_indices, target_indices] = weights
+
+    # fill in lower triangle as well
+    adjacency_matrix = adjacency_matrix + adjacency_matrix.transpose()
 
     return adjacency_matrix
 
