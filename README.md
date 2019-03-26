@@ -15,7 +15,7 @@ fundamentally different length units for different plot elements. This makes it 
 - provide a consistent layout for different axis / figure dimensions, and
 - judge the relative sizes of elements a priori.
 
-This module amends these issues. 
+This module amends these issues.
 
 Furthermore, algorithmically finding a visually pleasing layout of
 node positions is, in general, difficult. This is demonstrated by the
@@ -50,8 +50,8 @@ netgraph.draw(graph)
 # and you won't be able to move the plot elements around.
 plot_instance = netgraph.InteractiveGraph(graph)
 
-# The position of the nodes can be adjusted with the mouse. 
-# To access the new node positions: 
+# The position of the nodes can be adjusted with the mouse.
+# To access the new node positions:
 node_positions = plot_instance.node_positions
 ```
 
@@ -72,7 +72,7 @@ ax.set(xlim=[-2, 2], ylim=[-2, 2])
 # Define a graph. Here we start with a single edge:
 graph = [(0, 1)]
 
-# Initialise plot: 
+# Initialise plot:
 plot_instance = netgraph.InteractivelyConstructDestroyGraph(graph, draw_arrows=True, ax=ax)
 
 # As before, the node layout can be changed by selecting the nodes and moving them around
@@ -83,7 +83,7 @@ plot_instance = netgraph.InteractivelyConstructDestroyGraph(graph, draw_arrows=T
 #   Pressing 'd' will remove edges between all selected nodes.
 #   Pressing 'r' will reverse the direction of edges between all selected nodes.
 
-# To access the new node positions: 
+# To access the new node positions:
 node_positions = plot_instance.node_positions
 
 # The new graph can be accessed via the edge list:
@@ -92,7 +92,7 @@ edge_list = plot_instance.edge_list
 
 ## Integration with other network analysis libraries
 
-To facilitate interoperability, `netgraph.draw` supports various input formats for the `graph` argument. 
+To facilitate interoperability, `netgraph.draw` supports various input formats for the `graph` argument.
 
 In order of precedence:
 
@@ -100,12 +100,12 @@ In order of precedence:
 
    Iterable of (source, target) or (source, target, weight) tuples,
    or equivalent (m, 2) or (m, 3) ndarray.
-   
+
 2. Adjacency matrix:
 
    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
    The absence of a connection is indicated by a zero.
-   
+
 3. igraph.Graph or networkx.Graph object
 
 ```python
@@ -131,12 +131,12 @@ node_positions = interactive_graph.node_positions
 nodes = node_positions.keys()
 positions = node_positions.values()
 
-# Create igraph.Graph or networkx.Graph objects: 
+# Create igraph.Graph or networkx.Graph objects:
 igraph_graph = igraph.Graph(edge_list)
 networkx_graph = networkx.from_edgelist(edge_list)
 ```
 
-## Customizability 
+## Customizability
 
 Similar to `networkx`, netgraph provides a convenience function `draw` that "tries to do the right thing".
 What constitutes the "right thing", however, is a matter of taste, and hence netgraph also provides direct access to the four core plotting routines wrapped by `draw`:
@@ -146,11 +146,11 @@ What constitutes the "right thing", however, is a matter of taste, and hence net
 - `draw_node_labels`
 - `draw_edge_labels`
 
-Please refer to the documentation of these functions for a list of all available arguments to customize the layout of your graph. 
+Please refer to the documentation of these functions for a list of all available arguments to customize the layout of your graph.
 
-Furthermore, all of these functions return containers of standard matplotlib objects, which can thus also be manipulated directly. 
+Furthermore, all of these functions return containers of standard matplotlib objects, which can thus also be manipulated directly.
 In general, these containers are dictionaries, mapping the graph elements (node / edge) to their respective matplotlib artists (or text objects in the case of labels).
-Accessing and manipulating a specific plot element after the initial draw is hence straightforward. 
+Accessing and manipulating a specific plot element after the initial draw is hence straightforward.
 
 ```python
 import netgraph
@@ -173,7 +173,7 @@ special_artist.set_facecolor('red')
 fig.canvas.draw_idle()
 
 # the same effect could have achieved by passing in the edge color argument:
-edge_color = {(0, 1): 'k', (1, 2) : 'r'} 
+edge_color = {(0, 1): 'k', (1, 2) : 'r'}
 edge_to_artist = netgraph.draw_edges(edge_list, node_positions, edge_color=edge_color, ax=ax)
 ```
 
@@ -216,5 +216,3 @@ Labels can be drawn on top of nodes.
 
 Labels can be drawn on top of edges:
 ![Default plot with edge labels.](./figures/Show_edge_labels.png)
-
-
