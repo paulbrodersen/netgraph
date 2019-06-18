@@ -1270,36 +1270,6 @@ def _make_pretty(ax):
     ax.get_figure().canvas.draw()
 
 
-
-
-def _edge_list_to_adjacency(edge_list, edge_weights=None):
-
-    sources = [s for (s, _) in edge_list]
-    targets = [t for (_, t) in edge_list]
-
-    if edge_weights:
-        weights = [edge_weights[edge] for edge in edge_list]
-    else:
-        weights = np.ones((len(edge_list)))
-
-    # map nodes to consecutive integers
-    nodes = sources + targets
-    unique = np.unique(nodes)
-    indices = range(len(unique))
-    node_to_idx = dict(zip(unique, indices))
-    source_indices = [node_to_idx[source] for source in sources]
-    target_indices = [node_to_idx[target] for target in targets]
-
-    total_nodes = len(unique)
-    adjacency_matrix = np.zeros((total_nodes, total_nodes))
-    adjacency_matrix[source_indices, target_indices] = weights
-
-    # fill in lower triangle as well
-    adjacency_matrix = adjacency_matrix + adjacency_matrix.transpose()
-
-    return adjacency_matrix
-
-
 # --------------------------------------------------------------------------------
 # interactive plotting
 
