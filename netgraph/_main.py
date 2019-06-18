@@ -602,8 +602,11 @@ class RegularPolygon(matplotlib.patches.RegularPolygon):
     This class tries to bridge some of these gaps by translating Circle methods into RegularPolygon methods.
     """
 
-    center = property(matplotlib.patches.RegularPolygon._get_xy,
-                      matplotlib.patches.RegularPolygon._set_xy)
+    try: # seems deprecated for newer versions of matplotlib
+        center = property(matplotlib.patches.RegularPolygon._get_xy,
+                          matplotlib.patches.RegularPolygon._set_xy)
+    except AttributeError:
+        center = matplotlib.patches.RegularPolygon.xy
 
 
 def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
