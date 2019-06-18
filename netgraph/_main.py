@@ -101,9 +101,19 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Initialise node positions if none are given.
     if node_positions is None:
-        node_positions = fruchterman_reingold_layout(edge_list, **kwargs)
-    elif len(node_positions) < len(_get_unique_nodes(edge_list)): # some positions are given but not all
-        node_positions = fruchterman_reingold_layout(edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
+        node_positions = get_fruchterman_reingold_layout(edge_list, **kwargs)
+    else:
+        if set(node_positions.keys()) == _get_unique_nodes(edge_list):
+            # All node positions are given; nothing left to do.
+            pass
+        else:
+            # Some node positions are given; however, either
+            # 1) not all positions are provided, or
+            # 2) there are some unconnected nodes in the graph.
+            node_positions = get_fruchterman_reingold_layout(edge_list,
+                                                             node_positions = node_positions,
+                                                             fixed_nodes    = node_positions.keys(),
+                                                             **kwargs)
 
     # Create axis if none is given.
     if ax is None:
@@ -1382,14 +1392,19 @@ class Graph(object):
 
         # Initialise node positions.
         if node_positions is None:
-            # If none are given, initialise all.
-            self.node_positions = self._get_node_positions(self.edge_list)
-        elif len(node_positions) < len(_get_unique_nodes(self.edge_list)):
-            # If some are given, keep those fixed and initialise remaining.
-            self.node_positions = self._get_node_positions(self.edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
+            self.node_positions = self._get_node_positions(self.edge_list, **kwargs)
         else:
-            # If all are given, don't do anything.
-            self.node_positions = node_positions
+            if set(node_positions.keys()) == _get_unique_nodes(self.edge_list):
+                # All node positions are given; nothing left to do.
+                self.node_positions = node_positions
+            else:
+                # Some node positions are given; however, either
+                # 1) not all positions are provided, or
+                # 2) there are some unconnected nodes in the graph.
+                self.node_positions = self._get_node_positions(self.edge_list,
+                                                               node_positions = node_positions,
+                                                               fixed_nodes    = node_positions.keys(),
+                                                               **kwargs)
 
         # Draw plot elements.
         self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
