@@ -6,7 +6,6 @@ TODO:
 """
 
 import numpy as np
-from _main import _edge_list_to_adjacency
 
 
 def _spring(adjacency, node_positions, origin, scale, temperature):
@@ -14,6 +13,15 @@ def _spring(adjacency, node_positions, origin, scale, temperature):
     Loosely based on Eades (1984), using
     - attraction that scales linearly with distance instead of logarithmically, and
     - repulsion that scales inversely proportional to the square of the distance.
+from ._utils import (
+    warnings,
+    _edge_list_to_adjacency_matrix,
+    _edge_list_to_adjacency_list,
+    _get_subgraph,
+    _get_unique_nodes,
+    _flatten,
+)
+
     """
 
     X = np.array(node_positions.values())

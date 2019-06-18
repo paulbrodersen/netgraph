@@ -9,6 +9,11 @@ import matplotlib.pyplot as plt
 
 from collections import OrderedDict
 
+from ._utils import (
+    _save_cast_float_to_int,
+    _flatten,
+    _get_unique_nodes,
+    )
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 
@@ -214,25 +219,6 @@ def _parse_sparse_matrix_format(adjacency):
             return edge_list, None, _is_directed(edge_list)
     else:
         raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
-
-
-def _save_cast_float_to_int(num):
-    if isinstance(num, float) and np.isclose(num, int(num)):
-        return int(num)
-    else:
-        return num
-
-
-def _flatten(nested_list):
-    return [item for sublist in nested_list for item in sublist]
-
-
-def _get_unique_nodes(edge_list):
-    """
-    Using numpy.unique promotes nodes to numpy.float/numpy.int/numpy.str,
-    and breaks for nodes that have a more complicated type such as a tuple.
-    """
-    return list(set(_flatten(edge_list)))
 
 
 def _parse_adjacency_matrix(adjacency):
