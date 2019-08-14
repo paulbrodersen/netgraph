@@ -65,8 +65,8 @@ class InteractiveGrid(InteractiveGraph):
             if len(unique_grid_positions) < len(node_positions):
                 # rescale node positions such that each node occupies it's own grid point;
 
-                keys = node_positions.keys()
-                values = np.array(node_positions.values())
+                keys   = np.array(list(node_positions.keys()))
+                values = np.array(list(node_positions.values()))
 
                 distances = np.sqrt(np.sum(np.power(values[None,:,:] - values[:,None,:], 2), axis=-1))
                 distances = np.triu(distances, 1)
