@@ -318,129 +318,23 @@ def _set_diagonal(square_matrix, value=0):
 
 
 
-    import matplotlib.pyplot as plt; plt.ion()
     import networkx as nx
-    from _main import InteractiveGraph
 
     # # sparse random graph
     # from _main import _get_random_weight_matrix
-    # total_nodes = 100
-    # adjacency_matrix = _get_random_weight_matrix(total_nodes, p=0.1,
     #                                              directed=False,
     #                                              strictly_positive=True,
     #                                              weighted=True)
-
-    # sources, targets = np.where(adjacency_matrix)
-    # weights = adjacency_matrix[sources, targets]
     # edge_list = np.c_[sources, targets]
-    # adjacency = _edge_list_to_adjacency(edge_list)
 
     # # K-graph
     # total_nodes = 8
     # adjacency = np.ones((total_nodes, total_nodes)) - np.diag(np.ones((total_nodes)))
     # edge_list = nx.from_numpy_matrix(adjacency).edges()
 
-    # # square with satellites
-    # edge_list = [
-    #     (0, 1),
-    #     (1, 2),
-    #     (2, 3),
-    #     (3, 0),
-    #     (0, 4),
-    #     (1, 5),
-    #     (2, 6),
-    #     (3, 7)
-    # ]
-
-    # # cycle
-    # edge_list = [
-    #     (0, 1),
-    #     (1, 2),
-    #     (2, 3),
-    #     (3, 4),
-    #     (4, 5),
-    #     (5, 6),
-    #     (6, 7),
-    #     (7, 0)
-    # ]
-
-    # # cube
-    # edge_list = [
-    #     (0, 1),
-    #     (1, 2),
-    #     (2, 3),
-    #     (3, 0),
-    #     (4, 5),
-    #     (5, 6),
-    #     (6, 7),
-    #     (7, 4),
-    #     (0, 4),
-    #     (1, 5),
-    #     (2, 6),
-    #     (3, 7)
-    # ]
-
-    # # star
-    # edge_list = [
-    #     (0, 1),
-    #     (0, 2),
-    #     (0, 3),
-    #     (0, 4),
-    #     (0, 5),
-    # ]
-
-    # # unbalanced tree
-    # edge_list = [
-    #     (0, 1),
-    #     (0, 2),
-    #     (0, 3),
-    #     (0, 4),
-    #     (0, 5),
-    #     (2, 6),
-    #     (3, 7),
-    #     (3, 8),
-    #     (4, 9),
-    #     (4, 10),
-    #     (4, 11),
-    #     (5, 12),
-    #     (5, 13),
-    #     (5, 14),
-    #     (5, 15)
-    # ]
-
-    # adjacency = _edge_list_to_adjacency(edge_list)
-    # total_nodes = np.max(edge_list)+1
-
-    node_positions = {ii : np.random.rand(2) for ii in range(total_nodes)}
 
     fig, ax = plt.subplots(1,1)
-    g = InteractiveGraph(edge_list,
-                         node_positions=node_positions,
-                         ax=ax)
 
-    total_iterations = 50
-    x = np.linspace(0, 1, total_iterations) + 1e-4
-    temperatures = 0.1 * (x - 1)**2
 
-    for ii, temperature in enumerate(temperatures):
-        # g.node_positions = _spring(adjacency, g.node_positions,
-        #                            origin=np.zeros((2)),
-        #                            scale=np.array((1, 1)),
-        #                            temperature=temperature,
-        # )
-        g.node_positions = _fruchterman_reingold(adjacency, g.node_positions,
-                                                 origin=np.zeros((2)),
-                                                 scale=np.array((1, 1)),
-                                                 temperature=temperature,
-                                                 k=np.sqrt(1./total_nodes)
-                                                 # k = 0.1,
-        )
-        g._update_nodes(g.node_positions.keys())
-        g._update_edges(g.node_positions.keys())
-        g._update_view()
-        fig.canvas.draw()
-
-    input("Press any key to close figure...")
 
 if __name__ == '__main__':
-    g = test()
