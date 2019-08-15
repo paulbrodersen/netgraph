@@ -8,7 +8,7 @@ TODO:
 import numpy as np
 
 
-from ._utils import (
+from _utils import (
     warnings,
     _edge_list_to_adjacency_matrix,
     _edge_list_to_adjacency_list,
