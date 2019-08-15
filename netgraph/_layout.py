@@ -18,13 +18,15 @@ from _utils import (
 )
 
 
+BASE_NODE_SIZE = 1e-2
+BASE_EDGE_WIDTH = 1e-2
 
 
 def get_fruchterman_reingold_layout(edge_list,
                                     k                   = None,
                                     scale               = None,
                                     origin              = None,
-                                    initial_temperature = 0.1,
+                                    initial_temperature = 1.,
                                     total_iterations    = 50,
                                     node_size           = None,
                                     node_positions      = None,
@@ -52,7 +54,7 @@ def get_fruchterman_reingold_layout(edge_list,
     total_iterations : int (default 50)
         Number of iterations.
 
-    initial_temperature: float (default 0.1)
+    initial_temperature: float (default 1.)
         Temperature controls the maximum node displacement on each iteration.
         Temperature is decreased on each iteration to eventually force the algorithm
         into a particular solution. The size of the initial temperature determines how
@@ -79,7 +81,7 @@ def get_fruchterman_reingold_layout(edge_list,
 
     """
 
-    # This is just a wrapper around `_fruchterman_reingold` (which implements (the loop body of) the algorithm proper).
+    # This is just a wrapper around `_fruchterman_reingold`, which implements (the loop body of) the algorithm proper.
     # This wrapper handles the initialization of variables to their defaults (if not explicitely provided),
     # and checks inputs for self-consistency.
 
@@ -188,6 +190,8 @@ def get_fruchterman_reingold_layout(edge_list,
                                                                    node_radii  = node_size,
         )[is_mobile]
 
+    node_positions_as_array =  _rescale_to_frame(node_positions_as_array, origin, scale)
+
     # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
     # format output
@@ -201,15 +205,13 @@ def _is_within_bbox(points, origin, scale):
 
 
 def _get_temperature_decay(initial_temperature, total_iterations, mode='quadratic', eps=1e-9):
-
     x = np.linspace(0., 1., total_iterations)
     if mode == 'quadratic':
-        y = (x - 1)**2 + eps
+        y = (x - 1.)**2 + eps
     elif mode == 'linear':
         y = (1. - x) + eps
     else:
         raise ValueError("Argument `mode` one of: 'linear', 'quadratic'.")
-
     return initial_temperature * y
 
 
@@ -250,8 +252,7 @@ def _fruchterman_reingold(adjacency, node_positions, origin, scale, temperature,
     displacement_length = np.linalg.norm(displacement, axis=-1)
     displacement = displacement / displacement_length[:, None] * np.clip(displacement_length, None, temperature)[:, None]
 
-    # update node positions while keeping nodes within the  frame
-    node_positions = _enforce_frame(node_positions, displacement, origin, scale)
+    node_positions = node_positions + displacement
 
     return node_positions
 
@@ -271,15 +272,14 @@ def _get_fr_repulsion(distance, direction, k):
 
 
 def _get_fr_attraction(distance, direction, adjacency, k):
-    magnitude = 1/k * distance**2 * adjacency
+    magnitude = 1./k * distance**2 * adjacency
     vectors   = -direction * magnitude[..., None] # NB: the minus!
     vectors   = _set_diagonal(vectors, 0)
     return np.sum(vectors, axis=0)
 
 
-def test():
-def _rescale_to_frame(node_positions, displacement, origin, scale):
-    node_positions = node_positions + displacement # force copy, as otherwise the `fixed_nodes` argument is effectively ignored
+def _rescale_to_frame(node_positions, origin, scale):
+    node_positions = node_positions.copy() # force copy, as otherwise the `fixed_nodes` argument is effectively ignored
     node_positions -= np.min(node_positions, axis=0)
     node_positions /= np.max(node_positions, axis=0)
     node_positions *= scale[None, ...]
@@ -287,41 +287,15 @@ def _rescale_to_frame(node_positions, displacement, origin, scale):
     return node_positions
 
 
-def _clip_to_frame(node_positions, displacement, origin, scale):
+def _clip_to_frame(node_positions, origin, scale):
+    # This function does not work well with the FR algorithm:
     # If the new node positions exceed the frame in more than one dimension,
     # they end up being placed on a corner of the frame.
     # If more than one node ends up in one of the corners, we are in trouble,
     # as then the distance between them becomes zero.
-    node_positions = node_positions + displacement # force copy, as otherwise the `fixed_nodes` argument is effectively ignored
     for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
         node_positions[:, ii] = np.clip(node_positions[:, ii], minimum, maximum)
     return node_positions
-
-
-def _stop_at_frame(node_positions, displacement, origin, scale):
-    # For any nodes exceeding the frame, compute the location where
-    # the node first "crosses" the frame, and "stop" it there.
-
-    new_node_positions = np.zeros_like(node_positions)
-
-    for ii, is_valid in enumerate(_is_within_bbox(node_positions + displacement, origin, scale)):
-        if is_valid:
-            new_node_positions[ii] = node_positions[ii] + displacemen[ii]
-        else:
-            new_node_positions[ii] = _find_intersection(node_positions[ii],
-                                                        displacement[ii],
-                                                        origin,
-                                                        scale)
-
-    return new_node_positions
-
-
-def _find_intersection(position, delta, origin, scale):
-    # TODO: ray-tracing for axis-aligned bounding box (AABB).
-    pass
-
-
-_enforce_frame = _rescale_to_frame
 
 
 def _set_diagonal(square_matrix, value=0):
@@ -329,6 +303,18 @@ def _set_diagonal(square_matrix, value=0):
     is_diagonal = np.diag(np.ones((n), dtype=np.bool))
     square_matrix[is_diagonal] = value
     return square_matrix
+
+
+
+        else:
+
+
+
+    pass
+
+
+
+
 
 
 
