@@ -86,7 +86,6 @@ from ._main import (draw,
                     parse_graph,
                     get_color,
                     fruchterman_reingold_layout,
-                    spring_layout,
                     Graph,
                     InteractiveGraph,
                     test)
