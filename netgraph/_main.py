@@ -73,6 +73,8 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     draw_node_labels()
     draw_edge_labels()
 
+    TODO: return plot elements as dictionary
+
     """
 
     # Accept a variety of formats and convert to common denominator.
@@ -599,6 +601,8 @@ class RegularPolygon(matplotlib.patches.RegularPolygon):
     """
     The API for matplotlib.patches.Circle and matplotlib.patches.RegularPolygon in matplotlib differ substantially.
     This class tries to bridge some of these gaps by translating Circle methods into RegularPolygon methods.
+
+    TODO: remove class once python 2 is fully phased out
     """
 
     try: # seems deprecated for newer versions of matplotlib
