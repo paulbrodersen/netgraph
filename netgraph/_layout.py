@@ -305,36 +305,274 @@ def _set_diagonal(square_matrix, value=0):
     return square_matrix
 
 
+def get_positions_for_unconnected_nodes(unconnected_nodes, other_node_positions):
+    """
+    Determine a good position of unconnected nodes.
+    Currently, we place these nodes on the periphery, which we define as the area
+    just outside the circle covering all positions in `other_node_positions`.
 
+    TODO:
+    Place the nodes in empty regions of the periphery.
+    For example, one could use a force directed layout to achieve this.
+    1) Tether each unconnected node to the centroid.
+    2) Compute radial force give by other nodes; iterate for a few rounds.
+
+    Arguments:
+    ----------
+    unconnected_nodes : list
+        The nodes for which we need to find positions.
+
+    other_node_positions : dict node ID : (float, float)
+        The positions of all other nodes.
+
+    Returns:
+    --------
+    node_positions : dict node ID : (float, float)
+        The positions of the unconnected nodes.
+
+    """
+
+    xy = np.array(list(other_node_positions.values()))
+    centroid = np.mean(xy, axis=0)
+    delta = xy - centroid[np.newaxis, :]
+    distance = np.sqrt(np.sum(delta**2, axis=1))
+    radius = np.max(distance)
+
+    node_positions = dict()
+    for node in unconnected_nodes:
+        node_positions[node] = _get_random_point_on_a_circle(centroid, radius*1.1)
+
+    return node_positions
+
+
+def _get_random_point_on_a_circle(origin, radius):
+    random_angle = 2 * np.pi * np.random.random()
+    return _get_point_on_a_circle(origin, radius, angle)
+
+
+def _get_point_on_a_circle(origin, radius, angle):
+    x0, y0 = origin
+    x = x0 + radius * np.cos(angle)
+    y = y0 + radius * np.sin(angle)
+    return np.array([x, y])
+
+
+def get_layout_for_multiple_components(edge_list,
+                                       unconnected_nodes         = None,
+                                       node_size                 = None,
+                                       origin                    = (0, 0),
+                                       scale                     = (1, 1),
+                                       component_layout_function = get_fruchterman_reingold_layout,
+                                       *args, **kwargs):
+    """
+    Many graph layout algorithms assume that the graph consists of a single connected component.
+    As a consequence, they fail when that is not the case.
+    This function tries to work around this issue by determining suitable bounding box
+    dimensions and placement for each component in the graph, and then
+    computing the layout of each individual component given the constraint of the
+    bounding box.
+
+    The bounding boxes
+
+    Arguments:
+    ----------
+    edge_list : list of (source node, target node) tuples
+        The graph to plot.
+    unconnected_nodes : list of nodes
+        Additional nodes to plot, that are unconnected and hence are not present
+        in the edge list.
+    origin : D-tuple or None (default None, which implies (0, 0))
+        Bottom left corner of the frame / canvas containing the graph.
+        If None, it defaults to (0, 0) or the minimum of `node_positions`
+        (whichever is smaller).
+    scale : D-tuple or None (default None, which implies (1, 1)).
+        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
+        maximum distance of nodes in `node_positions` to the `origin`
+        (whichever is greater).
+
+    Returns:
+    --------
+    node_positions : dict node : (float x, float y)
+        The position of all nodes in the graph.
+
+    """
+
+    adjacency_list = _edge_list_to_adjacency_list(edge_list)
+    components = _get_connected_components(adjacency_list)
+    components = components + [set([node]) for node in unconnected_nodes]
+    bboxes = _get_component_bboxes(components, origin, scale)
+
+    # # for debugging
+    # import matplotlib.pyplot as plt
+    # from matplotlib.patches import Rectangle
+    # fig, ax = plt.subplots(1,1)
+    # for bbox in bboxes:
+    #     ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+    # ax.set_xlim(0, 1)
+    # ax.set_ylim(0, 1)
+    # plt.show()
+
+    node_positions = dict()
+    for ii, (component, bbox) in enumerate(zip(components, bboxes)):
+        if len(component) > 1:
+            subgraph = _get_subgraph(edge_list, component)
+            component_node_positions = component_layout_function(subgraph, origin=bbox[:2], scale=bbox[2:], *args, **kwargs)
+            node_positions.update(component_node_positions)
         else:
+            # component is a single node, which we can simply place at the centre of the bounding box
+            node_positions[component.pop()] = (bbox[0] + 0.5 * bbox[2], bbox[1] + 0.5 * bbox[3])
+
+    return node_positions
 
 
+def _get_connected_components(adjacency_list):
+    """
+    Get the connected components given a graph in adjacency list format.
 
-    pass
+    Arguments:
+    ----------
+    adjacency_list : dict node ID : set of node IDs
+        Adjacency list, i.e. a mapping from each node to its neighbours.
+
+    Returns:
+    --------
+    components : list of sets of node IDs
+
+    """
+
+    components = []
+    not_visited = set(list(adjacency_list.keys()))
+    while not_visited: # i.e. while stack is non-empty (empty set is interpreted as `False`)
+        start = not_visited.pop()
+        component = _dfs(adjacency_list, start)
+        components.append(component)
+
+        #  remove nodes that are in the component that we just found
+        for node in component:
+            try:
+                not_visited.remove(node)
+            except KeyError:
+                # KeyErrors occur when we try to remove
+                # 1) the start node (which we already popped), or
+                # 2) leaf nodes, i.e. nodes with no outgoing edges
+                pass
+
+    # Often, we are only interested in the largest component,
+    # hence we return the list of components sorted by size, largest first.
+    components = sorted(components, key=len, reverse=True)
+
+    return components
 
 
+def _dfs(adjacency_list, start, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(start)
+    for node in adjacency_list[start] - visited:
+        if node in adjacency_list:
+            _dfs(adjacency_list, node, visited)
+        else: # otherwise no outgoing edge
+            visited.add(node)
+    return visited
 
 
+def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
+    # leave rpack an optional dependency for the time being
+    try:
+        import rpack
+    except ImportError:
+        error_msg = "Plotting of multiple components only supported when rpack is installed.\n"
+        error_msg += "You can install rpack with:\n"
+        error_msg += "pip install rectangle-packer"
+        raise ImportError(error_msg)
+
+    relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
+
+    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
+    # We choose a padding proportional to the dimensions of the largest box.
+    maximum_dimensions = np.max(relative_dimensions, axis=0)
+    pad_x, pad_y = pad_by * maximum_dimensions
+    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
+
+    # rpack only works on integers;
+    # multiply by some large scalar to retain some precision;
+    # NB: for some strange reason, rpack's running time is sensitive to the size of the boxes
+    # TODO find alternative to rpack
+    scalar = 10
+    integer_dimensions = [(int(scalar*width), int(scalar*height)) for width, height in padded_dimensions]
+    origins = rpack.pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
+
+    bboxes = [(x, y, scalar*width, scalar*height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
+
+    # rescale boxes to canvas
+    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    return bboxes
 
 
+def _get_bbox_dimensions(n, power=0.5):
+    # TODO: factor in the dimensions of the canvas
+    # such that the rescaled boxes are approximately square
+    return (n**power, n**power)
 
+
+def _rescale_bboxes_to_canvas(bboxes, origin, scale):
+    lower_left_hand_corners = [(x, y) for (x, y, _, _) in bboxes]
+    upper_right_hand_corners = [(x+w, y+h) for (x, y, w, h) in bboxes]
+    minimum = np.min(lower_left_hand_corners, axis=0)
+    maximum = np.max(upper_right_hand_corners, axis=0)
+    total_width, total_height = maximum - minimum
+
+    # shift to (0, 0)
+    min_x, min_y = minimum
+    lower_left_hand_corners = [(x - min_x, y-min_y) for (x, y) in lower_left_hand_corners]
+
+    # rescale
+    scale_x = scale[0] / total_width
+    scale_y = scale[1] / total_height
+
+    lower_left_hand_corners = [(x*scale_x, y*scale_y) for x, y in lower_left_hand_corners]
+    dimensions = [(w * scale_x, h * scale_y) for (_, _, w, h) in bboxes]
+    rescaled_bboxes = [(x, y, w, h) for (x, y), (w, h) in zip(lower_left_hand_corners, dimensions)]
+
+    return rescaled_bboxes
+
+
+def test_get_layout_for_multiple_components():
+    import matplotlib.pyplot as plt # ; plt.ion()
+    from _main import draw, Graph # , InteractiveGraph
+    from itertools import combinations
     import networkx as nx
 
-    # # sparse random graph
-    # from _main import _get_random_weight_matrix
-    #                                              directed=False,
-    #                                              strictly_positive=True,
-    #                                              weighted=True)
-    # edge_list = np.c_[sources, targets]
+    edge_list = []
 
-    # # K-graph
-    # total_nodes = 8
-    # adjacency = np.ones((total_nodes, total_nodes)) - np.diag(np.ones((total_nodes)))
-    # edge_list = nx.from_numpy_matrix(adjacency).edges()
+    # add 100 unconnected nodes
+    unconnected_nodes = list(range(100))
 
+    # add 50 2-node components
+    edge_list.extend([(ii, ii+1) for ii in range(100, 200, 2)])
 
-    fig, ax = plt.subplots(1,1)
+    # add 33 3-node components
+    for ii in range(200, 300, 3):
+        edge_list.extend([(ii, ii+1), (ii, ii+2), (ii+1, ii+2)])
 
+    # add a couple of larger components
+    n = 300
+    for ii in np.random.randint(3, 30, size=10):
+        edge_list.extend(list(combinations(range(n, n+ii), 2)))
+        n += ii
+
+    pos = get_layout_for_multiple_components(edge_list, unconnected_nodes=unconnected_nodes)
+
+    g = nx.Graph()
+    g.add_edges_from(edge_list)
+    g.add_nodes_from(unconnected_nodes)
+    # nx.draw(g, pos=pos)
+
+    draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
+
+    plt.show()
 
 
 if __name__ == '__main__':
+    test_get_layout_for_multiple_components()

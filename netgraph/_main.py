@@ -106,7 +106,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     if node_positions is None:
         node_positions = get_fruchterman_reingold_layout(edge_list, **kwargs)
     else:
-        if set(node_positions.keys()) == _get_unique_nodes(edge_list):
+        if set(node_positions.keys()).issuperset(_get_unique_nodes(edge_list)):
             # All node positions are given; nothing left to do.
             pass
         else:
@@ -1402,7 +1402,7 @@ class Graph(object):
         if node_positions is None:
             self.node_positions = self._get_node_positions(self.edge_list, **kwargs)
         else:
-            if set(node_positions.keys()) == _get_unique_nodes(self.edge_list):
+            if set(node_positions.keys()).issuperset(_get_unique_nodes(self.edge_list)):
                 # All node positions are given; nothing left to do.
                 self.node_positions = node_positions
             else:
