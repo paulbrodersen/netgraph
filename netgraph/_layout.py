@@ -226,7 +226,7 @@ def _fruchterman_reingold(adjacency, node_positions, origin, scale, temperature,
 
     # alternatively: (hack adapted from igraph)
     if np.sum(distance==0) - np.trace(distance==0) > 0: # i.e. if off-diagonal entries in distance are zero
-        warning.warn("Some nodes have the same position; repulsion between the nodes is undefined.")
+        warnings.warn("Some nodes have the same position; repulsion between the nodes is undefined.")
         rand_delta = np.random.rand(*delta.shape) * 1e-9
         is_zero = distance <= 0
         delta[is_zero] = rand_delta[is_zeros]
