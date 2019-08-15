@@ -57,9 +57,15 @@ def line_supercover(y0, x0, y1, x1):
 
     return np.asarray(rr[0:ii+1]), np.asarray(cc[0:ii+1])
 
+
 def demo():
     import matplotlib.pyplot as plt
     x, y = line_supercover(0,0,2,9)
     img  = np.zeros((10, 10))
     img[x,y] = 1.
     plt.imshow(img)
+    plt.show()
+
+
+if __name__ == '__main__':
+    demo()
