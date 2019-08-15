@@ -85,7 +85,7 @@ from ._main import (draw,
                     draw_edge_labels,
                     parse_graph,
                     get_color,
-                    fruchterman_reingold_layout,
+                    get_fruchterman_reingold_layout,
                     Graph,
                     InteractiveGraph,
                     test)
