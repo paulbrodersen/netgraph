@@ -9,6 +9,14 @@ import matplotlib.pyplot as plt
 
 from collections import OrderedDict
 
+from ._utils import (
+    _save_cast_float_to_int,
+    _flatten,
+    _get_unique_nodes,
+    )
+
+from ._layout import get_fruchterman_reingold_layout
+
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 
@@ -93,9 +101,19 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
 
     # Initialise node positions if none are given.
     if node_positions is None:
-        node_positions = fruchterman_reingold_layout(edge_list, **kwargs)
-    elif len(node_positions) < len(_get_unique_nodes(edge_list)): # some positions are given but not all
-        node_positions = fruchterman_reingold_layout(edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
+        node_positions = get_fruchterman_reingold_layout(edge_list, **kwargs)
+    else:
+        if set(node_positions.keys()) == _get_unique_nodes(edge_list):
+            # All node positions are given; nothing left to do.
+            pass
+        else:
+            # Some node positions are given; however, either
+            # 1) not all positions are provided, or
+            # 2) there are some unconnected nodes in the graph.
+            node_positions = get_fruchterman_reingold_layout(edge_list,
+                                                             node_positions = node_positions,
+                                                             fixed_nodes    = node_positions.keys(),
+                                                             **kwargs)
 
     # Create axis if none is given.
     if ax is None:
@@ -214,25 +232,6 @@ def _parse_sparse_matrix_format(adjacency):
             return edge_list, None, _is_directed(edge_list)
     else:
         raise ValueError("Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3. Got iterable of tuples of length {}.".format(columns))
-
-
-def _save_cast_float_to_int(num):
-    if isinstance(num, float) and np.isclose(num, int(num)):
-        return int(num)
-    else:
-        return num
-
-
-def _flatten(nested_list):
-    return [item for sublist in nested_list for item in sublist]
-
-
-def _get_unique_nodes(edge_list):
-    """
-    Using numpy.unique promotes nodes to numpy.float/numpy.int/numpy.str,
-    and breaks for nodes that have a more complicated type such as a tuple.
-    """
-    return list(set(_flatten(edge_list)))
 
 
 def _parse_adjacency_matrix(adjacency):
@@ -1285,229 +1284,6 @@ def _make_pretty(ax):
 
 
 # --------------------------------------------------------------------------------
-# Spring layout
-
-
-def fruchterman_reingold_layout(edge_list,
-                                edge_weights=None,
-                                k=None,
-                                pos=None,
-                                fixed=None,
-                                iterations=50,
-                                scale=1,
-                                center=np.zeros((2)),
-                                dim=2,
-                                **kwargs):
-    """
-    Position nodes using Fruchterman-Reingold force-directed algorithm.
-
-    Parameters
-    ----------
-    edge_list: m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-    edge_weights: dict (source, target) : float or None (default=None)
-        Edge weights.
-
-    k : float (default=None)
-        Optimal distance between nodes.  If None the distance is set to
-        1/sqrt(n) where n is the number of nodes.  Increase this value
-        to move nodes farther apart.
-
-    pos : dict or None  optional (default=None)
-        Initial positions for nodes as a dictionary with node as keys
-        and values as a coordinate list or tuple.  If None, then use
-        random initial positions.
-
-    fixed : list or None  optional (default=None)
-        Nodes to keep fixed at initial position.
-
-    iterations : int  optional (default=50)
-        Number of iterations of spring-force relaxation
-
-    scale : number (default: 1)
-        Scale factor for positions. Only used if `fixed is None`.
-
-    center : array-like or None
-        Coordinate pair around which to center the layout.
-        Only used if `fixed is None`.
-
-    dim : int
-        Dimension of layout.
-
-    Returns
-    -------
-    pos : dict
-        A dictionary of positions keyed by node
-
-    Notes:
-    ------
-    Implementation taken with minor modifications from networkx.spring_layout().
-
-    """
-
-    nodes = _get_unique_nodes(edge_list)
-    total_nodes = len(nodes)
-
-    # translate fixed node ID to position in node list
-    if fixed is not None:
-        node_to_idx = dict(zip(nodes, range(total_nodes)))
-        fixed = np.asarray([node_to_idx[v] for v in fixed])
-
-    if pos is not None:
-        # Determine size of existing domain to adjust initial positions
-        domain_size = max(coord for pos_tup in pos.values() for coord in pos_tup)
-        if domain_size == 0:
-            domain_size = 1
-        shape = (total_nodes, dim)
-        pos_arr = np.random.random(shape) * domain_size + center
-        for i, n in enumerate(nodes):
-            if n in pos:
-                pos_arr[i] = np.asarray(pos[n])
-    else:
-        pos_arr = None
-
-    if k is None and fixed is not None:
-        # We must adjust k by domain size for layouts not near 1x1
-        k = domain_size / np.sqrt(total_nodes)
-
-    A = _edge_list_to_adjacency(edge_list, edge_weights)
-    pos = _dense_fruchterman_reingold(A, k, pos_arr, fixed, iterations, dim)
-
-    if fixed is None:
-        pos = _rescale_layout(pos, scale=scale) + center
-
-    return dict(zip(nodes, pos))
-
-
-spring_layout = fruchterman_reingold_layout
-
-
-def _dense_fruchterman_reingold(A, k=None, pos=None, fixed=None,
-                                iterations=50, dim=2):
-    """
-    Position nodes in adjacency matrix A using Fruchterman-Reingold
-    """
-
-    nnodes, _ = A.shape
-
-    # if pos is None:
-    #     # random initial positions
-    #     pos = np.asarray(np.random.random((nnodes, dim)), dtype=A.dtype)
-    # else:
-    #     # make sure positions are of same type as matrix
-    #     pos = pos.astype(A.dtype)
-
-    if pos is None:
-        # random initial positions
-        pos = np.random.rand(nnodes, dim)
-
-    # optimal distance between nodes
-    if k is None:
-        k = np.sqrt(1.0/nnodes)
-    # the initial "temperature"  is about .1 of domain area (=1x1)
-    # this is the largest step allowed in the dynamics.
-    # We need to calculate this in case our fixed positions force our domain
-    # to be much bigger than 1x1
-    t = max(max(pos.T[0]) - min(pos.T[0]), max(pos.T[1]) - min(pos.T[1]))*0.1
-    # simple cooling scheme.
-    # linearly step down by dt on each iteration so last iteration is size dt.
-    dt = t/float(iterations+1)
-    delta = np.zeros((pos.shape[0], pos.shape[0], pos.shape[1]), dtype=A.dtype)
-    # the inscrutable (but fast) version
-    # this is still O(V^2)
-    # could use multilevel methods to speed this up significantly
-    for iteration in range(iterations):
-        # matrix of difference between points
-        delta = pos[:, np.newaxis, :] - pos[np.newaxis, :, :]
-        # distance between points
-        distance = np.linalg.norm(delta, axis=-1)
-        # enforce minimum distance of 0.01
-        np.clip(distance, 0.01, None, out=distance)
-        # displacement "force"
-        displacement = np.einsum('ijk,ij->ik',
-                                 delta,
-                                 (k * k / distance**2 - A * distance / k))
-        # update positions
-        length = np.linalg.norm(displacement, axis=-1)
-        length = np.where(length < 0.01, 0.1, length)
-        delta_pos = np.einsum('ij,i->ij', displacement, t / length)
-        if fixed is not None:
-            # don't change positions of fixed nodes
-            delta_pos[fixed] = 0.0
-        pos += delta_pos
-        # cool temperature
-        t -= dt
-    return pos
-
-
-def _rescale_layout(pos, scale=1):
-    """Return scaled position array to (-scale, scale) in all axes.
-
-    The function acts on NumPy arrays which hold position information.
-    Each position is one row of the array. The dimension of the space
-    equals the number of columns. Each coordinate in one column.
-
-    To rescale, the mean (center) is subtracted from each axis separately.
-    Then all values are scaled so that the largest magnitude value
-    from all axes equals `scale` (thus, the aspect ratio is preserved).
-    The resulting NumPy Array is returned (order of rows unchanged).
-
-    Parameters
-    ----------
-    pos : numpy array
-        positions to be scaled. Each row is a position.
-
-    scale : number (default: 1)
-        The size of the resulting extent in all directions.
-
-    Returns
-    -------
-    pos : numpy array
-        scaled positions. Each row is a position.
-
-    """
-    # Find max length over all dimensions
-    lim = 0  # max coordinate for all axes
-    for i in range(pos.shape[1]):
-        pos[:, i] -= pos[:, i].mean()
-        lim = max(abs(pos[:, i]).max(), lim)
-    # rescale to (-scale, scale) in all directions, preserves aspect
-    if lim > 0:
-        for i in range(pos.shape[1]):
-            pos[:, i] *= scale / lim
-    return pos
-
-
-def _edge_list_to_adjacency(edge_list, edge_weights=None):
-
-    sources = [s for (s, _) in edge_list]
-    targets = [t for (_, t) in edge_list]
-
-    if edge_weights:
-        weights = [edge_weights[edge] for edge in edge_list]
-    else:
-        weights = np.ones((len(edge_list)))
-
-    # map nodes to consecutive integers
-    nodes = sources + targets
-    unique = np.unique(nodes)
-    indices = range(len(unique))
-    node_to_idx = dict(zip(unique, indices))
-    source_indices = [node_to_idx[source] for source in sources]
-    target_indices = [node_to_idx[target] for target in targets]
-
-    total_nodes = len(unique)
-    adjacency_matrix = np.zeros((total_nodes, total_nodes))
-    adjacency_matrix[source_indices, target_indices] = weights
-
-    # fill in lower triangle as well
-    adjacency_matrix = adjacency_matrix + adjacency_matrix.transpose()
-
-    return adjacency_matrix
-
-
-# --------------------------------------------------------------------------------
 # interactive plotting
 
 
@@ -1619,14 +1395,19 @@ class Graph(object):
 
         # Initialise node positions.
         if node_positions is None:
-            # If none are given, initialise all.
-            self.node_positions = self._get_node_positions(self.edge_list)
-        elif len(node_positions) < len(_get_unique_nodes(self.edge_list)):
-            # If some are given, keep those fixed and initialise remaining.
-            self.node_positions = self._get_node_positions(self.edge_list, pos=node_positions, fixed=node_positions.keys(), **kwargs)
+            self.node_positions = self._get_node_positions(self.edge_list, **kwargs)
         else:
-            # If all are given, don't do anything.
-            self.node_positions = node_positions
+            if set(node_positions.keys()) == _get_unique_nodes(self.edge_list):
+                # All node positions are given; nothing left to do.
+                self.node_positions = node_positions
+            else:
+                # Some node positions are given; however, either
+                # 1) not all positions are provided, or
+                # 2) there are some unconnected nodes in the graph.
+                self.node_positions = self._get_node_positions(self.edge_list,
+                                                               node_positions = node_positions,
+                                                               fixed_nodes    = node_positions.keys(),
+                                                               **kwargs)
 
         # Draw plot elements.
         self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
@@ -1662,10 +1443,10 @@ class Graph(object):
 
     def _get_node_positions(self, *args, **kwargs):
         """
-        Ultra-thin wrapper around fruchterman_reingold_layout.
+        Ultra-thin wrapper around get_fruchterman_reingold_layout.
         Allows method to be overwritten by derived classes.
         """
-        return fruchterman_reingold_layout(*args, **kwargs)
+        return get_fruchterman_reingold_layout(*args, **kwargs)
 
 
     @_add_doc(draw_nodes.__doc__)
