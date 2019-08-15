@@ -17,48 +17,7 @@ from _utils import (
     _flatten,
 )
 
-# def _spring(adjacency, node_positions, origin, scale, temperature):
-#     """
-#     Loosely based on Eades (1984), using
-#     - attraction that scales linearly with distance instead of logarithmically, and
-#     - repulsion that scales inversely proportional to the square of the distance.
-#     """
 
-#     X = np.array(node_positions.values())
-
-#     delta        = X[None, :, ...] - X[:, None, ...]
-#     distance     = np.sqrt(np.sum(delta*delta, axis=-1))
-#     direction    = delta / distance[..., None]
-#     repulsion    = _get_spring_repulsion(distance, direction)
-#     attraction   = _get_spring_attraction(distance, direction, adjacency)
-#     displacement = attraction + repulsion
-
-#     displacement /= np.max(np.abs(displacement), axis=0) # normalize values to (-1, 1)
-#     displacement *= scale[None, ...] # rescale to shape of canvas
-#     displacement *= temperature # scale by temperature
-
-#     new_X = X + displacement
-#     new_X = _rescale_to_frame(new_X, origin, scale)
-#     # new_X = _enforce_frame(new_X, origin, scale)
-
-#     new_node_positions = dict(zip(node_positions.keys(),  new_X))
-
-#     return new_node_positions
-
-
-# def _get_spring_repulsion(distance, direction):
-#     # magnitude = 1. / distance**0.5
-#     magnitude = 1. / distance**2 # analogous to electrostatical repulsion
-#     vectors   = direction * magnitude[..., None]
-#     vectors   = _set_diagonal(vectors, 0)
-#     return np.sum(vectors, axis=0)
-
-
-# def _get_spring_attraction(distance, direction, adjacency, eps=0.01):
-#     magnitude = distance * adjacency # analogous to a linear spring
-#     vectors   = -direction * magnitude[..., None] # NB: the minus!
-#     vectors   = _set_diagonal(vectors, 0)
-#     return np.sum(vectors, axis=0)
 
 
 def get_fruchterman_reingold_layout(edge_list,
