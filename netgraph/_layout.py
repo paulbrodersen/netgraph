@@ -305,56 +305,62 @@ def _set_diagonal(square_matrix, value=0):
     return square_matrix
 
 
-def get_positions_for_unconnected_nodes(unconnected_nodes, other_node_positions):
-    """
-    Determine a good position of unconnected nodes.
-    Currently, we place these nodes on the periphery, which we define as the area
-    just outside the circle covering all positions in `other_node_positions`.
+# def get_positions_for_unconnected_nodes(unconnected_nodes, other_node_positions):
+#     """
+#     Determine a good position of unconnected nodes.
+#     Currently, we place these nodes on the periphery, which we define as the area
+#     just outside the circle covering all positions in `other_node_positions`.
 
-    TODO:
-    Place the nodes in empty regions of the periphery.
-    For example, one could use a force directed layout to achieve this.
-    1) Tether each unconnected node to the centroid.
-    2) Compute radial force give by other nodes; iterate for a few rounds.
+#     TODO:
+#     Place the nodes in empty regions of the periphery.
+#     For example, one could use a force directed layout to achieve this.
+#     1) Tether each unconnected node to the centroid.
+#     2) Compute radial force give by other nodes; iterate for a few rounds.
 
-    Arguments:
-    ----------
-    unconnected_nodes : list
-        The nodes for which we need to find positions.
+#     Arguments:
+#     ----------
+#     unconnected_nodes : list
+#         The nodes for which we need to find positions.
 
-    other_node_positions : dict node ID : (float, float)
-        The positions of all other nodes.
+#     other_node_positions : dict node ID : (float, float)
+#         The positions of all other nodes.
 
-    Returns:
-    --------
-    node_positions : dict node ID : (float, float)
-        The positions of the unconnected nodes.
+#     Returns:
+#     --------
+#     node_positions : dict node ID : (float, float)
+#         The positions of the unconnected nodes.
 
-    """
+#     """
 
-    xy = np.array(list(other_node_positions.values()))
-    centroid = np.mean(xy, axis=0)
-    delta = xy - centroid[np.newaxis, :]
-    distance = np.sqrt(np.sum(delta**2, axis=1))
-    radius = np.max(distance)
+#     xy = np.array(list(other_node_positions.values()))
+#     centroid = np.mean(xy, axis=0)
+#     delta = xy - centroid[np.newaxis, :]
+#     distance = np.sqrt(np.sum(delta**2, axis=1))
+#     radius = np.max(distance)
 
-    node_positions = dict()
-    for node in unconnected_nodes:
-        node_positions[node] = _get_random_point_on_a_circle(centroid, radius*1.1)
+#     node_positions = dict()
+#     for node in unconnected_nodes:
+#         node_positions[node] = _get_random_point_on_a_circle(centroid, radius*1.1)
 
-    return node_positions
-
-
-def _get_random_point_on_a_circle(origin, radius):
-    random_angle = 2 * np.pi * np.random.random()
-    return _get_point_on_a_circle(origin, radius, angle)
+#     return node_positions
 
 
-def _get_point_on_a_circle(origin, radius, angle):
-    x0, y0 = origin
-    x = x0 + radius * np.cos(angle)
-    y = y0 + radius * np.sin(angle)
-    return np.array([x, y])
+# def _get_random_point_on_a_circle(origin, radius):
+#     random_angle = 2 * np.pi * np.random.random()
+#     return _get_point_on_a_circle(origin, radius, angle)
+
+
+# def _get_point_on_a_circle(origin, radius, angle):
+#     x0, y0 = origin
+#     x = x0 + radius * np.cos(angle)
+#     y = y0 + radius * np.sin(angle)
+#     return np.array([x, y])
+
+
+
+
+
+
 
 
 def get_layout_for_multiple_components(edge_list,
