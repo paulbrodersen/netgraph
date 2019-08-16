@@ -371,14 +371,9 @@ def get_layout_for_multiple_components(edge_list,
                                        component_layout_function = get_fruchterman_reingold_layout,
                                        *args, **kwargs):
     """
-    Many graph layout algorithms assume that the graph consists of a single connected component.
-    As a consequence, they fail when that is not the case.
-    This function tries to work around this issue by determining suitable bounding box
-    dimensions and placement for each component in the graph, and then
-    computing the layout of each individual component given the constraint of the
-    bounding box.
-
-    The bounding boxes
+    Determine suitable bounding box dimensions and placement for each
+    component in the graph, and then compute the layout of each
+    individual component given the constraint of the bounding box.
 
     Arguments:
     ----------
@@ -395,6 +390,9 @@ def get_layout_for_multiple_components(edge_list,
         Width, height, etc of the frame. If None, it defaults to (1, 1) or the
         maximum distance of nodes in `node_positions` to the `origin`
         (whichever is greater).
+    component_layout_function : function handle
+        Handle to the function computing the relative positions of each node within a component.
+        The args and kwargs are passed through to this function.
 
     Returns:
     --------
@@ -443,6 +441,7 @@ def _get_connected_components(adjacency_list):
     Returns:
     --------
     components : list of sets of node IDs
+        The unconnected components of the graph.
 
     """
 
@@ -483,6 +482,31 @@ def _dfs(adjacency_list, start, visited=None):
 
 
 def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
+    """
+    Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Arguments:
+    ----------
+    components : list of sets of node IDs
+        The unconnected components of the graph.
+    origin : D-tuple or None (default None, which implies (0, 0))
+        Bottom left corner of the frame / canvas containing the graph.
+        If None, it defaults to (0, 0) or the minimum of `node_positions`
+        (whichever is smaller).
+    scale : D-tuple or None (default None, which implies (1, 1)).
+        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
+        maximum distance of nodes in `node_positions` to the `origin`
+        (whichever is greater).
+    power : float (default 0.8)
+        The dimensions each bounding box are given by |V|^power by |V|^power,
+        where |V| are the total number of nodes.
+
+    Returns:
+    --------
+    bboxes : list of (min x, min y, width height) tuples
+        The bounding box for each component.
+    """
+
     # leave rpack an optional dependency for the time being
     try:
         import rpack
