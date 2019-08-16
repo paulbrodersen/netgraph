@@ -629,41 +629,33 @@ def test_get_layout_for_multiple_components():
     edge_list = []
 
     # add 50 2-node components
-    edge_list.extend([(ii, ii+1) for ii in range(100, 200, 2)])
+    edge_list.extend([(ii, ii+1) for ii in range(0, 100, 2)])
 
     # add 33 3-node components
-    for ii in range(200, 300, 3):
+    for ii in range(100, 200, 3):
         edge_list.extend([(ii, ii+1), (ii, ii+2), (ii+1, ii+2)])
 
     # add a couple of larger components
-    n = 300
+    n = 200
     for ii in np.random.randint(3, 30, size=10):
         edge_list.extend(list(combinations(range(n, n+ii), 2)))
         n += ii
 
-    pos = get_fruchterman_reingold_layout(edge_list)
-
     g = nx.Graph()
     g.add_edges_from(edge_list)
-    # g.add_nodes_from(unconnected_nodes)
-    # nx.draw(g, pos=pos)
 
-    draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
+    draw(g, node_size=1., node_edge_width=0.1, edge_width=0.1)
 
     plt.show()
 
 
 def test_get_layout_for_single_component():
-    import matplotlib.pyplot as plt # ; plt.ion()
-    from _main import draw, Graph # , InteractiveGraph
-    from itertools import combinations
     import networkx as nx
+    import matplotlib.pyplot as plt
+    from _main import draw
 
     g = nx.complete_graph(10)
-    edge_list = list(g.edges())
-    pos = get_fruchterman_reingold_layout(edge_list)
-    draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
-
+    draw(g)
     plt.show()
 
 
