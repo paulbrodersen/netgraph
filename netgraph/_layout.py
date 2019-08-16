@@ -433,16 +433,6 @@ def get_layout_for_multiple_components(edge_list, components,
 
     bboxes = _get_component_bboxes(components, origin, scale)
 
-    # # for debugging
-    # import matplotlib.pyplot as plt
-    # from matplotlib.patches import Rectangle
-    # fig, ax = plt.subplots(1,1)
-    # for bbox in bboxes:
-    #     ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
-    # ax.set_xlim(0, 1)
-    # ax.set_ylim(0, 1)
-    # plt.show()
-
     node_positions = dict()
     for ii, (component, bbox) in enumerate(zip(components, bboxes)):
         if len(component) > 1:
@@ -562,6 +552,14 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
 
     # rescale boxes to canvas, effectively reversing the upscaling
     bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    # # for debugging
+    # import matplotlib.pyplot as plt
+    # from matplotlib.patches import Rectangle
+    # fig, ax = plt.subplots(1,1)
+    # for bbox in bboxes:
+    #     ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+    # plt.show()
 
     return bboxes
 
