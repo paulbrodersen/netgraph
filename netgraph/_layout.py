@@ -628,5 +628,20 @@ def test_get_layout_for_multiple_components():
     plt.show()
 
 
+def test_get_layout_for_single_component():
+    import matplotlib.pyplot as plt # ; plt.ion()
+    from _main import draw, Graph # , InteractiveGraph
+    from itertools import combinations
+    import networkx as nx
+
+    g = nx.complete_graph(10)
+    edge_list = list(g.edges())
+    pos = get_layout(edge_list)
+    draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
+
+    plt.show()
+
+
 if __name__ == '__main__':
     test_get_layout_for_multiple_components()
+    test_get_layout_for_single_component()
