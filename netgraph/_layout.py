@@ -7,6 +7,7 @@ TODO:
 
 import numpy as np
 
+from rpack import pack
 from functools import wraps
 
 from _utils import (
@@ -177,15 +178,6 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
         The bounding box for each component.
     """
 
-    # leave rpack an optional dependency for the time being
-    try:
-        import rpack
-    except ImportError:
-        error_msg = "Plotting of multiple components only supported when rpack is installed.\n"
-        error_msg += "You can install rpack with:\n"
-        error_msg += "pip install rectangle-packer"
-        raise ImportError(error_msg)
-
     relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
 
     # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
@@ -199,7 +191,7 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
     # TODO find alternative to rpack
     scalar = 10
     integer_dimensions = [(int(scalar*width), int(scalar*height)) for width, height in padded_dimensions]
-    origins = rpack.pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
+    origins = pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
 
     bboxes = [(x, y, scalar*width, scalar*height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
 
