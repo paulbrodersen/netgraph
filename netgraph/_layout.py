@@ -7,6 +7,7 @@ TODO:
 
 import numpy as np
 
+from functools import wraps
 
 from _utils import (
     warnings,
@@ -18,10 +19,233 @@ from _utils import (
 )
 
 
+DEBUG = False
+
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 
 
+def _handle_multiple_components(layout_function):
+    """
+    Most layout algorithms only handle graphs that consist of a giant
+    single component, and fail to find a suitable layout if the graph
+    consists of more than component. This decorator wraps a given
+    layout function such that if the graph contains more than one
+    component, the layout is first applied to each individual
+    component, and then the component layouts are combined using
+    rectangle packing.
+
+    """
+    @wraps(layout_function)
+    def wrapped_layout_function(edge_list, *args, **kwargs):
+
+        # determine if there are more than one component
+        adjacency_list = _edge_list_to_adjacency_list(edge_list)
+        components = _get_connected_components(adjacency_list)
+
+        if len(components) > 1:
+            return get_layout_for_multiple_components(edge_list, components, layout_function, *args, **kwargs)
+        else:
+            return layout_function(edge_list, *args, **kwargs)
+
+    return wrapped_layout_function
+
+
+def _get_connected_components(adjacency_list):
+    """
+    Get the connected components given a graph in adjacency list format.
+
+    Arguments:
+    ----------
+    adjacency_list : dict node ID : set of node IDs
+        Adjacency list, i.e. a mapping from each node to its neighbours.
+
+    Returns:
+    --------
+    components : list of sets of node IDs
+        The unconnected components of the graph.
+
+    """
+
+    components = []
+    not_visited = set(list(adjacency_list.keys()))
+    while not_visited: # i.e. while stack is non-empty (empty set is interpreted as `False`)
+        start = not_visited.pop()
+        component = _dfs(adjacency_list, start)
+        components.append(component)
+
+        #  remove nodes that are in the component that we just found
+        for node in component:
+            try:
+                not_visited.remove(node)
+            except KeyError:
+                # KeyErrors occur when we try to remove
+                # 1) the start node (which we already popped), or
+                # 2) leaf nodes, i.e. nodes with no outgoing edges
+                pass
+
+    # Often, we are only interested in the largest component,
+    # hence we return the list of components sorted by size, largest first.
+    components = sorted(components, key=len, reverse=True)
+
+    return components
+
+
+def _dfs(adjacency_list, start, visited=None):
+    if visited is None:
+        visited = set()
+    visited.add(start)
+    for node in adjacency_list[start] - visited:
+        if node in adjacency_list:
+            _dfs(adjacency_list, node, visited)
+        else: # otherwise no outgoing edge
+            visited.add(node)
+    return visited
+
+
+def get_layout_for_multiple_components(edge_list, components, layout_function,
+                                       origin = (0, 0),
+                                       scale  = (1, 1),
+                                       *args, **kwargs):
+    """
+    Determine suitable bounding box dimensions and placement for each
+    component in the graph, and then compute the layout of each
+    individual component given the constraint of the bounding box.
+
+    Arguments:
+    ----------
+    edge_list : list of (source node, target node) tuples
+        The graph to plot.
+    components : list of sets of node IDs
+        The unconnected components of the graph.
+    layout_function : function handle
+        Handle to the function computing the relative positions of each node within a component.
+        The args and kwargs are passed through to this function.
+    origin : D-tuple or None (default None, which implies (0, 0))
+        Bottom left corner of the frame / canvas containing the graph.
+        If None, it defaults to (0, 0) or the minimum of `node_positions`
+        (whichever is smaller).
+    scale : D-tuple or None (default None, which implies (1, 1)).
+        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
+        maximum distance of nodes in `node_positions` to the `origin`
+        (whichever is greater).
+    Returns:
+    --------
+    node_positions : dict node : (float x, float y)
+        The position of all nodes in the graph.
+
+    """
+
+    bboxes = _get_component_bboxes(components, origin, scale)
+
+    node_positions = dict()
+    for ii, (component, bbox) in enumerate(zip(components, bboxes)):
+        if len(component) > 1:
+            subgraph = _get_subgraph(edge_list, component)
+            component_node_positions = layout_function(subgraph, origin=bbox[:2], scale=bbox[2:], *args, **kwargs)
+            node_positions.update(component_node_positions)
+        else:
+            # component is a single node, which we can simply place at the centre of the bounding box
+            node_positions[component.pop()] = (bbox[0] + 0.5 * bbox[2], bbox[1] + 0.5 * bbox[3])
+
+    return node_positions
+
+
+def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
+    """
+    Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Arguments:
+    ----------
+    components : list of sets of node IDs
+        The unconnected components of the graph.
+    origin : D-tuple or None (default None, which implies (0, 0))
+        Bottom left corner of the frame / canvas containing the graph.
+        If None, it defaults to (0, 0) or the minimum of `node_positions`
+        (whichever is smaller).
+    scale : D-tuple or None (default None, which implies (1, 1)).
+        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
+        maximum distance of nodes in `node_positions` to the `origin`
+        (whichever is greater).
+    power : float (default 0.8)
+        The dimensions each bounding box are given by |V|^power by |V|^power,
+        where |V| are the total number of nodes.
+
+    Returns:
+    --------
+    bboxes : list of (min x, min y, width height) tuples
+        The bounding box for each component.
+    """
+
+    # leave rpack an optional dependency for the time being
+    try:
+        import rpack
+    except ImportError:
+        error_msg = "Plotting of multiple components only supported when rpack is installed.\n"
+        error_msg += "You can install rpack with:\n"
+        error_msg += "pip install rectangle-packer"
+        raise ImportError(error_msg)
+
+    relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
+
+    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
+    # We choose a padding proportional to the dimensions of the largest box.
+    maximum_dimensions = np.max(relative_dimensions, axis=0)
+    pad_x, pad_y = pad_by * maximum_dimensions
+    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
+
+    # rpack only works on integers, hence multiply by some large scalar to retain some precision;
+    # NB: for some strange reason, rpack's running time is sensitive to the size of the boxes, so don't make the scalar too large
+    # TODO find alternative to rpack
+    scalar = 10
+    integer_dimensions = [(int(scalar*width), int(scalar*height)) for width, height in padded_dimensions]
+    origins = rpack.pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
+
+    bboxes = [(x, y, scalar*width, scalar*height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
+
+    # rescale boxes to canvas, effectively reversing the upscaling
+    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    if DEBUG:
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        fig, ax = plt.subplots(1,1)
+        for bbox in bboxes:
+            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+        plt.show()
+
+    return bboxes
+
+
+def _get_bbox_dimensions(n, power=0.5):
+    # TODO: factor in the dimensions of the canvas
+    # such that the rescaled boxes are approximately square
+    return (n**power, n**power)
+
+
+def _rescale_bboxes_to_canvas(bboxes, origin, scale):
+    lower_left_hand_corners = [(x, y) for (x, y, _, _) in bboxes]
+    upper_right_hand_corners = [(x+w, y+h) for (x, y, w, h) in bboxes]
+    minimum = np.min(lower_left_hand_corners, axis=0)
+    maximum = np.max(upper_right_hand_corners, axis=0)
+    total_width, total_height = maximum - minimum
+
+    # shift to (0, 0)
+    min_x, min_y = minimum
+    lower_left_hand_corners = [(x - min_x, y-min_y) for (x, y) in lower_left_hand_corners]
+
+    # rescale
+    scale_x = scale[0] / total_width
+    scale_y = scale[1] / total_height
+
+    lower_left_hand_corners = [(x*scale_x, y*scale_y) for x, y in lower_left_hand_corners]
+    dimensions = [(w * scale_x, h * scale_y) for (_, _, w, h) in bboxes]
+    rescaled_bboxes = [(x, y, w, h) for (x, y), (w, h) in zip(lower_left_hand_corners, dimensions)]
+
+    return rescaled_bboxes
+
+
+@_handle_multiple_components
 def get_fruchterman_reingold_layout(edge_list,
                                     k                   = None,
                                     scale               = None,
@@ -357,239 +581,43 @@ def _set_diagonal(square_matrix, value=0):
 #     return np.array([x, y])
 
 
-def get_layout(edge_list,
-               unconnected_nodes = None,
-               layout_function   = get_fruchterman_reingold_layout,
-               *args, **kwargs):
-    """
-    Determine if the graph contains more than one component.
-    If there is only one component, proceed to computing the layout.
-    Else, compute the relative layout for each component separately,
-    and then combines the layouts.
+# def get_layout(edge_list,
+#                unconnected_nodes = None,
+#                layout_function   = get_fruchterman_reingold_layout,
+#                *args, **kwargs):
+#     """
+#     Determine if the graph contains more than one component.
+#     If there is only one component, proceed to computing the layout.
+#     Else, compute the relative layout for each component separately,
+#     and then combines the layouts.
 
-    Arguments:
-    ----------
-    edge_list : list of (source node, target node) tuples
-        The graph to plot.
-    unconnected_nodes : list of nodes
-        Additional nodes to plot, that are unconnected and hence are not present
-        in the edge list.
+#     Arguments:
+#     ----------
+#     edge_list : list of (source node, target node) tuples
+#         The graph to plot.
+#     unconnected_nodes : list of nodes
+#         Additional nodes to plot, that are unconnected and hence are not present
+#         in the edge list.
 
-    Returns:
-    --------
-    node_positions : dict key : (float, float)
-        Mapping of nodes to (x,y) positions
+#     Returns:
+#     --------
+#     node_positions : dict key : (float, float)
+#         Mapping of nodes to (x,y) positions
 
-    TODO: implement as decorator
+#     TODO: implement as decorator
 
-    """
+#     """
 
-    adjacency_list = _edge_list_to_adjacency_list(edge_list)
-    components = _get_connected_components(adjacency_list)
+#     adjacency_list = _edge_list_to_adjacency_list(edge_list)
+#     components = _get_connected_components(adjacency_list)
 
-    if unconnected_nodes:
-        components = components + [set([node]) for node in unconnected_nodes]
+#     if unconnected_nodes:
+#         components = components + [set([node]) for node in unconnected_nodes]
 
-    if len(components) > 1:
-        return get_layout_for_multiple_components(edge_list, components, component_layout_function=layout_function, *args, **kwargs)
-    else:
-        return layout_function(edge_list, *args, **kwargs)
-
-
-def get_layout_for_multiple_components(edge_list, components,
-                                       origin                    = (0, 0),
-                                       scale                     = (1, 1),
-                                       component_layout_function = get_fruchterman_reingold_layout,
-                                       *args, **kwargs):
-    """
-    Determine suitable bounding box dimensions and placement for each
-    component in the graph, and then compute the layout of each
-    individual component given the constraint of the bounding box.
-
-    Arguments:
-    ----------
-    edge_list : list of (source node, target node) tuples
-        The graph to plot.
-    components : list of sets of node IDs
-        The unconnected components of the graph.
-    origin : D-tuple or None (default None, which implies (0, 0))
-        Bottom left corner of the frame / canvas containing the graph.
-        If None, it defaults to (0, 0) or the minimum of `node_positions`
-        (whichever is smaller).
-    scale : D-tuple or None (default None, which implies (1, 1)).
-        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
-        maximum distance of nodes in `node_positions` to the `origin`
-        (whichever is greater).
-    component_layout_function : function handle
-        Handle to the function computing the relative positions of each node within a component.
-        The args and kwargs are passed through to this function.
-
-    Returns:
-    --------
-    node_positions : dict node : (float x, float y)
-        The position of all nodes in the graph.
-
-    """
-
-    bboxes = _get_component_bboxes(components, origin, scale)
-
-    node_positions = dict()
-    for ii, (component, bbox) in enumerate(zip(components, bboxes)):
-        if len(component) > 1:
-            subgraph = _get_subgraph(edge_list, component)
-            component_node_positions = component_layout_function(subgraph, origin=bbox[:2], scale=bbox[2:], *args, **kwargs)
-            node_positions.update(component_node_positions)
-        else:
-            # component is a single node, which we can simply place at the centre of the bounding box
-            node_positions[component.pop()] = (bbox[0] + 0.5 * bbox[2], bbox[1] + 0.5 * bbox[3])
-
-    return node_positions
-
-
-def _get_connected_components(adjacency_list):
-    """
-    Get the connected components given a graph in adjacency list format.
-
-    Arguments:
-    ----------
-    adjacency_list : dict node ID : set of node IDs
-        Adjacency list, i.e. a mapping from each node to its neighbours.
-
-    Returns:
-    --------
-    components : list of sets of node IDs
-        The unconnected components of the graph.
-
-    """
-
-    components = []
-    not_visited = set(list(adjacency_list.keys()))
-    while not_visited: # i.e. while stack is non-empty (empty set is interpreted as `False`)
-        start = not_visited.pop()
-        component = _dfs(adjacency_list, start)
-        components.append(component)
-
-        #  remove nodes that are in the component that we just found
-        for node in component:
-            try:
-                not_visited.remove(node)
-            except KeyError:
-                # KeyErrors occur when we try to remove
-                # 1) the start node (which we already popped), or
-                # 2) leaf nodes, i.e. nodes with no outgoing edges
-                pass
-
-    # Often, we are only interested in the largest component,
-    # hence we return the list of components sorted by size, largest first.
-    components = sorted(components, key=len, reverse=True)
-
-    return components
-
-
-def _dfs(adjacency_list, start, visited=None):
-    if visited is None:
-        visited = set()
-    visited.add(start)
-    for node in adjacency_list[start] - visited:
-        if node in adjacency_list:
-            _dfs(adjacency_list, node, visited)
-        else: # otherwise no outgoing edge
-            visited.add(node)
-    return visited
-
-
-def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
-    """
-    Partition the canvas given by origin and scale into bounding boxes, one for each component.
-
-    Arguments:
-    ----------
-    components : list of sets of node IDs
-        The unconnected components of the graph.
-    origin : D-tuple or None (default None, which implies (0, 0))
-        Bottom left corner of the frame / canvas containing the graph.
-        If None, it defaults to (0, 0) or the minimum of `node_positions`
-        (whichever is smaller).
-    scale : D-tuple or None (default None, which implies (1, 1)).
-        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
-        maximum distance of nodes in `node_positions` to the `origin`
-        (whichever is greater).
-    power : float (default 0.8)
-        The dimensions each bounding box are given by |V|^power by |V|^power,
-        where |V| are the total number of nodes.
-
-    Returns:
-    --------
-    bboxes : list of (min x, min y, width height) tuples
-        The bounding box for each component.
-    """
-
-    # leave rpack an optional dependency for the time being
-    try:
-        import rpack
-    except ImportError:
-        error_msg = "Plotting of multiple components only supported when rpack is installed.\n"
-        error_msg += "You can install rpack with:\n"
-        error_msg += "pip install rectangle-packer"
-        raise ImportError(error_msg)
-
-    relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
-
-    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
-    # We choose a padding proportional to the dimensions of the largest box.
-    maximum_dimensions = np.max(relative_dimensions, axis=0)
-    pad_x, pad_y = pad_by * maximum_dimensions
-    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
-
-    # rpack only works on integers, hence multiply by some large scalar to retain some precision;
-    # NB: for some strange reason, rpack's running time is sensitive to the size of the boxes, so don't make the scalar too large
-    # TODO find alternative to rpack
-    scalar = 10
-    integer_dimensions = [(int(scalar*width), int(scalar*height)) for width, height in padded_dimensions]
-    origins = rpack.pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
-
-    bboxes = [(x, y, scalar*width, scalar*height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
-
-    # rescale boxes to canvas, effectively reversing the upscaling
-    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
-
-    # # for debugging
-    # import matplotlib.pyplot as plt
-    # from matplotlib.patches import Rectangle
-    # fig, ax = plt.subplots(1,1)
-    # for bbox in bboxes:
-    #     ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
-    # plt.show()
-
-    return bboxes
-
-
-def _get_bbox_dimensions(n, power=0.5):
-    # TODO: factor in the dimensions of the canvas
-    # such that the rescaled boxes are approximately square
-    return (n**power, n**power)
-
-
-def _rescale_bboxes_to_canvas(bboxes, origin, scale):
-    lower_left_hand_corners = [(x, y) for (x, y, _, _) in bboxes]
-    upper_right_hand_corners = [(x+w, y+h) for (x, y, w, h) in bboxes]
-    minimum = np.min(lower_left_hand_corners, axis=0)
-    maximum = np.max(upper_right_hand_corners, axis=0)
-    total_width, total_height = maximum - minimum
-
-    # shift to (0, 0)
-    min_x, min_y = minimum
-    lower_left_hand_corners = [(x - min_x, y-min_y) for (x, y) in lower_left_hand_corners]
-
-    # rescale
-    scale_x = scale[0] / total_width
-    scale_y = scale[1] / total_height
-
-    lower_left_hand_corners = [(x*scale_x, y*scale_y) for x, y in lower_left_hand_corners]
-    dimensions = [(w * scale_x, h * scale_y) for (_, _, w, h) in bboxes]
-    rescaled_bboxes = [(x, y, w, h) for (x, y), (w, h) in zip(lower_left_hand_corners, dimensions)]
-
-    return rescaled_bboxes
+#     if len(components) > 1:
+#         return get_layout_for_multiple_components(edge_list, components, component_layout_function=layout_function, *args, **kwargs)
+#     else:
+#         return layout_function(edge_list, *args, **kwargs)
 
 
 def test_get_layout_for_multiple_components():
@@ -599,9 +627,6 @@ def test_get_layout_for_multiple_components():
     import networkx as nx
 
     edge_list = []
-
-    # add 100 unconnected nodes
-    unconnected_nodes = list(range(100))
 
     # add 50 2-node components
     edge_list.extend([(ii, ii+1) for ii in range(100, 200, 2)])
@@ -616,11 +641,11 @@ def test_get_layout_for_multiple_components():
         edge_list.extend(list(combinations(range(n, n+ii), 2)))
         n += ii
 
-    pos = get_layout(edge_list, unconnected_nodes=unconnected_nodes)
+    pos = get_fruchterman_reingold_layout(edge_list)
 
     g = nx.Graph()
     g.add_edges_from(edge_list)
-    g.add_nodes_from(unconnected_nodes)
+    # g.add_nodes_from(unconnected_nodes)
     # nx.draw(g, pos=pos)
 
     draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
@@ -636,7 +661,7 @@ def test_get_layout_for_single_component():
 
     g = nx.complete_graph(10)
     edge_list = list(g.edges())
-    pos = get_layout(edge_list)
+    pos = get_fruchterman_reingold_layout(edge_list)
     draw(g, node_positions=pos, node_size=1., node_edge_width=0.1, edge_width=0.1)
 
     plt.show()
