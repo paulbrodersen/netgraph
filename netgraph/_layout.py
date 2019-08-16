@@ -357,15 +357,46 @@ def _set_diagonal(square_matrix, value=0):
 #     return np.array([x, y])
 
 
+def get_layout(edge_list,
+               unconnected_nodes = None,
+               layout_function   = get_fruchterman_reingold_layout,
+               *args, **kwargs):
+    """
+    Determine if the graph contains more than one component.
+    If there is only one component, proceed to computing the layout.
+    Else, compute the relative layout for each component separately,
+    and then combines the layouts.
+
+    Arguments:
+    ----------
+    edge_list : list of (source node, target node) tuples
+        The graph to plot.
+    unconnected_nodes : list of nodes
+        Additional nodes to plot, that are unconnected and hence are not present
+        in the edge list.
+
+    Returns:
+    --------
+    node_positions : dict key : (float, float)
+        Mapping of nodes to (x,y) positions
+
+    TODO: implement as decorator
+
+    """
+
+    adjacency_list = _edge_list_to_adjacency_list(edge_list)
+    components = _get_connected_components(adjacency_list)
+
+    if unconnected_nodes:
+        components = components + [set([node]) for node in unconnected_nodes]
+
+    if len(components) > 1:
+        return get_layout_for_multiple_components(edge_list, components, component_layout_function=layout_function, *args, **kwargs)
+    else:
+        return layout_function(edge_list, *args, **kwargs)
 
 
-
-
-
-
-def get_layout_for_multiple_components(edge_list,
-                                       unconnected_nodes         = None,
-                                       node_size                 = None,
+def get_layout_for_multiple_components(edge_list, components,
                                        origin                    = (0, 0),
                                        scale                     = (1, 1),
                                        component_layout_function = get_fruchterman_reingold_layout,
@@ -379,9 +410,8 @@ def get_layout_for_multiple_components(edge_list,
     ----------
     edge_list : list of (source node, target node) tuples
         The graph to plot.
-    unconnected_nodes : list of nodes
-        Additional nodes to plot, that are unconnected and hence are not present
-        in the edge list.
+    components : list of sets of node IDs
+        The unconnected components of the graph.
     origin : D-tuple or None (default None, which implies (0, 0))
         Bottom left corner of the frame / canvas containing the graph.
         If None, it defaults to (0, 0) or the minimum of `node_positions`
@@ -401,9 +431,6 @@ def get_layout_for_multiple_components(edge_list,
 
     """
 
-    adjacency_list = _edge_list_to_adjacency_list(edge_list)
-    components = _get_connected_components(adjacency_list)
-    components = components + [set([node]) for node in unconnected_nodes]
     bboxes = _get_component_bboxes(components, origin, scale)
 
     # # for debugging
@@ -592,7 +619,7 @@ def test_get_layout_for_multiple_components():
         edge_list.extend(list(combinations(range(n, n+ii), 2)))
         n += ii
 
-    pos = get_layout_for_multiple_components(edge_list, unconnected_nodes=unconnected_nodes)
+    pos = get_layout(edge_list, unconnected_nodes=unconnected_nodes)
 
     g = nx.Graph()
     g.add_edges_from(edge_list)
