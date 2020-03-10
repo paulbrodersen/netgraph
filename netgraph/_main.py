@@ -1116,6 +1116,7 @@ def draw_edge_labels(edge_list,
                      ax=None,
                      rotate=True,
                      edge_label_zorder=10000,
+                     edge_bg_color = None,
                      **kwargs):
     """
     Draw edge labels.
@@ -1169,6 +1170,8 @@ def draw_edge_labels(edge_list,
     edge_label_zorder : int (default 10000)
         Set the zorder of edge labels.
         Choose a large number to ensure that the labels are plotted on top of the edges.
+
+    edge_bg_color: str (default: None)
 
     edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
@@ -1241,9 +1244,11 @@ def draw_edge_labels(edge_list,
                         transform=ax.transData,
                         zorder=edge_label_zorder,
                         clip_on=clip_on,
+                        alpha=edge_label_font_alpha
                         )
-
             text_items[(n1, n2)] = t
+            if edge_bg_color:
+                t.set_backgroundcolor(edge_bg_color)
 
         else: # n1 == n2, i.e. a self-loop
             import warnings
