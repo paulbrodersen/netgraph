@@ -1809,7 +1809,7 @@ class InteractiveGraph(Graph, DraggableArtists):
             x1, y1 = self.node_positions[target]
 
             # shift edge right if birectional
-            # TODO: potentially move shift into FancyArrow (shape='right)
+            # TODO: potentially move shift into FancyArrow (shape='right')
             if (target, source) in edges: # bidirectional
                 x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=0.5*self.edge_artists[(source, target)].width)
 
