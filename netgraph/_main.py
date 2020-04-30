@@ -329,6 +329,7 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 def _get_zorder(color_dict):
     # reorder plot elements such that darker items are plotted last
     # and hence most prominent in the graph
+    # TODO: assumes that background is white (or at least light); might want to reverse order for dark backgrounds
     zorder = np.argsort(np.sum(list(color_dict.values()), axis=1)) # assumes RGB specification
     zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
     zorder = {key: index for key, index in zip(color_dict.keys(), zorder)}
