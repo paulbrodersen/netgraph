@@ -1241,8 +1241,8 @@ def draw_edge_labels(edge_list,
                         transform=ax.transData,
                         zorder=edge_label_zorder,
                         clip_on=clip_on,
+                        alpha=edge_label_font_alpha
                         )
-
             text_items[(n1, n2)] = t
 
         else: # n1 == n2, i.e. a self-loop
