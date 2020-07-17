@@ -1,12 +1,12 @@
 from setuptools import setup, find_packages
 setup(
     name = 'netgraph',
-    version = '3.1.6',
+    version = '3.1.7',
     description = 'Fork of networkx drawing utilities for publication quality plots of networks.',
     author = 'Paul Brodersen',
     author_email = 'paulbrodersen+netgraph@gmail.com',
     url = 'https://github.com/paulbrodersen/netgraph',
-    download_url = 'https://github.com/paulbrodersen/netgraph/archive/3.1.6.tar.gz',
+    download_url = 'https://github.com/paulbrodersen/netgraph/archive/3.1.7.tar.gz',
     keywords = ['matplotlib', 'network', 'visualisation'],
     classifiers = [ # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 4 - Beta',
