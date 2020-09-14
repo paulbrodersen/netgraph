@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 setup(
     name = 'netgraph',
-    version = '3.1.7',
+    version = '3.1.8',
     description = 'Fork of networkx drawing utilities for publication quality plots of networks.',
     author = 'Paul Brodersen',
     author_email = 'paulbrodersen+netgraph@gmail.com',
