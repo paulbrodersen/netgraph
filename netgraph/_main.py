@@ -1983,8 +1983,8 @@ class InteractiveGraph(Graph, DraggableArtists):
         self._node_to_draggable_artist = self.node_face_artists
         self._draggable_artist_to_node = dict(zip(self.node_face_artists.values(), self.node_face_artists.keys()))
 
-        # trigger resize of labels when canvas size changes
-        self.fig.canvas.mpl_connect('resize_event', self._on_resize)
+        # # trigger resize of labels when canvas size changes
+        # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
 
     def _move(self, event):
@@ -2051,11 +2051,11 @@ class InteractiveGraph(Graph, DraggableArtists):
             # TODO: adjust angle of label
 
 
-    def _on_resize(self, event):
-        if hasattr(self, 'node_labels') and not ('node_label_font_size' in self.kwargs):
-            self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **self.kwargs) * 0.9 # conservative fudge factor
-            self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
-            print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
+    # def _on_resize(self, event):
+    #     if hasattr(self, 'node_labels') and not ('node_label_font_size' in self.kwargs):
+    #         self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **self.kwargs) * 0.9 # conservative fudge factor
+    #         self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
+    #         print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
 
 
 # --------------------------------------------------------------------------------
