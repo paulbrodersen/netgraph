@@ -599,21 +599,6 @@ def _draw_nodes(node_positions,
     return artists
 
 
-class RegularPolygon(matplotlib.patches.RegularPolygon):
-    """
-    The API for matplotlib.patches.Circle and matplotlib.patches.RegularPolygon in matplotlib differ substantially.
-    This class tries to bridge some of these gaps by translating Circle methods into RegularPolygon methods.
-
-    TODO: remove class once python 2 is fully phased out
-    """
-
-    try: # seems deprecated for newer versions of matplotlib
-        center = property(matplotlib.patches.RegularPolygon._get_xy,
-                          matplotlib.patches.RegularPolygon._set_xy)
-    except AttributeError:
-        center = matplotlib.patches.RegularPolygon.xy
-
-
 def draw_edges(edge_list,
                node_positions,
                node_size=3.,
