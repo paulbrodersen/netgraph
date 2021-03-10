@@ -618,13 +618,3 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             if isinstance(self.edge_zorder, dict):
                 if source in self.edge_zorder:
                     self.edge_zorder[target] = self.edge_zorder[source]
-
-
-if __name__ == '__main__':
-
-    # g = test(InteractiveClass=InteractiveGrid, node_size=45, edge_width=15)
-    # g = test(InteractiveClass=InteractiveHypergraph)
-    # g = test(InteractiveClass=InteractivelyConstructDestroyGraph)
-    # plt.show()
-
-    pass

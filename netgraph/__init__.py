@@ -87,8 +87,7 @@ from ._main import (draw,
                     get_color,
                     get_fruchterman_reingold_layout,
                     Graph,
-                    InteractiveGraph,
-                    test)
+                    InteractiveGraph)
 
 from ._interactive_variants import (InteractiveGrid,
                                     InteractiveHypergraph,
@@ -109,4 +108,4 @@ __all__ = ['draw',
            'InteractiveGrid',
            'InteractiveHypergraph',
            'InteractivelyConstructDestroyGraph'
-           'test']
+]
