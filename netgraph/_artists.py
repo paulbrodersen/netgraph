@@ -84,3 +84,71 @@ class RegularPolygonDataUnits(PathPatchDataUnits):
             .scale(self.radius) \
             .rotate(self.orientation) \
             .translate(*self.xy)
+
+
+def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
+    shared_kwargs = dict(
+            xy=position,
+            radius=size,
+            facecolor=facecolor,
+            alpha=alpha,
+            linewidth=0.,
+            zorder=zorder,
+    )
+    if shape == 'o': # circle
+        artist = CircleDataUnits(**shared_kwargs)
+    elif shape == '^': # triangle up
+        artist = RegularPolygonDataUnits(
+            numVertices=3,
+            orientation=0,
+            **shared_kwargs
+        )
+    elif shape == '<': # triangle left
+        artist = RegularPolygonDataUnits(
+            numVertices=3,
+            orientation=np.pi*0.5,
+            **shared_kwargs
+        )
+    elif shape == 'v': # triangle down
+        artist = RegularPolygonDataUnits(
+            numVertices=3,
+            orientation=np.pi,
+            **shared_kwargs
+        )
+    elif shape == '>': # triangle right
+        artist = RegularPolygonDataUnits(
+            numVertices=3,
+            orientation=np.pi*1.5,
+            **shared_kwargs
+        )
+    elif shape == 's': # square
+        artist = RegularPolygonDataUnits(
+            numVertices=4,
+            orientation=np.pi*0.25,
+            **shared_kwargs
+        )
+    elif shape == 'd': # diamond
+        artist = RegularPolygonDataUnits(
+            numVertices=4,
+            orientation=np.pi*0.5,
+            **shared_kwargs
+        )
+    elif shape == 'p': # pentagon
+        artist = RegularPolygonDataUnits(
+            numVertices=5,
+            **shared_kwargs
+        )
+    elif shape == 'h': # hexagon
+        artist = RegularPolygonDataUnits(
+            numVertices=6,
+            **shared_kwargs
+        )
+    elif shape == '8': # octagon
+        artist = RegularPolygonDataUnits(
+            numVertices=8,
+            **shared_kwargs
+        )
+    else:
+        raise ValueError("Node shape one of: 'so^>v<dph8'. Current shape:{}".format(shape))
+
+    return artist

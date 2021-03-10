@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from matplotlib.patches import RegularPolygon
 from collections import OrderedDict
 
 from ._utils import (
@@ -17,6 +16,7 @@ from ._utils import (
     )
 
 from ._layout import get_fruchterman_reingold_layout
+from ._artists import _get_node_artist
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
@@ -612,98 +612,6 @@ class RegularPolygon(matplotlib.patches.RegularPolygon):
                           matplotlib.patches.RegularPolygon._set_xy)
     except AttributeError:
         center = matplotlib.patches.RegularPolygon.xy
-
-
-def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
-    if shape == 'o': # circle
-        artist = matplotlib.patches.Circle(xy=position,
-                                           radius=size,
-                                           facecolor=facecolor,
-                                           alpha=alpha,
-                                           linewidth=0.,
-                                           zorder=zorder)
-    elif shape == '^': # triangle up
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=3,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=0,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == '<': # triangle left
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=3,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=np.pi*0.5,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 'v': # triangle down
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=3,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=np.pi,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == '>': # triangle right
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=3,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=np.pi*1.5,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 's': # square
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=4,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=np.pi*0.25,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 'd': # diamond
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=4,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                orientation=np.pi*0.5,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 'p': # pentagon
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=5,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 'h': # hexagon
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=6,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                linewidth=0.,
-                                zorder=zorder)
-    elif shape == 8: # octagon
-        artist = RegularPolygon(xy=position,
-                                radius=size,
-                                numVertices=8,
-                                facecolor=facecolor,
-                                alpha=alpha,
-                                linewidth=0.,
-                                zorder=zorder)
-    else:
-        raise ValueError("Node shape one of: ''so^>v<dph8'. Current shape:{}".format(shape))
-
-    return artist
 
 
 def draw_edges(edge_list,
