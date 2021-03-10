@@ -75,8 +75,10 @@ class RegularPolygonDataUnits(PathPatchDataUnits):
         return self._path
 
     def get_patch_transform(self):
+        # The factor 2 * sin(pi/n) derives from the ratio between a
+        # side and the radius in a regular polygon.
         return self._patch_transform.clear() \
-            .scale(self.radius) \
+            .scale(self.radius-self._lw_data/(2*np.sin(np.pi/self.numvertices))) \
             .rotate(self.orientation) \
             .translate(*self.xy)
 
@@ -106,7 +108,7 @@ class CircleDataUnits(PathPatchDataUnits):
 
     def get_patch_transform(self):
         return self._patch_transform.clear() \
-            .scale(self.radius) \
+            .scale(self.radius-self._lw_data/2) \
             .translate(*self.xy)
 
 

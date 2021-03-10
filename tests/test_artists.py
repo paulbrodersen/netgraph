@@ -53,17 +53,17 @@ def test_RegularPolygonDataUnits():
     height = 2
     lw = 0.25
 
-    outer = Rectangle((origin[0],    origin[1]),    width,      height,      facecolor='darkblue',  zorder=1)
-    inner = Rectangle((origin[0]+lw, origin[1]+lw), width-2*lw, height-2*lw, facecolor='lightblue', zorder=2)
+    outer = Rectangle((origin[0],    origin[1]),    width,      height,      facecolor='darkblue',  zorder=1, linewidth=0)
+    inner = Rectangle((origin[0]+lw, origin[1]+lw), width-2*lw, height-2*lw, facecolor='lightblue', zorder=2, linewidth=0)
 
     ax1.add_patch(outer)
     ax1.add_patch(inner)
-    ax1.axis([-0.5, 2.5, -0.5, 2.5])
+    ax1.axis([-0.1, 2.1, -0.1, 2.1])
     ax1.set_aspect('equal')
     ax1.set_title('Desired')
 
     # create new patch with the adusted size, as the line is centered on the path
-    rp = RegularPolygonDataUnits((1., 1.), 4, radius=1.+lw, orientation=np.pi/4, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
+    rp = RegularPolygonDataUnits((1., 1.), numVertices=4, radius=np.sqrt(2), orientation=np.pi/4, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
     ax2.add_patch(rp)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')
@@ -80,12 +80,12 @@ def test_CircleDataUnits():
     radius = 2
     lw = 0.25
 
-    outer = Circle(origin, radius + lw/2, facecolor='darkblue',  zorder=1)
-    inner = Circle(origin, radius - lw/2, facecolor='lightblue', zorder=2)
+    outer = Circle(origin, radius,      facecolor='darkblue',  zorder=1, linewidth=0)
+    inner = Circle(origin, radius - lw, facecolor='lightblue', zorder=2, linewidth=0)
 
     ax1.add_patch(outer)
     ax1.add_patch(inner)
-    ax1.axis([0, 4, 0, 4])
+    ax1.axis([-0.1, 4.1, -0.1, 4.1])
     ax1.set_aspect('equal')
     ax1.set_title('Desired')
 
