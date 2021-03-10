@@ -9,7 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from matplotlib.path import Path
-from matplotlib.patches import PathPatch, transforms, Circle
+from matplotlib.patches import PathPatch, transforms
 
 
 class PathPatchDataUnits(PathPatch):
@@ -36,11 +36,6 @@ class PathPatchDataUnits(PathPatch):
 
 # ------------------------------------------------------------------------------------------
 # node artist
-
-class CircleDataUnits(Circle):
-    # TODO
-    pass
-
 
 # TODO: potentially apply transform before passing it to PathPatchDataUnits
 class RegularPolygonDataUnits(PathPatchDataUnits):
@@ -83,6 +78,35 @@ class RegularPolygonDataUnits(PathPatchDataUnits):
         return self._patch_transform.clear() \
             .scale(self.radius) \
             .rotate(self.orientation) \
+            .translate(*self.xy)
+
+
+class CircleDataUnits(PathPatchDataUnits):
+
+    def __init__(self, xy, radius, **kwargs):
+        """
+        Parameters
+        ----------
+        xy : (float, float)
+            The center position.
+        radius : float
+            The distance from the center to each of the vertices.
+        **kwargs
+            `Patch` properties:
+            %(Patch_kwdoc)s
+        """
+        self.xy = xy
+        self.radius = radius
+        self._path = Path.circle()
+        self._patch_transform = transforms.Affine2D()
+        super().__init__(path=self._path, **kwargs)
+
+    def get_path(self):
+        return self._path
+
+    def get_patch_transform(self):
+        return self._patch_transform.clear() \
+            .scale(self.radius) \
             .translate(*self.xy)
 
 
