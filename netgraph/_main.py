@@ -10,13 +10,13 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
 from collections import OrderedDict
 
-from _utils import (
+from ._utils import (
     _save_cast_float_to_int,
     _flatten,
     _get_unique_nodes,
     )
 
-from _layout import get_fruchterman_reingold_layout
+from ._layout import get_fruchterman_reingold_layout
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2

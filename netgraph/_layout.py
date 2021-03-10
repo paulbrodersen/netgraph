@@ -10,7 +10,7 @@ import numpy as np
 from rpack import pack
 from functools import wraps
 
-from _utils import (
+from ._utils import (
     warnings,
     _edge_list_to_adjacency_matrix,
     _edge_list_to_adjacency_list,
