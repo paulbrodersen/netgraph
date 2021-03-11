@@ -557,8 +557,7 @@ def draw_edges(edge_list,
         Line width of edges.
         NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
 
-    edge_color : matplotlib color specification or
-                 dict (source, target) : color specification (default 'k')
+    edge_color : matplotlib color specification or dict (source, target) : color specification (default 'k')
        Edge color.
 
     edge_alpha : float or dict (source, target) : float (default 1.)
