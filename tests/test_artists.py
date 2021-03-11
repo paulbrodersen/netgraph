@@ -11,7 +11,14 @@ from matplotlib.patches import Rectangle, Circle
 from netgraph._artists import (
     PathPatchDataUnits,
     NodeArtist,
+    EdgeArtist,
 )
+from netgraph._utils import bspline
+
+
+# set random seed for reproducibility
+np.random.seed(42)
+
 @pytest.mark.mpl_image_compare
 def test_PathPatchDataUnits():
 
@@ -97,3 +104,49 @@ def test_CircleDataUnits():
     return fig
 
 
+@pytest.mark.mpl_image_compare
+def test_simple_line():
+    x = np.linspace(-1, 1, 1000)
+    y = np.sqrt(1. - x**2)
+    return plot_edge(x, y)
+
+
+@pytest.mark.mpl_image_compare
+def test_complicated_line():
+    random_points = np.random.rand(5, 2)
+    x, y = bspline(random_points, n=1000).T
+    return plot_edge(x, y)
+
+
+@pytest.mark.mpl_image_compare
+def test_left_arrow():
+    x = np.linspace(-1, 1, 1000)
+    y = np.sqrt(1. - x**2)
+    return plot_edge(x, y, shape='left')
+
+
+@pytest.mark.mpl_image_compare
+def test_right_arrow():
+    x = np.linspace(-1, 1, 1000)
+    y = np.sqrt(1. - x**2)
+    return plot_edge(x, y, shape='right')
+
+
+def plot_edge(x, y, shape='full'):
+    midline = np.c_[x, y]
+    arrow = EdgeArtist(midline,
+                       width       = 0.05,
+                       head_width  = 0.1,
+                       head_length = 0.15,
+                       offset      = 0.1,
+                       facecolor   = 'red',
+                       edgecolor   = 'black',
+                       linewidth   = 0.005,
+                       alpha       = 0.5,
+                       shape       = shape,
+    )
+    fig, ax = plt.subplots(1,1)
+    ax.add_patch(arrow)
+    ax.plot(x, y, color='black', alpha=0.1) # plot path for reference
+    ax.set_aspect("equal")
+    return fig

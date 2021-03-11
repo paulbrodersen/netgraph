@@ -16,7 +16,7 @@ from ._utils import (
     )
 
 from ._layout import get_fruchterman_reingold_layout
-from ._artists import NodeArtist
+from ._artists import NodeArtist, EdgeArtist
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
@@ -579,7 +579,7 @@ def draw_edges(edge_list,
     Returns
     -------
     artists: dict (source, target) : artist
-        Mapping of edges to matplotlib.patches.FancyArrow artists.
+        Mapping of edges to EdgeArtists.
 
     """
 
@@ -634,15 +634,13 @@ def draw_edges(edge_list,
 
         if source != target:
 
-            x1, y1 = node_positions[source]
-            x2, y2 = node_positions[target]
-
-            dx = x2-x1
-            dy = y2-y1
-
             width = edge_width[(source, target)]
             color = edge_color[(source, target)]
             alpha = edge_alpha[(source, target)]
+            offset = node_size[target]
+
+            x1, y1 = node_positions[source]
+            x2, y2 = node_positions[target]
 
             if (target, source) in edge_list: # i.e. bidirectional
                 # shift edge to the right (looking along the arrow)
@@ -652,31 +650,30 @@ def draw_edges(edge_list,
             else:
                 shape = 'full'
 
+            midline = np.c_[[x1, x2], [y1, y2]]
+
             if draw_arrows:
-                offset = node_size[target]
                 head_length = 2 * width
                 head_width = 3 * width
-                length_includes_head = True
             else:
-                offset = None
                 head_length = 1e-10 # 0 throws error
                 head_width = 1e-10 # 0 throws error
-                length_includes_head = False
 
-            patch = FancyArrow(x1, y1, dx, dy,
-                               width=width,
-                               facecolor=color,
-                               alpha=alpha,
-                               head_length=head_length,
-                               head_width=head_width,
-                               length_includes_head=length_includes_head,
-                               zorder=1,
-                               edgecolor='none',
-                               linewidth=0.1,
-                               offset=offset,
-                               shape=shape)
-            ax.add_artist(patch)
-            artists[(source, target)] = patch
+            edge_artist = EdgeArtist(
+                midline     = midline,
+                width       = width,
+                facecolor   = color,
+                alpha       = alpha,
+                head_length = head_length,
+                head_width  = head_width,
+                zorder      = 1,
+                edgecolor   = 'none',
+                linewidth   = 0.1,
+                offset      = offset,
+                shape       = shape,
+            )
+            ax.add_artist(edge_artist)
+            artists[(source, target)] = edge_artist
 
         else: # source == target, i.e. a self-loop
             import warnings
@@ -692,134 +689,6 @@ def _shift_edge(x1, y1, x2, y2, delta):
     v = v / np.linalg.norm(v) # unit
     dx, dy = delta * v
     return x1+dx, y1+dy, x2+dx, y2+dy
-
-
-class FancyArrow(matplotlib.patches.Polygon):
-    """
-    This is an expansion of matplotlib.patches.FancyArrow.
-    """
-
-    _edge_default = True
-
-    def __str__(self):
-        return "FancyArrow()"
-
-    def __init__(self, x, y, dx, dy, width=0.001, length_includes_head=False,
-                 head_width=None, head_length=None, shape='full', overhang=0,
-                 head_starts_at_zero=False, offset=None, **kwargs):
-        """
-        Constructor arguments
-          *width*: float (default: 0.001)
-            width of full arrow tail
-
-          *length_includes_head*: [True | False] (default: False)
-            True if head is to be counted in calculating the length.
-
-          *head_width*: float or None (default: 3*width)
-            total width of the full arrow head
-
-          *head_length*: float or None (default: 1.5 * head_width)
-            length of arrow head
-
-          *shape*: ['full', 'left', 'right'] (default: 'full')
-            draw the left-half, right-half, or full arrow
-
-          *overhang*: float (default: 0)
-            fraction that the arrow is swept back (0 overhang means
-            triangular shape). Can be negative or greater than one.
-
-          *head_starts_at_zero*: [True | False] (default: False)
-            if True, the head starts being drawn at coordinate 0
-            instead of ending at coordinate 0.
-
-        Other valid kwargs (inherited from :class:`Patch`) are:
-        %(Patch)s
-
-        """
-        self.width = width
-
-        if head_width is None:
-            self.head_width = 3 * self.width
-        else:
-            self.head_width = head_width
-
-        if head_length is None:
-            self.head_length = 1.5 * self.head_width
-        else:
-            self.head_length = head_length
-
-        self.length_includes_head = length_includes_head
-        self.head_starts_at_zero = head_starts_at_zero
-        self.overhang = overhang
-        self.shape = shape
-        self.offset = offset
-
-        verts = self.compute_vertices(x, y, dx, dy)
-
-        matplotlib.patches.Polygon.__init__(self, list(map(tuple, verts)), closed=True, **kwargs)
-
-    def compute_vertices(self, x, y, dx, dy):
-
-        distance = np.hypot(dx, dy)
-
-        if self.offset:
-            dx *= (distance-self.offset)/distance
-            dy *= (distance-self.offset)/distance
-            distance = np.hypot(dx, dy)
-            # distance -= self.offset
-
-        if self.length_includes_head:
-            length = distance
-        else:
-            length = distance + self.head_length
-        if not length:
-            verts = []  # display nothing if empty
-        else:
-            # start by drawing horizontal arrow, point at (0,0)
-            hw, hl, hs, lw = self.head_width, self.head_length, self.overhang, self.width
-            left_half_arrow = np.array([
-                [0.0, 0.0],                   # tip
-                [-hl, -hw / 2.0],             # leftmost
-                [-hl * (1 - hs), -lw / 2.0],  # meets stem
-                [-length, -lw / 2.0],         # bottom left
-                [-length, 0],
-            ])
-            # if we're not including the head, shift up by head length
-            if not self.length_includes_head:
-                left_half_arrow += [self.head_length, 0]
-            # if the head starts at 0, shift up by another head length
-            if self.head_starts_at_zero:
-                left_half_arrow += [self.head_length / 2.0, 0]
-            # figure out the shape, and complete accordingly
-            if self.shape == 'left':
-                coords = left_half_arrow
-            else:
-                right_half_arrow = left_half_arrow * [1, -1]
-                if self.shape == 'right':
-                    coords = right_half_arrow
-                elif self.shape == 'full':
-                    # The half-arrows contain the midpoint of the stem,
-                    # which we can omit from the full arrow. Including it
-                    # twice caused a problem with xpdf.
-                    coords = np.concatenate([left_half_arrow[:-1],
-                                             right_half_arrow[-1::-1]])
-                else:
-                    raise ValueError("Got unknown shape: %s" % self.shape)
-            if distance != 0:
-                cx = float(dx) / distance
-                sx = float(dy) / distance
-            else:
-                #Account for division by zero
-                cx, sx = 0, 1
-            M = np.array([[cx, sx], [-sx, cx]])
-            verts = np.dot(coords, M) + (x + dx, y + dy)
-
-        return verts
-
-
-    def update_vertices(self, x0, y0, dx, dy):
-        verts = self.compute_vertices(x0, y0, dx, dy)
-        self.set_xy(verts)
 
 
 def draw_node_labels(node_labels,
@@ -1620,7 +1489,9 @@ class InteractiveGraph(Graph, DraggableArtists):
                 x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=0.5*self.edge_artists[(source, target)].width)
 
             # update path
-            self.edge_artists[(source, target)].update_vertices(x0=x0, y0=y0, dx=x1-x0, dy=y1-y0)
+            self.edge_artists[(source, target)].midline = np.c_[[x0, x1], [y0, y1]]
+            self.edge_artists[(source, target)]._update_path()
+            self.ax.draw_artist(self.edge_artists[(source, target)])
 
         # move edge labels
         if hasattr(self, 'edge_label_artists'):
