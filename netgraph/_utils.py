@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 import numpy as np
 import warnings
-# import colorama
-
 # # monkey patch warnings
+# import colorama
 # def custom_formatwarning(msg, *args, **kwargs):
 #     # ignore everything except the message
 #     return colorama.Fore.RED + "Warning: " + str(msg) + '\n' + colorama.Style.RESET_ALL
-
 # warnings.formatwarning = custom_formatwarning
 
 from scipy.interpolate import BSpline

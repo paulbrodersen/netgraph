@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import itertools
 import time
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from collections import OrderedDict
+# import itertools
+# from collections import OrderedDict
 
 from ._utils import (
     _save_cast_float_to_int,

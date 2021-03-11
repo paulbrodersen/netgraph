@@ -6,7 +6,6 @@ Classes for artists used to display
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch, transforms
