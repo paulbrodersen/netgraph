@@ -377,7 +377,7 @@ def _get_text_object_dimenstions(ax, string, *args, **kwargs):
 
 def _get_font_size(ax, node_labels, **kwargs):
     """
-    Determine the maximum font size that results in labels that still all fit inside the node face artist.
+    Determine the maximum font size that results in labels that still all fit inside the node artist.
 
     TODO:
     -----
@@ -438,7 +438,6 @@ def draw_nodes(node_positions,
                node_color='w',
                node_edge_color='k',
                node_alpha=1.0,
-               node_edge_alpha=1.0,
                ax=None,
                **kwargs):
     """
@@ -471,96 +470,13 @@ def draw_nodes(node_positions,
     node_alpha : scalar or dict node : float (default 1.)
        The node transparency.
 
-    node_edge_alpha : scalar or dict node : float (default 1.)
-       The node edge transparency.
-
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
     Returns
     -------
-    node_faces: dict node : artist
-        Mapping of nodes to the node face artists.
-
-    node_edges: dict node : artist
-        Mapping of nodes to the node edge artists.
-
-    """
-
-    if ax is None:
-        ax = plt.gca()
-
-    # convert all inputs to dicts mapping node:property
-    nodes = node_positions.keys()
-    number_of_nodes = len(nodes)
-
-    if isinstance(node_size, (int, float)):
-        node_size = {node:node_size for node in nodes}
-    if isinstance(node_edge_width, (int, float)):
-        node_edge_width = {node: node_edge_width for node in nodes}
-
-    # Simulate node edge by drawing a slightly larger node artist.
-    # I wish there was a better way to do this,
-    # but this seems to be the only way to guarantee constant proportions,
-    # as linewidth argument in matplotlib.patches will not be proportional
-    # to a given node radius.
-    node_edges = _draw_nodes(node_positions,
-                             node_shape=node_shape,
-                             node_size=node_size,
-                             node_color=node_edge_color,
-                             node_alpha=node_edge_alpha,
-                             ax=ax,
-                             **kwargs)
-
-    node_size = {node: node_size[node] - node_edge_width[node] for node in nodes}
-    node_faces = _draw_nodes(node_positions,
-                             node_shape=node_shape,
-                             node_size=node_size,
-                             node_color=node_color,
-                             node_alpha=node_alpha,
-                             ax=ax,
-                             **kwargs)
-
-    return node_faces, node_edges
-
-
-def _draw_nodes(node_positions,
-                node_shape='o',
-                node_size=3.,
-                node_color='r',
-                node_alpha=1.0,
-                ax=None,
-                **kwargs):
-    """
-    Draw node markers at specified positions.
-
-    Arguments
-    ----------
-    node_positions : dict node : (float, float)
-        Mapping of nodes to (x, y) positions
-
-    node_shape : string or dict key : string (default 'o')
-       The shape of the node. Specification is as for matplotlib.scatter
-       marker, i.e. one of 'so^>v<dph8'.
-       If a single string is provided all nodes will have the same shape.
-
-    node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
-
-    node_color : matplotlib color specification or dict node : color specification (default 'w')
-       Node color.
-
-    node_alpha : scalar or dict node : float (default 1.)
-       The node transparency.
-
-    ax : matplotlib.axis instance or None (default None)
-       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-    Returns
-    -------
-    artists: dict node : artist
-        Mapping of nodes to the artists,
+    node_artists: dict node : artist
+        Mapping of nodes to the node artists.
 
     """
 
@@ -573,13 +489,20 @@ def _draw_nodes(node_positions,
 
     if isinstance(node_shape, str):
         node_shape = {node:node_shape for node in nodes}
+    if isinstance(node_size, (int, float)):
+        node_size = {node:node_size for node in nodes}
+    if isinstance(node_edge_width, (int, float)):
+        node_edge_width = {node: node_edge_width for node in nodes}
     if not isinstance(node_color, dict):
         node_color = {node:node_color for node in nodes}
+    if not isinstance(node_edge_color, dict):
+        node_edge_color = {node:node_edge_color for node in nodes}
     if isinstance(node_alpha, (int, float)):
         node_alpha = {node:node_alpha for node in nodes}
 
     # rescale
-    node_size = {node: size  * BASE_NODE_SIZE for (node, size)  in node_size.items()}
+    node_size = {node: size  * BASE_NODE_SIZE for (node, size) in node_size.items()}
+    node_edge_width = {node: width  * BASE_NODE_SIZE for (node, width) in node_edge_width.items()}
 
     artists = dict()
     for node in nodes:
@@ -587,6 +510,8 @@ def _draw_nodes(node_positions,
                                        position=node_positions[node],
                                        size=node_size[node],
                                        facecolor=node_color[node],
+                                       edgecolor=node_edge_color[node],
+                                       linewidth=node_edge_width[node],
                                        alpha=node_alpha[node],
                                        zorder=2)
 
@@ -1324,7 +1249,7 @@ class Graph(object):
                 self.node_labels.update(node_labels)
 
             if not 'node_label_font_size' in kwargs:
-                # set font size such that even the largest label fits inside node label face artist
+                # set font size such that even the largest label fits inside node artist
                 self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **kwargs) * 0.9 # conservative fudge factor
                 self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax, **kwargs)
             else:
@@ -1351,27 +1276,17 @@ class Graph(object):
     @_add_doc(draw_nodes.__doc__)
     def draw_nodes(self, *args, **kwargs):
 
-        node_faces, node_edges = draw_nodes(*args, **kwargs)
+        node_artists = draw_nodes(*args, **kwargs)
 
-        if not hasattr(self, 'node_face_artists'):
-            self.node_face_artists = node_faces
+        if not hasattr(self, 'node_artists'):
+            self.node_artists = node_artists
         else:
-            for key, artist in node_faces.items():
-                if key in self.node_face_artists:
+            for key, artist in node_artists.items():
+                if key in self.node_artists:
                     # remove old artist
-                    self.node_face_artists[key].remove()
+                    self.node_artists[key].remove()
                 # assign new one
-                self.node_face_artists[key] = artist
-
-        if not hasattr(self, 'node_edge_artists'):
-            self.node_edge_artists = node_edges
-        else:
-            for key, artist in node_edges.items():
-                if key in self.node_edge_artists:
-                    # remove old artist
-                    self.node_edge_artists[key].remove()
-                # assign new one
-                self.node_edge_artists[key] = artist
+                self.node_artists[key] = artist
 
 
     @_add_doc(draw_edges.__doc__)
@@ -1427,9 +1342,7 @@ class Graph(object):
         # when matplotlib sets axis limits automatically.
         # Hence we need to set them manually.
 
-        max_edge_radius = np.max([artist.radius for artist in self.node_edge_artists.values()])
-        max_face_radius = np.max([artist.radius for artist in self.node_face_artists.values()])
-        max_radius = np.max([max_edge_radius, max_face_radius])
+        max_radius = np.max([artist.radius for artist in self.node_artists.values()])
 
         maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
         minx, miny = np.min(list(self.node_positions.values()), axis=0)
@@ -1526,7 +1439,7 @@ class DraggableArtists(object):
 
                     # start dragging
                     self._currently_dragging = True
-                    self._offset = {artist : artist.center - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
+                    self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
 
                     # do not check anything else
                     # NOTE: if two artists are overlapping, only the first one encountered is selected!
@@ -1550,7 +1463,7 @@ class DraggableArtists(object):
 
             # select artists inside window
             for artist in self._draggable_artists:
-                if self._is_inside_rect(*artist.center):
+                if self._is_inside_rect(*artist.xy):
                     if self._control_is_held:               # if/else probably superfluouos
                         self._toggle_select_artist(artist)  # as no artists will be selected
                     else:                                   # if control is not held previously
@@ -1589,7 +1502,7 @@ class DraggableArtists(object):
     def _move(self, event):
         cursor_position = np.array([event.xdata, event.ydata])
         for artist in self._selected_artists:
-            artist.center = cursor_position + self._offset[artist]
+            artist.xy = cursor_position + self._offset[artist]
         self.fig.canvas.draw_idle()
 
 
@@ -1658,10 +1571,10 @@ class InteractiveGraph(Graph, DraggableArtists):
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
-        DraggableArtists.__init__(self, self.node_face_artists.values())
+        DraggableArtists.__init__(self, self.node_artists.values())
 
-        self._node_to_draggable_artist = self.node_face_artists
-        self._draggable_artist_to_node = dict(zip(self.node_face_artists.values(), self.node_face_artists.keys()))
+        self._node_to_draggable_artist = self.node_artists
+        self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
 
         # trigger resize of labels when canvas size changes
         self.fig.canvas.mpl_connect('resize_event', self._on_resize)
@@ -1684,8 +1597,7 @@ class InteractiveGraph(Graph, DraggableArtists):
 
     def _update_nodes(self, nodes):
         for node in nodes:
-            self.node_edge_artists[node].center = self.node_positions[node]
-            self.node_face_artists[node].center = self.node_positions[node]
+            self.node_artists[node].xy = self.node_positions[node]
             if hasattr(self, 'node_label_artists'):
                 self.node_label_artists[node].set_position(self.node_positions[node])
 

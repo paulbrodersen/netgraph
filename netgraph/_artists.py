@@ -112,14 +112,15 @@ class CircleDataUnits(PathPatchDataUnits):
             .translate(*self.xy)
 
 
-def _get_node_artist(shape, position, size, facecolor, alpha, zorder=2):
+def _get_node_artist(shape, position, size, facecolor, edgecolor, linewidth, alpha, zorder=2):
     shared_kwargs = dict(
-            xy=position,
-            radius=size,
-            facecolor=facecolor,
-            alpha=alpha,
-            linewidth=0.,
-            zorder=zorder,
+        xy=position,
+        radius=size,
+        facecolor=facecolor,
+        edgecolor=edgecolor,
+        alpha=alpha,
+        linewidth=linewidth,
+        zorder=zorder,
     )
     if shape == 'o': # circle
         artist = CircleDataUnits(**shared_kwargs)
