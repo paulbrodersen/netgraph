@@ -10,8 +10,7 @@ import pytest
 from matplotlib.patches import Rectangle, Circle
 from netgraph._artists import (
     PathPatchDataUnits,
-    RegularPolygonDataUnits,
-    CircleDataUnits,
+    NodeArtist,
 )
 @pytest.mark.mpl_image_compare
 def test_PathPatchDataUnits():
@@ -63,7 +62,7 @@ def test_RegularPolygonDataUnits():
     ax1.set_title('Desired')
 
     # create new patch with the adusted size, as the line is centered on the path
-    rp = RegularPolygonDataUnits((1., 1.), numVertices=4, radius=np.sqrt(2), orientation=np.pi/4, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
+    rp = NodeArtist(shape='s', xy=(1., 1.), radius=np.sqrt(2), facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
     ax2.add_patch(rp)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')
@@ -90,7 +89,7 @@ def test_CircleDataUnits():
     ax1.set_title('Desired')
 
     # create new patch with the adusted size, as the line is centered on the path
-    c = CircleDataUnits(origin, radius=radius, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
+    c = NodeArtist(shape='o', xy=origin, radius=radius, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
     ax2.add_patch(c)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')

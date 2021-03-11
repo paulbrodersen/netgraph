@@ -34,40 +34,67 @@ class PathPatchDataUnits(PathPatch):
     _linewidth = property(_get_lw, _set_lw)
 
 
-# ------------------------------------------------------------------------------------------
-# node artist
+class NodeArtist(PathPatchDataUnits):
 
-# TODO: potentially apply transform before passing it to PathPatchDataUnits
-class RegularPolygonDataUnits(PathPatchDataUnits):
-    """A regular polygon patch."""
-
-    def __str__(self):
-        s = "RegularPolygon((%g, %g), %d, radius=%g, orientation=%g)"
-        return s % (self.xy[0], self.xy[1], self.numvertices, self.radius,
-                    self.orientation)
-
-    def __init__(self, xy, numVertices, radius=5, orientation=0,
-                 **kwargs):
+    def __init__(self, shape, xy, radius, **kwargs):
         """
         Parameters
         ----------
+        shape : string
+            The shape of the node. Specification is as for matplotlib.scatter
+            marker, i.e. one of 'so^>v<dph8'.
         xy : (float, float)
             The center position.
-        numVertices : int
-            The number of vertices.
         radius : float
             The distance from the center to each of the vertices.
-        orientation : float
-            The polygon rotation angle (in radians).
         **kwargs
             `Patch` properties:
             %(Patch_kwdoc)s
         """
+        self.shape = shape
         self.xy = xy
-        self.numvertices = numVertices
-        self.orientation = orientation
         self.radius = radius
-        self._path = Path.unit_regular_polygon(numVertices)
+
+        if shape == 'o': # circle
+            self.numVertices = None
+            self.orientation = 0
+        elif shape == '^': # triangle up
+            self.numVertices = 3
+            self.orientation = 0
+        elif shape == '<': # triangle left
+            self.numVertices = 3
+            self.orientation = np.pi*0.5
+        elif shape == 'v': # triangle down
+            self.numVertices = 3
+            self.orientation = np.pi
+        elif shape == '>': # triangle right
+            self.numVertices = 3
+            self.orientation = np.pi*1.5
+        elif shape == 's': # square
+            self.numVertices = 4
+            self.orientation = np.pi*0.25
+        elif shape == 'd': # diamond
+            self.numVertices = 4
+            self.orientation = np.pi*0.5
+        elif shape == 'p': # pentagon
+            self.numVertices = 5
+            self.orientation = 0
+        elif shape == 'h': # hexagon
+            self.numVertices = 6
+            self.orientation = 0
+        elif shape == '8': # octagon
+            self.numVertices = 8
+            self.orientation = 0
+        else:
+            raise ValueError("Node shape should be one of: 'so^>v<dph8'. Current shape:{}".format(shape))
+
+        if self.shape == 'o': # circle
+            self.linewidth_correction = 2
+            self._path = Path.circle()
+        else: # regular polygon
+            self.linewidth_correction = 2 * np.sin(np.pi/self.numVertices) # derives from the ratio between a side and the radius in a regular polygon.
+            self._path = Path.unit_regular_polygon(self.numVertices)
+
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
 
@@ -75,107 +102,15 @@ class RegularPolygonDataUnits(PathPatchDataUnits):
         return self._path
 
     def get_patch_transform(self):
-        # The factor 2 * sin(pi/n) derives from the ratio between a
-        # side and the radius in a regular polygon.
+        # The factor 2 * sin(pi/n) d
         return self._patch_transform.clear() \
-            .scale(self.radius-self._lw_data/(2*np.sin(np.pi/self.numvertices))) \
+            .scale(self.radius-self._lw_data/self.linewidth_correction) \
             .rotate(self.orientation) \
             .translate(*self.xy)
 
 
-class CircleDataUnits(PathPatchDataUnits):
-
-    def __init__(self, xy, radius, **kwargs):
-        """
-        Parameters
-        ----------
-        xy : (float, float)
-            The center position.
-        radius : float
-            The distance from the center to each of the vertices.
-        **kwargs
-            `Patch` properties:
-            %(Patch_kwdoc)s
-        """
-        self.xy = xy
-        self.radius = radius
-        self._path = Path.circle()
-        self._patch_transform = transforms.Affine2D()
-        super().__init__(path=self._path, **kwargs)
-
-    def get_path(self):
-        return self._path
-
-    def get_patch_transform(self):
-        return self._patch_transform.clear() \
-            .scale(self.radius-self._lw_data/2) \
-            .translate(*self.xy)
 
 
-def _get_node_artist(shape, position, size, facecolor, edgecolor, linewidth, alpha, zorder=2):
-    shared_kwargs = dict(
-        xy=position,
-        radius=size,
-        facecolor=facecolor,
-        edgecolor=edgecolor,
-        alpha=alpha,
-        linewidth=linewidth,
-        zorder=zorder,
-    )
-    if shape == 'o': # circle
-        artist = CircleDataUnits(**shared_kwargs)
-    elif shape == '^': # triangle up
-        artist = RegularPolygonDataUnits(
-            numVertices=3,
-            orientation=0,
-            **shared_kwargs
-        )
-    elif shape == '<': # triangle left
-        artist = RegularPolygonDataUnits(
-            numVertices=3,
-            orientation=np.pi*0.5,
-            **shared_kwargs
-        )
-    elif shape == 'v': # triangle down
-        artist = RegularPolygonDataUnits(
-            numVertices=3,
-            orientation=np.pi,
-            **shared_kwargs
-        )
-    elif shape == '>': # triangle right
-        artist = RegularPolygonDataUnits(
-            numVertices=3,
-            orientation=np.pi*1.5,
-            **shared_kwargs
-        )
-    elif shape == 's': # square
-        artist = RegularPolygonDataUnits(
-            numVertices=4,
-            orientation=np.pi*0.25,
-            **shared_kwargs
-        )
-    elif shape == 'd': # diamond
-        artist = RegularPolygonDataUnits(
-            numVertices=4,
-            orientation=np.pi*0.5,
-            **shared_kwargs
-        )
-    elif shape == 'p': # pentagon
-        artist = RegularPolygonDataUnits(
-            numVertices=5,
-            **shared_kwargs
-        )
-    elif shape == 'h': # hexagon
-        artist = RegularPolygonDataUnits(
-            numVertices=6,
-            **shared_kwargs
-        )
-    elif shape == '8': # octagon
-        artist = RegularPolygonDataUnits(
-            numVertices=8,
-            **shared_kwargs
-        )
-    else:
-        raise ValueError("Node shape one of: 'so^>v<dph8'. Current shape:{}".format(shape))
 
-    return artist
+
+

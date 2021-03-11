@@ -16,7 +16,7 @@ from ._utils import (
     )
 
 from ._layout import get_fruchterman_reingold_layout
-from ._artists import _get_node_artist
+from ._artists import NodeArtist
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
@@ -506,14 +506,14 @@ def draw_nodes(node_positions,
 
     artists = dict()
     for node in nodes:
-        node_artist = _get_node_artist(shape=node_shape[node],
-                                       position=node_positions[node],
-                                       size=node_size[node],
-                                       facecolor=node_color[node],
-                                       edgecolor=node_edge_color[node],
-                                       linewidth=node_edge_width[node],
-                                       alpha=node_alpha[node],
-                                       zorder=2)
+        node_artist = NodeArtist(shape=node_shape[node],
+                                 xy=node_positions[node],
+                                 radius=node_size[node],
+                                 facecolor=node_color[node],
+                                 edgecolor=node_edge_color[node],
+                                 linewidth=node_edge_width[node],
+                                 alpha=node_alpha[node],
+                                 zorder=2)
 
         # add artists to axis
         ax.add_artist(node_artist)
