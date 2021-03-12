@@ -587,7 +587,6 @@ def draw_edges(edge_list,
 
     edge_list = _parse_edge_list(edge_list)
     nodes = node_positions.keys()
-    number_of_nodes = len(nodes)
 
     # convert node and edge to dictionaries if they are not dictionaries already;
     # if dictionaries are provided, make sure that they are complete;
