@@ -394,21 +394,18 @@ def get_fruchterman_reingold_layout(edge_list,
     temperatures = _get_temperature_decay(initial_temperature, total_iterations)
 
     # --------------------------------------------------------------------------------
-    # --------------------------------------------------------------------------------
     # main loop
 
     for ii, temperature in enumerate(temperatures):
-        node_positions_as_array[is_mobile] = _fruchterman_reingold(adjacency, node_positions_as_array,
-                                                                   origin      = origin,
-                                                                   scale       = scale,
-                                                                   temperature = temperature,
-                                                                   k           = k,
-                                                                   node_radii  = node_size,
-        )[is_mobile]
+        new_positions = _fruchterman_reingold(adjacency, node_positions_as_array,
+                                              temperature = temperature,
+                                              k           = k,
+                                              node_radii  = node_size,
+        )
+        is_valid = _is_within_bbox(new_positions, origin=origin, scale=scale)
+        mask = np.logical_and(is_mobile, is_valid)
+        node_positions_as_array[mask] = new_positions[mask]
 
-    node_positions_as_array =  _rescale_to_frame(node_positions_as_array, origin, scale)
-
-    # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
     # format output
     node_positions = dict(zip(unique_nodes, node_positions_as_array))
