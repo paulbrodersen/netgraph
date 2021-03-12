@@ -367,7 +367,7 @@ def get_fruchterman_reingold_layout(edge_list,
                     warnings.warn("Node {} appears to be unconnected. No position is computed for this node.".format(node))
                     del node_positions[node]
 
-        node_positions_as_array = np.array(list(node_positions.values()))
+        node_positions_as_array = np.array([node_positions[node] for node in unique_nodes])
 
     if node_size is None:
         node_size = np.zeros((total_nodes))
