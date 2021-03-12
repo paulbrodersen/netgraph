@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import time
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -21,8 +20,6 @@ from ._artists import NodeArtist, EdgeArtist
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
-
-MAX_CLICK_LENGTH = 0.1 # in seconds; anything longer is a drag motion
 
 
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
@@ -592,7 +589,6 @@ def draw_edges(edge_list,
 
     edge_list = _parse_edge_list(edge_list)
     nodes = node_positions.keys()
-    number_of_nodes = len(nodes)
 
     # convert node and edge to dictionaries if they are not dictionaries already;
     # if dictionaries are provided, make sure that they are complete;
@@ -1083,6 +1079,7 @@ def draw_edge_labels(edge_list,
                         label,
                         size=edge_label_font_size,
                         color=edge_label_font_color,
+                        alpha=edge_label_font_alpha,
                         family=edge_label_font_family,
                         weight=edge_label_font_weight,
                         bbox=edge_label_bbox,
@@ -1413,10 +1410,10 @@ class DraggableArtists(object):
 
         self._draggable_artists = artists
         self._clicked_artist = None
-        self._time_on_key_press = -np.inf
         self._control_is_held = False
-        self._currently_selecting = False
+        self._currently_clicking_on_artist = False
         self._currently_dragging = False
+        self._currently_selecting = False
         self._selected_artists = []
         self._offset = dict()
         self._base_alpha = dict([(artist, artist.get_alpha()) for artist in artists])
@@ -1456,7 +1453,6 @@ class DraggableArtists(object):
                         # 2) deselect everything else and select only the last selected artist.
                         # Hence we will defer decision until the user releases mouse button.
                         self._clicked_artist = artist
-                        self._time_on_key_press = time.time()
 
                     else:
                         # print("Clicked on new artist.")
@@ -1465,8 +1461,8 @@ class DraggableArtists(object):
                             self._deselect_all_artists()
                         self._select_artist(artist)
 
-                    # start dragging
-                    self._currently_dragging = True
+                    # prepare dragging
+                    self._currently_clicking_on_artist = True
                     self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
 
                     # do not check anything else
@@ -1502,23 +1498,23 @@ class DraggableArtists(object):
             self._rect.set_visible(False)
             self.fig.canvas.draw_idle()
 
-        elif self._currently_dragging:
+        elif self._currently_clicking_on_artist:
 
-            # If there was just short 'click and release' not a 'click and hold' indicating a drag motion,
-            # we need to (toggle) select the clicked artist and deselect everything else.
-            if ((time.time() - self._time_on_key_press) < MAX_CLICK_LENGTH) and (self._clicked_artist is not None):
+            if (self._clicked_artist is not None) & (self._currently_dragging is False):
                 if self._control_is_held:
                     self._toggle_select_artist(self._clicked_artist)
                 else:
                     self._deselect_all_artists()
                     self._select_artist(self._clicked_artist)
 
+            self._currently_clicking_on_artist = False
             self._currently_dragging = False
 
 
     def _on_motion(self, event):
         if event.inaxes:
-            if self._currently_dragging:
+            if self._currently_clicking_on_artist:
+                self._currently_dragging = True
                 self._move(event)
             elif self._currently_selecting:
                 self._x1 = event.xdata
