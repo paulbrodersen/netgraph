@@ -431,7 +431,7 @@ def _get_temperature_decay(initial_temperature, total_iterations, mode='quadrati
     return initial_temperature * y
 
 
-def _fruchterman_reingold(adjacency, node_positions, origin, scale, temperature, k, node_radii):
+def _fruchterman_reingold(adjacency, node_positions, temperature, k, node_radii):
     """
     Inner loop of Fruchterman-Reingold layout algorithm.
     """
