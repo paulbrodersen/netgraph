@@ -13,6 +13,7 @@ from ._utils import (
     _save_cast_float_to_int,
     _flatten,
     _get_unique_nodes,
+    bspline,
     )
 
 from ._layout import get_fruchterman_reingold_layout
@@ -532,6 +533,7 @@ def draw_edges(edge_list,
                edge_alpha=1.,
                edge_zorder=None,
                draw_arrows=True,
+               curved=False,
                ax=None,
                **kwargs):
     """
@@ -571,6 +573,9 @@ def draw_edges(edge_list,
 
     draw_arrows : bool, optional (default True)
         If True, draws edges with arrow heads.
+
+    curved : bool, optional (default False)
+        If True, draw edges as curved splines.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -626,59 +631,76 @@ def draw_edges(edge_list,
             edge_zorder.setdefault(edge, max(edge_zorder.values()))
         edge_list = sorted(edge_zorder, key=lambda k: edge_zorder[k])
 
-    # NOTE: At the moment, only the relative zorder is honored, not the absolute value.
+    # compute edge paths
+    if not curved:
+        edge_paths = _get_straight_edge_paths(edge_list, node_positions)
+    else:
+        edge_paths = _get_curved_edge_paths(edge_list, node_positions)
 
+    # NOTE: At the moment, only the relative zorder is honored, not the absolute value.
     artists = dict()
     for (source, target) in edge_list:
 
-        if source != target:
-
-            width = edge_width[(source, target)]
-            color = edge_color[(source, target)]
-            alpha = edge_alpha[(source, target)]
-            offset = node_size[target]
-
-            x1, y1 = node_positions[source]
-            x2, y2 = node_positions[target]
-
-            if (target, source) in edge_list: # i.e. bidirectional
-                # shift edge to the right (looking along the arrow)
-                x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
-                # plot half arrow / line
-                shape = 'right'
-            else:
-                shape = 'full'
-
-            midline = np.c_[[x1, x2], [y1, y2]]
-
-            if draw_arrows:
-                head_length = 2 * width
-                head_width = 3 * width
-            else:
-                head_length = 1e-10 # 0 throws error
-                head_width = 1e-10 # 0 throws error
-
-            edge_artist = EdgeArtist(
-                midline     = midline,
-                width       = width,
-                facecolor   = color,
-                alpha       = alpha,
-                head_length = head_length,
-                head_width  = head_width,
-                zorder      = 1,
-                edgecolor   = 'none',
-                linewidth   = 0.1,
-                offset      = offset,
-                shape       = shape,
-            )
-            ax.add_artist(edge_artist)
-            artists[(source, target)] = edge_artist
-
-        else: # source == target, i.e. a self-loop
+        if source == target and not curved:
             import warnings
-            warnings.warn("Plotting of self-loops not supported. Ignoring edge ({}, {}).".format(source, target))
+            msg = "Plotting of self-loops not supported for straight edges."
+            msg += "Ignoring edge ({}, {}).".format(source, target)
+            warnings.warn(msg)
+
+        width = edge_width[(source, target)]
+        color = edge_color[(source, target)]
+        alpha = edge_alpha[(source, target)]
+        offset = node_size[target]
+
+        if (target, source) in edge_list: # i.e. bidirectional
+            # plot half arrow / line
+            shape = 'right'
+        else:
+            shape = 'full'
+
+        if draw_arrows:
+            head_length = 2 * width
+            head_width = 3 * width
+        else:
+            head_length = 1e-10 # 0 throws error
+            head_width = 1e-10 # 0 throws error
+
+        edge_artist = EdgeArtist(
+            midline     = edge_paths[(source, target)],
+            width       = width,
+            facecolor   = color,
+            alpha       = alpha,
+            head_length = head_length,
+            head_width  = head_width,
+            zorder      = 1,
+            edgecolor   = 'none',
+            linewidth   = 0.1,
+            offset      = offset,
+            shape       = shape,
+        )
+        ax.add_artist(edge_artist)
+        artists[(source, target)] = edge_artist
 
     return artists
+
+
+def _get_straight_edge_paths(edge_list, node_positions):
+    edge_paths = dict()
+    for (source, target) in edge_list:
+        if source == target:
+            # self-loops not supported
+            continue
+
+        x1, y1 = node_positions[source]
+        x2, y2 = node_positions[target]
+
+        if (target, source) in edge_list: # i.e. bidirectional
+            # shift edge to the right (looking along the arrow)
+            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
+
+        edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
+
+    return edge_paths
 
 
 def _shift_edge(x1, y1, x2, y2, delta):
@@ -688,6 +710,144 @@ def _shift_edge(x1, y1, x2, y2, delta):
     v = v / np.linalg.norm(v) # unit
     dx, dy = delta * v
     return x1+dx, y1+dy, x2+dx, y2+dy
+
+
+def _get_curved_edge_paths(edge_list, node_positions,
+                           total_control_points_per_edge = 11,
+                           bspline_degree                = 5,
+                           origin                        = np.array([0, 0]),
+                           scale                         = np.array([1, 1]),
+                           k                             = None,
+                           initial_temperature           = 0.1,
+                           total_iterations              = 50,
+                           node_size                     = None,
+                           *args, **kwargs):
+
+    # Create a new graph, in which each edge is split into multiple segments;
+    # there are total_control_points + 1 segments / edges for each original edge.
+    new_edge_list, edge_to_control_points = _insert_control_points(edge_list, total_control_points_per_edge)
+
+    # Initialize the positions of the control points to positions on the original edge.
+    control_point_positions = _initialize_control_point_positions(edge_to_control_points, node_positions)
+    # node_positions.update(control_point_positions)
+    control_point_positions.update(node_positions)
+
+    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
+    # This would maximise the us of the available space. However, we do not want space to be filled with edges like a Peano-curve.
+    # Therefor, we apply an additional fudge factor that pulls the edges a bit more "taut".
+    unique_nodes = _get_unique_nodes(edge_list)
+    total_nodes = len(unique_nodes)
+    if k is None:
+        area = np.product(scale)
+        k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
+        k *= 0.5
+
+    all_positions = get_fruchterman_reingold_layout(new_edge_list,
+                                                    node_positions      = control_point_positions,
+                                                    scale               = scale,
+                                                    origin              = origin,
+                                                    k                   = k,
+                                                    initial_temperature = initial_temperature,
+                                                    total_iterations    = total_iterations,
+                                                    node_size           = node_size,
+                                                    fixed_nodes         = unique_nodes,
+    )
+
+    # Fit a BSpline to each set of control points (+ anchors).
+    edge_to_path = dict()
+    for (source, target), control_points in edge_to_control_points.items():
+        control_point_positions = [all_positions[node] for node in control_points]
+        control_point_positions = [all_positions[source]] + control_point_positions + [all_positions[target]]
+        path = bspline(np.array(control_point_positions), degree=bspline_degree)
+        edge_to_path[(source, target)] = path
+
+    return edge_to_path
+
+
+def _insert_control_points(edge_list, n=3):
+    new_edge_list = []
+    edge_to_control_points = dict()
+
+    ctr = np.max(edge_list) + 1 # TODO: this assumes that nodes are integers; should probably use large random node IDs instead
+    for source, target in edge_list:
+        control_points = list(range(ctr, ctr+n))
+        sources = [source] + control_points
+        targets = control_points + [target]
+        new_edge_list.extend(zip(sources, targets))
+        edge_to_control_points[(source, target)] = control_points
+        ctr += n
+
+    return new_edge_list, edge_to_control_points
+
+
+def _initialize_control_point_positions(edge_to_control_points, node_positions, selfloop_radius = 0.1):
+    # TODO: potentially fork out two subfunctions, one for normal edges and the other for self-loops
+    control_point_positions = dict()
+    for (source, target), control_points in edge_to_control_points.items():
+        edge_origin = node_positions[source]
+        delta = node_positions[target] - node_positions[source]
+        distance = np.linalg.norm(delta)
+
+        if distance > 1e-12:
+            unit_vector = delta / distance
+            for ii, control_point in enumerate(control_points):
+                # y = mx + b
+                m = (ii+1) * distance / (len(control_points) + 1)
+                control_point_positions[control_point] = m * unit_vector + edge_origin
+
+        else:
+            # Source and target have the same position (probably a self-loop),
+            # such that using the strategy employed above the control points also end up at the same position.
+            # Instead we want to make a loop.
+
+            # To minimise overlap with edges, we want the loop to be
+            # on the side of the node away from the centroid of the graph.
+            if len(node_positions) > 1:
+                centroid = np.mean(list(node_positions.values()), axis=0)
+                delta = edge_origin - centroid
+                distance = np.linalg.norm(delta)
+                unit_vector = delta / distance
+            else: # single node; placement does not matter
+                unit_vector = np.zeros_like(delta)
+                unit_vector[1] = 1.# self-loop points upwards
+
+            selfloop_center = edge_origin + selfloop_radius * unit_vector
+
+            selfloop_control_point_angles = np.linspace(0, 2*np.pi, len(control_points) + 2)[1:-1]
+            start_angle = _get_angle_between(np.array([1., 0.]), edge_origin - selfloop_center)
+            selfloop_control_point_angles = (selfloop_control_point_angles + start_angle) % (2*np.pi)
+
+            selfloop_control_point_positions = np.array([_get_point_on_a_circle(selfloop_center, selfloop_radius, angle) for angle in selfloop_control_point_angles])
+
+            # # ensure that the loop stays within the bounding box
+            # selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
+
+            for ii, control_point in enumerate(control_points):
+                control_point_positions[control_point] = selfloop_control_point_positions[ii]
+
+    return control_point_positions
+
+
+def _get_angle_between(v1, v2):
+    """
+    Compute the signed angle between two vectors.
+
+    Adapted from:
+    https://stackoverflow.com/a/16544330/2912349
+    """
+    x1, y1 = v1
+    x2, y2 = v2
+    dot = x1*x2 + y1*y2
+    det = x1*y2 - y1*x2
+    angle = np.arctan2(det, dot)
+    return angle
+
+
+def _get_point_on_a_circle(origin, radius, angle):
+    x0, y0 = origin
+    x = x0 + radius * np.cos(angle)
+    y = y0 + radius * np.sin(angle)
+    return np.array([x, y])
 
 
 def draw_node_labels(node_labels,
