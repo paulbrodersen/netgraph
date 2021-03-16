@@ -246,7 +246,7 @@ def get_fruchterman_reingold_layout(edge_list,
                                     total_iterations    = 50,
                                     node_size           = None,
                                     node_positions      = None,
-                                    fixed_nodes         = None,
+                                    fixed_nodes         = [],
                                     *args, **kwargs
 ):
     """
@@ -287,7 +287,7 @@ def get_fruchterman_reingold_layout(edge_list,
         nodes are initially placed randomly within the bounding box defined by `origin`
         and `scale`.
 
-    fixed_nodes : list of nodes
+    fixed_nodes : list of nodes (default [])
         Nodes to keep fixed at their initial positions.
 
     Returns:
@@ -326,11 +326,12 @@ def get_fruchterman_reingold_layout(edge_list,
         "Arguments `origin` (d={}) and `scale` (d={}) need to have the same number of dimensions!".format(len(origin), len(scale))
     dimensionality = len(origin)
 
-    unique_nodes = _get_unique_nodes(edge_list)
-    total_nodes = len(unique_nodes)
+    connected_nodes = _get_unique_nodes(edge_list)
 
     if node_positions is None: # assign random starting positions to all nodes
-        node_positions_as_array = np.random.rand(total_nodes, dimensionality) * scale + origin
+        node_positions_as_array = np.random.rand(len(connected_nodes), dimensionality) * scale + origin
+        unique_nodes = connected_nodes
+
     else:
         # 1) check input dimensionality
         dimensionality_node_positions = np.array(list(node_positions.values())).shape[1]
@@ -348,26 +349,30 @@ def get_fruchterman_reingold_layout(edge_list,
             raise ValueError(error_message)
 
         # 2) handle discrepancies in nodes listed in node_positions and nodes extracted from edge_list
-        if set(node_positions.keys()) == set(unique_nodes):
+        if set(node_positions.keys()) == set(connected_nodes):
             # all starting positions are given;
             # no superfluous nodes in node_positions;
             # nothing left to do
-            pass
+            unique_nodes = connected_nodes
         else:
             # some node positions are provided, but not all
-            for node in unique_nodes:
+            for node in connected_nodes:
                 if not (node in node_positions):
                     warnings.warn("Position of node {} not provided. Initializing to random position within frame.".format(node))
                     node_positions[node] = np.random.rand(2) * scale + origin
 
-            # unconnected_nodes = []
+            unconnected_nodes = []
             for node in node_positions:
-                if not (node in unique_nodes):
-                    # unconnected_nodes.append(node)
-                    warnings.warn("Node {} appears to be unconnected. No position is computed for this node.".format(node))
-                    del node_positions[node]
+                if not (node in connected_nodes):
+                    unconnected_nodes.append(node)
+                    fixed_nodes.append(node)
+                    # warnings.warn("Node {} appears to be unconnected. The current node position will be kept.".format(node))
+
+            unique_nodes = connected_nodes + unconnected_nodes
 
         node_positions_as_array = np.array([node_positions[node] for node in unique_nodes])
+
+    total_nodes = len(unique_nodes)
 
     if node_size is None:
         node_size = np.zeros((total_nodes))
@@ -376,12 +381,12 @@ def get_fruchterman_reingold_layout(edge_list,
     elif isinstance(node_size, dict):
         node_size = np.array([BASE_NODE_SIZE * node_size[node] if node in node_size else 0. for node in unique_nodes])
 
-    if fixed_nodes is None:
-        is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
-    else:
+    if fixed_nodes:
         is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=np.bool)
+    else:
+        is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
 
-    adjacency = _edge_list_to_adjacency_matrix(edge_list)
+    adjacency = _edge_list_to_adjacency_matrix(edge_list, unique_nodes=unique_nodes)
 
     # Forces in FR are symmetric.
     # Hence we need to ensure that the adjacency matrix is also symmetric.

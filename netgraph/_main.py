@@ -673,6 +673,7 @@ def draw_edges(edge_list,
             linewidth   = 0.1,
             offset      = offset,
             shape       = shape,
+            curved      = curved,
         )
         ax.add_artist(edge_artist)
         artists[(source, target)] = edge_artist
@@ -1619,6 +1620,16 @@ class InteractiveGraph(Graph, DraggableArtists):
         self.fig.canvas.draw_idle()
 
 
+    def _on_release(self, event):
+        if self._currently_dragging:
+            nodes = []
+            for artist in self._selected_artists:
+                node = self._draggable_artist_to_node[artist]
+                nodes.append(node)
+            self._update_curved_edges(nodes)
+        super()._on_release(event)
+
+
     def _update_nodes(self, nodes):
         for node in nodes:
             self.node_artists[node].xy = self.node_positions[node]
@@ -1651,6 +1662,49 @@ class InteractiveGraph(Graph, DraggableArtists):
         # move edge labels
         if hasattr(self, 'edge_label_artists'):
             self._update_edge_labels(edges, self.node_positions)
+
+
+    def _update_curved_edges(self, nodes):
+        """Compute a new layout for curved edges keeping all other edges constant."""
+
+        # get edges that potentially need to move
+        edges = [(source, target) for (source, target) in self.edge_list if (source in nodes) or (target in nodes)]
+
+        # subselect curved edges
+        edges = [edge for edge in edges if self.edge_artists[edge].is_curved]
+
+        if edges: # i.e. non-empty list
+            fixed_positions = dict()
+            ctr = np.max(list(self.node_positions.keys())) + 1 # TODO: handle cases where nodes are not integers
+            for edge in self.edge_list:
+                if edge not in edges:
+                    edge_artist = self.edge_artists[edge]
+                    if edge_artist.is_curved:
+                        for position in self.edge_artists[edge].midline[1:-1]:
+                            fixed_positions[ctr] = position
+                            ctr += 1
+                    else:
+                        edge_origin = edge_artist.midline[0]
+                        delta = edge_artist.midline[-1] - edge_artist.midline[0]
+                        distance = np.linalg.norm(delta)
+                        unit_vector = delta / distance
+                        for ii in range(TOTAL_POINTS_PER_EDGE):
+                            # y = mx + b
+                            m = (ii+1) * distance / (TOTAL_POINTS_PER_EDGE + 1)
+                            fixed_positions[ctr] = m * unit_vector + edge_origin
+                            ctr += 1
+
+            fixed_positions.update(self.node_positions)
+            edge_paths = _get_curved_edge_paths(edges, fixed_positions)
+
+            for edge, path in edge_paths.items():
+                self.edge_artists[edge].midline = path
+                self.edge_artists[edge]._update_path()
+                self.ax.draw_artist(self.edge_artists[edge])
+
+            # move edge labels
+            if hasattr(self, 'edge_label_artists'):
+                self._update_edge_labels(edges, self.node_positions)
 
 
     def _update_edge_labels(self, edges, node_positions, edge_label_position=0.5, rotate=True): # TODO: pass 'rotate' properly

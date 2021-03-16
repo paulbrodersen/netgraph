@@ -30,7 +30,7 @@ def _get_unique_nodes(edge_list):
     return list(set(_flatten(edge_list)))
 
 
-def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None):
+def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None, unique_nodes=None):
 
     sources = [s for (s, _) in edge_list]
     targets = [t for (_, t) in edge_list]
@@ -39,16 +39,18 @@ def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None):
     else:
         weights = np.ones((len(edge_list)))
 
-    # map nodes to consecutive integers
-    nodes = sources + targets
-    unique = set(nodes)
-    indices = range(len(unique))
-    node_to_idx = dict(zip(unique, indices))
+    if unique_nodes is None:
+        # map nodes to consecutive integers
+        nodes = sources + targets
+        unique_nodes = set(nodes)
+
+    indices = range(len(unique_nodes))
+    node_to_idx = dict(zip(unique_nodes, indices))
 
     source_indices = [node_to_idx[source] for source in sources]
     target_indices = [node_to_idx[target] for target in targets]
 
-    total_nodes = len(unique)
+    total_nodes = len(unique_nodes)
     adjacency_matrix = np.zeros((total_nodes, total_nodes))
     adjacency_matrix[source_indices, target_indices] = weights
 

@@ -116,6 +116,7 @@ class EdgeArtist(PathPatchDataUnits):
                  head_length = 0.15,
                  offset      = 0.,
                  shape       = 'full',
+                 curved      = False,
                  *args, **kwargs):
 
         # book keeping
@@ -125,6 +126,7 @@ class EdgeArtist(PathPatchDataUnits):
         self.head_length = head_length
         self.shape       = shape
         self.offset      = offset
+        self.is_curved   = curved
 
         self._update_path() # sets self._path
         super().__init__(self._path, *args, **kwargs)
