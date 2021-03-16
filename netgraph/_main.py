@@ -20,6 +20,7 @@ from ._artists import NodeArtist, EdgeArtist
 
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
+TOTAL_POINTS_PER_EDGE = 100
 
 
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
@@ -755,7 +756,7 @@ def _get_curved_edge_paths(edge_list, node_positions,
     for (source, target), control_points in edge_to_control_points.items():
         control_point_positions = [all_positions[node] for node in control_points]
         control_point_positions = [all_positions[source]] + control_point_positions + [all_positions[target]]
-        path = bspline(np.array(control_point_positions), degree=bspline_degree)
+        path = bspline(np.array(control_point_positions), n=TOTAL_POINTS_PER_EDGE, degree=bspline_degree)
         edge_to_path[(source, target)] = path
 
     return edge_to_path
