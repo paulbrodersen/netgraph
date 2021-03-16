@@ -738,7 +738,7 @@ def _get_curved_edge_paths(edge_list, node_positions,
     if k is None:
         area = np.product(scale)
         k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
-        k *= 0.5
+        k *= 0.3
 
     all_positions = get_fruchterman_reingold_layout(new_edge_list,
                                                     node_positions      = control_point_positions,
