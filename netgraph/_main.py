@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import warnings
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
@@ -15,6 +16,7 @@ from ._utils import (
 from ._layout import get_fruchterman_reingold_layout
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
+from ._deprecated import deprecated
 
 
 BASE_NODE_SIZE = 1e-2
@@ -22,6 +24,7 @@ BASE_EDGE_WIDTH = 1e-2
 TOTAL_POINTS_PER_EDGE = 100
 
 
+@deprecated("Use Graph.draw() or InteractiveGraph.draw() instead.")
 def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
     """
     Convenience function that tries to do "the right thing".
@@ -304,6 +307,7 @@ def _get_font_size(ax, node_labels, **kwargs):
     return font_size
 
 
+@deprecated("Use Graph.draw_nodes() or InteractiveGraph.draw_nodes() instead.")
 def draw_nodes(node_positions,
                node_shape='o',
                node_size=3.,
@@ -397,6 +401,7 @@ def draw_nodes(node_positions,
     return artists
 
 
+@deprecated("Use Graph.draw_edges() or InteractiveGraph.draw_edges() instead.")
 def draw_edges(edge_list,
                node_positions,
                node_size=3.,
@@ -722,6 +727,7 @@ def _get_point_on_a_circle(origin, radius, angle):
     return np.array([x, y])
 
 
+@deprecated("Use Graph.draw_node_labels() or InteractiveGraph.draw_node_labels() instead.")
 def draw_node_labels(node_labels,
                      node_positions,
                      node_label_font_size=12,
@@ -822,6 +828,7 @@ def draw_node_labels(node_labels,
     return artists
 
 
+@deprecated("Use Graph.draw_edge_labels() or InteractiveGraph.draw_edge_labels() instead.")
 def draw_edge_labels(edge_list,
                      edge_labels,
                      node_positions,
@@ -1177,7 +1184,9 @@ class Graph(object):
     @_add_doc(draw_nodes.__doc__)
     def draw_nodes(self, *args, **kwargs):
 
-        node_artists = draw_nodes(*args, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            node_artists = draw_nodes(*args, **kwargs)
 
         if not hasattr(self, 'node_artists'):
             self.node_artists = node_artists
@@ -1193,7 +1202,9 @@ class Graph(object):
     @_add_doc(draw_edges.__doc__)
     def draw_edges(self, *args, **kwargs):
 
-        artists = draw_edges(*args, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            artists = draw_edges(*args, **kwargs)
 
         if not hasattr(self, 'edge_artists'):
             self.edge_artists = artists
@@ -1209,7 +1220,9 @@ class Graph(object):
     @_add_doc(draw_node_labels.__doc__)
     def draw_node_labels(self, *args, **kwargs):
 
-        artists = draw_node_labels(*args, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            artists = draw_node_labels(*args, **kwargs)
 
         if not hasattr(self, 'node_label_artists'):
             self.node_label_artists = artists
@@ -1225,7 +1238,9 @@ class Graph(object):
     @_add_doc(draw_edge_labels.__doc__)
     def draw_edge_labels(self, *args, **kwargs):
 
-        artists = draw_edge_labels(*args, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
+            artists = draw_edge_labels(*args, **kwargs)
 
         if not hasattr(self, 'edge_label_artists'):
             self.edge_label_artists = artists
