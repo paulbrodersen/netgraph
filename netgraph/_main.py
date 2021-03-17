@@ -5,9 +5,6 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-# import itertools
-# from collections import OrderedDict
-
 from ._utils import (
     _save_cast_float_to_int,
     _flatten,
