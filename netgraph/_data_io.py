@@ -60,7 +60,7 @@ def parse_graph(graph):
 
     else:
         allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph']
-        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed)), type(graph))
+        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
 
 
 def _parse_edge_list(edge_list):
