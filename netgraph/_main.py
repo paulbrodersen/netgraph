@@ -236,7 +236,7 @@ def _find_renderer(fig):
     return(renderer)
 
 
-def _get_text_object_dimenstions(ax, string, *args, **kwargs):
+def _get_text_object_dimensions(ax, string, *args, **kwargs):
     text_object = ax.text(0., 0., string, *args, **kwargs)
     renderer = _find_renderer(text_object.get_figure())
     bbox_in_display_coordinates = text_object.get_window_extent(renderer)
@@ -292,7 +292,7 @@ def _get_font_size(ax, node_labels, **kwargs):
 
         node_diameter = 2 * (r-e) * BASE_NODE_SIZE
 
-        width, height = _get_text_object_dimenstions(ax, label, size=node_label_font_size)
+        width, height = _get_text_object_dimensions(ax, label, size=node_label_font_size)
 
         if width > widest:
             widest = width
