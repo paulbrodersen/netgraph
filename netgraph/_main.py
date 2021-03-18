@@ -605,9 +605,6 @@ def _get_curved_edge_paths(edge_list, node_positions,
     new_edge_list, edge_to_control_points = _insert_control_points(edge_list, total_control_points_per_edge)
 
     # Initialize the positions of the control points to positions on the original edge.
-    # TODO: Handle bidirectional edges better. At the moment,
-    # bidirectional edges are assigned the same initial control point
-    # positions, resulting in a warning in get_fruchterman_reingold_layout().
     control_point_positions = _initialize_control_point_positions(edge_to_control_points, node_positions)
     control_point_positions.update(node_positions)
 
@@ -621,16 +618,19 @@ def _get_curved_edge_paths(edge_list, node_positions,
         k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
         k *= 0.5
 
-    all_positions = get_fruchterman_reingold_layout(new_edge_list,
-                                                    node_positions      = control_point_positions,
-                                                    scale               = scale,
-                                                    origin              = origin,
-                                                    k                   = k,
-                                                    initial_temperature = initial_temperature,
-                                                    total_iterations    = total_iterations,
-                                                    node_size           = node_size,
-                                                    fixed_nodes         = unique_nodes,
-    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+
+        all_positions = get_fruchterman_reingold_layout(new_edge_list,
+                                                        node_positions      = control_point_positions,
+                                                        scale               = scale,
+                                                        origin              = origin,
+                                                        k                   = k,
+                                                        initial_temperature = initial_temperature,
+                                                        total_iterations    = total_iterations,
+                                                        node_size           = node_size,
+                                                        fixed_nodes         = unique_nodes,
+        )
 
     # Fit a BSpline to each set of control points (+ anchors).
     edge_to_path = dict()
@@ -663,6 +663,15 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions, 
     # TODO: potentially fork out two subfunctions, one for normal edges and the other for self-loops
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
+        # # This would solve the warning in get_fruchterman_reingold_layout;
+        # # however, the resulting edge path layout tends to be worse.
+        # if (target, source) in edge_to_control_points: # bidirectional
+        #     x1, y1 = node_positions[source]
+        #     x2, y2 = node_positions[target]
+        #     x1, y1, _, _ = _shift_edge(x1, y1, x2, y2, delta=1e-3)
+        #     edge_origin = x1, y1
+        # else:
+        #     edge_origin = node_positions[source]
         edge_origin = node_positions[source]
         delta = node_positions[target] - node_positions[source]
         distance = np.linalg.norm(delta)
