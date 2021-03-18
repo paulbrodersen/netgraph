@@ -89,6 +89,7 @@ from ._main import (draw,
                     Graph,
                     DraggableGraph,
                     EmphasizeOnHoverGraph,
+                    AnnotateOnClickGraph,
 )
 
 from ._interactive_variants import (InteractiveGrid,
@@ -109,6 +110,7 @@ __all__ = ['draw',
            'DraggableGraph',
            'InteractiveGraph',
            'EmphasizeOnHoverGraph',
+           'AnnotateOnClickGraph',
            'InteractiveGrid',
            'InteractiveHypergraph',
            'InteractivelyConstructDestroyGraph'

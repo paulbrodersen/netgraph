@@ -101,3 +101,23 @@ def bspline(cv, n=100, degree=3, periodic=False):
     max_param = count - (degree * (1-periodic))
     spl = BSpline(kv, cv, degree)
     return spl(np.linspace(0,max_param,n))
+
+
+def get_angle_between(v1, v2):
+    """ Returns the angle in radians between vectors 'v1' and 'v2'::
+
+            >>> angle_between((1, 0, 0), (0, 1, 0))
+            1.5707963267948966
+            >>> angle_between((1, 0, 0), (1, 0, 0))
+            0.0
+            >>> angle_between((1, 0, 0), (-1, 0, 0))
+            3.141592653589793
+    """
+    v1_u = get_unit_vector(v1)
+    v2_u = get_unit_vector(v2)
+    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)) / (2 * np.pi) * 360
+
+
+def get_unit_vector(vector):
+    """ Returns the unit vector of the vector.  """
+    return vector / np.linalg.norm(vector)

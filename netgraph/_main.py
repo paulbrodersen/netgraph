@@ -6,10 +6,10 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from ._utils import _get_unique_nodes, bspline,
+from ._utils import _get_unique_nodes, bspline, get_angle_between
 
 from ._layout import get_fruchterman_reingold_layout
-from ._artists import NodeArtist, EdgeArtist
+from ._artists import NodeArtist, EdgeArtist, _get_orthogonal_unit_vector
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
 
@@ -1922,5 +1922,162 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
                     artist.set_alpha(self.artist_to_alpha[artist])
                 self.deemphasized_artists = []
                 self.fig.canvas.draw_idle()
+
+
+class AnnotateOnClick(object):
+
+    def __init__(self, artist_to_data):
+
+        self.artist_to_data = artist_to_data
+
+        self.annotatable_artists = artist_to_data.keys()
+        self.annotated_artists = set()
+        self.artist_to_text_object = dict()
+
+        try:
+            self.fig, = set(list(artist.figure for artist in self.annotatable_artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same figure!")
+
+        try:
+            self.ax, = set(list(artist.axes for artist in self.annotatable_artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same axis!")
+
+        self.fig.canvas.mpl_connect("button_release_event", self._on_release)
+
+
+    def _on_release(self, event):
+
+        if event.inaxes == self.ax:
+
+            # clicked on already annotated artist
+            for artist in self.annotated_artists:
+                if artist.contains(event)[0]:
+                    self._remove_annotation(artist)
+                    self.fig.canvas.draw()
+                    return
+
+            # clicked on un-annotated artist
+            for artist in self.annotatable_artists:
+                if artist.contains(event)[0]:
+                    placement = self._get_annotation_placement(artist)
+                    self._add_annotation(artist, *placement)
+                    self.fig.canvas.draw()
+                    return
+
+            # clicked outside of any artist
+            for artist in list(self.annotated_artists): # list to force copy
+                self._remove_annotation(artist)
+            self.fig.canvas.draw()
+
+
+    def _get_annotation_placement(self, artist):
+        vector = self._get_vector_pointing_outwards(artist.xy)
+        x, y = artist.xy + 2 * artist.radius * vector
+        horizontalalignment, verticalalignment = self._get_text_alignment(vector)
+        return x, y, horizontalalignment, verticalalignment
+
+
+    def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
+
+        if isinstance(self.artist_to_data[artist], str):
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, self.artist_to_data[artist],
+                horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment,
+            )
+        elif isinstance(self.artist_to_data[artist], dict):
+            params = self.artist_to_data[artist].copy()
+            params.setdefault('horizontalalignment', horizontalalignment)
+            params.setdefault('verticalalignment', verticalalignment)
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, **params
+            )
+        self.annotated_artists.add(artist)
+
+
+    def _get_centroid(self):
+        return np.mean([artist.xy for artist in self.annotatable_artists], axis=0)
+
+
+    def _get_vector_pointing_outwards(self, xy):
+        centroid = self._get_centroid()
+        delta = xy - centroid
+        distance = np.linalg.norm(delta)
+        unit_vector = delta / distance
+        return unit_vector
+
+
+    def _get_text_alignment(self, vector):
+        dx, dy = vector
+        angle = np.arctan2(dy, dx)/(2.0*np.pi)*360
+        angle %= 360 # arctan2 return angles in [-180, 180)
+
+        if (45 <= angle < 135):
+            horizontalalignment = 'center'
+            verticalalignment = 'bottom'
+        elif (135 <= angle < 225):
+            horizontalalignment = 'right'
+            verticalalignment = 'center'
+        elif (225 <= angle < 315):
+            horizontalalignment = 'center'
+            verticalalignment = 'top'
+        else:
+            horizontalalignment = 'left'
+            verticalalignment = 'center'
+
+        return horizontalalignment, verticalalignment
+
+
+    def _remove_annotation(self, artist):
+        text_object = self.artist_to_text_object[artist]
+        text_object.remove()
+        del self.artist_to_text_object[artist]
+        self.annotated_artists.discard(artist)
+
+
+class AnnotateOnClickGraph(Graph, AnnotateOnClick):
+
+    def __init__(self, *args, **kwargs):
+        Graph.__init__(self, *args, **kwargs)
+
+        artist_to_data = dict()
+        if 'node_data' in kwargs:
+            artist_to_data.update({self.node_artists[node] : data for node, data in kwargs['node_data'].items()})
+        if 'edge_data' in kwargs:
+            artist_to_data.update({self.edge_artists[edge] : data for edge, data in kwargs['edge_data'].items()})
+
+        AnnotateOnClick.__init__(self, artist_to_data)
+
+
+    def _get_centroid(self):
+        return np.mean([position for position in self.node_positions.values()], axis=0)
+
+
+    def _get_annotation_placement(self, artist):
+
+        if isinstance(artist, NodeArtist):
+            return super()._get_annotation_placement(artist)
+
+        elif isinstance(artist, EdgeArtist):
+            idx = int(len(artist.midline)/2)
+            p2 = artist.midline[max([0, idx-1])]
+            p1 = artist.midline[min([idx+1, len(artist.midline)-1])]
+            delta = p2 - p1
+            midpoint = p1 + delta / 2
+            orthogonal_vector = _get_orthogonal_unit_vector(np.atleast_2d(delta)).ravel()
+            vector_pointing_outwards = self._get_vector_pointing_outwards(midpoint)
+
+            if get_angle_between(orthogonal_vector, vector_pointing_outwards) <= 90:
+                pass
+            else:
+                orthogonal_vector *= -1
+            x, y = midpoint + 2 * artist.width * orthogonal_vector
+            horizontalalignment, verticalalignment = self._get_text_alignment(orthogonal_vector)
+            return x, y, horizontalalignment, verticalalignment
+
+        else:
+            raise NotImplementedError
 
 
