@@ -1142,35 +1142,38 @@ class Graph(object):
                                                                **kwargs)
 
         # Draw plot elements.
-        self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
-        self.draw_nodes(self.node_positions, ax=self.ax, **kwargs)
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-        # Improve default layout of axis.
-        # This function needs to be called before any font sizes are adjusted,
-        # as the axis dimensions affect the effective font size.
-        self._update_view()
+            self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
+            self.draw_nodes(self.node_positions, ax=self.ax, **kwargs)
 
-        if node_labels:
-            if not hasattr(self, 'node_labels'):
-                self.node_labels = node_labels
-            else:
-                self.node_labels.update(node_labels)
+            # Improve default layout of axis.
+            # This function needs to be called before any font sizes are adjusted,
+            # as the axis dimensions affect the effective font size.
+            self._update_view()
 
-            if not 'node_label_font_size' in kwargs:
-                # set font size such that even the largest label fits inside node artist
-                self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **kwargs) * 0.9 # conservative fudge factor
-                self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax, **kwargs)
-            else:
-                self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
+            if node_labels:
+                if not hasattr(self, 'node_labels'):
+                    self.node_labels = node_labels
+                else:
+                    self.node_labels.update(node_labels)
 
-        if edge_labels:
-            if not hasattr(self, 'edge_labels'):
-                self.edge_labels = edge_labels
-            else:
-                self.edge_labels.update(edge_labels)
-            self.draw_edge_labels(self.edge_labels, **kwargs)
+                if not 'node_label_font_size' in kwargs:
+                    # set font size such that even the largest label fits inside node artist
+                    self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **kwargs) * 0.9 # conservative fudge factor
+                    self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax, **kwargs)
+                else:
+                    self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
 
-        _make_pretty(self.ax)
+            if edge_labels:
+                if not hasattr(self, 'edge_labels'):
+                    self.edge_labels = edge_labels
+                else:
+                    self.edge_labels.update(edge_labels)
+                self.draw_edge_labels(self.edge_labels, **kwargs)
+
+            _make_pretty(self.ax)
 
 
     def _get_node_positions(self, *args, **kwargs):
