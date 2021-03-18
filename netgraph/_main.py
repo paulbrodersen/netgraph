@@ -513,7 +513,6 @@ def draw_edges(edge_list,
     for (source, target) in edge_list:
 
         if source == target and not curved:
-            import warnings
             msg = "Plotting of self-loops not supported for straight edges."
             msg += "Ignoring edge ({}, {}).".format(source, target)
             warnings.warn(msg)
