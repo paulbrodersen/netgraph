@@ -87,7 +87,9 @@ from ._main import (draw,
                     get_color,
                     get_fruchterman_reingold_layout,
                     Graph,
-                    InteractiveGraph)
+                    DraggableGraph,
+                    EmphasizeOnHoverGraph,
+)
 
 from ._interactive_variants import (InteractiveGrid,
                                     InteractiveHypergraph,
@@ -104,7 +106,9 @@ __all__ = ['draw',
            'fruchterman_reingold_layout',
            'spring_layout',
            'Graph',
+           'DraggableGraph',
            'InteractiveGraph',
+           'EmphasizeOnHoverGraph',
            'InteractiveGrid',
            'InteractiveHypergraph',
            'InteractivelyConstructDestroyGraph'

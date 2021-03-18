@@ -1663,7 +1663,7 @@ class DraggableArtists(object):
         self.fig.canvas.draw_idle()
 
 
-class InteractiveGraph(Graph, DraggableArtists):
+class DraggableGraph(Graph, DraggableArtists):
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -1827,3 +1827,100 @@ class InteractiveGraph(Graph, DraggableArtists):
             self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **self.kwargs) * 0.9 # conservative fudge factor
             self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
             print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
+
+
+class EmphasizeOnHover(object):
+
+    def __init__(self, artists):
+
+        self.emphasizeable_artists = artists
+        self.artist_to_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
+        self.deemphasized_artists = []
+
+        try:
+            self.fig, = set(list(artist.figure for artist in artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same figure!")
+
+        try:
+            self.ax, = set(list(artist.axes for artist in artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same axis!")
+
+        self.fig.canvas.mpl_connect("motion_notify_event", self._on_motion)
+
+
+    def _on_motion(self, event):
+
+        if event.inaxes == self.ax:
+            # on artist
+            selected_artist = None
+            for artist in self.emphasizeable_artists:
+                if artist.contains(event)[0]: # returns two arguments for some reason
+                    selected_artist = artist
+                    break
+
+            if selected_artist:
+                for artist in self.emphasizeable_artists:
+                    if artist is not selected_artist:
+                        artist.set_alpha(self.artist_to_alpha[artist]/5)
+                        self.deemphasized_artists.append(artist)
+                self.fig.canvas.draw_idle()
+
+            # not on any artist
+            if (selected_artist is None) and self.deemphasized_artists:
+                for artist in self.deemphasized_artists:
+                    artist.set_alpha(self.artist_to_alpha[artist])
+                self.deemphasized_artists = []
+                self.fig.canvas.draw_idle()
+
+
+class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
+
+    def __init__(self, *args, **kwargs):
+        Graph.__init__(self, *args, **kwargs)
+
+        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
+        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
+        self.artist_to_key = dict(zip(artists, keys))
+        EmphasizeOnHover.__init__(self, artists)
+
+
+    def _on_motion(self, event):
+
+        if event.inaxes == self.ax:
+
+            # determine if the cursor is on an artist
+            selected_artist = None
+            for artist in self.emphasizeable_artists:
+                if artist.contains(event)[0]: # returns bool, {} for some reason
+                    selected_artist = artist
+                    break
+
+            if selected_artist:
+                emphasized_artists = [selected_artist]
+
+                if isinstance(selected_artist, NodeArtist):
+                    node = self.artist_to_key[selected_artist]
+                    edge_artists = [edge_artist for edge, edge_artist in self.edge_artists.items() if node in edge]
+                    emphasized_artists.extend(edge_artists)
+
+                elif isinstance(selected_artist, EdgeArtist):
+                    edge = self.artist_to_key[selected_artist]
+                    node_artists = [self.node_artists[node] for node in edge[:2]]
+                    emphasized_artists.extend(node_artists)
+
+                for artist in self.emphasizeable_artists:
+                    if artist not in emphasized_artists:
+                        artist.set_alpha(self.artist_to_alpha[artist]/5)
+                        self.deemphasized_artists.append(artist)
+                self.fig.canvas.draw_idle()
+
+            # not on any artist
+            if (selected_artist is None) and self.deemphasized_artists:
+                for artist in self.deemphasized_artists:
+                    artist.set_alpha(self.artist_to_alpha[artist])
+                self.deemphasized_artists = []
+                self.fig.canvas.draw_idle()
+
+
