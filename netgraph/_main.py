@@ -605,8 +605,10 @@ def _get_curved_edge_paths(edge_list, node_positions,
     new_edge_list, edge_to_control_points = _insert_control_points(edge_list, total_control_points_per_edge)
 
     # Initialize the positions of the control points to positions on the original edge.
+    # TODO: Handle bidirectional edges better. At the moment,
+    # bidirectional edges are assigned the same initial control point
+    # positions, resulting in a warning in get_fruchterman_reingold_layout().
     control_point_positions = _initialize_control_point_positions(edge_to_control_points, node_positions)
-    # node_positions.update(control_point_positions)
     control_point_positions.update(node_positions)
 
     # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
