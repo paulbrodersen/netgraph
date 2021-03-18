@@ -4,6 +4,7 @@ Functions for reading and writing graphs.
 """
 import numpy as np
 
+from ._utils import _save_cast_float_to_int, _flatten
 
 def parse_graph(graph):
     """

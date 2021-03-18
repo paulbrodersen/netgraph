@@ -6,12 +6,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from ._utils import (
-    _save_cast_float_to_int,
-    _flatten,
-    _get_unique_nodes,
-    bspline,
-    )
+from ._utils import _get_unique_nodes, bspline,
 
 from ._layout import get_fruchterman_reingold_layout
 from ._artists import NodeArtist, EdgeArtist
@@ -988,7 +983,6 @@ def draw_edge_labels(edge_list,
             text_items[(n1, n2)] = t
 
         else: # n1 == n2, i.e. a self-loop
-            import warnings
             warnings.warn("Plotting of edge labels for self-loops not supported. Ignoring edge with label: {}".format(label))
 
     return text_items
