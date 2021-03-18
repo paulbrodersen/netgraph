@@ -90,6 +90,7 @@ from ._main import (draw,
                     DraggableGraph,
                     EmphasizeOnHoverGraph,
                     AnnotateOnClickGraph,
+                    InteractiveGraph,
 )
 
 from ._interactive_variants import (InteractiveGrid,

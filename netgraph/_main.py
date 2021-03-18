@@ -2081,3 +2081,43 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
             raise NotImplementedError
 
 
+class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph):
+
+    def __init__(self, *args, **kwargs):
+
+        DraggableGraph.__init__(self, *args, **kwargs)
+
+        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
+        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
+        self.artist_to_key = dict(zip(artists, keys))
+        EmphasizeOnHover.__init__(self, artists)
+
+        artist_to_data = dict()
+        if 'node_data' in kwargs:
+            artist_to_data.update({self.node_artists[node] : data for node, data in kwargs['node_data'].items()})
+        if 'edge_data' in kwargs:
+            artist_to_data.update({self.edge_artists[edge] : data for edge, data in kwargs['edge_data'].items()})
+        AnnotateOnClick.__init__(self, artist_to_data)
+
+
+    def _on_motion(self, event):
+        DraggableGraph._on_motion(self, event)
+        EmphasizeOnHoverGraph._on_motion(self, event)
+
+
+    def _on_release(self, event):
+        if self._currently_dragging is False:
+            DraggableGraph._on_release(self, event)
+            AnnotateOnClickGraph._on_release(self, event)
+        else:
+            DraggableGraph._on_release(self, event)
+            self._redraw_annotations(event)
+
+
+    def _redraw_annotations(self, event):
+        if event.inaxes == self.ax:
+            for artist in self.annotated_artists:
+                self._remove_annotation(artist)
+                placement = self._get_annotation_placement(artist)
+                self._add_annotation(artist, *placement)
+            self.fig.canvas.draw()
