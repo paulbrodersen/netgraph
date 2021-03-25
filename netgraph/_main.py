@@ -1242,35 +1242,20 @@ class Graph(object):
                 self.node_label_artists[key] = artist
 
 
-    def draw_edge_labels(self,
-                         edge_labels,
-                         edge_list=None,
+    def draw_edge_labels(self, edge_labels,
                          edge_label_position=0.5,
-                         edge_label_font_size=10,
-                         edge_label_font_color='k',
-                         edge_label_font_family='sans-serif',
-                         edge_label_font_weight='normal',
-                         edge_label_font_alpha=1.,
-                         edge_label_bbox=None,
-                         edge_label_horizontalalignment='center',
-                         edge_label_verticalalignment='center',
-                         clip_on=False,
-                         edge_width=1.,
-                         rotate_edge_labels=True,
-                         edge_label_zorder=10000,
-                         **kwargs):
+                         edge_label_rotate=True,
+                         edge_label_fontdict=None,
+                         **kwargs
+    ):
         """
         Draw edge labels.
 
         Arguments
         ---------
-
         edge_labels : dict (source, target) : str
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
-
-        edge_list: m-long list of 2-tuples
-            List of edges. Each tuple corresponds to an edge defined by (source, target).
 
         edge_label_position : float
             Relative position along the edge where the label is placed.
@@ -1278,149 +1263,80 @@ class Graph(object):
                 centre : 0.5 (default)
                 tail   : 1.
 
-        edge_label_font_size : int (default 12)
-           Font size
+        edge_label_rotate : bool (default True)
+            If True, edge labels are rotated such that they track the orientation of their edges.
+            If False, edge labels are not rotated; the angle of the text is parallel to the axis.
 
-        edge_label_font_color : str (default 'k')
-           Font color
-
-        edge_label_font_family : str (default='sans-serif')
-           Font family
-
-        edge_label_font_weight : str (default='normal')
-           Font weight
-
-        edge_label_font_alpha : float (default 1.)
-           Text transparency
-
-        edge_label_bbox : Matplotlib bbox
-           Specify text box shape and colors.
-
-        edge_label_horizontalalignment: str
-            Horizontal label alignment inside bbox.
-
-        edge_label_verticalalignment: str
-            Vertical label alignment inside bbox.
-
-        clip_on : bool (default=False)
-           Turn on clipping at axis boundaries.
-
-        edge_label_zorder : int (default 10000)
-            Set the zorder of edge labels.
-            Choose a large number to ensure that the labels are plotted on top of the edges.
+        edge_label_fontdict : dict or None
+            Keyword arguments passed to matplotlib.text.Text.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - horizontalalignment (default here 'center'),
+                - verticalalignment (default 'center')
+                - clip_on (default False),
+                - bbox (default dict(boxstyle='round',
+                                    ec=(1.0, 1.0, 1.0),
+                                    fc=(1.0, 1.0, 1.0)),
+                - zorder (default 1000),
+                - rotation (determined by edge_label_rotate argument)
 
         Returns
         -------
         artists: dict (source, target) : text object
             Mapping of edges to edge label artists.
 
+        TODO: shift bidirectional edges
         """
 
         # book keeping
-        self.rotate_edge_labels = rotate_edge_labels
         self.edge_label_position = edge_label_position
-
-        if not edge_list:
-            edge_list = self.edge_list
-
-        if isinstance(edge_width, (int, float)):
-            edge_width = {edge: edge_width for edge in edge_list}
-
-        edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
-
-        if edge_label_bbox is None: # use default box of white with white border
-            edge_label_bbox = dict(boxstyle='round',
-                                   ec=(1.0, 1.0, 1.0),
-                                   fc=(1.0, 1.0, 1.0))
+        self.edge_label_rotate = edge_label_rotate
+        self.edge_label_fontdict = dict(
+            bbox=dict(boxstyle='round',
+                      ec=(1.0, 1.0, 1.0),
+                      fc=(1.0, 1.0, 1.0)),
+            horizontalalignment='center',
+            verticalalignment='center',
+            clip_on=False,
+            zorder=10000
+        )
+        if edge_label_fontdict:
+            self.edge_label_fontdict.update(edge_label_fontdict)
 
         text_items = {}
         for (n1, n2), label in edge_labels.items():
 
             edge_artist = self.edge_artists[(n1, n2)]
 
-            if not edge_artist.curved and (n1 != n2):
+            if (n1 != n2) or edge_artist.curved:
 
-                (x1, y1) = self.node_positions[n1]
-                (x2, y2) = self.node_positions[n2]
+                x, y = _get_point_along_spline(edge_artist.midline, edge_label_position)
 
-                if (n2, n1) in self.edge_list: # i.e. bidirectional edge --> need to shift label to stay on edge
-                    x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.*edge_width[(n1, n2)])
+                if self.edge_label_rotate:
 
-                (x, y) = (x1 * self.edge_label_position + x2 * (1.0 - self.edge_label_position),
-                          y1 * self.edge_label_position + y2 * (1.0 - self.edge_label_position))
+                    # get tangent in degrees
+                    dx, dy = _get_tangent_at_point(edge_artist.midline, edge_label_position)
+                    angle = np.arctan2(dy, dx) * 360 / (2.0 * np.pi)
 
-                if self.rotate_edge_labels:
-                    angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
                     # make label orientation "right-side-up"
                     if angle > 90:
                         angle -= 180
                     if angle < - 90:
                         angle += 180
+
                     # transform data coordinate angle to screen coordinate angle
                     xy = np.array((x, y))
                     trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
-                                                                xy.reshape((1, 2)))[0]
+                                                                     xy.reshape((1, 2)))[0]
                 else:
                     trans_angle = 0.0
 
-                text_items[(n1, n2)] = self.ax.text(
-                    x, y, label,
-                    size=edge_label_font_size,
-                    color=edge_label_font_color,
-                    alpha=edge_label_font_alpha,
-                    family=edge_label_font_family,
-                    weight=edge_label_font_weight,
-                    bbox=edge_label_bbox,
-                    horizontalalignment=edge_label_horizontalalignment,
-                    verticalalignment=edge_label_verticalalignment,
-                    rotation=trans_angle,
-                    transform=self.ax.transData,
-                    zorder=edge_label_zorder,
-                    clip_on=clip_on
-                )
+                text_items[(n1, n2)] = self.ax.text(x, y, label,
+                                                    rotation=trans_angle,
+                                                    transform=self.ax.transData,
+                                                    **self.edge_label_fontdict)
 
-            elif not edge_artist.curved and (n1 == n2): # n1 == n2, i.e. a self-loop
+            else: # self-loop and straight edge
                 warnings.warn("Plotting of edge labels for self-loops not supported for straight edges. Ignoring edge with label: {}".format(label))
-
-            else: # edge is curved
-
-                idx = int(self.edge_label_position * len(edge_artist.midline)) -1
-                x, y = edge_artist.midline[idx]
-
-                if self.rotate_edge_labels:
-
-                    # get tangent via central difference
-                    (x1, y1) = edge_artist.midline[max([0, idx-1])]
-                    (x2, y2) = edge_artist.midline[min([idx+1, len(edge_artist.midline)-1])]
-
-                    angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
-                    # make label orientation "right-side-up"
-                    if angle > 90:
-                        angle -= 180
-                    if angle < - 90:
-                        angle += 180
-                    # transform data coordinate angle to screen coordinate angle
-                    xy = np.array((x, y))
-                    trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
-                                                                xy.reshape((1, 2)))[0]
-                else:
-                    trans_angle = 0.0
-
-                text_items[(n1, n2)] = self.ax.text(
-                    x, y, label,
-                    size=edge_label_font_size,
-                    color=edge_label_font_color,
-                    alpha=edge_label_font_alpha,
-                    family=edge_label_font_family,
-                    weight=edge_label_font_weight,
-                    bbox=edge_label_bbox,
-                    horizontalalignment=edge_label_horizontalalignment,
-                    verticalalignment=edge_label_verticalalignment,
-                    rotation=trans_angle,
-                    transform=self.ax.transData,
-                    zorder=edge_label_zorder,
-                    clip_on=clip_on
-                )
 
         if not hasattr(self, 'edge_label_artists'):
             self.edge_label_artists = text_items
@@ -1807,7 +1723,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
             self.edge_label_artists[(n1, n2)].set_position((x, y))
 
-            if self.rotate_edge_labels:
+            if self.edge_label_rotate:
                 angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
                 # make label orientation "right-side-up"
                 if angle > 90:
