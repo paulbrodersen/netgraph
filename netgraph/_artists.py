@@ -208,6 +208,7 @@ class EdgeArtist(PathPatchDataUnits):
         self._path = Path(vertices, codes)
 
 
+
 def _get_parallel_line(path, delta):
     # initialise output
     orthogonal_unit_vector = np.zeros_like(path)
@@ -246,3 +247,25 @@ def _shorten_line_by(path, distance):
     new_end_point = path[-1] + distance * unit_vector
 
     return np.concatenate([path[:idx+1], new_end_point[None, :]], axis=0)
+
+
+def _get_point_along_spline(spline, fraction):
+    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
+    deltas = np.diff(spline, axis=0)
+    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
+    cumulative_sum = np.cumsum(successive_distances)
+    desired_length = cumulative_sum[-1] * fraction
+    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
+    overhang = cumulative_sum[idx] - desired_length
+    x, y = spline[idx+1] - overhang/successive_distances[idx] * deltas[idx]
+    return x, y
+
+
+def _get_tangent_at_point(spline, fraction):
+    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
+    deltas = np.diff(spline, axis=0)
+    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
+    cumulative_sum = np.cumsum(successive_distances)
+    desired_length = cumulative_sum[-1] * fraction
+    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
+    return deltas[idx]

@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from ._utils import _get_unique_nodes, bspline, get_angle_between
 
 from ._layout import get_fruchterman_reingold_layout
-from ._artists import NodeArtist, EdgeArtist, _get_orthogonal_unit_vector
+from ._artists import NodeArtist, EdgeArtist, _get_orthogonal_unit_vector, _get_point_along_spline, _get_tangent_at_point
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
 
@@ -2055,29 +2055,31 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
 
     def _get_annotation_placement(self, artist):
-
         if isinstance(artist, NodeArtist):
-            return super()._get_annotation_placement(artist)
-
+            return self._get_node_annotation_placement(artist)
         elif isinstance(artist, EdgeArtist):
-            idx = int(len(artist.midline)/2)
-            p2 = artist.midline[max([0, idx-1])]
-            p1 = artist.midline[min([idx+1, len(artist.midline)-1])]
-            delta = p2 - p1
-            midpoint = p1 + delta / 2
-            orthogonal_vector = _get_orthogonal_unit_vector(np.atleast_2d(delta)).ravel()
-            vector_pointing_outwards = self._get_vector_pointing_outwards(midpoint)
-
-            if get_angle_between(orthogonal_vector, vector_pointing_outwards) <= 90:
-                pass
-            else:
-                orthogonal_vector *= -1
-            x, y = midpoint + 2 * artist.width * orthogonal_vector
-            horizontalalignment, verticalalignment = self._get_text_alignment(orthogonal_vector)
-            return x, y, horizontalalignment, verticalalignment
-
+            return self._get_edge_annotation_placement(artist)
         else:
             raise NotImplementedError
+
+
+    def _get_node_annotation_placement(self, artist):
+        return super()._get_annotation_placement(artist)
+
+
+    def _get_edge_annotation_placement(self, artist):
+        midpoint = _get_point_along_spline(artist.midline, 0.5)
+
+        tangent = _get_tangent_at_point(artist.midline, 0.5)
+        orthogonal_vector = _get_orthogonal_unit_vector(np.atleast_2d(tangent)).ravel()
+        vector_pointing_outwards = self._get_vector_pointing_outwards(midpoint)
+        if get_angle_between(orthogonal_vector, vector_pointing_outwards) > 90:
+            orthogonal_vector *= -1
+
+        x, y = midpoint + 2 * artist.width * orthogonal_vector
+        horizontalalignment, verticalalignment = self._get_text_alignment(orthogonal_vector)
+        return x, y, horizontalalignment, verticalalignment
+
 
 
 class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph):
