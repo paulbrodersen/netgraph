@@ -504,7 +504,7 @@ def draw_edges(edge_list,
 
     # compute edge paths
     if not curved:
-        edge_paths = _get_straight_edge_paths(edge_list, node_positions)
+        edge_paths = _get_straight_edge_paths(edge_list, node_positions, edge_width)
     else:
         edge_paths = _get_curved_edge_paths(edge_list, node_positions)
 
@@ -555,7 +555,7 @@ def draw_edges(edge_list,
     return artists
 
 
-def _get_straight_edge_paths(edge_list, node_positions):
+def _get_straight_edge_paths(edge_list, node_positions, edge_width):
     edge_paths = dict()
     for (source, target) in edge_list:
         if source == target:
@@ -567,7 +567,7 @@ def _get_straight_edge_paths(edge_list, node_positions):
 
         if (target, source) in edge_list: # i.e. bidirectional
             # shift edge to the right (looking along the arrow)
-            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=0.5*width)
+            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=-0.5*edge_width[(source, target)])
 
         edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
 
