@@ -6,7 +6,12 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-from ._utils import _get_unique_nodes, bspline, get_angle_between
+from ._utils import (
+    _get_unique_nodes,
+    bspline,
+    get_angle_between,
+    _get_text_object_dimensions
+)
 
 from ._layout import get_fruchterman_reingold_layout
 from ._artists import NodeArtist, EdgeArtist, _get_orthogonal_unit_vector, _get_point_along_spline, _get_tangent_at_point
@@ -213,37 +218,6 @@ def _get_zorder(color_dict):
     zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
     zorder = {key: index for key, index in zip(color_dict.keys(), zorder)}
     return zorder
-
-
-def _find_renderer(fig):
-    """
-    https://stackoverflow.com/questions/22667224/matplotlib-get-text-bounding-box-independent-of-backend
-    """
-
-    if hasattr(fig.canvas, "get_renderer"):
-        # Some backends, such as TkAgg, have the get_renderer method, which
-        # makes this easy.
-        renderer = fig.canvas.get_renderer()
-    else:
-        # Other backends do not have the get_renderer method, so we have a work
-        # around to find the renderer. Print the figure to a temporary file
-        # object, and then grab the renderer that was used.
-        # (I stole this trick from the matplotlib backend_bases.py
-        # print_figure() method.)
-        import io
-        fig.canvas.print_pdf(io.BytesIO())
-        renderer = fig._cachedRenderer
-    return(renderer)
-
-
-def _get_text_object_dimensions(ax, string, *args, **kwargs):
-    text_object = ax.text(0., 0., string, *args, **kwargs)
-    renderer = _find_renderer(text_object.get_figure())
-    bbox_in_display_coordinates = text_object.get_window_extent(renderer)
-    bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(ax.transData.inverted())
-    w, h = bbox_in_data_coordinates.width, bbox_in_data_coordinates.height
-    text_object.remove()
-    return w, h
 
 
 def _get_font_size(ax, node_labels, **kwargs):
