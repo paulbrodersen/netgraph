@@ -143,3 +143,70 @@ def test_draw_straight_directed_edges_with_labels():
     Graph(edge_list, node_positions=node_positions, edge_labels=edge_labels, curved=False)
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_node_labels():
+    fig, ax = plt.subplots()
+    edge_list = [
+        (0, 1),
+        (1, 0),
+        (0, 2),
+    ]
+    node_positions = {
+        0 : np.array([0.1, 0.1]),
+        1 : np.array([0.5, 0.1]),
+        2 : np.array([0.9, 0.9]),
+    }
+    node_labels = {
+        0 : 'I',
+        1 : 'Lorem ipsum'
+    }
+    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_label_fontdict=dict(size=10))
+    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_node_labels_with_automatic_resize():
+    fig, ax = plt.subplots()
+    edge_list = [
+        (0, 1),
+        (1, 0),
+        (0, 2),
+    ]
+    node_positions = {
+        0 : np.array([0.1, 0.1]),
+        1 : np.array([0.5, 0.1]),
+        2 : np.array([0.9, 0.9]),
+    }
+    node_labels = {
+        0 : 'I',
+        1 : 'Lorem ipsum'
+    }
+    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_size=10)
+    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_node_labels_with_offset():
+    fig, ax = plt.subplots()
+    edge_list = [
+        (0, 1),
+        (1, 0),
+        (0, 2),
+    ]
+    node_positions = {
+        0 : np.array([0.1, 0.1]),
+        1 : np.array([0.5, 0.1]),
+        2 : np.array([0.9, 0.9]),
+    }
+    node_labels = {
+        0 : 'I',
+        1 : 'Lorem ipsum'
+    }
+    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_size=10,
+          node_label_offset=(0.1, -0.1), node_label_fontdict=dict(horizontalalignment='left', verticalalignment='top'))
+    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig

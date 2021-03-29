@@ -1132,17 +1132,7 @@ class Graph(object):
             self._update_view()
 
             if node_labels:
-                if not hasattr(self, 'node_labels'):
-                    self.node_labels = node_labels
-                else:
-                    self.node_labels.update(node_labels)
-
-                if not 'node_label_font_size' in kwargs:
-                    # set font size such that even the largest label fits inside node artist
-                    self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **kwargs) * 0.9 # conservative fudge factor
-                    self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax, **kwargs)
-                else:
-                    self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
+                self.draw_node_labels(node_labels, **kwargs)
 
             if edge_labels:
                 self.draw_edge_labels(edge_labels, **kwargs)
@@ -1194,12 +1184,74 @@ class Graph(object):
                 self.edge_artists[key] = artist
 
 
-    @_add_doc(draw_node_labels.__doc__)
-    def draw_node_labels(self, *args, **kwargs):
+    def draw_node_labels(self, node_labels,
+                         node_label_offset=(0., 0.),
+                         node_label_fontdict={},
+                         **kwargs):
+        """
+        Draw node labels.
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            artists = draw_node_labels(*args, **kwargs)
+        Arguments
+        ---------
+        node_labels : dict key : str
+           Mapping of nodes to labels.
+           Only nodes in the dictionary are labelled.
+
+        node_label_offset: 2-tuple or equivalent iterable (default (0.,0.))
+            (x, y) offset from node centre of label position.
+
+        node_label_fontdict : dict
+            Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - size (adjusted to fit into node artists if offset is (0, 0))
+                - horizontalalignment (default here: 'center')
+                - verticalalignment (default here: 'center')
+                - clip_on (default here: False)
+
+        Returns/Sets
+        ------------
+        self.node_label_artists: dict
+            Dictionary mapping node indices to text objects.
+
+        """
+
+        # book keeping
+        if not hasattr(self, 'node_labels'):
+            self.node_labels = node_labels
+        else:
+            self.node_labels.update(node_labels)
+
+        self.node_label_offset = node_label_offset
+
+        if not hasattr(self, 'node_label_fontdict'):
+            if np.all(np.isclose(node_label_offset, (0,0))): # labels are supposed to be inside node artists
+                # determine fontsize that fits the diameter of the node artists
+                size = self._get_font_size(self.node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
+                self.node_label_fontdict = dict(
+                    size=size,
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    clip_on=False,
+                )
+            else:
+                self.node_label_fontdict = dict(
+                    horizontalalignment='center',
+                    verticalalignment='center',
+                    clip_on=False,
+                )
+        self.node_label_fontdict.update(node_label_fontdict)
+
+        dx, dy = self.node_label_offset
+
+        artists = dict()
+        for node, label in node_labels.items():
+            if node in self.node_positions:
+                x, y = self.node_positions[node]
+                artists[node] = self.ax.text(x+dx, y+dy, label, **self.node_label_fontdict)
+            else:
+                warnings.warn("Cannot draw node label for node with ID {}. The node has no position assigned to it.".format(node))
+                continue
 
         if not hasattr(self, 'node_label_artists'):
             self.node_label_artists = artists
@@ -1210,6 +1262,29 @@ class Graph(object):
                     self.node_label_artists[key].remove()
                 # assign new one
                 self.node_label_artists[key] = artist
+
+
+    def _get_font_size(self, node_labels, node_label_fontdict):
+        """
+        Determine the maximum font size such that all labels fit inside their node artist.
+
+        TODO:
+        -----
+        - potentially rescale font sizes individually on a per node basis
+        """
+
+        rescale_factor = np.inf
+        for node, label in node_labels.items():
+            artist = self.node_artists[node]
+            diameter = 2 * (artist.radius - artist._lw_data/artist.linewidth_correction)
+            width, height = _get_text_object_dimensions(self.ax, label, **node_label_fontdict)
+            rescale_factor = min(rescale_factor, diameter/np.sqrt(width**2 + height**2))
+
+        if 'size' in node_label_fontdict:
+            size = rescale_factor * node_label_fontdict['size']
+        else:
+            size = rescale_factor * plt.rcParams['font.size']
+        return size
 
 
     def draw_edge_labels(self, edge_labels,
@@ -1558,8 +1633,8 @@ class DraggableGraph(Graph, DraggableArtists):
         self._node_to_draggable_artist = self.node_artists
         self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
 
-        # trigger resize of labels when canvas size changes
-        self.fig.canvas.mpl_connect('resize_event', self._on_resize)
+        # # trigger resize of labels when canvas size changes
+        # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
 
     def _move(self, event):
@@ -1708,11 +1783,10 @@ class DraggableGraph(Graph, DraggableArtists):
                 self.edge_label_artists[(n1, n2)].set_rotation(trans_angle)
 
 
-    def _on_resize(self, event):
-        if hasattr(self, 'node_labels') and not ('node_label_font_size' in self.kwargs):
-            self.node_label_font_size = _get_font_size(self.ax, self.node_labels, **self.kwargs) * 0.9 # conservative fudge factor
-            self.draw_node_labels(self.node_labels, self.node_positions, node_label_font_size=self.node_label_font_size, ax=self.ax)
-            print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
+    # def _on_resize(self, event):
+    #     if hasattr(self, 'node_labels'):
+    #         self.draw_node_labels(self.node_labels)
+    #         # print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
 
 
 class EmphasizeOnHover(object):
