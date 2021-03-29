@@ -1145,11 +1145,7 @@ class Graph(object):
                     self.draw_node_labels(self.node_labels, self.node_positions, ax=self.ax, **kwargs)
 
             if edge_labels:
-                if not hasattr(self, 'edge_labels'):
-                    self.edge_labels = edge_labels
-                else:
-                    self.edge_labels.update(edge_labels)
-                self.draw_edge_labels(self.edge_labels, **kwargs)
+                self.draw_edge_labels(edge_labels, **kwargs)
 
             _make_pretty(self.ax)
 
@@ -1219,9 +1215,8 @@ class Graph(object):
     def draw_edge_labels(self, edge_labels,
                          edge_label_position=0.5,
                          edge_label_rotate=True,
-                         edge_label_fontdict=None,
-                         **kwargs
-    ):
+                         edge_label_fontdict={},
+                         **kwargs):
         """
         Draw edge labels.
 
@@ -1243,25 +1238,28 @@ class Graph(object):
 
         edge_label_fontdict : dict or None
             Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
             The following default values differ from the defaults for matplotlib.text.Text:
                 - horizontalalignment (default here 'center'),
-                - verticalalignment (default 'center')
-                - clip_on (default False),
-                - bbox (default dict(boxstyle='round',
-                                    ec=(1.0, 1.0, 1.0),
-                                    fc=(1.0, 1.0, 1.0)),
-                - zorder (default 1000),
+                - verticalalignment (default here 'center')
+                - clip_on (default here False),
+                - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
+                - zorder (default here 1000),
                 - rotation (determined by edge_label_rotate argument)
 
-        Returns
-        -------
-        artists: dict (source, target) : text object
+        Returns/Sets
+        ------------
+        self.edge_label_artists: dict (source, target) : text object
             Mapping of edges to edge label artists.
 
-        TODO: shift bidirectional edges
         """
 
         # book keeping
+        if not hasattr(self, 'edge_labels'):
+            self.edge_labels = edge_labels
+        else:
+            self.edge_labels.update(edge_labels)
+
         self.edge_label_position = edge_label_position
         self.edge_label_rotate = edge_label_rotate
         self.edge_label_fontdict = dict(
@@ -1273,8 +1271,7 @@ class Graph(object):
             clip_on=False,
             zorder=10000
         )
-        if edge_label_fontdict:
-            self.edge_label_fontdict.update(edge_label_fontdict)
+        self.edge_label_fontdict.update(edge_label_fontdict)
 
         text_items = {}
         for (n1, n2), label in edge_labels.items():
