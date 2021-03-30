@@ -212,3 +212,7 @@ class EdgeArtist(PathPatchDataUnits):
             raise ValueError("Argument 'shape' needs to one of: 'left', 'right', 'full', not '{}'.".format(self.shape))
 
         self._path = Path(vertices, codes)
+
+    def update_midline(self, midline):
+        self.midline = midline
+        self._update_path()
