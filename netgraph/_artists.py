@@ -10,6 +10,12 @@ import numpy as np
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch, transforms
 
+from ._utils import (
+    _get_parallel_line,
+    _get_orthogonal_unit_vector,
+    _shorten_line_by,
+)
+
 
 class PathPatchDataUnits(PathPatch):
     # adapted from https://stackoverflow.com/a/42972469/2912349
@@ -206,66 +212,3 @@ class EdgeArtist(PathPatchDataUnits):
             raise ValueError("Argument 'shape' needs to one of: 'left', 'right', 'full', not '{}'.".format(self.shape))
 
         self._path = Path(vertices, codes)
-
-
-
-def _get_parallel_line(path, delta):
-    # initialise output
-    orthogonal_unit_vector = np.zeros_like(path)
-
-    tangents = path[2:] - path[:-2] # using the central difference approximation
-    orthogonal_unit_vector[1:-1] = _get_orthogonal_unit_vector(tangents)
-
-    # handle start and end points
-    orthogonal_unit_vector[ 0] = _get_orthogonal_unit_vector(np.atleast_2d([path[ 1] - path[ 0]]))
-    orthogonal_unit_vector[-1] = _get_orthogonal_unit_vector(np.atleast_2d([path[-1] - path[-2]]))
-
-    return path + delta * orthogonal_unit_vector
-
-
-def _get_orthogonal_unit_vector(v):
-    # adapted from https://stackoverflow.com/a/16890776/2912349
-    v = v / np.linalg.norm(v, axis=-1)[:, None] # unit vector
-    w = np.c_[-v[:,1], v[:,0]]                  # orthogonal vector
-    w = w / np.linalg.norm(w, axis=-1)[:, None] # orthogonal unit vector
-    return w
-
-
-def _shorten_line_by(path, distance):
-    """
-    Cut path off at the end by `distance`.
-    """
-    distance_to_end = np.linalg.norm(path - path[-1], axis=1)
-    idx = np.where(distance_to_end - distance >= 0)[0][-1] # i.e. the last valid point
-
-    # We could truncate the  path using `path[:idx+1]` and return here.
-    # However, if the path is not densely sampled, the error will be large.
-    # Therefor, we compute a point that is on the line from the last valid point to
-    # the end point, and append it to the truncated path.
-    vector = path[idx] - path[-1]
-    unit_vector = vector / np.linalg.norm(vector)
-    new_end_point = path[-1] + distance * unit_vector
-
-    return np.concatenate([path[:idx+1], new_end_point[None, :]], axis=0)
-
-
-def _get_point_along_spline(spline, fraction):
-    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
-    deltas = np.diff(spline, axis=0)
-    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
-    cumulative_sum = np.cumsum(successive_distances)
-    desired_length = cumulative_sum[-1] * fraction
-    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
-    overhang = cumulative_sum[idx] - desired_length
-    x, y = spline[idx+1] - overhang/successive_distances[idx] * deltas[idx]
-    return x, y
-
-
-def _get_tangent_at_point(spline, fraction):
-    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
-    deltas = np.diff(spline, axis=0)
-    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
-    cumulative_sum = np.cumsum(successive_distances)
-    desired_length = cumulative_sum[-1] * fraction
-    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
-    return deltas[idx]

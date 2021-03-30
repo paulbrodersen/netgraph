@@ -18,16 +18,16 @@ def _save_cast_float_to_int(num):
         return num
 
 
-def _flatten(nested_list):
-    return [item for sublist in nested_list for item in sublist]
-
-
 def _get_unique_nodes(edge_list):
     """
     Using numpy.unique promotes nodes to numpy.float/numpy.int/numpy.str,
     and breaks for nodes that have a more complicated type such as a tuple.
     """
     return list(set(_flatten(edge_list)))
+
+
+def _flatten(nested_list):
+    return [item for sublist in nested_list for item in sublist]
 
 
 def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None, unique_nodes=None):
@@ -72,14 +72,15 @@ def _get_subgraph(edge_list, node_list):
     return subgraph_edge_list
 
 
-# Adapted from https://stackoverflow.com/a/35007804/2912349
-def bspline(cv, n=100, degree=3, periodic=False):
+def _bspline(cv, n=100, degree=3, periodic=False):
     """ Calculate n samples on a bspline
 
         cv :      Array ov control vertices
         n  :      Number of samples to return
         degree:   Curve degree
         periodic: True - Curve is closed
+
+    Adapted from https://stackoverflow.com/a/35007804/2912349
     """
 
     cv = np.asarray(cv)
@@ -103,7 +104,15 @@ def bspline(cv, n=100, degree=3, periodic=False):
     return spl(np.linspace(0,max_param,n))
 
 
-def get_angle_between(v1, v2):
+def _get_angle(dx, dy, radians=False):
+    """Angle of vector in 2D."""
+    angle = np.arctan2(dy, dx)
+    if radians:
+        angle *= 360 / (2.0 * np.pi)
+    return angle
+
+
+def _get_interior_angle_between(v1, v2, radians=False):
     """ Returns the angle in radians between vectors 'v1' and 'v2'::
 
             >>> angle_between((1, 0, 0), (0, 1, 0))
@@ -112,15 +121,114 @@ def get_angle_between(v1, v2):
             0.0
             >>> angle_between((1, 0, 0), (-1, 0, 0))
             3.141592653589793
+
+    Adapted from:
+    https://stackoverflow.com/a/13849249/2912349
     """
     v1_u = get_unit_vector(v1)
     v2_u = get_unit_vector(v2)
-    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0)) / (2 * np.pi) * 360
+    angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+    if radians:
+        angle *= 360 / (2 * np.pi)
+    return angle
 
 
 def get_unit_vector(vector):
     """ Returns the unit vector of the vector.  """
     return vector / np.linalg.norm(vector)
+
+
+def _get_signed_angle_between(v1, v2, radians=False):
+    """
+    Compute the signed angle in radians between two vectors.
+
+    Adapted from:
+    https://stackoverflow.com/a/16544330/2912349
+    """
+    x1, y1 = v1
+    x2, y2 = v2
+    dot = x1*x2 + y1*y2
+    det = x1*y2 - y1*x2
+    angle = np.arctan2(det, dot)
+    if radians:
+        angle *= 360 / (2 * np.pi)
+    return angle
+
+
+def _get_n_points_on_a_circle(xy, radius, n, start_angle):
+    angles = np.linspace(0, 2*np.pi, n + 2)[1:-1]
+    angles = (angles + start_angle) % (2*np.pi)
+    positions = np.array([_get_point_on_a_circle(xy, radius, angle) for angle in angles])
+    return positions
+
+
+def _get_point_on_a_circle(origin, radius, angle):
+    x0, y0 = origin
+    x = x0 + radius * np.cos(angle)
+    y = y0 + radius * np.sin(angle)
+    return np.array([x, y])
+
+
+def _get_parallel_line(path, delta):
+    # initialise output
+    orthogonal_unit_vector = np.zeros_like(path)
+
+    tangents = path[2:] - path[:-2] # using the central difference approximation
+    orthogonal_unit_vector[1:-1] = _get_orthogonal_unit_vector(tangents)
+
+    # handle start and end points
+    orthogonal_unit_vector[ 0] = _get_orthogonal_unit_vector(np.atleast_2d([path[ 1] - path[ 0]]))
+    orthogonal_unit_vector[-1] = _get_orthogonal_unit_vector(np.atleast_2d([path[-1] - path[-2]]))
+
+    return path + delta * orthogonal_unit_vector
+
+
+def _get_orthogonal_unit_vector(v):
+    # adapted from https://stackoverflow.com/a/16890776/2912349
+    v = v / np.linalg.norm(v, axis=-1)[:, None] # unit vector
+    w = np.c_[-v[:,1], v[:,0]]                  # orthogonal vector
+    w = w / np.linalg.norm(w, axis=-1)[:, None] # orthogonal unit vector
+    return w
+
+
+def _shorten_line_by(path, distance):
+    """
+    Cut path off at the end by `distance`.
+    """
+    distance_to_end = np.linalg.norm(path - path[-1], axis=1)
+    idx = np.where(distance_to_end - distance >= 0)[0][-1] # i.e. the last valid point
+
+    # We could truncate the  path using `path[:idx+1]` and return here.
+    # However, if the path is not densely sampled, the error will be large.
+    # Therefor, we compute a point that is on the line from the last valid point to
+    # the end point, and append it to the truncated path.
+    vector = path[idx] - path[-1]
+    unit_vector = vector / np.linalg.norm(vector)
+    new_end_point = path[-1] + distance * unit_vector
+
+    return np.concatenate([path[:idx+1], new_end_point[None, :]], axis=0)
+
+
+def _get_point_along_spline(spline, fraction):
+    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
+    deltas = np.diff(spline, axis=0)
+    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
+    cumulative_sum = np.cumsum(successive_distances)
+    desired_length = cumulative_sum[-1] * fraction
+    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
+    overhang = cumulative_sum[idx] - desired_length
+    x, y = spline[idx+1] - overhang/successive_distances[idx] * deltas[idx]
+    return x, y
+
+
+def _get_tangent_at_point(spline, fraction):
+    assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
+    deltas = np.diff(spline, axis=0)
+    successive_distances = np.sqrt(np.sum(deltas**2, axis=1))
+    cumulative_sum = np.cumsum(successive_distances)
+    desired_length = cumulative_sum[-1] * fraction
+    idx = np.where(cumulative_sum >= desired_length)[0][0] # upper bound
+    return deltas[idx]
 
 
 def _get_text_object_dimensions(ax, string, *args, **kwargs):
@@ -152,3 +260,12 @@ def _find_renderer(fig):
         fig.canvas.print_pdf(io.BytesIO())
         renderer = fig._cachedRenderer
     return(renderer)
+
+
+def _make_pretty(ax):
+    ax.set_xticks([])
+    ax.set_yticks([])
+    ax.set_aspect('equal')
+    ax.get_figure().set_facecolor('w')
+    ax.set_frame_on(False)
+    ax.get_figure().canvas.draw()

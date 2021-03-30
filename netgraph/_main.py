@@ -8,13 +8,20 @@ import matplotlib.pyplot as plt
 
 from ._utils import (
     _get_unique_nodes,
-    bspline,
-    get_angle_between,
-    _get_text_object_dimensions
+    _bspline,
+    _get_angle,
+    _get_interior_angle_between,
+    _get_signed_angle_between,
+    _get_n_points_on_a_circle,
+    _get_orthogonal_unit_vector,
+    _get_point_along_spline,
+    _get_tangent_at_point,
+    _get_text_object_dimensions,
+    _make_pretty,
 )
 
 from ._layout import get_fruchterman_reingold_layout
-from ._artists import NodeArtist, EdgeArtist, _get_orthogonal_unit_vector, _get_point_along_spline, _get_tangent_at_point
+from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
 
@@ -651,7 +658,7 @@ def _initialize_selfloops(source, control_points, node_positions, selfloop_radiu
 
     selfloop_control_point_positions = _get_n_points_on_a_circle(
         selfloop_center, selfloop_radius, len(control_points),
-        _get_angle_between(np.array([1., 0.]), node_positions[source] - selfloop_center)
+        _get_signed_angle_between(np.array([1., 0.]), node_positions[source] - selfloop_center)
     )
 
     # # ensure that the loop stays within the bounding box
@@ -662,35 +669,6 @@ def _initialize_selfloops(source, control_points, node_positions, selfloop_radiu
         output[control_point] = selfloop_control_point_positions[ii]
 
     return output
-
-
-def _get_angle_between(v1, v2):
-    """
-    Compute the signed angle between two vectors.
-
-    Adapted from:
-    https://stackoverflow.com/a/16544330/2912349
-    """
-    x1, y1 = v1
-    x2, y2 = v2
-    dot = x1*x2 + y1*y2
-    det = x1*y2 - y1*x2
-    angle = np.arctan2(det, dot)
-    return angle
-
-
-def _get_n_points_on_a_circle(xy, radius, n, start_angle):
-    angles = np.linspace(0, 2*np.pi, n + 2)[1:-1]
-    angles = (angles + start_angle) % (2*np.pi)
-    positions = np.array([_get_point_on_a_circle(xy, radius, angle) for angle in angles])
-    return positions
-
-
-def _get_point_on_a_circle(origin, radius, angle):
-    x0, y0 = origin
-    x = x0 + radius * np.cos(angle)
-    y = y0 + radius * np.sin(angle)
-    return np.array([x, y])
 
 
 def _optimize_control_point_positions(
@@ -741,7 +719,7 @@ def _fit_splines_through_control_points(edge_to_control_points, expanded_node_po
         control_point_positions = [expanded_node_positions[source]] \
             + [expanded_node_positions[node] for node in control_points] \
             + [expanded_node_positions[target]]
-        path = bspline(np.array(control_point_positions), n=TOTAL_POINTS_PER_EDGE, degree=bspline_degree)
+        path = _bspline(np.array(control_point_positions), n=TOTAL_POINTS_PER_EDGE, degree=bspline_degree)
         edge_to_path[(source, target)] = path
     return edge_to_path
 
@@ -959,7 +937,7 @@ def draw_edge_labels(edge_list,
                       y1 * edge_label_position + y2 * (1.0 - edge_label_position))
 
             if rotate:
-                angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
+                ange += _get_angle(x2-x1, y2-y1, radians=True)
                 # make label orientation "right-side-up"
                 if angle > 90:
                     angle -= 180
@@ -1021,15 +999,6 @@ def _update_view(node_positions, ax, node_size=3.):
 
     ax.update_datalim(corners)
     ax.autoscale_view()
-    ax.get_figure().canvas.draw()
-
-
-def _make_pretty(ax):
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_aspect('equal')
-    ax.get_figure().set_facecolor('w')
-    ax.set_frame_on(False)
     ax.get_figure().canvas.draw()
 
 
@@ -1401,7 +1370,7 @@ class Graph(object):
 
                     # get tangent in degrees
                     dx, dy = _get_tangent_at_point(edge_artist.midline, edge_label_position)
-                    angle = np.arctan2(dy, dx) * 360 / (2.0 * np.pi)
+                    angle = _get_angle(dx, dy, radians=True)
 
                     # make label orientation "right-side-up"
                     if angle > 90:
@@ -1810,7 +1779,7 @@ class DraggableGraph(Graph, DraggableArtists):
             self.edge_label_artists[(n1, n2)].set_position((x, y))
 
             if self.edge_label_rotate:
-                angle = np.arctan2(y2-y1, x2-x1)/(2.0*np.pi)*360  # degrees
+                angle = _get_angle(dx, dy, radians=True)
                 # make label orientation "right-side-up"
                 if angle > 90:
                     angle -= 180
@@ -2011,8 +1980,7 @@ class AnnotateOnClick(object):
 
     def _get_text_alignment(self, vector):
         dx, dy = vector
-        angle = np.arctan2(dy, dx)/(2.0*np.pi)*360
-        angle %= 360 # arctan2 return angles in [-180, 180)
+        angle = _get_angle(dx, dy, radians=True) % 360
 
         if (45 <= angle < 135):
             horizontalalignment = 'center'
@@ -2074,7 +2042,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
         tangent = _get_tangent_at_point(artist.midline, 0.5)
         orthogonal_vector = _get_orthogonal_unit_vector(np.atleast_2d(tangent)).ravel()
         vector_pointing_outwards = self._get_vector_pointing_outwards(midpoint)
-        if get_angle_between(orthogonal_vector, vector_pointing_outwards) > 90:
+        if _get_interior_angle_between(orthogonal_vector, vector_pointing_outwards, radians=True) > 90:
             orthogonal_vector *= -1
 
         x, y = midpoint + 2 * artist.width * orthogonal_vector
