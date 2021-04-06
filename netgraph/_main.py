@@ -638,7 +638,8 @@ def _initialize_nonloops(source, target, control_points, node_positions):
     unit_vector = delta / distance
     output = dict()
     for ii, control_point in enumerate(control_points):
-        m = (ii+1) * distance / (len(control_points) + 1) # y = mx + b
+        # y = mx + b
+        m = (ii+1) * distance / (len(control_points) + 1)
         output[control_point] = m * unit_vector + node_positions[source]
     return output
 
@@ -1749,6 +1750,45 @@ class DraggableGraph(Graph, DraggableArtists):
         # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
 
+    def _move(self, event):
+
+        cursor_position = np.array([event.xdata, event.ydata])
+
+        nodes = []
+        for artist in self._selected_artists:
+            node = self._draggable_artist_to_node[artist]
+            self.node_positions[node] = cursor_position + self._offset[artist]
+            nodes.append(node)
+
+        self._update_subgraph_element_positions(nodes)
+
+
+    def _update_subgraph_element_positions(self, nodes=None):
+        """Determines stale nodes, edges, and labels (if any), and updates
+        their positions or paths."""
+
+        if nodes is None:
+            nodes = self._get_stale_nodes()
+
+        edges = self._get_stale_edges(nodes)
+
+        self._update_node_positions(nodes)
+
+        # In the interest of speed, we only compute the straight edge paths here.
+        # We will re-compute curved edge paths only on mouse button release,
+        # i.e. when the dragging motion has stopped.
+        self._update_straight_edge_positions(edges)
+
+        if hasattr(self, 'node_label_artists'):
+            self._update_node_label_positions(nodes)
+
+        if hasattr(self, 'edge_label_artists'):
+            self._update_edge_label_positions(edges)
+
+        # TODO: might want to force redraw after each individual update.
+        self.fig.canvas.draw_idle()
+
+
     def _get_stale_nodes(self):
         return [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
@@ -1757,24 +1797,6 @@ class DraggableGraph(Graph, DraggableArtists):
         if nodes is None:
             nodes = self._get_stale_nodes()
         return [(source, target) for (source, target) in self.edge_list if (source in nodes) or (target in nodes)]
-
-
-    def _move(self, event):
-
-        cursor_position = np.array([event.xdata, event.ydata])
-
-        nodes = self._get_stale_nodes()
-        for node, artist in zip(nodes, self._selected_artists):
-            self.node_positions[node] = cursor_position + self._offset[artist]
-        self._update_node_positions(nodes)
-
-        edges = self._get_stale_edges(nodes)
-        self._update_straight_edge_positions(edges)
-
-        if hasattr(self, 'edge_label_artists'): # move edge labels
-            self._update_edge_label_positions(edges)
-
-        self.fig.canvas.draw_idle()
 
 
     def _on_release(self, event):
@@ -1792,6 +1814,7 @@ class DraggableGraph(Graph, DraggableArtists):
                     self._update_edge_label_positions(edges)
 
         super()._on_release(event)
+
 
     # def _on_resize(self, event):
     #     if hasattr(self, 'node_labels'):
