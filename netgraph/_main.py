@@ -1182,9 +1182,6 @@ class Graph(object):
         for node in nodes:
             self.node_artists[node].xy = self.node_positions[node]
 
-        if hasattr(self, 'node_label_artists'):
-            self._update_node_label_positions(nodes)
-
 
     @_add_doc(draw_edges.__doc__)
     def draw_edges(self, *args, **kwargs):
