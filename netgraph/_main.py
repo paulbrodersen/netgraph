@@ -617,15 +617,15 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions, 
 
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
-        distance = np.linalg.norm(node_positions[target] - node_positions[source])
 
-        if distance > 1e-12:
+        if source != target:
             positions = _initialize_nonloops(source, target, control_points, node_positions)
         else:
-            # Source and target have the same position (probably a self-loop),
-            # such that using the strategy employed above the control points also end up at the same position.
-            # Instead we want to make a loop.
-            positions = _initialize_selfloops(source, control_points, node_positions, selfloop_radius)
+            # Source and target have the same position, such that
+            # using the strategy employed above the control points
+            # also end up at the same position. Instead we make a loop.
+            positions = _initialize_selfloops(source, control_points, node_positions,
+                                              selfloop_radius, origin, scale)
 
         control_point_positions.update(positions)
 
