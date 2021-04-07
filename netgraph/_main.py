@@ -1079,7 +1079,7 @@ class Graph(object):
 
 
     @_add_doc(draw.__doc__)
-    def draw(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
+    def draw(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', prettify=True, ax=None, **kwargs):
 
         # --------------------------------------------------------------------------------
         # TODO: split off / move to __init__ (potentially)
@@ -1154,6 +1154,7 @@ class Graph(object):
             if edge_labels:
                 self.draw_edge_labels(edge_labels, **kwargs)
 
+        if prettify:
             _make_pretty(self.ax)
 
 
