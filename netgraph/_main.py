@@ -21,7 +21,7 @@ from ._utils import (
     _make_pretty,
 )
 
-from ._layout import get_fruchterman_reingold_layout
+from ._layout import get_fruchterman_reingold_layout, _clip_to_frame
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
@@ -565,6 +565,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
 def _get_curved_edge_paths(edge_list, node_positions,
                            total_control_points_per_edge = 11,
                            bspline_degree                = 5,
+                           selfloop_radius               = 0.1,
                            origin                        = np.array([0, 0]),
                            scale                         = np.array([1, 1]),
                            k                             = None,
@@ -574,9 +575,11 @@ def _get_curved_edge_paths(edge_list, node_positions,
                            *args, **kwargs):
 
 
-    expanded_edge_list, edge_to_control_points = _insert_control_points(edge_list, total_control_points_per_edge)
+    expanded_edge_list, edge_to_control_points = _insert_control_points(
+        edge_list, total_control_points_per_edge)
 
-    control_point_positions = _initialize_control_point_positions(edge_to_control_points, node_positions)
+    control_point_positions = _initialize_control_point_positions(
+        edge_to_control_points, node_positions, selfloop_radius, origin, scale)
 
     expanded_node_positions = _optimize_control_point_positions(
         expanded_edge_list, node_positions, control_point_positions, total_control_points_per_edge,
@@ -609,7 +612,11 @@ def _insert_control_points(edge_list, total_control_points_per_edge=11):
     return expanded_edge_list, edge_to_control_points
 
 
-def _initialize_control_point_positions(edge_to_control_points, node_positions, selfloop_radius=0.1):
+def _initialize_control_point_positions(edge_to_control_points, node_positions,
+                                        selfloop_radius = 0.1,
+                                        origin          = np.array([0, 0]),
+                                        scale           = np.array([1, 1])
+):
     """
     Initialise the positions of the control points to positions on a straight line between source and target node.
     For self-loops, initialise the positions on a circle next to the node.
@@ -644,7 +651,7 @@ def _initialize_nonloops(source, target, control_points, node_positions):
     return output
 
 
-def _initialize_selfloops(source, control_points, node_positions, selfloop_radius):
+def _initialize_selfloops(source, control_points, node_positions, selfloop_radius, origin, scale):
     # To minimise overlap with other edges, we want the loop to be
     # on the side of the node away from the centroid of the graph.
     if len(node_positions) > 1:
@@ -662,8 +669,8 @@ def _initialize_selfloops(source, control_points, node_positions, selfloop_radiu
         _get_signed_angle_between(np.array([1., 0.]), node_positions[source] - selfloop_center)
     )
 
-    # # ensure that the loop stays within the bounding box
-    # selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
+    # ensure that the loop stays within the bounding box
+    selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
 
     output = dict()
     for ii, control_point in enumerate(control_points):
@@ -673,8 +680,8 @@ def _initialize_selfloops(source, control_points, node_positions, selfloop_radiu
 
 
 def _optimize_control_point_positions(
-        expanded_edge_list, node_positions, control_point_positions,
-        total_control_points_per_edge = 11,
+        expanded_edge_list, node_positions,
+        control_point_positions, total_control_points_per_edge,
         origin                        = np.array([0, 0]),
         scale                         = np.array([1, 1]),
         k                             = None,
