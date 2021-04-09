@@ -1023,18 +1023,39 @@ def _add_doc(value):
 
 class Graph(object):
 
-    def __init__(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', ax=None, **kwargs):
+    def __init__(self, graph,
+                 node_positions=None,
+                 node_shape='o',
+                 node_size=3.,
+                 node_edge_width=0.5,
+                 node_color='w',
+                 node_edge_color='k',
+                 node_alpha=1.0,
+                 node_zorder=2,
+                 node_labels=None,
+                 node_label_offset=(0., 0.),
+                 node_label_fontdict={},
+                 edge_width=1.,
+                 edge_color='k',
+                 edge_alpha=1.,
+                 edge_zorder=1,
+                 arrows=False,
+                 curved=False,
+                 edge_labels=None,
+                 edge_label_position=0.5,
+                 edge_label_rotate=True,
+                 edge_label_fontdict={},
+                 edge_cmap='RdGy',
+                 prettify=True,
+                 ax=None,
+                 *args, **kwargs,
+    ):
         """
-        Initialises the Graph object.
-        Upon initialisation, it will try to do "the right thing".
+        Parses the given graph and initialises the Graph object.
 
-        For finer control of the individual draw elements,
-        and a complete list of keyword arguments, see the class methods:
-
-            draw_nodes()
-            draw_edges()
-            draw_node_labels()
-            draw_edge_labels()
+        Upon initialisation, it will try to do "the right thing". Specifically, it will:
+        - determine if the graph is weighted, and map weights to edge colors if that is the case;
+        - determine if the graph is directed, and set `arrows` to True is that is the case;
 
         Arguments
         ----------
@@ -1052,16 +1073,96 @@ class Graph(object):
 
         node_positions : dict node : (float, float)
             Mapping of nodes to (x, y) positions.
-            If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+            If 'graph' is an adjacency matrix, nodes must be integers in range 0 to number of nodes - 1.
+
+        node_shape : string or dict node : string (default 'o')
+           The shape of the node. Specification is as for matplotlib.scatter
+           marker, i.e. one of 'so^>v<dph8'.
+           If a single string is provided all nodes will have the same shape.
+
+        node_size : scalar or dict node : float (default 3.)
+           Size (radius) of nodes.
+           NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+
+        node_edge_width : scalar or dict node : float (default 0.5)
+           Line width of node marker border.
+           NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+
+        node_color : matplotlib color specification or dict node : color (default 'w')
+           Node color.
+
+        node_edge_color : matplotlib color specification or dict node : color (default 'k')
+           Node edge color.
+
+        node_alpha : scalar or dict node : float (default 1.)
+           The node transparency.
+
+        node_zorder : scalar or dict node : float (default 2)
+           Order in which to plot the nodes.
 
         node_labels : dict node : str (default None)
            Mapping of nodes to node labels.
            Only nodes in the dictionary are labelled.
-           If 'graph' is an adjacency matrix, nodes must be integers in range(n).
+           If 'graph' is an adjacency matrix, nodes must be integers in range 0 to number of nodes - 1.
 
-        edge_labels : dict (source, target) : str (default None)
+        node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
+            (x, y) offset from node centre of label position.
+
+        node_label_fontdict : dict
+            Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - size (adjusted to fit into node artists if offset is (0, 0))
+                - horizontalalignment (default here: 'center')
+                - verticalalignment (default here: 'center')
+                - clip_on (default here: False)
+
+        edge_width : float or dict (source, target) : width (default 1.)
+            Line width of edges.
+            NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
+
+        edge_color : matplotlib color specification or dict (source, target) : color (default 'k')
+           Edge color.
+
+        edge_alpha : float or dict (source, target) : float (default 1.)
+            The edge transparency,
+
+        edge_zorder : int or dict (source, target) : int (default 1)
+            Order in which to plot the edges.
+            If None, the edges will be plotted in the order they appear in 'adjacency'.
+            Note: graphs typically appear more visually pleasing if darker edges
+            are plotted on top of lighter edges.
+
+        arrows : bool, optional (default False)
+            If True, draw edges with arrow heads.
+
+        curved : bool, optional (default False)
+            If True, draw edges as curved splines.
+
+        edge_labels : dict edge : str
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
+
+        edge_label_position : float
+            Relative position along the edge where the label is placed.
+                head   : 0.
+                centre : 0.5 (default)
+                tail   : 1.
+
+        edge_label_rotate : bool (default True)
+            If True, edge labels are rotated such that they track the orientation of their edges.
+            If False, edge labels are not rotated; the angle of the text is parallel to the axis.
+
+        edge_label_fontdict : dict
+            Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - horizontalalignment (default here 'center'),
+                - verticalalignment (default here 'center')
+                - clip_on (default here False),
+                - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
+                - zorder (default here 1000),
+                - rotation (determined by edge_label_rotate argument)
 
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -1075,15 +1176,6 @@ class Graph(object):
 
         """
 
-        self.draw(graph, node_positions, node_labels, edge_labels, edge_cmap, ax, **kwargs)
-
-
-    @_add_doc(draw.__doc__)
-    def draw(self, graph, node_positions=None, node_labels=None, edge_labels=None, edge_cmap='RdGy', prettify=True, ax=None, **kwargs):
-
-        # --------------------------------------------------------------------------------
-        # TODO: split off / move to __init__ (potentially)
-
         # Create axis if none is given.
         if ax is None:
             self.ax = plt.gca()
@@ -1091,38 +1183,48 @@ class Graph(object):
             self.ax = ax
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        self.edge_list, self.edge_weight, is_directed = parse_graph(graph)
+        # TODO: parse_graph also returns nodes
+        self.edge_list, edge_weight, directed = parse_graph(graph)
+        self.nodes = _get_unique_nodes(self.edge_list)
 
         # Color and reorder edges for weighted graphs.
-        if self.edge_weight:
-
+        if edge_weight:
             # If the graph is weighted, we want to visualise the weights using color.
             # Edge width is another popular choice when visualising weighted networks,
             # but if the variance in weights is large, this typically results in less
             # visually pleasing results.
-            self.edge_color  = get_color(self.edge_weight, cmap=edge_cmap)
-            kwargs.setdefault('edge_color', self.edge_color)
+            edge_color = get_color(edge_weight, cmap=edge_cmap)
 
             # Plotting darker edges over lighter edges typically results in visually
             # more pleasing results. Here we hence specify the relative order in
             # which edges are plotted according to the color of the edge.
-            self.edge_zorder = _get_zorder(self.edge_color)
-            kwargs.setdefault('edge_zorder', self.edge_zorder)
+            edge_zorder = _get_zorder(edge_color)
 
         # Plot arrows if the graph has bi-directional edges.
-        if is_directed:
-            kwargs.setdefault('draw_arrows', True)
-        else:
-            kwargs.setdefault('draw_arrows', False)
+        if directed:
+            arrows = True
 
-        # keep track of kwargs
-        self.kwargs = kwargs
+        # Convert all node and edge parameters to dictionaries.
+        node_shape      = self._normalize_string_argument(node_shape, self.nodes, 'node_shape')
+        node_size       = self._normalize_numeric_argument(node_size, self.nodes, 'node_size')
+        node_edge_width = self._normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
+        node_color      = self._normalize_color_argument(node_color, self.nodes, 'node_color')
+        node_edge_color = self._normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
+        node_alpha      = self._normalize_numeric_argument(node_alpha, self.nodes, 'node_alpha')
+        node_zorder     = self._normalize_numeric_argument(node_zorder, self.nodes, 'node_zorder')
+        edge_width      = self._normalize_numeric_argument(edge_width, self.edge_list, 'edge_width')
+        edge_color      = self._normalize_color_argument(edge_color, self.edge_list, 'edge_color')
+        edge_alpha      = self._normalize_numeric_argument(edge_alpha, self.edge_list, 'edge_alpha')
+        edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edge_list, 'edge_zorder')
 
-        # --------------------------------------------------------------------------------
+        # Rescale.
+        node_size = self._rescale(node_size, BASE_NODE_SIZE)
+        node_edge_width = self._rescale(node_edge_width, BASE_NODE_SIZE)
+        edge_width = self._rescale(edge_width, BASE_EDGE_WIDTH)
 
         # Initialise node positions.
         if node_positions is None:
-            self.node_positions = self._get_node_positions(self.edge_list, **kwargs)
+            self.node_positions = self._get_node_positions(self.edge_list)
         else:
             if set(node_positions.keys()).issuperset(_get_unique_nodes(self.edge_list)):
                 # All node positions are given; nothing left to do.
@@ -1133,29 +1235,95 @@ class Graph(object):
                 # 2) there are some unconnected nodes in the graph.
                 self.node_positions = self._get_node_positions(self.edge_list,
                                                                node_positions = node_positions,
-                                                               fixed_nodes    = node_positions.keys(),
-                                                               **kwargs)
+                                                               fixed_nodes    = node_positions.keys())
 
-        # Draw plot elements.
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
+        # Draw plot elements
+        self.edge_artists = dict()
+        self.draw_edges(self.edge_list, self.node_positions,
+                        node_size, edge_width, edge_color, edge_alpha,
+                        edge_zorder, arrows, curved)
 
-            self.draw_edges(self.edge_list, self.node_positions, ax=self.ax, **kwargs)
-            self.draw_nodes(self.node_positions, ax=self.ax, **kwargs)
+        self.node_artists = dict()
+        self.draw_nodes(self.nodes, self.node_positions,
+                        node_shape, node_size, node_edge_width,
+                        node_color, node_edge_color, node_alpha, node_zorder)
 
-            # Improve default layout of axis.
-            # This function needs to be called before any font sizes are adjusted,
-            # as the axis dimensions affect the effective font size.
-            self._update_view()
+        # This function needs to be called before any font sizes are adjusted,
+        # as the axis dimensions affect the effective font size.
+        self._update_view()
 
-            if node_labels:
-                self.draw_node_labels(node_labels, **kwargs)
+        if node_labels:
+            node_label_fontdict.setdefault('horizontalalignment', 'center')
+            node_label_fontdict.setdefault('verticalalignment', 'center')
+            node_label_fontdict.setdefault('clip_on', False)
 
-            if edge_labels:
-                self.draw_edge_labels(edge_labels, **kwargs)
+            if np.all(np.isclose(node_label_offset, (0, 0))):
+                # Labels are centered on node artists.
+                # Set fontsize such that labels fit the diameter of the node artists.
+                size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
+                node_label_fontdict.setdefault('size', size)
+
+            self.node_label_artists = dict()
+            self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
+
+        if edge_labels:
+            self.edge_label_position = edge_label_position
+            self.edge_label_rotate = edge_label_rotate
+            edge_label_fontdict.setdefault('bbox', dict(boxstyle='round',
+                                                        ec=(1.0, 1.0, 1.0),
+                                                        fc=(1.0, 1.0, 1.0)))
+            edge_label_fontdict.setdefault('horizontalalignment', 'center')
+            edge_label_fontdict.setdefault('verticalalignment', 'center')
+            edge_label_fontdict.setdefault('clip_on', False)
+            edge_label_fontdict.setdefault('zorder', 1000)
+
+            self.edge_label_artists = dict()
+            self.draw_edge_labels(edge_labels, self.edge_label_position,
+                                  self.edge_label_rotate, edge_label_fontdict)
 
         if prettify:
             _make_pretty(self.ax)
+
+
+    def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
+        # TODO: check dict contents for validity and completeness
+        if isinstance(numeric_or_dict, (int, float)):
+            return {key : numeric_or_dict for key in dict_keys}
+        elif isinstance(node_size, dict):
+            return numeric_or_dict
+        else:
+            msg = f"The type of {variable_name} has to be either a int, float, or a dict."
+            msg += f"The current type is {type(numeric_or_dict)}."
+            raise TypeError(msg)
+
+
+    def _normalize_string_argument(self, str_or_dict, dict_keys, variable_name):
+        # TODO: check dict contents for validity and completeness
+        if isinstance(str_or_dict, str):
+            return {key : str_or_dict for key in dict_keys}
+        elif isinstance(str_or_dict, dict):
+            return str_or_dict
+        else:
+            msg = f"The type of {variable_name} has to be either a str or a dict."
+            msg += f"The current type is {type(str_or_dict)}."
+            raise TypeError(msg)
+
+
+    def _normalize_color_argument(self, color_or_dict, dict_keys, variable_name):
+        # TODO: check dict contents for validity and completeness
+        if matplotlib.colors.is_color_like(color_or_dict):
+            return {key : color_or_dict for key in dict_keys}
+        elif color_or_dict is None:
+            return {key : color_or_dict for key in dict_keys}
+        elif isinstance(color_or_dict, dict):
+            return color_or_dict
+        else:
+            msg = f"The type of {variable_name} has to be either a valid matplotlib color specification or a dict."
+            raise TypeError(msg)
+
+
+    def _rescale(self, mydict, scalar):
+        return {key: value * scalar for (key, value) in mydict.items()}
 
 
     def _get_node_positions(self, *args, **kwargs):
@@ -1166,22 +1334,62 @@ class Graph(object):
         return get_fruchterman_reingold_layout(*args, **kwargs)
 
 
-    @_add_doc(draw_nodes.__doc__)
-    def draw_nodes(self, *args, **kwargs):
+    def draw_nodes(self, nodes, node_positions, node_shape, node_size,
+                   node_edge_width, node_color, node_edge_color, node_alpha,
+                   node_zorder):
+        """
+        Draw node markers at specified positions.
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            node_artists = draw_nodes(*args, **kwargs)
+        Arguments
+        ----------
+        nodes : list
+            List of node IDs.
 
-        if not hasattr(self, 'node_artists'):
-            self.node_artists = node_artists
-        else:
-            for key, artist in node_artists.items():
-                if key in self.node_artists:
-                    # remove old artist
-                    self.node_artists[key].remove()
-                # assign new one
-                self.node_artists[key] = artist
+        node_positions : dict node : (float, float)
+            Mapping of nodes to (x, y) positions.
+
+        node_shape : dict node : string
+           The shape of the node. Specification is as for matplotlib.scatter
+           marker, i.e. one of 'so^>v<dph8'.
+
+        node_size : dict node : float
+           Size (radius) of nodes.
+
+        node_edge_width : dict node : float
+           Line width of node marker border.
+
+        node_color : dict node : matplotlib color specification
+           Node color.
+
+        node_edge_color : dict node : matplotlib color specification
+           Node edge color.
+
+        node_alpha : dict node : float
+           The node transparency.
+
+        node_zorder : dict node : int
+            The z-order of nodes.
+
+        Updates
+        -------
+        node_artists: dict node : artist
+            Mapping of nodes to the node artists.
+
+        """
+        for node in nodes:
+            node_artist = NodeArtist(shape=node_shape[node],
+                                     xy=node_positions[node],
+                                     radius=node_size[node],
+                                     facecolor=node_color[node],
+                                     edgecolor=node_edge_color[node],
+                                     linewidth=node_edge_width[node],
+                                     alpha=node_alpha[node],
+                                     zorder=node_zorder[node])
+            self.ax.add_artist(node_artist)
+
+            if node in self.node_artists:
+                self.node_artists[node].remove()
+            self.node_artists[node] = node_artist
 
 
     def _update_node_positions(self, nodes, node_positions=None):
@@ -1192,22 +1400,91 @@ class Graph(object):
             self.node_artists[node].xy = self.node_positions[node]
 
 
-    @_add_doc(draw_edges.__doc__)
-    def draw_edges(self, *args, **kwargs):
+    def draw_edges(self, edge_list, node_positions, node_size, edge_width,
+                   edge_color, edge_alpha, edge_zorder, arrows, curved):
+        """
+        Draw the edges of the network.
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore", category=DeprecationWarning)
-            artists = draw_edges(*args, **kwargs)
+        Arguments
+        ----------
+        edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+            List of edges. Each tuple corresponds to an edge defined by (source, target).
 
-        if not hasattr(self, 'edge_artists'):
-            self.edge_artists = artists
+        node_positions : dict node : (float, float)
+            Mapping of nodes to (x,y) positions
+
+        node_size : dict node : float
+            Size (radius) of nodes. Required to offset edges when drawing arrow heads,
+            such that the arrow heads are not occluded.
+
+        edge_width : dict (source, target) : width
+            Line width of edges.
+
+        edge_color :  dict (source, target) : matplotlib color specification
+           Edge color.
+
+        edge_alpha : dict (source, target) : float
+            The edge transparency,
+
+        edge_zorder : dict (source, target) : int
+            Order in which to plot the edges.
+            Hint: graphs typically appear more visually pleasing if darker edges
+            are plotted on top of lighter edges.
+
+        arrows : bool
+            If True, draws edges with arrow heads.
+
+        curved : bool
+            If True, draw edges as curved splines.
+
+        Updates
+        -------
+        self.edge_artists: dict (source, target) : artist
+            Mapping of edges to EdgeArtists.
+
+        """
+
+        if not curved:
+            edge_paths = _get_straight_edge_paths(edge_list, node_positions, edge_width)
         else:
-            for key, artist in artists.items():
-                if key in self.edge_artists:
-                    # remove old artist
-                    self.edge_artists[key].remove()
-                # assign new one
-                self.edge_artists[key] = artist
+            edge_paths = _get_curved_edge_paths(edge_list, node_positions)
+
+        # Plot edges sorted by edge order.
+        # Note that we are only honouring the relative z-order, not the absolute z-order.
+        for edge in sorted(edge_zorder, key=lambda k: edge_zorder[k]):
+
+            source, target = edge
+            if ((target, source) in edge_list) and not curved: # i.e. bidirectional, straight edges
+                shape = 'right' # i.e. plot half arrow / thin line shifted to the right
+            else:
+                shape = 'full'
+
+            if arrows:
+                head_length = 2 * edge_width[edge]
+                head_width = 3 * edge_width[edge]
+            else:
+                head_length = 1e-10 # 0 throws error
+                head_width = 1e-10 # 0 throws error
+
+            edge_artist = EdgeArtist(
+                midline     = edge_paths[edge],
+                width       = edge_width[edge],
+                facecolor   = edge_color[edge],
+                alpha       = edge_alpha[edge],
+                head_length = head_length,
+                head_width  = head_width,
+                zorder      = 1,
+                edgecolor   = 'none',
+                linewidth   = 0.1,
+                offset      = node_size[target],
+                shape       = shape,
+                curved      = curved,
+            )
+            self.ax.add_artist(edge_artist)
+
+            if edge in self.edge_artists:
+                self.edge_artists[edge].remove()
+            self.edge_artists[edge] = edge_artist
 
 
     def _update_straight_edge_positions(self, edges):
@@ -1220,9 +1497,8 @@ class Graph(object):
             x0, y0 = self.node_positions[source]
             x1, y1 = self.node_positions[target]
 
-            # shift edge right if directional
-            # TODO: potentially move shift into FancyArrow (shape='right')
-            if (target, source) in edges: # bidirectional
+            # shift edge right if bi-directional
+            if (target, source) in edges:
                 x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=0.5*self.edge_artists[(source, target)].width)
 
             # update midline & path
@@ -1249,7 +1525,6 @@ class Graph(object):
                     # y = mx + b
                     m = (ii+1) * distance / (TOTAL_POINTS_PER_EDGE + 1)
                     fixed_positions[uuid4()] = m * unit_vector + edge_origin
-
         fixed_positions.update(self.node_positions)
         edge_paths = _get_curved_edge_paths(edges, fixed_positions)
 
@@ -1258,10 +1533,7 @@ class Graph(object):
             self.ax.draw_artist(self.edge_artists[edge])
 
 
-    def draw_node_labels(self, node_labels,
-                         node_label_offset=(0., 0.),
-                         node_label_fontdict={},
-                         **kwargs):
+    def draw_node_labels(self, node_labels, node_label_offset, node_label_fontdict):
         """
         Draw node labels.
 
@@ -1271,7 +1543,7 @@ class Graph(object):
            Mapping of nodes to labels.
            Only nodes in the dictionary are labelled.
 
-        node_label_offset: 2-tuple or equivalent iterable (default (0.,0.))
+        node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
             (x, y) offset from node centre of label position.
 
         node_label_fontdict : dict
@@ -1283,59 +1555,21 @@ class Graph(object):
                 - verticalalignment (default here: 'center')
                 - clip_on (default here: False)
 
-        Returns/Sets
-        ------------
+        Updates:
+        --------
         self.node_label_artists: dict
-            Dictionary mapping node indices to text objects.
+            Dictionary mapping nodes to text objects.
 
         """
 
-        # book keeping
-        if not hasattr(self, 'node_labels'):
-            self.node_labels = node_labels
-        else:
-            self.node_labels.update(node_labels)
-
-        self.node_label_offset = node_label_offset
-
-        if not hasattr(self, 'node_label_fontdict'):
-            if np.all(np.isclose(node_label_offset, (0,0))): # labels are supposed to be inside node artists
-                # determine fontsize that fits the diameter of the node artists
-                size = self._get_font_size(self.node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
-                self.node_label_fontdict = dict(
-                    size=size,
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                    clip_on=False,
-                )
-            else:
-                self.node_label_fontdict = dict(
-                    horizontalalignment='center',
-                    verticalalignment='center',
-                    clip_on=False,
-                )
-        self.node_label_fontdict.update(node_label_fontdict)
-
-        dx, dy = self.node_label_offset
-
-        artists = dict()
+        dx, dy = node_label_offset
         for node, label in node_labels.items():
-            if node in self.node_positions:
-                x, y = self.node_positions[node]
-                artists[node] = self.ax.text(x+dx, y+dy, label, **self.node_label_fontdict)
-            else:
-                warnings.warn("Cannot draw node label for node with ID {}. The node has no position assigned to it.".format(node))
-                continue
+            x, y = self.node_positions[node]
+            artist = self.ax.text(x+dx, y+dy, label, **node_label_fontdict)
 
-        if not hasattr(self, 'node_label_artists'):
-            self.node_label_artists = artists
-        else:
-            for key, artist in artists.items():
-                if key in self.node_label_artists:
-                    # remove old artist
-                    self.node_label_artists[key].remove()
-                # assign new one
-                self.node_label_artists[key] = artist
+            if node in self.node_label_artists:
+                self.node_label_artists[node].remove()
+            self.node_label_artists[node] = artist
 
 
     def _get_font_size(self, node_labels, node_label_fontdict):
@@ -1364,21 +1598,21 @@ class Graph(object):
     def _update_node_label_positions(self, nodes, node_label_positions=None):
         if node_label_positions is None:
             node_label_positions = self.node_positions
+
+        dx, dy = self.node_label_offset
         for node in nodes:
-            self.node_label_artists[node].set_position(node_label_positions[node])
+            x, y = node_label_positions[node]
+            self.node_label_artists[node].set_position(x + dx, y + dy)
 
 
-    def draw_edge_labels(self, edge_labels,
-                         edge_label_position=0.5,
-                         edge_label_rotate=True,
-                         edge_label_fontdict={},
-                         **kwargs):
+    def draw_edge_labels(self, edge_labels, edge_label_position,
+                         edge_label_rotate, edge_label_fontdict):
         """
         Draw edge labels.
 
         Arguments
         ---------
-        edge_labels : dict (source, target) : str
+        edge_labels : dict edge : str
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
 
@@ -1388,92 +1622,63 @@ class Graph(object):
                 centre : 0.5 (default)
                 tail   : 1.
 
-        edge_label_rotate : bool (default True)
+        edge_label_rotate : bool
             If True, edge labels are rotated such that they track the orientation of their edges.
             If False, edge labels are not rotated; the angle of the text is parallel to the axis.
 
-        edge_label_fontdict : dict or None
+        edge_label_fontdict : dict
             Keyword arguments passed to matplotlib.text.Text.
-            For a full list of available arguments see the matplotlib documentation.
-            The following default values differ from the defaults for matplotlib.text.Text:
-                - horizontalalignment (default here 'center'),
-                - verticalalignment (default here 'center')
-                - clip_on (default here False),
-                - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-                - zorder (default here 1000),
-                - rotation (determined by edge_label_rotate argument)
 
-        Returns/Sets
-        ------------
-        self.edge_label_artists: dict (source, target) : text object
+        Updates
+        -------
+        self.edge_label_artists: dict edge : text object
             Mapping of edges to edge label artists.
 
         """
 
-        # book keeping
-        if not hasattr(self, 'edge_labels'):
-            self.edge_labels = edge_labels
-        else:
-            self.edge_labels.update(edge_labels)
+        for edge, label in edge_labels.items():
 
-        self.edge_label_position = edge_label_position
-        self.edge_label_rotate = edge_label_rotate
-        self.edge_label_fontdict = dict(
-            bbox=dict(boxstyle='round',
-                      ec=(1.0, 1.0, 1.0),
-                      fc=(1.0, 1.0, 1.0)),
-            horizontalalignment='center',
-            verticalalignment='center',
-            clip_on=False,
-            zorder=10000
-        )
-        self.edge_label_fontdict.update(edge_label_fontdict)
+            edge_artist = self.edge_artists[edge]
 
-        text_items = {}
-        for (n1, n2), label in edge_labels.items():
+            if self._is_selfloop(edge) and (edge_artist.curved is False):
+                msg = "Plotting of edge labels for self-loops not supported for straight edges."
+                msg += "\nIgnoring edge with label: {}".format(label)
+                warnings.warn(msg)
+                continue
 
-            edge_artist = self.edge_artists[(n1, n2)]
+            x, y = _get_point_along_spline(edge_artist.midline, edge_label_position)
 
-            if (n1 != n2) or edge_artist.curved:
+            if edge_label_rotate:
 
-                x, y = _get_point_along_spline(edge_artist.midline, edge_label_position)
+                # get tangent in degrees
+                dx, dy = _get_tangent_at_point(edge_artist.midline, edge_label_position)
+                angle = _get_angle(dx, dy, radians=True)
 
-                if self.edge_label_rotate:
+                # make label orientation "right-side-up"
+                if angle > 90:
+                    angle -= 180
+                if angle < - 90:
+                    angle += 180
 
-                    # get tangent in degrees
-                    dx, dy = _get_tangent_at_point(edge_artist.midline, edge_label_position)
-                    angle = _get_angle(dx, dy, radians=True)
+                # transform data coordinate angle to screen coordinate angle
+                xy = np.array((x, y))
+                trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
+                                                                 xy.reshape((1, 2)))[0]
+            else:
+                trans_angle = 0.0
 
-                    # make label orientation "right-side-up"
-                    if angle > 90:
-                        angle -= 180
-                    if angle < - 90:
-                        angle += 180
+            edge_label_artist = self.ax.text(x, y, label,
+                                             rotation=trans_angle,
+                                             transform=self.ax.transData,
+                                             **edge_label_fontdict)
 
-                    # transform data coordinate angle to screen coordinate angle
-                    xy = np.array((x, y))
-                    trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
-                                                                     xy.reshape((1, 2)))[0]
-                else:
-                    trans_angle = 0.0
+            if edge in self.edge_label_artists:
+                self.edge_label_artists[edge].remove()
+            self.edge_label_artists[edge] = edge_label_artist
 
-                text_items[(n1, n2)] = self.ax.text(x, y, label,
-                                                    rotation=trans_angle,
-                                                    transform=self.ax.transData,
-                                                    **self.edge_label_fontdict)
 
-            else: # self-loop and straight edge
-                warnings.warn("Plotting of edge labels for self-loops not supported for straight edges. Ignoring edge with label: {}".format(label))
-
-        if not hasattr(self, 'edge_label_artists'):
-            self.edge_label_artists = text_items
-        else:
-            for key, artist in text_items.items():
-                if key in self.edge_label_artists:
-                    # remove old artist
-                    self.edge_label_artists[key].remove()
-                # assign new one
-                self.edge_label_artists[key] = artist
+    def _is_selfloop(self, edge):
+        return True if edge[0] == edge[1] else False
 
 
     def _update_edge_label_positions(self, edges):
