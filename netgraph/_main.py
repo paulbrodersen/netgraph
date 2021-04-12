@@ -1286,10 +1286,11 @@ class Graph(object):
 
 
     def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
-        # TODO: check dict contents for validity and completeness
         if isinstance(numeric_or_dict, (int, float)):
             return {key : numeric_or_dict for key in dict_keys}
         elif isinstance(node_size, dict):
+            self._check_completeness(set(numeric_or_dict), dict_keys, variable_name)
+            self._check_types(numeric_or_dict, (int, float), variable_name)
             return numeric_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a int, float, or a dict."
@@ -1297,11 +1298,31 @@ class Graph(object):
             raise TypeError(msg)
 
 
+    def _check_completeness(self, given_set, desired_set):
+        complete = given_set.issuperset(desired_set)
+        if not complete:
+            missing = desired_set - given_set
+            msg = f"{variable_name} is incomplete. The following elements are missing:"
+            for item in missing:
+                msg += f"\n-{item}"
+            raise ValueError(msg)
+
+
+    def _check_types(self, items, types, variable_name):
+        for item in items:
+            if not isinstance(item, types):
+                msg = f"Item {item} in {variable_name} is of the wrong type."
+                msg += f"\nExpected type: {types}"
+                msg += f"\nActual type: {type(item)}"
+                raise TypeError(msg)
+
+
     def _normalize_string_argument(self, str_or_dict, dict_keys, variable_name):
-        # TODO: check dict contents for validity and completeness
         if isinstance(str_or_dict, str):
             return {key : str_or_dict for key in dict_keys}
         elif isinstance(str_or_dict, dict):
+            self._check_completeness(set(str_or_dict), dict_keys, variable_name)
+            self._check_types(str_or_dict, str, variable_name)
             return str_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a str or a dict."
@@ -1310,12 +1331,13 @@ class Graph(object):
 
 
     def _normalize_color_argument(self, color_or_dict, dict_keys, variable_name):
-        # TODO: check dict contents for validity and completeness
         if matplotlib.colors.is_color_like(color_or_dict):
             return {key : color_or_dict for key in dict_keys}
         elif color_or_dict is None:
             return {key : color_or_dict for key in dict_keys}
         elif isinstance(color_or_dict, dict):
+            self._check_completeness(set(color_or_dict), dict_keys, variable_name)
+            # TODO: assert that each element is a valid color
             return color_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a valid matplotlib color specification or a dict."
