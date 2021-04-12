@@ -1021,9 +1021,10 @@ def _add_doc(value):
     return _doc
 
 
-class Graph(object):
+class BaseGraph(object):
 
-    def __init__(self, graph,
+    def __init__(self, edge_list,
+                 nodes=None,
                  node_positions=None,
                  node_shape='o',
                  node_size=3.,
@@ -1045,31 +1046,19 @@ class Graph(object):
                  edge_label_position=0.5,
                  edge_label_rotate=True,
                  edge_label_fontdict={},
-                 edge_cmap='RdGy',
                  prettify=True,
                  ax=None,
                  *args, **kwargs,
     ):
         """
-        Parses the given graph and initialises the Graph object.
-
-        Upon initialisation, it will try to do "the right thing". Specifically, it will:
-        - determine if the graph is weighted, and map weights to edge colors if that is the case;
-        - determine if the graph is directed, and set `arrows` to True is that is the case;
 
         Arguments
         ----------
-        graph: various formats
-            Graph object to plot. Various input formats are supported.
-            In order of precedence:
-                - Edge list:
-                    Iterable of (source, target) or (source, target, weight) tuples,
-                    or equivalent (m, 2) or (m, 3) ndarray.
-                - Adjacency matrix:
-                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
-                    The absence of a connection is indicated by a zero.
-                - igraph.Graph object
-                - networkx.Graph object
+        edge_list : list of (source node, target node) 2-tuples
+            List of edges.
+
+        nodes : list of node IDs or None (default None)
+            If None, `nodes` is initialised to the set of the flattened `edge_list`.
 
         node_positions : dict node : (float, float)
             Mapping of nodes to (x, y) positions.
@@ -1175,34 +1164,16 @@ class Graph(object):
         draw_edge_labels()
 
         """
+        self.edge_list = edge_list
 
-        # Create axis if none is given.
-        if ax is None:
-            self.ax = plt.gca()
+        nodes_in_edge_list = _get_unique_nodes(edge_list)
+        if nodes is None:
+            self.nodes = nodes_in_edge_list
         else:
-            self.ax = ax
-
-        # Accept a variety of formats for 'graph' and convert to common denominator.
-        # TODO: parse_graph also returns nodes
-        self.edge_list, edge_weight, directed = parse_graph(graph)
-        self.nodes = _get_unique_nodes(self.edge_list)
-
-        # Color and reorder edges for weighted graphs.
-        if edge_weight:
-            # If the graph is weighted, we want to visualise the weights using color.
-            # Edge width is another popular choice when visualising weighted networks,
-            # but if the variance in weights is large, this typically results in less
-            # visually pleasing results.
-            edge_color = get_color(edge_weight, cmap=edge_cmap)
-
-            # Plotting darker edges over lighter edges typically results in visually
-            # more pleasing results. Here we hence specify the relative order in
-            # which edges are plotted according to the color of the edge.
-            edge_zorder = _get_zorder(edge_color)
-
-        # Plot arrows if the graph has bi-directional edges.
-        if directed:
-            arrows = True
+            msg = "There are some node IDs in the edgelist not present in `nodes`. "
+            msg += "`nodes` has to be the superset of `edge_list`."
+            assert set(nodes).issuperset(nodes_in_edge_list), msg
+            self.nodes = nodes
 
         # Convert all node and edge parameters to dictionaries.
         node_shape      = self._normalize_string_argument(node_shape, self.nodes, 'node_shape')
@@ -1226,7 +1197,7 @@ class Graph(object):
         if node_positions is None:
             self.node_positions = self._get_node_positions(self.edge_list)
         else:
-            if set(node_positions.keys()).issuperset(_get_unique_nodes(self.edge_list)):
+            if set(node_positions.keys()).issuperset(self.nodes):
                 # All node positions are given; nothing left to do.
                 self.node_positions = node_positions
             else:
@@ -1236,6 +1207,12 @@ class Graph(object):
                 self.node_positions = self._get_node_positions(self.edge_list,
                                                                node_positions = node_positions,
                                                                fixed_nodes    = node_positions.keys())
+
+        # Create axis if none is given.
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
 
         # Draw plot elements
         self.edge_artists = dict()
@@ -1761,6 +1738,62 @@ class Graph(object):
         self.ax.update_datalim(corners)
         self.ax.autoscale_view()
         self.ax.get_figure().canvas.draw()
+
+
+class Graph(BaseGraph):
+
+    def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
+        """
+        Parses the given graph and initialises the BaseGraph object.
+
+        Upon initialisation, it will try to do "the right thing". Specifically, it will:
+        - determine if the graph is weighted, and map weights to edge colors if that is the case;
+        - determine if the graph is directed, and set `arrows` to True is that is the case;
+
+        Arguments
+        ----------
+        graph: various formats
+            Graph object to plot. Various input formats are supported.
+            In order of precedence:
+                - Edge list:
+                    Iterable of (source, target) or (source, target, weight) tuples,
+                    or equivalent (m, 2) or (m, 3) ndarray.
+                - Adjacency matrix:
+                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
+                    The absence of a connection is indicated by a zero.
+                - igraph.Graph object
+                - networkx.Graph object
+        """
+
+        # Accept a variety of formats for 'graph' and convert to common denominator.
+        # TODO: parse_graph also returns nodes
+        edge_list, edge_weight, directed = parse_graph(graph)
+        nodes = _get_unique_nodes(edge_list)
+
+        # Color and reorder edges for weighted graphs.
+        if edge_weight:
+            # If the graph is weighted, we want to visualise the weights using color.
+            # Edge width is another popular choice when visualising weighted networks,
+            # but if the variance in weights is large, this typically results in less
+            # visually pleasing results.
+            edge_color = get_color(edge_weight, cmap=edge_cmap)
+
+            # Plotting darker edges over lighter edges typically results in visually
+            # more pleasing results. Here we hence specify the relative order in
+            # which edges are plotted according to the color of the edge.
+            edge_zorder = _get_zorder(edge_color)
+        else: # set to default
+            edge_color = 'k'
+            edge_zorder = 1
+
+        # Plot arrows if the graph has bi-directional edges.
+        if directed:
+            arrows = True
+        else:
+            arrows = False
+
+        super().__init__(edge_list, nodes, edge_color=edge_color,
+                         edge_zorder=edge_zorder, arrows=arrows, *args, **kwargs)
 
 
 class DraggableArtists(object):
