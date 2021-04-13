@@ -485,14 +485,14 @@ def _get_fr_repulsion(distance, direction, k):
     # NaNs is just another NaN.
     # Also we do not want to ignore NaNs by using np.nansum, as then we would
     # potentially mask the existence of off-diagonal zero distances.
-    vectors   = _set_diagonal(vectors, 0)
+    np.fill_diagonal(vectors, 0)
     return np.sum(vectors, axis=0)
 
 
 def _get_fr_attraction(distance, direction, adjacency, k):
     magnitude = 1./k * distance**2 * adjacency
     vectors   = -direction * magnitude[..., None] # NB: the minus!
-    vectors   = _set_diagonal(vectors, 0)
+    np.fill_diagonal(vectors, 0)
     return np.sum(vectors, axis=0)
 
 
@@ -514,13 +514,6 @@ def _clip_to_frame(node_positions, origin, scale):
     for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
         node_positions[:, ii] = np.clip(node_positions[:, ii], minimum, maximum)
     return node_positions
-
-
-def _set_diagonal(square_matrix, value=0):
-    n = len(square_matrix)
-    is_diagonal = np.diag(np.ones((n), dtype=np.bool))
-    square_matrix[is_diagonal] = value
-    return square_matrix
 
 
 # def get_positions_for_unconnected_nodes(unconnected_nodes, other_node_positions):
