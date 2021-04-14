@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import itertools
 import warnings
 import numpy as np
 import matplotlib
@@ -19,9 +20,12 @@ from ._utils import (
     _get_tangent_at_point,
     _get_text_object_dimensions,
     _make_pretty,
+    _edge_list_to_adjacency_matrix,
+    _flatten,
+    _get_orthogonal_projection_onto_segment,
 )
 
-from ._layout import get_fruchterman_reingold_layout, _clip_to_frame
+from ._layout import get_fruchterman_reingold_layout, _clip_to_frame, _get_temperature_decay
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
@@ -622,24 +626,24 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
     For self-loops, initialise the positions on a circle next to the node.
     """
 
+    nonloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source != target}
+    selfloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source == target}
+
     control_point_positions = dict()
-    for (source, target), control_points in edge_to_control_points.items():
-
-        if source != target:
-            positions = _initialize_nonloops(source, target, control_points, node_positions)
-        else:
-            # Source and target have the same position, such that
-            # using the strategy employed above the control points
-            # also end up at the same position. Instead we make a loop.
-            positions = _initialize_selfloops(source, control_points, node_positions,
-                                              selfloop_radius, origin, scale)
-
-        control_point_positions.update(positions)
+    control_point_positions.update(_initialize_nonloops(nonloops_to_control_points, node_positions))
+    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, origin, scale))
 
     return control_point_positions
 
 
-def _initialize_nonloops(source, target, control_points, node_positions):
+def _initialize_nonloops(edge_to_control_points, node_positions):
+    control_point_positions = dict()
+    for (source, target), control_points in edge_to_control_points.items():
+        control_point_positions.update(_init_nonloop(source, target, control_points, node_positions))
+    return control_point_positions
+
+
+def _init_nonloop(source, target, control_points, node_positions):
     delta = node_positions[target] - node_positions[source]
     distance = np.linalg.norm(delta)
     unit_vector = delta / distance
@@ -651,7 +655,23 @@ def _initialize_nonloops(source, target, control_points, node_positions):
     return output
 
 
-def _initialize_selfloops(source, control_points, node_positions, selfloop_radius, origin, scale):
+def _initialize_selfloops(edge_to_control_points, node_positions,
+                          selfloop_radius = 0.1,
+                          origin          = np.array([0, 0]),
+                          scale           = np.array([1, 1])
+):
+    control_point_positions = dict()
+    for (source, target), control_points in edge_to_control_points.items():
+        # Source and target have the same position, such that
+        # using the strategy employed above the control points
+        # also end up at the same position. Instead we make a loop.
+        control_point_positions.update(
+            _init_selfloop(source, control_points, node_positions, selfloop_radius, origin, scale)
+        )
+    return control_point_positions
+
+
+def _init_selfloop(source, control_points, node_positions, selfloop_radius, origin, scale):
     # To minimise overlap with other edges, we want the loop to be
     # on the side of the node away from the centroid of the graph.
     if len(node_positions) > 1:
@@ -719,6 +739,15 @@ def _optimize_control_point_positions(
 
     return expanded_node_positions
 
+def _get_path_through_control_points(edge_to_control_points, expanded_node_positions):
+    edge_to_path = dict()
+    for (source, target), control_points in edge_to_control_points.items():
+        control_point_positions = [expanded_node_positions[source]] \
+            + [expanded_node_positions[node] for node in control_points] \
+            + [expanded_node_positions[target]]
+        edge_to_path[(source, target)] = control_point_positions
+    return edge_to_path
+
 
 def _fit_splines_through_control_points(edge_to_control_points, expanded_node_positions, bspline_degree):
     # Fit a BSpline to each set of control points (+ anchors).
@@ -730,6 +759,285 @@ def _fit_splines_through_control_points(edge_to_control_points, expanded_node_po
         path = _bspline(np.array(control_point_positions), n=TOTAL_POINTS_PER_EDGE, degree=bspline_degree)
         edge_to_path[(source, target)] = path
     return edge_to_path
+
+
+def _get_bundled_edge_paths(edge_list, node_positions,
+                            total_control_points_per_edge=16,
+                            total_iterations=25, initial_temperature=0.05, k=10000,
+                            bspline_degree=20,
+):
+    """Bundle edges using the method proposed by Holten & Wijk (2009).
+
+    The implementation follows the paper closely with the exception
+    that forces are computed using matrix operations rather than
+    computing them on pairs of points. In doing so, memory
+    allocation becomes the rate limiting step rather than the force updates.
+
+    This has several consequences:
+
+    1. We do not neglect interactions between edges with a low
+    compatibility scores.
+
+    2. We use a (large) constant number of control points on each
+    iteration instead of starting with a small number of control
+    points and increasing the number on each iteration.
+
+    A further difference is in the definition of the scale compatibility,
+    which appears to be wrong as stated in the paper. Instead we define this
+    value as the minimum of the two possible ratios of the edge lengths.
+
+    Arguments:
+    ----------
+    edge_list : list
+        List of (source node, target node) 2-tuples.
+
+    node_positions : dict node : (float x, float y)
+        Dictionary mapping nodes to (x, y) positions.
+
+    total_control_points_per_edge : int (default 16)
+        Determines the number of segments, into which each edge is partitioned.
+
+    total_iterations : int (default 20)
+        The number of updates of the force simulation.
+
+    initial_temperature : float (default 0.4)
+        The temperature controls the maximum displacement of a control point on each iteration.
+        Starting from this initial value, the temperature is decreased on each iteration.
+
+    k : float (default 0.1)
+        The stiffness of the springs that connect control points.
+
+    bspline_degree : int (default 5)
+        Determines the stiffness of the splines fitted to the updated control
+        point positions.
+
+    Returns:
+    --------
+    edge_to_paths : dict edge : path
+        Dictionary mapping edges to arrays of (x, y) tuples, the edge paths.
+
+    """
+
+    # Filter out self-loops.
+    # TODO: raise warning if any self-loops are present.
+    edge_list = [(source, target) for (source, target) in edge_list if source != target]
+
+    # Filter out bi-directional edges.
+    unidirectional_edges = set()
+    for (source, target) in edge_list:
+        if (target, source) not in unidirectional_edges:
+            unidirectional_edges.add((source, target))
+    reverse_edges = list(set(edge_list) - unidirectional_edges)
+    edge_list = list(unidirectional_edges)
+
+    expanded_edge_list, edge_to_control_points = _insert_control_points(
+        edge_list, total_control_points_per_edge)
+
+    # Initialize control point positions to regularly spaced points on
+    # a line between source and target node.
+    control_point_positions = _initialize_nonloops(
+        edge_to_control_points, node_positions)
+
+    # x, y = zip(*control_point_positions.values())
+    # plt.plot(x, y, 'ro')
+
+    # Convert the list of segments to an adjacency matrix.
+    # Convert the dictionary of node and control point positions to an array of positions.
+    # Ensure that the indices into the adjacency matrix match the indices into the positions array.
+    expanded_positions = control_point_positions.copy()
+    expanded_positions.update(node_positions)
+    expanded_nodes = list(expanded_positions.keys())
+    expanded_positions_as_array = np.array([expanded_positions[node] for node in expanded_nodes])
+    expanded_adjacency = _edge_list_to_adjacency_matrix(
+        expanded_edge_list, unique_nodes=expanded_nodes)
+    expanded_adjacency += expanded_adjacency.transpose() # make symmetric
+
+    # Holten & Wijk compute electrostatic attraction Fe in a pairwise fashion,
+    # i.e. the first control point in edge A only attracts the first control point in edge B, etc.
+    # Here we construct an adjacency matrix for these pairs.
+    valid_control_point_pairs = _get_valid_control_point_pairs(
+        edge_list, node_positions, edge_to_control_points)
+    control_point_compatibility = _edge_list_to_adjacency_matrix(
+        valid_control_point_pairs, unique_nodes=expanded_nodes)
+    control_point_compatibility += control_point_compatibility.transpose()
+
+    # Compute edge compatibility scores and map to (all combinations of) control points.
+    edge_compatibility = _get_edge_compatibility(edge_list, node_positions)
+    edge_compatibility_matrix = np.zeros_like(expanded_adjacency)
+    for (e1, e2), compatibility in edge_compatibility.items():
+        if compatibility > 0.05:
+            is_e1 = np.in1d(expanded_nodes, list(e1) + edge_to_control_points[e1]) # most expensive operation according to line_profiler
+            is_e2 = np.in1d(expanded_nodes, list(e2) + edge_to_control_points[e2])
+            mask = is_e1[:, None] & is_e2[None, :]
+            edge_compatibility_matrix[mask] = compatibility
+    edge_compatibility_matrix += edge_compatibility_matrix.T # make symmetric
+
+    compatibility_matrix = control_point_compatibility * edge_compatibility_matrix
+
+    # TODO compute kp for each edge.
+    kp = k
+
+    # Apply force directed layout while only updating control point positions
+    # and keeping the node positions constant.
+    is_control_point = np.in1d(expanded_nodes, list(control_point_positions.keys()))
+    temperatures = _get_temperature_decay(initial_temperature, total_iterations)
+    for temperature in temperatures:
+        expanded_positions_as_array[is_control_point] = _holten_wijk_inner(
+            expanded_positions_as_array, expanded_adjacency,
+            compatibility_matrix, kp, temperature)[is_control_point]
+
+    # Construct edge paths from new control point positions.
+    expanded_positions = dict(zip(expanded_nodes, expanded_positions_as_array))
+    # edge_to_path = _fit_splines_through_control_points(
+    #     edge_to_control_points, expanded_positions, bspline_degree
+    # )
+    edge_to_path = _get_path_through_control_points(
+        edge_to_control_points, expanded_positions
+    )
+
+    # Add previously removed bi-directional edges back in.
+    for (source, target) in reverse_edges:
+        edge_to_path[(source, target)] = edge_to_path[(target, source)]
+
+    return edge_to_path
+
+
+def _get_edge_compatibility(edge_list, node_positions):
+    edge_compatibility = dict()
+    for e1, e2 in itertools.combinations(edge_list, 2):
+        P = np.array([node_positions[e1[0]], node_positions[e1[1]]])
+        Q = np.array([node_positions[e2[0]], node_positions[e2[1]]])
+        angle_compatibility      = _get_angle_compatibility(P, Q)
+        scale_compatibility      = _get_scale_compatibility(P, Q)
+        position_compatibility   = _get_position_compatibility(P, Q)
+        visibility_compatibility = _get_visibility_compatibility(P, Q)
+        edge_compatibility[(e1, e2)] = angle_compatibility \
+            * scale_compatibility \
+            * position_compatibility \
+            * visibility_compatibility
+    return edge_compatibility
+
+
+def _get_vector(segment):
+    return np.squeeze(np.diff(segment, axis=0))
+
+
+def _get_length(segment):
+    return np.linalg.norm(_get_vector(segment))
+
+
+def _get_angle_compatibility(P, Q):
+    return np.abs(np.cos(_get_interior_angle_between(_get_vector(P), _get_vector(Q))))
+
+
+def _get_scale_compatibility(P, Q):
+    length_P = _get_length(P)
+    length_Q = _get_length(Q)
+    avg = 0.5 * (length_P + length_Q)
+
+    # The definition in the paper is rubbish, as the result is not on the interval [0, 1].
+    # For example, consider an two edges, both 0.5 long:
+    # return 2 / (avg * min(length_P, length_Q) + max(length_P, length_Q) / avg)
+    # return min(length_P/length_Q, length_Q/length_P)
+    return 2 / (avg / min(length_P, length_Q) + max(length_P, length_Q) / avg)
+
+
+def _get_position_compatibility(P, Q):
+    length_P = _get_length(P)
+    length_Q = _get_length(Q)
+    avg = 0.5 * (length_P + length_Q)
+
+    Pm = _get_midpoint(P)
+    Qm = _get_midpoint(Q)
+    distance_between_midpoints = np.linalg.norm(Qm - Pm)
+
+    return avg / (avg + distance_between_midpoints)
+
+
+def _get_midpoint(segment):
+    return segment[0] + 0.5 * _get_vector(segment)
+
+
+def _get_visibility_compatibility(P, Q):
+    return min(_get_visibility(P, Q), _get_visibility(Q, P))
+
+
+def _get_visibility(P, Q):
+    I0 = _get_orthogonal_projection_onto_segment(Q[0], P)
+    I1 = _get_orthogonal_projection_onto_segment(Q[1], P)
+    I = np.array([I0, I1])
+    Im = _get_midpoint(I)
+    Pm = _get_midpoint(P)
+    distance_between_midpoints = np.linalg.norm(Pm - Im)
+    length_I = _get_length(I)
+    visibility = 1 - 2 * distance_between_midpoints / length_I
+    return max(visibility, 0)
+
+
+def _get_valid_control_point_pairs(edge_list, node_positions, edge_to_control_points):
+    """Zip two sets of control points starting at the two closest edge endpoints."""
+    valid_pairs = []
+    for (s1, t1), (s2, t2) in itertools.combinations(edge_list, 2):
+        # determine the two closest edge endpoints
+        P0 = node_positions[s1]
+        P1 = node_positions[t1]
+        Q0 = node_positions[s2]
+        Q1 = node_positions[t2]
+        if min(np.linalg.norm(P0-Q0), np.linalg.norm(P1-Q1)) <= \
+           min(np.linalg.norm(P0-Q1), np.linalg.norm(P1-Q0)):
+            # i.e. if source/source or target/target closest
+            valid_pairs.extend(zip(edge_to_control_points[(s1, t1)], edge_to_control_points[(s2, t2)]))
+        else:
+            # need to reverse one set of control points
+            valid_pairs.extend(zip(edge_to_control_points[(s1, t1)], edge_to_control_points[(s2, t2)][::-1]))
+    return valid_pairs
+
+
+def _holten_wijk_inner(node_positions, adjacency, edge_compatibility, k, temperature):
+    # compute distances and unit vectors between nodes
+    delta        = node_positions[None, :, ...] - node_positions[:, None, ...]
+    distance     = np.linalg.norm(delta, axis=-1)
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        direction = delta / distance[..., None] # i.e. the unit vector
+
+    # calculate forces
+    Fs = _get_Fs(distance, direction, adjacency, k)
+    Fe = _get_Fe(distance, direction, edge_compatibility)
+
+    # print(np.mean(np.linalg.norm(Fs, axis=-1) > np.linalg.norm(Fe, axis=-1)))
+    # displacement = Fs
+    # displacement = Fe
+    displacement = Fs + Fe
+
+    # limit maximum displacement
+    displacement_length = np.clip(np.linalg.norm(displacement, axis=-1), 1e-12, None) # prevent divide by 0 error in next line
+    displacement = displacement / displacement_length[:, None] * np.clip(displacement_length, None, temperature)[:, None]
+
+    # x, y = (node_positions + displacement).transpose()
+    # plt.plot(x, y, 'ko', alpha=0.1)
+    return node_positions + displacement
+
+
+def _get_Fe(distance, direction, edge_compatibility):
+    with np.errstate(divide='ignore', invalid='ignore'):
+        magnitude = edge_compatibility / distance
+    # # Points that are very close to each other have a high attraction.
+    # # However, the displacement of due to that force should not excel the
+    # # distance between the two points.
+    # magnitude = np.clip(magnitude, None, distance)
+    vectors = -direction * magnitude[..., None]
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
+    return np.sum(vectors, axis=0)
+
+
+def _get_Fs(distance, direction, adjacency, k):
+    magnitude = k * distance * adjacency
+    vectors = -direction * magnitude[..., None] # NB: the minus!
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
+    return np.sum(vectors, axis=0)
 
 
 @deprecated("Use Graph.draw_node_labels() or InteractiveGraph.draw_node_labels() instead.")
@@ -1041,7 +1349,7 @@ class BaseGraph(object):
                  edge_alpha=1.,
                  edge_zorder=1,
                  arrows=False,
-                 curved=False,
+                 edge_layout='straight',
                  edge_labels=None,
                  edge_label_position=0.5,
                  edge_label_rotate=True,
@@ -1125,8 +1433,11 @@ class BaseGraph(object):
         arrows : bool, optional (default False)
             If True, draw edges with arrow heads.
 
-        curved : bool, optional (default False)
-            If True, draw edges as curved splines.
+        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
+            If 'straight', draw edges as straight lines.
+            If 'curved', draw edges as curved splines. The spline control points
+            are optimised to avoid other nodes and edges.
+            If 'bundled', draw edges as edge bundles.
 
         edge_labels : dict edge : str
             Mapping of edges to edge labels.
@@ -1218,7 +1529,7 @@ class BaseGraph(object):
         self.edge_artists = dict()
         self.draw_edges(self.edge_list, self.node_positions,
                         node_size, edge_width, edge_color, edge_alpha,
-                        edge_zorder, arrows, curved)
+                        edge_zorder, arrows, edge_layout)
 
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
@@ -1400,7 +1711,7 @@ class BaseGraph(object):
 
 
     def draw_edges(self, edge_list, node_positions, node_size, edge_width,
-                   edge_color, edge_alpha, edge_zorder, arrows, curved):
+                   edge_color, edge_alpha, edge_zorder, arrows, edge_layout):
         """
         Draw the edges of the network.
 
@@ -1433,8 +1744,11 @@ class BaseGraph(object):
         arrows : bool
             If True, draws edges with arrow heads.
 
-        curved : bool
-            If True, draw edges as curved splines.
+        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
+            If 'straight', draw edges as straight lines.
+            If 'curved', draw edges as curved splines. The spline control points
+            are optimised to avoid other nodes and edges.
+            If 'bundled', draw edges as edge bundles.
 
         Updates
         -------
@@ -1443,17 +1757,21 @@ class BaseGraph(object):
 
         """
 
-        if not curved:
+        if edge_layout is 'straight':
             edge_paths = _get_straight_edge_paths(edge_list, node_positions, edge_width)
-        else:
+        elif edge_layout is 'curved':
             edge_paths = _get_curved_edge_paths(edge_list, node_positions)
+        elif edge_layout is 'bundled':
+            edge_paths = _get_bundled_edge_paths(edge_list, node_positions)
+        else:
+            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
 
         # Plot edges sorted by edge order.
         # Note that we are only honouring the relative z-order, not the absolute z-order.
         for edge in sorted(edge_zorder, key=lambda k: edge_zorder[k]):
 
             source, target = edge
-            if ((target, source) in edge_list) and not curved: # i.e. bidirectional, straight edges
+            if ((target, source) in edge_list) and (edge_layout is 'straight'): # i.e. bidirectional, straight edges
                 shape = 'right' # i.e. plot half arrow / thin line shifted to the right
             else:
                 shape = 'full'
@@ -1477,7 +1795,7 @@ class BaseGraph(object):
                 linewidth   = 0.1,
                 offset      = node_size[target],
                 shape       = shape,
-                curved      = curved,
+                curved      = False if edge_layout is 'straight' else True,
             )
             self.ax.add_artist(edge_artist)
 
