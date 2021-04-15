@@ -31,6 +31,13 @@ from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
 
 
+# for profiling with line_profiler
+try:
+    profile
+except NameError:
+    profile = lambda x: x
+
+
 BASE_NODE_SIZE = 1e-2
 BASE_EDGE_WIDTH = 1e-2
 TOTAL_POINTS_PER_EDGE = 100
@@ -761,6 +768,7 @@ def _fit_splines_through_control_points(edge_to_control_points, expanded_node_po
     return edge_to_path
 
 
+@profile
 def _get_bundled_edge_paths(edge_list, node_positions,
                             total_control_points_per_edge=16,
                             total_iterations=25, initial_temperature=0.05, k=10000,
@@ -902,6 +910,7 @@ def _get_bundled_edge_paths(edge_list, node_positions,
     return edge_to_path
 
 
+@profile
 def _get_edge_compatibility(edge_list, node_positions):
     edge_compatibility = dict()
     for e1, e2 in itertools.combinations(edge_list, 2):
@@ -993,6 +1002,7 @@ def _get_valid_control_point_pairs(edge_list, node_positions, edge_to_control_po
     return valid_pairs
 
 
+@profile
 def _holten_wijk_inner(node_positions, adjacency, edge_compatibility, k, temperature):
     # compute distances and unit vectors between nodes
     delta        = node_positions[None, :, ...] - node_positions[:, None, ...]
@@ -1019,6 +1029,7 @@ def _holten_wijk_inner(node_positions, adjacency, edge_compatibility, k, tempera
     return node_positions + displacement
 
 
+@profile
 def _get_Fe(distance, direction, edge_compatibility):
     with np.errstate(divide='ignore', invalid='ignore'):
         magnitude = edge_compatibility / distance
@@ -1032,6 +1043,7 @@ def _get_Fe(distance, direction, edge_compatibility):
     return np.sum(vectors, axis=0)
 
 
+@profile
 def _get_Fs(distance, direction, adjacency, k):
     magnitude = k * distance * adjacency
     vectors = -direction * magnitude[..., None] # NB: the minus!
