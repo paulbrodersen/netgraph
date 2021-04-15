@@ -746,6 +746,7 @@ def _optimize_control_point_positions(
 
     return expanded_node_positions
 
+
 def _get_path_through_control_points(edge_to_control_points, expanded_node_positions):
     edge_to_path = dict()
     for (source, target), control_points in edge_to_control_points.items():
@@ -911,10 +912,13 @@ def _get_bundled_edge_paths(edge_list, node_positions,
 
 @profile
 def _get_edge_compatibility(edge_list, node_positions):
+    # precompute edge segments, segment lengths and corresponding vectors
+    edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edge_list}
+
     edge_compatibility = dict()
     for e1, e2 in itertools.combinations(edge_list, 2):
-        P = np.array([node_positions[e1[0]], node_positions[e1[1]]])
-        Q = np.array([node_positions[e2[0]], node_positions[e2[1]]])
+        P = edge_to_segment[e1]
+        Q = edge_to_segment[e2]
         angle_compatibility      = _get_angle_compatibility(P, Q)
         scale_compatibility      = _get_scale_compatibility(P, Q)
         position_compatibility   = _get_position_compatibility(P, Q)
@@ -926,44 +930,41 @@ def _get_edge_compatibility(edge_list, node_positions):
     return edge_compatibility
 
 
-def _get_vector(segment):
-    return np.squeeze(np.diff(segment, axis=0))
+class Segment(object):
+    def __init__(self, p0, p1):
+        self._p0 = p0
+        self._p1 = p1
+        self.vector = p1 - p0
+        self.length = np.linalg.norm(self.vector)
+        self.midpoint = self._p0 * 0.5 * self.vector
 
-
-def _get_length(segment):
-    return np.linalg.norm(_get_vector(segment))
+    def __getitem__(self, idx):
+        if idx == 0:
+            return self._p0
+        elif idx == 1:
+            return self._p1
+        else:
+            raise IndexError
 
 
 def _get_angle_compatibility(P, Q):
-    return np.abs(np.cos(_get_interior_angle_between(_get_vector(P), _get_vector(Q))))
+    return np.abs(np.cos(_get_interior_angle_between(P.vector, Q.vector)))
 
 
 def _get_scale_compatibility(P, Q):
-    length_P = _get_length(P)
-    length_Q = _get_length(Q)
-    avg = 0.5 * (length_P + length_Q)
+    avg = 0.5 * (P.length + Q.length)
 
     # The definition in the paper is rubbish, as the result is not on the interval [0, 1].
     # For example, consider an two edges, both 0.5 long:
     # return 2 / (avg * min(length_P, length_Q) + max(length_P, length_Q) / avg)
     # return min(length_P/length_Q, length_Q/length_P)
-    return 2 / (avg / min(length_P, length_Q) + max(length_P, length_Q) / avg)
+    return 2 / (avg / min(P.length, Q.length) + max(P.length, Q.length) / avg)
 
 
 def _get_position_compatibility(P, Q):
-    length_P = _get_length(P)
-    length_Q = _get_length(Q)
-    avg = 0.5 * (length_P + length_Q)
-
-    Pm = _get_midpoint(P)
-    Qm = _get_midpoint(Q)
-    distance_between_midpoints = np.linalg.norm(Qm - Pm)
-
+    avg = 0.5 * (P.length + Q.length)
+    distance_between_midpoints = np.linalg.norm(Q.midpoint - P.midpoint)
     return avg / (avg + distance_between_midpoints)
-
-
-def _get_midpoint(segment):
-    return segment[0] + 0.5 * _get_vector(segment)
 
 
 def _get_visibility_compatibility(P, Q):
@@ -973,12 +974,9 @@ def _get_visibility_compatibility(P, Q):
 def _get_visibility(P, Q):
     I0 = _get_orthogonal_projection_onto_segment(Q[0], P)
     I1 = _get_orthogonal_projection_onto_segment(Q[1], P)
-    I = np.array([I0, I1])
-    Im = _get_midpoint(I)
-    Pm = _get_midpoint(P)
-    distance_between_midpoints = np.linalg.norm(Pm - Im)
-    length_I = _get_length(I)
-    visibility = 1 - 2 * distance_between_midpoints / length_I
+    I = Segment(I0, I1)
+    distance_between_midpoints = np.linalg.norm(P.midpoint - I.midpoint)
+    visibility = 1 - 2 * distance_between_midpoints / I.length
     return max(visibility, 0)
 
 
