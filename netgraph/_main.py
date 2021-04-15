@@ -872,11 +872,10 @@ def _get_bundled_edge_paths(edge_list, node_positions,
     # Compute edge compatibility scores and map to (all combinations of) control points.
     edge_compatibility = _get_edge_compatibility(edge_list, node_positions)
     edge_compatibility_matrix = np.zeros_like(expanded_adjacency)
+    edge_to_indices = {edge : np.in1d(expanded_nodes, list(edge) + edge_to_control_points[edge]) for edge in edge_list}
     for (e1, e2), compatibility in edge_compatibility.items():
         if compatibility > 0.05:
-            is_e1 = np.in1d(expanded_nodes, list(e1) + edge_to_control_points[e1]) # most expensive operation according to line_profiler
-            is_e2 = np.in1d(expanded_nodes, list(e2) + edge_to_control_points[e2])
-            mask = is_e1[:, None] & is_e2[None, :]
+            mask = edge_to_indices[e1][:, None] & edge_to_indices[e2][None, :]
             edge_compatibility_matrix[mask] = compatibility
     edge_compatibility_matrix += edge_compatibility_matrix.T # make symmetric
 
