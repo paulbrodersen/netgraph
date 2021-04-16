@@ -239,6 +239,7 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
 
 @_handle_multiple_components
 def get_fruchterman_reingold_layout(edge_list,
+                                    edge_weights        = None,
                                     k                   = None,
                                     scale               = None,
                                     origin              = None,
@@ -256,6 +257,12 @@ def get_fruchterman_reingold_layout(edge_list,
     edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
+    edge_weights : dict edge : float
+        Mapping of edges to edge weights.
+
+    k : float or None (default None)
+        Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
+
     origin : (float x, float y) tuple or None (default None -> (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the layout.
         If None is given, the origin is placed at (0, 0).
@@ -263,9 +270,6 @@ def get_fruchterman_reingold_layout(edge_list,
     scale : (float delta x, float delta y) or None (default None -> (1, 1))
         The width and height of the bounding box specifying the extent of the layout.
         If None is given, the scale is set to (1, 1).
-
-    k : float or None (default None)
-        Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
 
     total_iterations : int (default 50)
         Number of iterations.
@@ -386,7 +390,8 @@ def get_fruchterman_reingold_layout(edge_list,
     else:
         is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
 
-    adjacency = _edge_list_to_adjacency_matrix(edge_list, unique_nodes=unique_nodes)
+    adjacency = _edge_list_to_adjacency_matrix(
+        edge_list, edge_weights=edge_weights, unique_nodes=unique_nodes)
 
     # Forces in FR are symmetric.
     # Hence we need to ensure that the adjacency matrix is also symmetric.
