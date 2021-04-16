@@ -483,21 +483,23 @@ def _fruchterman_reingold(adjacency, node_positions, temperature, k, node_radii)
 def _get_fr_repulsion(distance, direction, k):
     with np.errstate(divide='ignore', invalid='ignore'):
         magnitude = k**2 / distance
-    vectors   = direction * magnitude[..., None]
+    vectors = direction * magnitude[..., None]
     # Note that we cannot apply the usual strategy of summing the array
     # along either axis and subtracting the trace,
     # as the diagonal of `direction` is np.nan, and any sum or difference of
     # NaNs is just another NaN.
     # Also we do not want to ignore NaNs by using np.nansum, as then we would
     # potentially mask the existence of off-diagonal zero distances.
-    np.fill_diagonal(vectors, 0)
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
     return np.sum(vectors, axis=0)
 
 
 def _get_fr_attraction(distance, direction, adjacency, k):
     magnitude = 1./k * distance**2 * adjacency
-    vectors   = -direction * magnitude[..., None] # NB: the minus!
-    np.fill_diagonal(vectors, 0)
+    vectors = -direction * magnitude[..., None] # NB: the minus!
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
     return np.sum(vectors, axis=0)
 
 
