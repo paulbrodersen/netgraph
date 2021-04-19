@@ -5,18 +5,17 @@ TODO:
 - ensure that the adjacency matrix has the correct dimensions even is one of the nodes is unconnected
 """
 
+import warnings
 import numpy as np
 
 from rpack import pack
 from functools import wraps
 
 from ._utils import (
-    warnings,
     _edge_list_to_adjacency_matrix,
     _edge_list_to_adjacency_list,
     _get_subgraph,
     _get_unique_nodes,
-    _flatten,
 )
 
 

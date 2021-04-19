@@ -19,7 +19,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
 )
-from ._node_layout import get_fruchterman_reingold_layout, _clip_to_frame, _get_temperature_decay
+from ._node_layout import get_fruchterman_reingold_layout
 from ._edge_layout import _get_straight_edge_paths, _get_curved_edge_paths, _get_bundled_edge_paths, _shift_edge
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
