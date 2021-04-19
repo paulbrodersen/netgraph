@@ -122,13 +122,11 @@ def _initialize_nonloops(edge_to_control_points, node_positions):
 
 def _init_nonloop(source, target, control_points, node_positions):
     delta = node_positions[target] - node_positions[source]
-    distance = np.linalg.norm(delta)
-    unit_vector = delta / distance
     output = dict()
     for ii, control_point in enumerate(control_points):
         # y = mx + b
-        m = (ii+1) * distance / (len(control_points) + 1)
-        output[control_point] = m * unit_vector + node_positions[source]
+        m = (ii + 1) / (len(control_points) + 1)
+        output[control_point] = m * delta + node_positions[source]
     return output
 
 
