@@ -1292,7 +1292,7 @@ class BaseGraph(object):
             self.edge_artists[edge] = edge_artist
 
 
-    def _update_straight_edge_positions(self, edges):
+    def _update_straight_edge_paths(self, edges):
 
         # remove self-loops
         edges = [(source, target) for source, target in edges if source != target]
@@ -1311,7 +1311,7 @@ class BaseGraph(object):
             self.ax.draw_artist(self.edge_artists[(source, target)])
 
 
-    def _update_curved_edge_positions(self, edges):
+    def _update_curved_edge_paths(self, edges):
         """Compute a new layout for curved edges keeping all other edges constant."""
 
         fixed_positions = dict()
@@ -1852,7 +1852,7 @@ class DraggableGraph(Graph, DraggableArtists):
         # In the interest of speed, we only compute the straight edge paths here.
         # We will re-compute curved edge paths only on mouse button release,
         # i.e. when the dragging motion has stopped.
-        self._update_straight_edge_positions(edges)
+        self._update_straight_edge_paths(edges)
 
         if hasattr(self, 'node_label_artists'):
             self._update_node_label_positions(nodes)
@@ -1883,7 +1883,7 @@ class DraggableGraph(Graph, DraggableArtists):
             edges = [edge for edge in edges if self.edge_artists[edge].curved]
 
             if edges: # i.e. non-empty list
-                self._update_curved_edge_positions(edges)
+                self._update_curved_edge_paths(edges)
 
                 if hasattr(self, 'edge_label_artists'): # move edge labels
                     self._update_edge_label_positions(edges)
