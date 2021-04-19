@@ -47,7 +47,6 @@ def _shift_edge(x1, y1, x2, y2, delta):
 
 def _get_curved_edge_paths(edge_list, node_positions,
                            total_control_points_per_edge = 11,
-                           bspline_degree                = 5,
                            selfloop_radius               = 0.1,
                            origin                        = np.array([0, 0]),
                            scale                         = np.array([1, 1]),
@@ -70,8 +69,7 @@ def _get_curved_edge_paths(edge_list, node_positions,
     )
 
     edge_to_path = _fit_splines_through_control_points(
-        edge_to_control_points, expanded_node_positions, bspline_degree
-    )
+        edge_to_control_points, expanded_node_positions)
 
     return edge_to_path
 
@@ -229,7 +227,7 @@ def _get_path_through_control_points(edge_to_control_points, expanded_node_posit
     return edge_to_path
 
 
-def _fit_splines_through_control_points(edge_to_control_points, expanded_node_positions, bspline_degree):
+def _fit_splines_through_control_points(edge_to_control_points, expanded_node_positions):
     # Fit a BSpline to each set of control points (+ anchors).
     edge_to_path = dict()
     for (source, target), control_points in edge_to_control_points.items():

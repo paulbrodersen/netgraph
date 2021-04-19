@@ -72,7 +72,7 @@ def _get_subgraph(edge_list, node_list):
     return subgraph_edge_list
 
 
-def _bspline(cv, n=100, degree=3, periodic=False):
+def _bspline(cv, n=100, degree=5, periodic=False):
     """ Calculate n samples on a bspline
 
         cv :      Array ov control vertices
