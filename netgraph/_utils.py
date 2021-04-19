@@ -231,6 +231,25 @@ def _get_tangent_at_point(spline, fraction):
     return deltas[idx]
 
 
+def _get_orthogonal_projection_onto_segment(point, segment):
+    # Adapted from https://stackoverflow.com/a/61343727/2912349
+
+    p1, p2 = segment
+
+    segment_length = np.sum((p1-p2)**2)
+
+    # The line extending the segment is parameterized as p1 + t (p2 - p1).
+    # The projection falls where t = [(point-p1) . (p2-p1)] / |p2-p1|^2
+
+    # Project onto line through p1 and p2.
+    t = np.sum((point - p1) * (p2 - p1)) / segment_length
+
+    # # Project onto line segment between p1 and p2 or closest point of the line segment.
+    # t = max(0, t)
+
+    return p1 + t * (p2 - p1)
+
+
 def _get_text_object_dimensions(ax, string, *args, **kwargs):
     text_object = ax.text(0., 0., string, *args, **kwargs)
     renderer = _find_renderer(text_object.get_figure())
