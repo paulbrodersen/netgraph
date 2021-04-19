@@ -27,7 +27,6 @@ from ._deprecated import deprecated
 
 
 BASE_SCALE = 1e-2
-TOTAL_POINTS_PER_EDGE = 100
 
 
 @deprecated("Use Graph.draw() or InteractiveGraph.draw() instead.")
@@ -1323,15 +1322,16 @@ class BaseGraph(object):
                 for position in edge_artist.midline[1:-1]:
                     fixed_positions[uuid4()] = position
             else:
+                # Densely sample points along the straight edge such that updated
+                # edges avoid the whole edge, not just the end points.
                 edge_origin = edge_artist.midline[0]
                 delta = edge_artist.midline[-1] - edge_artist.midline[0]
-                distance = np.linalg.norm(delta)
-                unit_vector = delta / distance
-                for ii in range(TOTAL_POINTS_PER_EDGE):
+                for ii in range(100):
                     # y = mx + b
-                    m = (ii+1) * distance / (TOTAL_POINTS_PER_EDGE + 1)
-                    fixed_positions[uuid4()] = m * unit_vector + edge_origin
+                    m = (ii + 1) / (100 + 1)
+                    fixed_positions[uuid4()] = m * delta + edge_origin
         fixed_positions.update(self.node_positions)
+
         edge_paths = _get_curved_edge_paths(edges, fixed_positions)
 
         for edge, path in edge_paths.items():

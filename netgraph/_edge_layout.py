@@ -13,8 +13,6 @@ try:
 except NameError:
     profile = lambda x: x
 
-TOTAL_POINTS_PER_EDGE = 100
-
 
 def _get_straight_edge_paths(edge_list, node_positions, edge_width):
     edge_paths = dict()
@@ -238,7 +236,7 @@ def _fit_splines_through_control_points(edge_to_control_points, expanded_node_po
         control_point_positions = [expanded_node_positions[source]] \
             + [expanded_node_positions[node] for node in control_points] \
             + [expanded_node_positions[target]]
-        path = _bspline(np.array(control_point_positions), n=TOTAL_POINTS_PER_EDGE, degree=bspline_degree)
+        path = _bspline(np.array(control_point_positions))
         edge_to_path[(source, target)] = path
     return edge_to_path
 
