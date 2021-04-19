@@ -26,8 +26,7 @@ from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
 
 
-BASE_NODE_SIZE = 1e-2
-BASE_EDGE_WIDTH = 1e-2
+BASE_SCALE = 1e-2
 TOTAL_POINTS_PER_EDGE = 100
 
 
@@ -271,7 +270,7 @@ def _get_font_size(ax, node_labels, **kwargs):
         elif isinstance(node_edge_width, dict):
             e = node_edge_width[key]
 
-        node_diameter = 2 * (r-e) * BASE_NODE_SIZE
+        node_diameter = 2 * (r-e) * BASE_SCALE
 
         width, height = _get_text_object_dimensions(ax, label, size=node_label_font_size)
 
@@ -308,11 +307,11 @@ def draw_nodes(node_positions,
 
     node_size : scalar or dict node : float (default 3.)
        Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+       NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
     node_edge_width : scalar or dict key : float (default 0.5)
        Line width of node marker border.
-       NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+       NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict node : color specification (default 'w')
        Node color.
@@ -354,8 +353,8 @@ def draw_nodes(node_positions,
         node_alpha = {node:node_alpha for node in nodes}
 
     # rescale
-    node_size = {node: size  * BASE_NODE_SIZE for (node, size) in node_size.items()}
-    node_edge_width = {node: width  * BASE_NODE_SIZE for (node, width) in node_edge_width.items()}
+    node_size = {node: size  * BASE_SCALE for (node, size) in node_size.items()}
+    node_edge_width = {node: width  * BASE_SCALE for (node, width) in node_edge_width.items()}
 
     artists = dict()
     for node in nodes:
@@ -409,7 +408,7 @@ def draw_edges(edge_list,
 
     edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
-        NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
+        NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
     edge_color : matplotlib color specification or dict (source, target) : color specification (default 'k')
        Edge color.
@@ -473,8 +472,8 @@ def draw_edges(edge_list,
             edge_alpha.setdefault(edge, 1.)
 
     # rescale
-    node_size  = {node: size  * BASE_NODE_SIZE  for (node, size)  in node_size.items()}
-    edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
+    node_size  = {node: size  * BASE_SCALE  for (node, size)  in node_size.items()}
+    edge_width = {edge: width * BASE_SCALE for (edge, width) in edge_width.items()}
 
     # order edges if necessary
     if edge_zorder:
@@ -705,7 +704,7 @@ def draw_edge_labels(edge_list,
 
     edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
-        NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
+        NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -726,7 +725,7 @@ def draw_edge_labels(edge_list,
     if isinstance(edge_width, (int, float)):
         edge_width = {edge: edge_width for edge in edge_list}
 
-    edge_width = {edge: width * BASE_EDGE_WIDTH for (edge, width) in edge_width.items()}
+    edge_width = {edge: width * BASE_SCALE for (edge, width) in edge_width.items()}
 
     text_items = {}
     for (n1, n2), label in edge_labels.items():
@@ -791,9 +790,9 @@ def _update_view(node_positions, ax, node_size=3.):
     # Hence we need to set them manually.
 
     if isinstance(node_size, dict):
-        maxs = np.max(list(node_size.values())) * BASE_NODE_SIZE
+        maxs = np.max(list(node_size.values())) * BASE_SCALE
     else:
-        maxs = node_size * BASE_NODE_SIZE
+        maxs = node_size * BASE_SCALE
 
     maxx, maxy = np.max(list(node_positions.values()), axis=0)
     minx, miny = np.min(list(node_positions.values()), axis=0)
@@ -869,11 +868,11 @@ class BaseGraph(object):
 
         node_size : scalar or dict node : float (default 3.)
            Size (radius) of nodes.
-           NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
         node_edge_width : scalar or dict node : float (default 0.5)
            Line width of node marker border.
-           NOTE: Value is rescaled by BASE_NODE_SIZE (1e-2) to work well with layout routines in igraph and networkx.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
         node_color : matplotlib color specification or dict node : color (default 'w')
            Node color.
@@ -906,7 +905,7 @@ class BaseGraph(object):
 
         edge_width : float or dict (source, target) : width (default 1.)
             Line width of edges.
-            NOTE: Value is rescaled by BASE_EDGE_WIDTH (1e-2) to work well with layout routines in igraph and networkx.
+            NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
 
         edge_color : matplotlib color specification or dict (source, target) : color (default 'k')
            Edge color.
@@ -990,9 +989,9 @@ class BaseGraph(object):
         edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edge_list, 'edge_zorder')
 
         # Rescale.
-        node_size = self._rescale(node_size, BASE_NODE_SIZE)
-        node_edge_width = self._rescale(node_edge_width, BASE_NODE_SIZE)
-        edge_width = self._rescale(edge_width, BASE_EDGE_WIDTH)
+        node_size = self._rescale(node_size, BASE_SCALE)
+        node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
+        edge_width = self._rescale(edge_width, BASE_SCALE)
 
         # Initialise node positions.
         if node_positions is None:
