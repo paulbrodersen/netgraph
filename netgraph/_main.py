@@ -8,6 +8,9 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from uuid import uuid4
+from joblib import Parallel, delayed
+from multiprocessing import Pool
+
 from ._utils import (
     _get_unique_nodes,
     _bspline,
@@ -24,7 +27,6 @@ from ._utils import (
     _flatten,
     _get_orthogonal_projection_onto_segment,
 )
-
 from ._layout import get_fruchterman_reingold_layout, _clip_to_frame, _get_temperature_decay
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
@@ -867,42 +869,92 @@ def _get_edge_compatibility(edge_list, node_positions, threshold):
     for e1, e2 in itertools.combinations(edge_list, 2):
         P = edge_to_segment[e1]
         Q = edge_to_segment[e2]
-        # TODO: potentially stop as soon as compatibility drops below threshold
+
         compatibility = 1
         compatibility *= _get_scale_compatibility(P, Q)
+        if compatibility < threshold:
+            continue # with next edge pair
         compatibility *= _get_position_compatibility(P, Q)
+        if compatibility < threshold:
+            continue # with next edge pair
         compatibility *= _get_angle_compatibility(P, Q)
+        if compatibility < threshold:
+            continue # with next edge pair
         compatibility *= _get_visibility_compatibility(P, Q)
+        if compatibility < threshold:
+            continue # with next edge pair
 
-        if compatibility > threshold:
-            # also determine if one of the edges needs to be reversed
-            reverse = min(np.linalg.norm(P[0] - Q[0]), np.linalg.norm(P[1] - Q[1])) > \
-                min(np.linalg.norm(P[0] - Q[1]), np.linalg.norm(P[1] - Q[0]))
+        # Also determine if one of the edges needs to be reversed:
+        reverse = min(np.linalg.norm(P[0] - Q[0]), np.linalg.norm(P[1] - Q[1])) > \
+            min(np.linalg.norm(P[0] - Q[1]), np.linalg.norm(P[1] - Q[0]))
 
-            edge_compatibility.append((e1, e2, compatibility, reverse))
+        edge_compatibility.append((e1, e2, compatibility, reverse))
 
     return edge_compatibility
+
+# @profile
+# def _get_edge_compatibility(edge_list, node_positions, threshold):
+#     # precompute edge segments, segment lengths and corresponding vectors
+#     edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edge_list}
+
+#     def process_edge_pair(e1, e2):
+#         P = edge_to_segment[e1]
+#         Q = edge_to_segment[e2]
+#         compatibility = 1
+#         compatibility *= _get_scale_compatibility(P, Q)
+#         compatibility *= _get_position_compatibility(P, Q)
+#         if compatibility < threshold:
+#             return
+#         compatibility *= _get_angle_compatibility(P, Q)
+#         if compatibility < threshold:
+#             return
+#         compatibility *= _get_visibility_compatibility(P, Q)
+
+#         if compatibility > threshold:
+#             # also determine if one of the edges needs to be reversed
+#             reverse = min(np.linalg.norm(P[0] - Q[0]), np.linalg.norm(P[1] - Q[1])) > \
+#                 min(np.linalg.norm(P[0] - Q[1]), np.linalg.norm(P[1] - Q[0]))
+#             return (e1, e2, compatibility, reverse)
+
+#     edge_compatibility = Parallel(n_jobs=2)(delayed(process_edge_pair)(e1, e2) for e1, e2 in itertools.combinations(edge_list, 2))
+#     return [item for item in edge_compatibility if item is not None]
 
 
 class Segment(object):
     def __init__(self, p0, p1):
-        self._p0 = p0
-        self._p1 = p1
+        self.p0 = p0
+        self.p1 = p1
         self.vector = p1 - p0
         self.length = np.linalg.norm(self.vector)
-        self.midpoint = self._p0 * 0.5 * self.vector
+        self.unit_vector = self.vector / self.length
+        self.midpoint = self.p0 * 0.5 * self.vector
 
     def __getitem__(self, idx):
         if idx == 0:
-            return self._p0
-        elif idx == 1:
-            return self._p1
+            return self.p0
+        elif (idx == 1) or (idx == -1):
+            return self.p1
         else:
             raise IndexError
 
+    def get_orthogonal_projection_onto_segment(self, point):
+        # Adapted from https://stackoverflow.com/a/61343727/2912349
+        # The line extending the segment is parameterized as p0 + t (p1 - p0).
+        # The projection falls where t = [(point-p0) . (p1-p0)] / |p1-p0|^2
+        t = np.sum((point - self.p0) * self.vector) / self.length**2
+        return self.p0 + t * self.vector
+
+#     def get_interior_angle_with(self, other_segment):
+#         # Adapted from: https://stackoverflow.com/a/13849249/2912349
+#         return np.arccos(np.clip(np.dot(self.unit_vector, other_segment.unit_vector), -1.0, 1.0))
+
+
+# def _get_angle_compatibility(P, Q):
+#     return np.abs(np.cos(P.get_interior_angle_with(Q)))
+
 
 def _get_angle_compatibility(P, Q):
-    return np.abs(np.cos(_get_interior_angle_between(P.vector, Q.vector)))
+    return np.abs(np.clip(np.dot(P.unit_vector, Q.unit_vector), -1.0, 1.0))
 
 
 def _get_scale_compatibility(P, Q):
@@ -925,9 +977,10 @@ def _get_visibility_compatibility(P, Q):
     return min(_get_visibility(P, Q), _get_visibility(Q, P))
 
 
+@profile
 def _get_visibility(P, Q):
-    I0 = _get_orthogonal_projection_onto_segment(Q[0], P)
-    I1 = _get_orthogonal_projection_onto_segment(Q[1], P)
+    I0 = P.get_orthogonal_projection_onto_segment(Q[0])
+    I1 = P.get_orthogonal_projection_onto_segment(Q[1])
     I = Segment(I0, I1)
     distance_between_midpoints = np.linalg.norm(P.midpoint - I.midpoint)
     visibility = 1 - 2 * distance_between_midpoints / I.length
@@ -959,7 +1012,6 @@ def _expand_control_points(edge_to_control_points):
     return edge_to_control_points
 
 
-@profile
 def _get_Fs(edge_to_control_points, k):
     out = dict()
     for edge, control_points in edge_to_control_points.items():
@@ -974,6 +1026,7 @@ def _get_Fs(edge_to_control_points, k):
 
 @profile
 def _get_Fe(edge_to_control_points, edge_compatibility, out):
+
     for e1, e2, compatibility, reverse in edge_compatibility:
         P = edge_to_control_points[e1]
         Q = edge_to_control_points[e2]
@@ -985,8 +1038,13 @@ def _get_Fe(edge_to_control_points, edge_compatibility, out):
             # need to reverse one set of control points
             delta = Q[::-1] - P
 
-        distance = np.linalg.norm(delta, axis=1)
-        displacement = compatibility * delta / distance[..., None]**2
+        # # desired computation:
+        # distance = np.linalg.norm(delta, axis=1)
+        # displacement = compatibility * delta / distance[..., None]**2
+
+        # actually much faster:
+        distance_squared = delta[:, 0]**2 + delta[:, 1]**2
+        displacement = compatibility * delta / distance_squared[..., None]
 
         # Don't move the first and last control point, which are just the node positions.
         displacement[0] = 0
@@ -999,6 +1057,89 @@ def _get_Fe(edge_to_control_points, edge_compatibility, out):
             out[e2] -= displacement[::-1]
 
     return out
+
+# @profile
+# def _get_Fe(edge_to_control_points, edge_compatibility, out):
+
+#     def process_edge_pair(e1, e2, compatibility, reverse):
+#         P = edge_to_control_points[e1]
+#         Q = edge_to_control_points[e2]
+
+#         if not reverse:
+#             # i.e. if source/source or target/target closest
+#             delta = Q - P
+#         else:
+#             # need to reverse one set of control points
+#             delta = Q[::-1] - P
+
+#         # # desired computation:
+#         # distance = np.linalg.norm(delta, axis=1)
+#         # displacement = compatibility * delta / distance[..., None]**2
+
+#         # actually much faster:
+#         distance_squared = delta[:, 0]**2 + delta[:, 1]**2
+#         displacement = compatibility * delta / distance_squared[..., None]
+
+#         # Don't move the first and last control point, which are just the node positions.
+#         displacement[0] = 0
+#         displacement[-1] = 0
+
+#         if not reverse:
+#             return e1, displacement, e2, displacement
+#         else:
+#             return e1, displacement, e2, displacement[::-1]
+
+#     displacements = Parallel(n_jobs=2)(delayed(process_edge_pair)(e1, e2, compatibility, reverse) for e1, e2, compatibility, reverse in edge_compatibility)
+#     for e1, d1, e2, d2 in displacements:
+#         out[e1] += d1
+#         out[e2] -= d2
+
+#     return out
+
+# @profile
+# def _get_Fe(edge_to_control_points, edge_compatibility, out):
+
+#     with Pool(4) as pool:
+#         displacements = pool.starmap(
+#             _get_Fe_for_a_singe_edge_pair,
+#             zip(edge_compatibility, itertools.repeat(edge_to_control_points))
+#         )
+
+#     for e1, d1, e2, d2 in displacements:
+#         out[e1] += d1
+#         out[e2] -= d2
+
+#     return out
+
+
+# def _get_Fe_for_a_singe_edge_pair(edge_compatibility, edge_to_control_points):
+#     e1, e2, compatibility, reverse = edge_compatibility
+#     P = edge_to_control_points[e1]
+#     Q = edge_to_control_points[e2]
+
+#     if not reverse:
+#         # i.e. if source/source or target/target closest
+#         delta = Q - P
+#     else:
+#         # need to reverse one set of control points
+#         delta = Q[::-1] - P
+
+#     # # desired computation:
+#     # distance = np.linalg.norm(delta, axis=1)
+#     # displacement = compatibility * delta / distance[..., None]**2
+
+#     # actually much faster:
+#     distance_squared = delta[:, 0]**2 + delta[:, 1]**2
+#     displacement = compatibility * delta / distance_squared[..., None]
+
+#     # Don't move the first and last control point, which are just the node positions.
+#     displacement[0] = 0
+#     displacement[-1] = 0
+
+#     if not reverse:
+#         return e1, displacement, e2, displacement
+#     else:
+#         return e1, displacement, e2, displacement[::-1]
 
 
 def _update_control_point_positions(edge_to_control_points, F, step_size):
