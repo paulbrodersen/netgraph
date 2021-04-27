@@ -13,10 +13,10 @@ from functools import partial
 from matplotlib.patches import Rectangle
 
 try:
-    from ._main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
+    from ._main import InteractiveGraph, BASE_SCALE
     from ._line_supercover import line_supercover
 except ValueError:
-    from _main import InteractiveGraph, BASE_EDGE_WIDTH, BASE_NODE_SIZE
+    from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
 
 
@@ -296,8 +296,8 @@ class InteractiveHypergraph(InteractiveGraph):
 
         # draw hypernode
         self.draw_nodes({hypernode:pos}, # has to be {} not dict()!
-                        node_size=node_size / BASE_NODE_SIZE,
-                        node_edge_width=node_edge_width / BASE_NODE_SIZE,
+                        node_size=node_size / BASE_SCALE,
+                        node_edge_width=node_edge_width / BASE_SCALE,
                         node_color=node_color,
                         node_edge_color=node_edge_color,
                         node_alpha=node_alpha,
@@ -392,7 +392,7 @@ class InteractiveHypergraph(InteractiveGraph):
             # filter old_edges: self-loops have no edge artists
             old_edges = [(source, target) for (source, target) in old_edges if source != target]
             # combine properties
-            edge_width[new_edge] = combine_properties([self.edge_artists[edge].width           for edge in old_edges])  / BASE_EDGE_WIDTH
+            edge_width[new_edge] = combine_properties([self.edge_artists[edge].width           for edge in old_edges])  / BASE_SCALE
             edge_color[new_edge] = combine_properties([self.edge_artists[edge].get_facecolor() for edge in old_edges]) # NB: this only makes sense for a gray cmap; combine weights instead?
             # edge_alpha[new_edge] = combine_properties([self.edge_artists[edge].get_alpha()     for edge in old_edges]) # TODO: .get_alpha() returns None?
 
