@@ -98,6 +98,12 @@ from ._interactive_variants import (InteractiveGrid,
                                     InteractivelyConstructDestroyGraph
 )
 
+from ._edge_layout import (
+    get_straight_edge_paths,
+    get_curved_edge_paths,
+    get_bundled_edge_paths,
+)
+
 __all__ = ['draw',
            'draw_nodes',
            'draw_node_labels',
@@ -113,5 +119,8 @@ __all__ = ['draw',
            'InteractiveGraph',
            'InteractiveGrid',
            'InteractiveHypergraph',
-           'InteractivelyConstructDestroyGraph'
+           'InteractivelyConstructDestroyGraph',
+           'get_straight_edge_paths',
+           'get_curved_edge_paths',
+           'get_bundled_edge_paths',
 ]

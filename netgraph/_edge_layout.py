@@ -14,7 +14,28 @@ except NameError:
     profile = lambda x: x
 
 
-def _get_straight_edge_paths(edge_list, node_positions, edge_width):
+def get_straight_edge_paths(edge_list, node_positions, edge_width):
+    """Determine the edge layout, where edges are represented by straight
+    lines connecting the source and target node. Bi-directional edges
+    are offset from one another by one edge width.
+
+    Arguments:
+    ----------
+    edge_list : list of (source node ID, target node ID) 2-tuples
+        The edges.
+
+    node_positions : dict node ID : (x, y) positions
+        The node positions.
+
+    edge_width: dict edge : float
+        The width of each edge.
+
+    Returns:
+    --------
+    edge_paths : dict edge : ndarray
+        Dictionary mapping each edge to a list of edge segments.
+
+    """
     edge_paths = dict()
     for (source, target) in edge_list:
 
@@ -45,17 +66,65 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def _get_curved_edge_paths(edge_list, node_positions,
-                           total_control_points_per_edge = 11,
-                           selfloop_radius               = 0.1,
-                           origin                        = np.array([0, 0]),
-                           scale                         = np.array([1, 1]),
-                           k                             = None,
-                           initial_temperature           = 0.1,
-                           total_iterations              = 50,
-                           node_size                     = None,
-                           *args, **kwargs):
+def get_curved_edge_paths(edge_list, node_positions,
+                          total_control_points_per_edge = 11,
+                          selfloop_radius               = 0.1,
+                          origin                        = np.array([0, 0]),
+                          scale                         = np.array([1, 1]),
+                          k                             = None,
+                          initial_temperature           = 0.1,
+                          total_iterations              = 50,
+                          node_size                     = None
+):
 
+    """Determine the edge layout, where edges are represented by curved
+    lines connecting the source and target node. Edges paths avoid
+    nodes and each other. The edge layout is determined using the
+    Fruchterman-Reingold algorithm.
+
+    Arguments:
+    ----------
+    edge_list : list of (source node ID, target node ID) 2-tuples
+        The edges.
+
+    node_positions : dict node ID : (x, y) positions
+        The node positions.
+
+    selfloop_radius : float
+        Self-loops are drawn as circles adjacent to a node. This value determine
+        the radius of the circle.
+
+    total_control_points_per_edge : int (default 11)
+        Number of control
+
+    k : float or None (default None)
+        Expected mean segment length. If None, initialized to :
+        sqrt(area / total nodes) / total control points + 1.
+
+    origin : (float x, float y) tuple or None (default (0, 0))
+        The lower left hand corner of the bounding box specifying the extent of the layout.
+
+    scale : (float delta x, float delta y) or None (default (1, 1))
+        The width and height of the bounding box specifying the extent of the layout.
+
+    total_iterations : int (default 50)
+        Number of iterations in the Fruchterman-Reingold algorithm.
+
+    initial_temperature: float (default 1.)
+        Temperature controls the maximum node displacement on each iteration.
+        Temperature is decreased on each iteration to eventually force the algorithm
+        into a particular solution. The size of the initial temperature determines how
+        quickly that happens. Values should be much smaller than the values of `scale`.
+
+    node_size : dict node ID : float
+        Size of nodes. Used for node avoidance.
+
+    Returns:
+    --------
+    edge_paths : dict edge : ndarray
+        Dictionary mapping each edge to a list of edge segments.
+
+    """
 
     expanded_edge_list, edge_to_control_points = _insert_control_points(
         edge_list, total_control_points_per_edge)
@@ -238,12 +307,12 @@ def _fit_splines_through_control_points(edge_to_control_points, expanded_node_po
 
 
 @profile
-def _get_bundled_edge_paths(edge_list, node_positions,
-                            k                       = 1000.,
-                            compatibility_threshold = 0.05,
-                            total_cycles            = 5,
-                            total_iterations        = 50,
-                            step_size               = 0.04,
+def get_bundled_edge_paths(edge_list, node_positions,
+                           k                       = 1000.,
+                           compatibility_threshold = 0.05,
+                           total_cycles            = 5,
+                           total_iterations        = 50,
+                           step_size               = 0.04,
 ):
     """Bundle edges using the FDEB algorithm proposed by Holten & Wijk (2009).
 
@@ -280,7 +349,7 @@ def _get_bundled_edge_paths(edge_list, node_positions,
     Returns:
     --------
     edge_to_paths : dict edge : path
-        Dictionary mapping edges to arrays of (x, y) tuples, the edge paths.
+        Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
 
     """
 

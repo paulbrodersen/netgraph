@@ -20,7 +20,7 @@ from ._utils import (
     _make_pretty,
 )
 from ._node_layout import get_fruchterman_reingold_layout
-from ._edge_layout import _get_straight_edge_paths, _get_curved_edge_paths, _get_bundled_edge_paths, _shift_edge
+from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
@@ -482,9 +482,9 @@ def draw_edges(edge_list,
 
     # compute edge paths
     if not curved:
-        edge_paths = _get_straight_edge_paths(edge_list, node_positions, edge_width)
+        edge_paths = get_straight_edge_paths(edge_list, node_positions, edge_width)
     else:
-        edge_paths = _get_curved_edge_paths(edge_list, node_positions)
+        edge_paths = get_curved_edge_paths(edge_list, node_positions)
 
     # NOTE: At the moment, only the relative zorder is honored, not the absolute value.
     artists = dict()
