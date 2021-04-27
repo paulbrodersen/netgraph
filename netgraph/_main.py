@@ -838,13 +838,16 @@ class BaseGraph(object):
                  edge_zorder=1,
                  arrows=False,
                  edge_layout='straight',
+                 edge_layout_kwargs={},
                  edge_labels=None,
                  edge_label_position=0.5,
                  edge_label_rotate=True,
                  edge_label_fontdict={},
+                 origin=(0., 0.),
+                 scale=(1., 1.),
                  prettify=True,
                  ax=None,
-                 *args, **kwargs,
+                 *args, **kwargs
     ):
         """
 
@@ -929,6 +932,14 @@ class BaseGraph(object):
             are optimised to avoid other nodes and edges.
             If 'bundled', draw edges as edge bundles.
 
+        edge_layout_kwargs : dict (default {})
+            Keyword arguments passed to edge layout functions.
+            See the documentation of the following functions for a full description
+            of available options:
+            - get_straight_edge_paths
+            - get_curved_edge_paths
+            - get_bundled_edge_paths
+
         edge_labels : dict edge : str
             Mapping of edges to edge labels.
             Only edges in the dictionary are labelled.
@@ -953,6 +964,12 @@ class BaseGraph(object):
                 - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
                 - zorder (default here 1000),
                 - rotation (determined by edge_label_rotate argument)
+
+        origin : (float x, float y) tuple or None (default (0, 0))
+            The lower left hand corner of the bounding box specifying the extent of the canvas.
+
+        scale : (float delta x, float delta y) or None (default (1, 1))
+            The width and height of the bounding box specifying the extent of the canvas.
 
         prettify : bool (default True)
             If True, despine and remove ticks and tick labels.
@@ -998,6 +1015,12 @@ class BaseGraph(object):
         node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
         edge_width = self._rescale(edge_width, BASE_SCALE)
 
+        # Create axis if none is given.
+        if ax is None:
+            self.ax = plt.gca()
+        else:
+            self.ax = ax
+
         # Initialise node positions.
         if node_positions is None:
             self.node_positions = self._get_node_positions(self.edge_list)
@@ -1011,19 +1034,39 @@ class BaseGraph(object):
                 # 2) there are some unconnected nodes in the graph.
                 self.node_positions = self._get_node_positions(self.edge_list,
                                                                node_positions = node_positions,
-                                                               fixed_nodes    = node_positions.keys())
+                                                               fixed_nodes    = node_positions.keys(),
+                                                               origin         = origin,
+                                                               scale          = scale,
+                )
 
-        # Create axis if none is given.
-        if ax is None:
-            self.ax = plt.gca()
+        # Initialise edge paths.
+        self.edge_layout_kwargs = edge_layout_kwargs.copy()
+        if edge_layout == "straight":
+            self.edge_layout_kwargs.setdefault('edge_width', edge_width)
+        elif edge_layout == 'curved':
+            self.edge_layout_kwargs.setdefault('origin', origin)
+            self.edge_layout_kwargs.setdefault('scale', scale)
+            self.edge_layout_kwargs.setdefault('total_control_points_per_edge', 11)
+            area = np.product(scale)
+            total_segments = self.edge_layout_kwargs['total_control_points_per_edge'] + 1
+            k = np.sqrt(area / float(len(self.nodes))) / total_segments
+            k *= 0.5
+            self.edge_layout_kwargs.setdefault('k', k)
+        elif edge_layout == 'bundled':
+            pass
+
+        if isinstance(edge_layout, str):
+            edge_paths = self._get_edge_paths(edge_list, self.node_positions,
+                                              edge_layout, self.edge_layout_kwargs)
+        elif isinstance(edge_layout, dict): # assume edge paths
+            edge_paths = edge_layout
         else:
-            self.ax = ax
+            raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
         # Draw plot elements
         self.edge_artists = dict()
-        self.draw_edges(self.edge_list, self.node_positions,
-                        node_size, edge_width, edge_color, edge_alpha,
-                        edge_zorder, arrows, edge_layout)
+        self.draw_edges(edge_paths, edge_width, edge_color, edge_alpha,
+                        edge_zorder, arrows, node_size)
 
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
@@ -1204,11 +1247,8 @@ class BaseGraph(object):
             self.node_artists[node].xy = self.node_positions[node]
 
 
-    def draw_edges(self, edge_list, node_positions, node_size, edge_width,
-                   edge_color, edge_alpha, edge_zorder, arrows, edge_layout):
+    def _get_edge_paths(self, edge_list, node_positions, edge_layout, edge_layout_kwargs):
         """
-        Draw the edges of the network.
-
         Arguments
         ----------
         edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
@@ -1217,20 +1257,59 @@ class BaseGraph(object):
         node_positions : dict node : (float, float)
             Mapping of nodes to (x,y) positions
 
-        node_size : dict node : float
-            Size (radius) of nodes. Required to offset edges when drawing arrow heads,
-            such that the arrow heads are not occluded.
+        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
+            If 'straight', draw edges as straight lines.
+            If 'curved', draw edges as curved splines. The spline control points
+            are optimised to avoid other nodes and edges.
+            If 'bundled', draw edges as edge bundles.
 
-        edge_width : dict (source, target) : width
+        edge_layout_kwargs : dict
+            Keyword arguments passed to edge layout functions.
+            See the documentation of the following functions for a full list of
+            available options:
+            - get_straight_edge_paths
+            - get_curved_edge_paths
+            - get_bundled_edge_paths
+
+        Returns:
+        --------
+        edge_paths : dict edge : path
+            Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
+
+        """
+
+        if edge_layout is 'straight':
+            edge_paths = get_straight_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+        elif edge_layout is 'curved':
+            edge_paths = get_curved_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+        elif edge_layout is 'bundled':
+            edge_paths = get_bundled_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+        else:
+            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
+
+        return edge_paths
+
+
+    def draw_edges(self, edge_path, edge_width, edge_color, edge_alpha,
+                   edge_zorder, arrows, node_size):
+        """
+        Draw the edges of the network.
+
+        Arguments
+        ----------
+        edge_path : dict edge : path
+            Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
+
+        edge_width : dict edge : width
             Line width of edges.
 
-        edge_color :  dict (source, target) : matplotlib color specification
+        edge_color :  dict edge : matplotlib color specification
            Edge color.
 
-        edge_alpha : dict (source, target) : float
+        edge_alpha : dict edge : float
             The edge transparency,
 
-        edge_zorder : dict (source, target) : int
+        edge_zorder : dict edge : int
             Order in which to plot the edges.
             Hint: graphs typically appear more visually pleasing if darker edges
             are plotted on top of lighter edges.
@@ -1238,11 +1317,6 @@ class BaseGraph(object):
         arrows : bool
             If True, draws edges with arrow heads.
 
-        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
-            If 'straight', draw edges as straight lines.
-            If 'curved', draw edges as curved splines. The spline control points
-            are optimised to avoid other nodes and edges.
-            If 'bundled', draw edges as edge bundles.
         node_size : dict node : float
             Size (radius) of nodes. Required to offset edges from nodes.
 
@@ -1253,21 +1327,13 @@ class BaseGraph(object):
 
         """
 
-        if edge_layout is 'straight':
-            edge_paths = _get_straight_edge_paths(edge_list, node_positions, edge_width)
-        elif edge_layout is 'curved':
-            edge_paths = _get_curved_edge_paths(edge_list, node_positions)
-        elif edge_layout is 'bundled':
-            edge_paths = _get_bundled_edge_paths(edge_list, node_positions)
-        else:
-            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
-
-        # Plot edges sorted by edge order.
-        # Note that we are only honouring the relative z-order, not the absolute z-order.
+        # Plot edges sorted by edge z-order.
         for edge in sorted(edge_zorder, key=lambda k: edge_zorder[k]):
 
+            curved = False if (len(edge_path[edge]) == 2) else True
+
             source, target = edge
-            if ((target, source) in edge_list) and (edge_layout is 'straight'): # i.e. bidirectional, straight edges
+            if ((target, source) in edge_path) and not curved: # i.e. bidirectional, straight edges
                 shape = 'right' # i.e. plot half arrow / thin line shifted to the right
             else:
                 shape = 'full'
@@ -1280,18 +1346,18 @@ class BaseGraph(object):
                 head_width = 1e-10 # 0 throws error
 
             edge_artist = EdgeArtist(
-                midline     = edge_paths[edge],
+                midline     = edge_path[edge],
                 width       = edge_width[edge],
                 facecolor   = edge_color[edge],
                 alpha       = edge_alpha[edge],
                 head_length = head_length,
                 head_width  = head_width,
-                zorder      = 1,
                 edgecolor   = 'none',
                 linewidth   = 0.1,
                 offset      = node_size[target],
                 shape       = shape,
-                curved      = False if edge_layout is 'straight' else True,
+                curved      = curved,
+                zorder      = edge_zorder[edge],
             )
             self.ax.add_artist(edge_artist)
 
@@ -1340,7 +1406,7 @@ class BaseGraph(object):
                     fixed_positions[uuid4()] = m * delta + edge_origin
         fixed_positions.update(self.node_positions)
 
-        edge_paths = _get_curved_edge_paths(edges, fixed_positions)
+        edge_paths = get_curved_edge_paths(edges, fixed_positions, **self.edge_layout_kwargs)
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
