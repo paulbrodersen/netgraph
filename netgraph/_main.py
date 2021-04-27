@@ -306,11 +306,11 @@ def draw_nodes(node_positions,
 
     node_size : scalar or dict node : float (default 3.)
        Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : scalar or dict key : float (default 0.5)
        Line width of node marker border.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict node : color specification (default 'w')
        Node color.
@@ -407,7 +407,7 @@ def draw_edges(edge_list,
 
     edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
-        NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+        NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
     edge_color : matplotlib color specification or dict (source, target) : color specification (default 'k')
        Edge color.
@@ -703,7 +703,7 @@ def draw_edge_labels(edge_list,
 
     edge_width : float or dict (source, key) : width (default 1.)
         Line width of edges.
-        NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+        NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
     ax : matplotlib.axis instance or None (default None)
        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -856,9 +856,11 @@ class BaseGraph(object):
         nodes : list of node IDs or None (default None)
             If None, `nodes` is initialised to the set of the flattened `edge_list`.
 
-        node_positions : dict node : (float, float)
+        node_positions : dict node : (float, float) or None
             Mapping of nodes to (x, y) positions.
-            If 'graph' is an adjacency matrix, nodes must be integers in range 0 to number of nodes - 1.
+            If none are provided, node positions are computed internally.
+            If the 'graph' object is an adjacency matrix, nodes must be integers
+            in the range 0 to number of nodes - 1.
 
         node_shape : string or dict node : string (default 'o')
            The shape of the node. Specification is as for matplotlib.scatter
@@ -867,11 +869,11 @@ class BaseGraph(object):
 
         node_size : scalar or dict node : float (default 3.)
            Size (radius) of nodes.
-           NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
         node_edge_width : scalar or dict node : float (default 0.5)
            Line width of node marker border.
-           NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
         node_color : matplotlib color specification or dict node : color (default 'w')
            Node color.
@@ -904,7 +906,7 @@ class BaseGraph(object):
 
         edge_width : float or dict (source, target) : width (default 1.)
             Line width of edges.
-            NOTE: Value is rescaled by BASE_SCALE (1e-2) to work well with layout routines in igraph and networkx.
+            NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
         edge_color : matplotlib color specification or dict (source, target) : color (default 'k')
            Edge color.
@@ -921,7 +923,7 @@ class BaseGraph(object):
         arrows : bool, optional (default False)
             If True, draw edges with arrow heads.
 
-        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
+        edge_layout : 'straight', 'curved', or 'bundled' (default 'straight')
             If 'straight', draw edges as straight lines.
             If 'curved', draw edges as curved splines. The spline control points
             are optimised to avoid other nodes and edges.
@@ -951,6 +953,10 @@ class BaseGraph(object):
                 - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
                 - zorder (default here 1000),
                 - rotation (determined by edge_label_rotate argument)
+
+        prettify : bool (default True)
+            If True, despine and remove ticks and tick labels.
+            Set figure background to white. Set axis aspect to equal.
 
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
@@ -1237,6 +1243,8 @@ class BaseGraph(object):
             If 'curved', draw edges as curved splines. The spline control points
             are optimised to avoid other nodes and edges.
             If 'bundled', draw edges as edge bundles.
+        node_size : dict node : float
+            Size (radius) of nodes. Required to offset edges from nodes.
 
         Updates
         -------

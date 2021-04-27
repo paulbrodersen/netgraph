@@ -115,18 +115,14 @@ def get_layout_for_multiple_components(edge_list, components, layout_function,
     edge_list : list of (source node, target node) tuples
         The graph to plot.
     components : list of sets of node IDs
-        The unconnected components of the graph.
+        The connected components of the graph.
     layout_function : function handle
         Handle to the function computing the relative positions of each node within a component.
         The args and kwargs are passed through to this function.
-    origin : D-tuple or None (default None, which implies (0, 0))
+    origin : (float x, float y) 2-tuple (default (0, 0))
         Bottom left corner of the frame / canvas containing the graph.
-        If None, it defaults to (0, 0) or the minimum of `node_positions`
-        (whichever is smaller).
-    scale : D-tuple or None (default None, which implies (1, 1)).
-        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
-        maximum distance of nodes in `node_positions` to the `origin`
-        (whichever is greater).
+    scale : (float x, float y) 2-tuple (default (1, 1))
+        Width, height of the frame.
     Returns:
     --------
     node_positions : dict node : (float x, float y)
