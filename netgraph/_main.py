@@ -18,7 +18,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
 )
-from ._node_layout import get_fruchterman_reingold_layout, get_random_layout
+from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout
 from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
@@ -864,6 +864,7 @@ class BaseGraph(object):
             using the indicated method:
             - 'random' : place nodes in random positions
             - 'spring' : place nodes using a force-directed layout (Fruchterman-Reingold algorithm)
+            - 'dot'    : place nodes using the Sugiyama algorithm; requires a directed, acyclic graph
             If node_layout is a dict, keys are nodes and values are (x, y) positions.
 
         node_layout_kwargs : dict (default {})
@@ -872,6 +873,7 @@ class BaseGraph(object):
             of available options:
             - get_random_layout
             - get_fruchterman_reingold_layout
+            - get_sugiyama_layout
 
         node_shape : string or dict node : string (default 'o')
            The shape of the node. Specification is as for matplotlib.scatter
@@ -1021,7 +1023,7 @@ class BaseGraph(object):
 
         # Initialise node and edge layouts.
         self.node_positions = self._initialize_node_layout(
-            node_layout, node_layout_kwargs, origin, scale)
+            node_layout, node_layout_kwargs, origin, scale, node_size)
 
         edge_paths, self.edge_layout_kwargs = self._initialize_edge_layout(
             edge_layout, edge_layout_kwargs, origin, scale, edge_width)
@@ -1151,9 +1153,10 @@ class BaseGraph(object):
         return {key: value * scalar for (key, value) in mydict.items()}
 
 
-    def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale):
-
+    def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale, node_size):
         if isinstance(node_layout, str):
+            if (node_layout == 'spring') or (node_layout == 'dot'):
+                node_layout_kwargs.setdefault('node_size', node_size)
             return self._get_node_positions(node_layout, node_layout_kwargs, origin, scale)
 
         elif isinstance(node_layout, dict):
@@ -1171,10 +1174,12 @@ class BaseGraph(object):
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
         if node_layout == 'spring':
             return get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'dot':
+            return get_sugiyama_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'random':
             return get_random_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'random']
+            implemented = ['spring', 'dot', 'random']
             msg = "Variable 'node_layout' one of:"
             for method in implemented:
                 msg += f"\n\t{method}"

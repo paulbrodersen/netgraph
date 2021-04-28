@@ -11,6 +11,9 @@ import numpy as np
 from rpack import pack
 from functools import wraps
 
+from grandalf.graphs import Vertex, Edge, Graph
+from grandalf.layouts import SugiyamaLayout
+
 from ._utils import (
     _edge_list_to_adjacency_matrix,
     _edge_list_to_adjacency_list,
@@ -519,3 +522,60 @@ def _clip_to_frame(node_positions, origin, scale):
 def get_random_layout(edge_list, origin=(0, 0), scale=(1, 1)):
     nodes = _get_unique_nodes(edge_list)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
+
+
+@_handle_multiple_components
+def get_sugiyama_layout(edge_list, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+
+    # TODO potentially test that graph is a DAG
+    nodes = _get_unique_nodes(edge_list)
+    graph = _get_grandalf_graph(edge_list, nodes, node_size)
+
+    layout = SugiyamaLayout(graph.C[0])
+    layout.init_all()
+    layout.draw(total_iterations)
+
+    # extract node positions
+    node_positions = dict()
+    for layer in layout.layers:
+        for vertex in layer:
+            node_positions[vertex.data] = vertex.view.xy
+
+    # rescale to canvas
+    # TODO: by rescaling, we effectively ignore the node_size argument
+    nodes, positions = zip(*node_positions.items())
+    positions = _rescale_to_frame(np.array(positions), np.array(origin), np.array(scale))
+
+    # place roots on top, leaves on bottom
+    positions -= np.max(positions, axis=0)
+    positions *= -1
+
+    return dict(zip(nodes, positions))
+
+
+def _get_grandalf_graph(edge_list, nodes, node_size):
+    node_to_grandalf_vertex = dict()
+    for node in nodes:
+        # initialize vertex object
+        vertex = Vertex(node)
+
+        # initialize view
+        if isinstance(node_size, (int, float)):
+            vertex.view = vertex_view(2 * node_size, 2 * node_size)
+        elif isinstance(node_size, dict):
+            vertex.view = vertex_view(2 * node_size[node], 2 * node_size[node])
+        else:
+            raise TypeError
+
+        node_to_grandalf_vertex[node] = vertex
+
+    V = list(node_to_grandalf_vertex.values())
+    E = [Edge(node_to_grandalf_vertex[source], node_to_grandalf_vertex[target]) for source, target in edge_list]
+    G = Graph(V, E)
+    return G
+
+
+class vertex_view(object):
+    def __init__(self, w, h):
+        self.w = w
+        self.h = h

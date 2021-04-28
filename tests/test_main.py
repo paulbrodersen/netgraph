@@ -7,6 +7,8 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
+from toy_graphs import unbalanced_tree
+
 from netgraph._main import Graph, draw_edges, draw_nodes, BaseGraph
 from netgraph._utils import _get_point_on_a_circle
 
@@ -331,4 +333,12 @@ def test_draw_graph_with_random_layout():
     fig, ax = plt.subplots()
     bg = BaseGraph(edge_list, node_layout='random')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_graph_with_sugiyama_layout():
+    fig, ax = plt.subplots()
+    bg = BaseGraph(unbalanced_tree, node_layout='dot')
+    # ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig

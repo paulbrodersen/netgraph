@@ -85,7 +85,6 @@ from ._main import (draw,
                     draw_edge_labels,
                     parse_graph,
                     get_color,
-                    get_fruchterman_reingold_layout,
                     Graph,
                     DraggableGraph,
                     EmphasizeOnHoverGraph,
@@ -96,6 +95,12 @@ from ._main import (draw,
 from ._interactive_variants import (InteractiveGrid,
                                     InteractiveHypergraph,
                                     InteractivelyConstructDestroyGraph
+)
+
+from .node_layout import (
+    get_random_layout,
+    get_fruchterman_reingold_layout,
+    get_sugiyama_layout,
 )
 
 from ._edge_layout import (
@@ -111,7 +116,9 @@ __all__ = ['draw',
            'draw_edge_labels',
            'parse_graph',
            'get_color',
+           'get_random_layout',
            'get_fruchterman_reingold_layout',
+           'get_sugiyama_layout',
            'Graph',
            'DraggableGraph',
            'EmphasizeOnHoverGraph',
