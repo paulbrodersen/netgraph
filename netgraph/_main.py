@@ -988,14 +988,7 @@ class BaseGraph(object):
         """
         self.edge_list = edge_list
 
-        nodes_in_edge_list = _get_unique_nodes(edge_list)
-        if nodes is None:
-            self.nodes = nodes_in_edge_list
-        else:
-            msg = "There are some node IDs in the edgelist not present in `nodes`. "
-            msg += "`nodes` has to be the superset of `edge_list`."
-            assert set(nodes).issuperset(nodes_in_edge_list), msg
-            self.nodes = nodes
+        self.nodes = self._initialize_nodes(nodes)
 
         # Convert all node and edge parameters to dictionaries.
         node_shape      = self._normalize_string_argument(node_shape, self.nodes, 'node_shape')
@@ -1108,6 +1101,19 @@ class BaseGraph(object):
 
         if prettify:
             _make_pretty(self.ax)
+
+
+    def _initialize_nodes(self, nodes):
+        nodes_in_edge_list = _get_unique_nodes(self.edge_list)
+        if nodes is None:
+            return nodes_in_edge_list
+        else:
+            if set(nodes).issuperset(nodes_in_edge_list):
+                return nodes
+            else:
+                msg = "There are some node IDs in the edgelist not present in `nodes`. "
+                msg += "`nodes` has to be the superset of `edge_list`."
+                raise ValueError(msg)
 
 
     def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
