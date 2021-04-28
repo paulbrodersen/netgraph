@@ -1008,11 +1008,6 @@ class BaseGraph(object):
         node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
         edge_width = self._rescale(edge_width, BASE_SCALE)
 
-        # Create axis if none is given.
-        if ax is None:
-            self.ax = plt.gca()
-        else:
-            self.ax = ax
 
         # Initialise node positions.
         if node_positions is None:
@@ -1057,6 +1052,8 @@ class BaseGraph(object):
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
         # Draw plot elements
+        self.ax = self._initialize_axis(ax)
+
         self.edge_artists = dict()
         self.draw_edges(edge_paths, edge_width, edge_color, edge_alpha,
                         edge_zorder, arrows, node_size)
@@ -1185,6 +1182,15 @@ class BaseGraph(object):
         Allows method to be overwritten by derived classes.
         """
         return get_fruchterman_reingold_layout(*args, **kwargs)
+
+
+    def _initialize_axis(self, ax):
+        if ax is None:
+            return plt.gca()
+        elif isinstance(ax, matplotlib.axes._subplots.Axes):
+            return ax
+        else:
+            raise TypeError(f"Variable 'ax' either None or a matplotlib axis instance. However, type(ax) is {type(ax)}.")
 
 
     def draw_nodes(self, nodes, node_positions, node_shape, node_size,
