@@ -471,7 +471,11 @@ def _get_scale_compatibility(P, Q):
     # The definition in the paper is rubbish, as the result is not on the interval [0, 1].
     # For example, consider an two edges, both 0.5 long:
     # return 2 / (avg * min(length_P, length_Q) + max(length_P, length_Q) / avg)
+
+    # my original alternative:
     # return min(length_P/length_Q, length_Q/length_P)
+
+    # typo in original paper corrected in Graser et al. (2019)
     return 2 / (avg / min(P.length, Q.length) + max(P.length, Q.length) / avg)
 
 
