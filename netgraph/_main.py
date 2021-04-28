@@ -926,11 +926,14 @@ class BaseGraph(object):
         arrows : bool, optional (default False)
             If True, draw edges with arrow heads.
 
-        edge_layout : 'straight', 'curved', or 'bundled' (default 'straight')
-            If 'straight', draw edges as straight lines.
-            If 'curved', draw edges as curved splines. The spline control points
-            are optimised to avoid other nodes and edges.
-            If 'bundled', draw edges as edge bundles.
+        edge_layout : str or dict edge : segments (default 'straight')
+            If edge_layout is a string, determine the layout internally:
+            - 'straight' : draw edges as straight lines
+            - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
+            - 'bundled'  : draw edges as edge bundles
+            If edge_layout is a dict, the keys are edges and the
+            values are edge paths in the form iterables of (x, y)
+            tuples, the edge segments.
 
         edge_layout_kwargs : dict (default {})
             Keyword arguments passed to edge layout functions.
@@ -1027,29 +1030,8 @@ class BaseGraph(object):
                                                                scale          = scale,
                 )
 
-        # Initialise edge paths.
-        self.edge_layout_kwargs = edge_layout_kwargs.copy()
-        if edge_layout == "straight":
-            self.edge_layout_kwargs.setdefault('edge_width', edge_width)
-        elif edge_layout == 'curved':
-            self.edge_layout_kwargs.setdefault('origin', origin)
-            self.edge_layout_kwargs.setdefault('scale', scale)
-            self.edge_layout_kwargs.setdefault('total_control_points_per_edge', 11)
-            area = np.product(scale)
-            total_segments = self.edge_layout_kwargs['total_control_points_per_edge'] + 1
-            k = np.sqrt(area / float(len(self.nodes))) / total_segments
-            k *= 0.5
-            self.edge_layout_kwargs.setdefault('k', k)
-        elif edge_layout == 'bundled':
-            pass
-
-        if isinstance(edge_layout, str):
-            edge_paths = self._get_edge_paths(edge_list, self.node_positions,
-                                              edge_layout, self.edge_layout_kwargs)
-        elif isinstance(edge_layout, dict): # assume edge paths
-            edge_paths = edge_layout
-        else:
-            raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
+        edge_paths, self.edge_layout_kwargs = self._initialize_edge_layout(
+            edge_layout, edge_layout_kwargs, origin, scale, edge_width)
 
         # Draw plot elements
         self.ax = self._initialize_axis(ax)
@@ -1182,6 +1164,39 @@ class BaseGraph(object):
         Allows method to be overwritten by derived classes.
         """
         return get_fruchterman_reingold_layout(*args, **kwargs)
+    def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width):
+
+        if edge_layout == "straight":
+            edge_layout_kwargs.setdefault('edge_width', edge_width)
+        elif edge_layout == 'curved':
+            edge_layout_kwargs.setdefault('origin', origin)
+            edge_layout_kwargs.setdefault('scale', scale)
+            edge_layout_kwargs.setdefault('total_control_points_per_edge', 11)
+            area = np.product(scale)
+            total_segments = edge_layout_kwargs['total_control_points_per_edge'] + 1
+            k = np.sqrt(area / float(len(self.nodes))) / total_segments
+            k *= 0.5
+            edge_layout_kwargs.setdefault('k', k)
+        elif edge_layout == 'bundled':
+            pass
+
+        if isinstance(edge_layout, str):
+            edge_paths = self._get_edge_paths(self.edge_list, self.node_positions,
+                                              edge_layout, edge_layout_kwargs)
+        elif isinstance(edge_layout, dict):
+            if set(edge_layout.keys()).issuperset(self.edge_list):
+                # TODO test of type of dict values
+                edge_paths = edge_layout
+            else:
+                missing = set(self.edge_list) - set(list(edge_layout.keys()))
+                msg = 'Some edges do not have an edge path in the provided edge layout:'
+                for edge in missing:
+                    msg += f'\n\t{edge}'
+                raise ValueError(msg)
+        else:
+            raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
+
+        return edge_paths, edge_layout_kwargs
 
 
     def _initialize_axis(self, ax):
