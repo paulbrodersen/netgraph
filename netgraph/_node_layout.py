@@ -241,7 +241,7 @@ def get_fruchterman_reingold_layout(edge_list,
                                     origin              = None,
                                     initial_temperature = 1.,
                                     total_iterations    = 50,
-                                    node_size           = None,
+                                    node_size           = 0,
                                     node_positions      = None,
                                     fixed_nodes         = [],
                                     *args, **kwargs
@@ -276,7 +276,7 @@ def get_fruchterman_reingold_layout(edge_list,
         into a particular solution. The size of the initial temperature determines how
         quickly that happens. Values should be much smaller than the values of `scale`.
 
-    node_size : scalar or (n,) or dict key : float (default 0.)
+    node_size : scalar or dict key : float (default 0.)
         Size (radius) of nodes.
         Providing the correct node size minimises the overlap of nodes in the graph,
         which can otherwise occur if there are many nodes, or if the nodes differ considerably in size.
@@ -374,9 +374,7 @@ def get_fruchterman_reingold_layout(edge_list,
 
     total_nodes = len(unique_nodes)
 
-    if node_size is None:
-        node_size = np.zeros((total_nodes))
-    elif isinstance(node_size, (int, float)):
+    if isinstance(node_size, (int, float)):
         node_size = BASE_SCALE * node_size * np.ones((total_nodes))
     elif isinstance(node_size, dict):
         node_size = np.array([BASE_SCALE * node_size[node] if node in node_size else 0. for node in unique_nodes])
