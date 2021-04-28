@@ -321,3 +321,14 @@ def test_draw_random_graph_with_bundled_edges():
     # bg = BaseGraph(edge_list, edge_layout='straight', edge_width=0.5, arrows=True)
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_graph_with_random_layout():
+    edge_list = np.random.randint(0, 10, size=(40, 2))
+    edge_list = [(source, target) for source, target in edge_list if source != target]
+    edge_list = list(set(edge_list))
+    fig, ax = plt.subplots()
+    bg = BaseGraph(edge_list, node_layout='random')
+    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig

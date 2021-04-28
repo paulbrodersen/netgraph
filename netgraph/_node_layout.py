@@ -514,3 +514,8 @@ def _clip_to_frame(node_positions, origin, scale):
     for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
         node_positions[:, ii] = np.clip(node_positions[:, ii], minimum, maximum)
     return node_positions
+
+
+def get_random_layout(edge_list, origin=(0, 0), scale=(1, 1)):
+    nodes = _get_unique_nodes(edge_list)
+    return {node : np.random.rand(2) * scale + origin for node in nodes}

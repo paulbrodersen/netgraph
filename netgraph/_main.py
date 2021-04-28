@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-
 import warnings
 import numpy as np
 import matplotlib
@@ -19,7 +18,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
 )
-from ._node_layout import get_fruchterman_reingold_layout
+from ._node_layout import get_fruchterman_reingold_layout, get_random_layout
 from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
@@ -821,7 +820,8 @@ class BaseGraph(object):
 
     def __init__(self, edge_list,
                  nodes=None,
-                 node_positions=None,
+                 node_layout='spring',
+                 node_layout_kwargs={},
                  node_shape='o',
                  node_size=3.,
                  node_edge_width=0.5,
@@ -859,11 +859,19 @@ class BaseGraph(object):
         nodes : list of node IDs or None (default None)
             If None, `nodes` is initialised to the set of the flattened `edge_list`.
 
-        node_positions : dict node : (float, float) or None
-            Mapping of nodes to (x, y) positions.
-            If none are provided, node positions are computed internally.
-            If the 'graph' object is an adjacency matrix, nodes must be integers
-            in the range 0 to number of nodes - 1.
+        node_layout : str or dict node : (float x, float y) (default 'spring')
+            If node_layout is a string, the node positions are computed internally
+            using the indicated method:
+            - 'random' : place nodes in random positions
+            - 'spring' : place nodes using a force-directed layout (Fruchterman-Reingold algorithm)
+            If node_layout is a dict, keys are nodes and values are (x, y) positions.
+
+        node_layout_kwargs : dict (default {})
+            Keyword arguments passed to node layout functions.
+            See the documentation of the following functions for a full description
+            of available options:
+            - get_random_layout
+            - get_fruchterman_reingold_layout
 
         node_shape : string or dict node : string (default 'o')
            The shape of the node. Specification is as for matplotlib.scatter
@@ -1011,24 +1019,9 @@ class BaseGraph(object):
         node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
         edge_width = self._rescale(edge_width, BASE_SCALE)
 
-
-        # Initialise node positions.
-        if node_positions is None:
-            self.node_positions = self._get_node_positions(self.edge_list)
-        else:
-            if set(node_positions.keys()).issuperset(self.nodes):
-                # All node positions are given; nothing left to do.
-                self.node_positions = node_positions
-            else:
-                # Some node positions are given; however, either
-                # 1) not all positions are provided, or
-                # 2) there are some unconnected nodes in the graph.
-                self.node_positions = self._get_node_positions(self.edge_list,
-                                                               node_positions = node_positions,
-                                                               fixed_nodes    = node_positions.keys(),
-                                                               origin         = origin,
-                                                               scale          = scale,
-                )
+        # Initialise node and edge layouts.
+        self.node_positions = self._initialize_node_layout(
+            node_layout, node_layout_kwargs, origin, scale)
 
         edge_paths, self.edge_layout_kwargs = self._initialize_edge_layout(
             edge_layout, edge_layout_kwargs, origin, scale, edge_width)
@@ -1158,12 +1151,36 @@ class BaseGraph(object):
         return {key: value * scalar for (key, value) in mydict.items()}
 
 
-    def _get_node_positions(self, *args, **kwargs):
-        """
-        Ultra-thin wrapper around get_fruchterman_reingold_layout.
-        Allows method to be overwritten by derived classes.
-        """
-        return get_fruchterman_reingold_layout(*args, **kwargs)
+    def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale):
+
+        if isinstance(node_layout, str):
+            return self._get_node_positions(node_layout, node_layout_kwargs, origin, scale)
+
+        elif isinstance(node_layout, dict):
+            if set(node_layout.keys()).issuperset(self.nodes):
+                # TODO: assert that dictionary values are of the correct type
+                return node_layout
+            else:
+                missing = set(self.nodes) - set(list(node_layout.keys()))
+                msg = 'Some nodes are not assigned a position in the provided node layout:'
+                for node in missing:
+                    msg += f'\n\t{node}'
+                raise ValueError(msg)
+
+
+    def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
+        if node_layout == 'spring':
+            return get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'random':
+            return get_random_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+        else:
+            implemented = ['spring', 'random']
+            msg = "Variable 'node_layout' one of:"
+            for method in implemented:
+                msg += f"\n\t{method}"
+            raise NotImplementedError(msg)
+
+
     def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width):
 
         if edge_layout == "straight":
