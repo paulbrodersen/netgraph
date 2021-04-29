@@ -861,12 +861,12 @@ class BaseGraph(object):
             If None, `nodes` is initialised to the set of the flattened `edge_list`.
 
         node_layout : str or dict node : (float x, float y) (default 'spring')
-            If node_layout is a string, the node positions are computed internally
-            using the indicated method:
-            - 'random' : place nodes in random positions
-            - 'circular' : place nodes
-            - 'spring' : place nodes using a force-directed layout (Fruchterman-Reingold algorithm)
-            - 'dot'    : place nodes using the Sugiyama algorithm; requires a directed, acyclic graph
+            If node_layout is a string, the node positions are computed using
+            the indicated method:
+            - 'random'   : place nodes in random positions;
+            - 'circular' : place nodes regularly spaced on a circle;
+            - 'spring'   : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+            - 'dot'      : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
             If node_layout is a dict, keys are nodes and values are (x, y) positions.
 
         node_layout_kwargs : dict (default {})
