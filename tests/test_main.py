@@ -241,15 +241,15 @@ def test_position_compatibility():
     fig, ax = plt.subplots()
     edge_list = [(0, 1), (2, 3), (4, 5)]
     node_positions = {
-        0 : np.array([ 0.0, 0.25]),
-        1 : np.array([ 1.0, 0.25]),
-        2 : np.array([ 0.0, 0.50]),
-        3 : np.array([ 1.0, 0.50]),
-        4 : np.array([ 0.0, 2.00]),
-        5 : np.array([ 1.0, 2.00]),
+        0 : np.array([ 0.0, -1.0]),
+        1 : np.array([ 1.0, -1.0]),
+        2 : np.array([ 0.0, 0.0]),
+        3 : np.array([ 1.0, 0.0]),
+        4 : np.array([ 0.0, 4.0]),
+        5 : np.array([ 1.0, 4.0]),
     }
-    ax.axis([-0.1, 1.1, -0.1, 2.1])
     Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
+    ax.axis([-0.1, 1.1, -1.1, 4.1])
     return fig
 
 
