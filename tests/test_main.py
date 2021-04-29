@@ -94,7 +94,7 @@ def test_draw_straight_directed_edges():
         1 : np.array([0.5, 0.1]),
         2 : np.array([0.9, 0.9]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='straight')
+    Graph(edge_list, node_layout=node_positions, edge_layout='straight')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -113,7 +113,7 @@ def test_draw_curved_directed_edges_with_labels():
         2 : np.array([0.9, 0.9]),
     }
     edge_labels = dict(zip(edge_list, 'ABC'))
-    Graph(edge_list, node_positions=node_positions, edge_labels=edge_labels, edge_layout='curved')
+    Graph(edge_list, node_layout=node_positions, edge_labels=edge_labels, edge_layout='curved')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -132,7 +132,7 @@ def test_draw_straight_directed_edges_with_labels():
         2 : np.array([0.9, 0.9]),
     }
     edge_labels = dict(zip(edge_list, 'ABC'))
-    Graph(edge_list, node_positions=node_positions, edge_labels=edge_labels, edge_layout='straight')
+    Graph(edge_list, node_layout=node_positions, edge_labels=edge_labels, edge_layout='straight')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -154,7 +154,7 @@ def test_draw_node_labels():
         0 : 'I',
         1 : 'Lorem ipsum'
     }
-    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_label_fontdict=dict(size=10))
+    Graph(edge_list, node_layout=node_positions, node_labels=node_labels, node_label_fontdict=dict(size=10))
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -176,7 +176,7 @@ def test_draw_node_labels_with_automatic_resize():
         0 : 'I',
         1 : 'Lorem ipsum'
     }
-    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_size=10)
+    Graph(edge_list, node_layout=node_positions, node_labels=node_labels, node_size=10)
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -198,7 +198,7 @@ def test_draw_node_labels_with_offset():
         0 : 'I',
         1 : 'Lorem ipsum'
     }
-    Graph(edge_list, node_positions=node_positions, node_labels=node_labels, node_size=10,
+    Graph(edge_list, node_layout=node_positions, node_labels=node_labels, node_size=10,
           node_label_offset=(0.1, -0.1), node_label_fontdict=dict(horizontalalignment='left', verticalalignment='top'))
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
@@ -214,7 +214,7 @@ def test_draw_bundled_edges():
         2 : np.array([0, 0.75]),
         3 : np.array([1, 0.75]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -231,7 +231,7 @@ def test_scale_compatibility():
         4 : np.array([-1.5, 0.75]),
         5 : np.array([ 2.5, 0.75]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     ax.axis([-1.6, 2.6, -0.1, 1.1])
     return fig
 
@@ -248,8 +248,8 @@ def test_position_compatibility():
         4 : np.array([ 0.0, 2.00]),
         5 : np.array([ 1.0, 2.00]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
     ax.axis([-0.1, 1.1, -0.1, 2.1])
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     return fig
 
 
@@ -265,7 +265,7 @@ def test_angle_compatibility():
         4 : np.array([ 0.0, 0.55]),
         5 : np.array([ 1.0, 0.95]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
@@ -282,7 +282,7 @@ def test_visibility_compatibility():
         4 : np.array([ 0.0, -np.sqrt(2)]), # i.e. distance between midpoints from (0, 1) to (2, 3) the same as (0, 1) to (4, 5)
         5 : np.array([ 1.0, -np.sqrt(2)]),
     }
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     ax.axis([-0.1, 2.1, -1.5, 1.1])
     return fig
 
@@ -298,7 +298,7 @@ def test_draw_star_graph_with_bundled_edges():
     node_positions = {ii : _get_point_on_a_circle(origin, radius, 2*np.pi*np.random.rand()) for ii in range(total_edges)}
     node_positions[total_edges] = origin
     node_positions = {k : np.array(v) for k, v in node_positions.items()}
-    Graph(edge_list, node_positions=node_positions, edge_layout='bundled')
+    Graph(edge_list, node_layout=node_positions, edge_layout='bundled')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
 
