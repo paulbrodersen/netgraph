@@ -17,6 +17,7 @@ from ._utils import (
     _get_tangent_at_point,
     _get_text_object_dimensions,
     _make_pretty,
+    _flatten,
 )
 from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout, get_circular_layout
 from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
@@ -2097,13 +2098,17 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
                 if isinstance(selected_artist, NodeArtist):
                     node = self.artist_to_key[selected_artist]
-                    edge_artists = [edge_artist for edge, edge_artist in self.edge_artists.items() if node in edge]
+                    connected_edges = [edge for edge in self.edge_artists.keys() if node in edge]
+                    edge_artists = [self.edge_artists[edge] for edge in connected_edges]
                     emphasized_artists.extend(edge_artists)
+                    neighbours = _flatten(connected_edges)
+                    node_artists = [self.node_artists[neighbour] for neighbour in neighbours if neighbour != node]
+                    emphasized_artists.extend(node_artists)
 
                 elif isinstance(selected_artist, EdgeArtist):
-                    edge = self.artist_to_key[selected_artist]
-                    node_artists = [self.node_artists[node] for node in edge[:2]]
-                    emphasized_artists.extend(node_artists)
+                    source, target = self.artist_to_key[selected_artist]
+                    emphasized_artists.append(self.node_artists[source])
+                    emphasized_artists.append(self.node_artists[target])
 
                 for artist in self.emphasizeable_artists:
                     if artist not in emphasized_artists:
