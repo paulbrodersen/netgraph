@@ -482,6 +482,7 @@ def _get_scale_compatibility(P, Q):
 def _get_position_compatibility(P, Q):
     avg = 0.5 * (P.length + Q.length)
     distance_between_midpoints = np.linalg.norm(Q.midpoint - P.midpoint)
+    # This is the definition from the paper, but the scaling should probably be more aggressive.
     return avg / (avg + distance_between_midpoints)
 
 
