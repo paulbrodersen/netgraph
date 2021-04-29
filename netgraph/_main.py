@@ -1190,11 +1190,11 @@ class BaseGraph(object):
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('total_control_points_per_edge', 11)
+            edge_layout_kwargs.setdefault('total_control_points_per_edge', 7)
             area = np.product(scale)
             total_segments = edge_layout_kwargs['total_control_points_per_edge'] + 1
             k = np.sqrt(area / float(len(self.nodes))) / total_segments
-            k *= 0.5
+            k *= 0.3
             edge_layout_kwargs.setdefault('k', k)
         elif edge_layout == 'bundled':
             pass
