@@ -1080,19 +1080,19 @@ class BaseGraph(object):
 
 
     def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
-        if isinstance(numeric_or_dict, (int, float)):
+        if isinstance(numeric_or_dict, (int, float, np.integer, np.float)):
             return {key : numeric_or_dict for key in dict_keys}
-        elif isinstance(node_size, dict):
+        elif isinstance(numeric_or_dict, dict):
             self._check_completeness(set(numeric_or_dict), dict_keys, variable_name)
-            self._check_types(numeric_or_dict, (int, float), variable_name)
+            self._check_types(numeric_or_dict.values(), (int, float, np.integer, np.float), variable_name)
             return numeric_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a int, float, or a dict."
-            msg += f"The current type is {type(numeric_or_dict)}."
+            msg += f"\nThe current type is {type(numeric_or_dict)}."
             raise TypeError(msg)
 
 
-    def _check_completeness(self, given_set, desired_set):
+    def _check_completeness(self, given_set, desired_set, variable_name):
         complete = given_set.issuperset(desired_set)
         if not complete:
             missing = desired_set - given_set
