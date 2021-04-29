@@ -74,7 +74,7 @@ def get_curved_edge_paths(edge_list, node_positions,
                           k                             = None,
                           initial_temperature           = 0.1,
                           total_iterations              = 50,
-                          node_size                     = None
+                          node_size                     = 0.,
 ):
 
     """Determine the edge layout, where edges are represented by curved
