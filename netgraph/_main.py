@@ -1476,6 +1476,29 @@ class BaseGraph(object):
         return node_label_fontdict
 
 
+    def _get_font_size(self, node_labels, node_label_fontdict):
+        """
+        Determine the maximum font size such that all labels fit inside their node artist.
+
+        TODO:
+        -----
+        - potentially rescale font sizes individually on a per node basis
+        """
+
+        rescale_factor = np.inf
+        for node, label in node_labels.items():
+            artist = self.node_artists[node]
+            diameter = 2 * (artist.radius - artist._lw_data/artist.linewidth_correction)
+            width, height = _get_text_object_dimensions(self.ax, label, **node_label_fontdict)
+            rescale_factor = min(rescale_factor, diameter/np.sqrt(width**2 + height**2))
+
+        if 'size' in node_label_fontdict:
+            size = rescale_factor * node_label_fontdict['size']
+        else:
+            size = rescale_factor * plt.rcParams['font.size']
+        return size
+
+
     def draw_node_labels(self, node_labels, node_label_offset, node_label_fontdict):
         """
         Draw node labels.
@@ -1513,29 +1536,6 @@ class BaseGraph(object):
             if node in self.node_label_artists:
                 self.node_label_artists[node].remove()
             self.node_label_artists[node] = artist
-
-
-    def _get_font_size(self, node_labels, node_label_fontdict):
-        """
-        Determine the maximum font size such that all labels fit inside their node artist.
-
-        TODO:
-        -----
-        - potentially rescale font sizes individually on a per node basis
-        """
-
-        rescale_factor = np.inf
-        for node, label in node_labels.items():
-            artist = self.node_artists[node]
-            diameter = 2 * (artist.radius - artist._lw_data/artist.linewidth_correction)
-            width, height = _get_text_object_dimensions(self.ax, label, **node_label_fontdict)
-            rescale_factor = min(rescale_factor, diameter/np.sqrt(width**2 + height**2))
-
-        if 'size' in node_label_fontdict:
-            size = rescale_factor * node_label_fontdict['size']
-        else:
-            size = rescale_factor * plt.rcParams['font.size']
-        return size
 
 
     def _update_node_label_positions(self, nodes, node_label_positions=None):
