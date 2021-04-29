@@ -251,7 +251,7 @@ def _optimize_control_point_positions(
         k                             = None,
         initial_temperature           = 0.1,
         total_iterations              = 50,
-        node_size                     = None,
+        node_size                     = 0.,
 ):
 
     # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
