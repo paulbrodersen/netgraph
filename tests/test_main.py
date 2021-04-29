@@ -94,7 +94,6 @@ def test_draw_straight_directed_edges():
         1 : np.array([0.5, 0.1]),
         2 : np.array([0.9, 0.9]),
     }
-    edge_labels = dict(zip(edge_list, 'ABC'))
     Graph(edge_list, node_positions=node_positions, edge_layout='straight')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
