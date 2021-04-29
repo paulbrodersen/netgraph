@@ -244,7 +244,7 @@ def get_fruchterman_reingold_layout(edge_list,
                                     total_iterations    = 50,
                                     node_size           = 0,
                                     node_positions      = None,
-                                    fixed_nodes         = [],
+                                    fixed_nodes         = None,
                                     *args, **kwargs
 ):
     """
@@ -288,7 +288,7 @@ def get_fruchterman_reingold_layout(edge_list,
         nodes are initially placed randomly within the bounding box defined by `origin`
         and `scale`.
 
-    fixed_nodes : list of nodes (default [])
+    fixed_nodes : list of nodes (default None)
         Nodes to keep fixed at their initial positions.
 
     Returns:
@@ -363,6 +363,7 @@ def get_fruchterman_reingold_layout(edge_list,
                     node_positions[node] = np.random.rand(2) * scale + origin
 
             unconnected_nodes = []
+            fixed_nodes = []
             for node in node_positions:
                 if not (node in connected_nodes):
                     unconnected_nodes.append(node)

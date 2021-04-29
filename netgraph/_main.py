@@ -822,7 +822,7 @@ class BaseGraph(object):
     def __init__(self, edge_list,
                  nodes=None,
                  node_layout='spring',
-                 node_layout_kwargs={},
+                 node_layout_kwargs=None,
                  node_shape='o',
                  node_size=3.,
                  node_edge_width=0.5,
@@ -832,18 +832,18 @@ class BaseGraph(object):
                  node_zorder=2,
                  node_labels=None,
                  node_label_offset=(0., 0.),
-                 node_label_fontdict={},
+                 node_label_fontdict=None,
                  edge_width=1.,
                  edge_color='k',
                  edge_alpha=1.,
                  edge_zorder=1,
                  arrows=False,
                  edge_layout='straight',
-                 edge_layout_kwargs={},
+                 edge_layout_kwargs=None,
                  edge_labels=None,
                  edge_label_position=0.5,
                  edge_label_rotate=True,
-                 edge_label_fontdict={},
+                 edge_label_fontdict=None,
                  origin=(0., 0.),
                  scale=(1., 1.),
                  prettify=True,
@@ -869,7 +869,7 @@ class BaseGraph(object):
             - 'dot'      : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
             If node_layout is a dict, keys are nodes and values are (x, y) positions.
 
-        node_layout_kwargs : dict (default {})
+        node_layout_kwargs : dict (default None)
             Keyword arguments passed to node layout functions.
             See the documentation of the following functions for a full description
             of available options:
@@ -948,7 +948,7 @@ class BaseGraph(object):
             values are edge paths in the form iterables of (x, y)
             tuples, the edge segments.
 
-        edge_layout_kwargs : dict (default {})
+        edge_layout_kwargs : dict (default None)
             Keyword arguments passed to edge layout functions.
             See the documentation of the following functions for a full description
             of available options:
@@ -1048,30 +1048,15 @@ class BaseGraph(object):
         self._update_view()
 
         if node_labels:
-            node_label_fontdict.setdefault('horizontalalignment', 'center')
-            node_label_fontdict.setdefault('verticalalignment', 'center')
-            node_label_fontdict.setdefault('clip_on', False)
-
-            if np.all(np.isclose(node_label_offset, (0, 0))):
-                # Labels are centered on node artists.
-                # Set fontsize such that labels fit the diameter of the node artists.
-                size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
-                node_label_fontdict.setdefault('size', size)
-
+            node_label_fontdict = self._initialize_node_label_fontdict(
+                node_label_fontdict, node_labels, node_label_offset)
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
 
         if edge_labels:
+            edge_label_fontdict = self._initialize_edge_label_fontdict(edge_label_fontdict)
             self.edge_label_position = edge_label_position
             self.edge_label_rotate = edge_label_rotate
-            edge_label_fontdict.setdefault('bbox', dict(boxstyle='round',
-                                                        ec=(1.0, 1.0, 1.0),
-                                                        fc=(1.0, 1.0, 1.0)))
-            edge_label_fontdict.setdefault('horizontalalignment', 'center')
-            edge_label_fontdict.setdefault('verticalalignment', 'center')
-            edge_label_fontdict.setdefault('clip_on', False)
-            edge_label_fontdict.setdefault('zorder', 1000)
-
             self.edge_label_artists = dict()
             self.draw_edge_labels(edge_labels, self.edge_label_position,
                                   self.edge_label_rotate, edge_label_fontdict)
@@ -1157,6 +1142,9 @@ class BaseGraph(object):
 
 
     def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale, node_size):
+        if node_layout_kwargs is None:
+            node_layout_kwargs = dict()
+
         if isinstance(node_layout, str):
             if (node_layout == 'spring') or (node_layout == 'dot'):
                 node_layout_kwargs.setdefault('node_size', node_size)
@@ -1192,6 +1180,8 @@ class BaseGraph(object):
 
 
     def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width):
+        if edge_layout_kwargs is None:
+            edge_layout_kwargs = dict()
 
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('edge_width', edge_width)
@@ -1467,6 +1457,24 @@ class BaseGraph(object):
             self.ax.draw_artist(self.edge_artists[edge])
 
 
+    def _initialize_node_label_fontdict(self, node_label_fontdict, node_labels, node_label_offset):
+        if node_label_fontdict is None:
+            node_label_fontdict = dict()
+
+        node_label_fontdict.setdefault('horizontalalignment', 'center')
+        node_label_fontdict.setdefault('verticalalignment', 'center')
+        node_label_fontdict.setdefault('clip_on', False)
+        node_label_fontdict.setdefault('zorder', np.inf)
+
+        if np.all(np.isclose(node_label_offset, (0, 0))):
+            # Labels are centered on node artists.
+            # Set fontsize such that labels fit the diameter of the node artists.
+            size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
+            node_label_fontdict.setdefault('size', size)
+
+        return node_label_fontdict
+
+
     def draw_node_labels(self, node_labels, node_label_offset, node_label_fontdict):
         """
         Draw node labels.
@@ -1537,6 +1545,20 @@ class BaseGraph(object):
         for node in nodes:
             x, y = node_label_positions[node]
             self.node_label_artists[node].set_position(x + dx, y + dy)
+
+
+    def _initialize_edge_label_fontdict(self, edge_label_fontdict):
+        if edge_label_fontdict is None:
+            edge_label_fontdict = dict()
+
+        edge_label_fontdict.setdefault('bbox', dict(boxstyle='round',
+                                                    ec=(1.0, 1.0, 1.0),
+                                                    fc=(1.0, 1.0, 1.0)))
+        edge_label_fontdict.setdefault('horizontalalignment', 'center')
+        edge_label_fontdict.setdefault('verticalalignment', 'center')
+        edge_label_fontdict.setdefault('clip_on', False)
+        edge_label_fontdict.setdefault('zorder', np.inf)
+        return edge_label_fontdict
 
 
     def draw_edge_labels(self, edge_labels, edge_label_position,
