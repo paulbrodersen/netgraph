@@ -342,3 +342,11 @@ def test_draw_graph_with_sugiyama_layout():
     bg = BaseGraph(unbalanced_tree, node_layout='dot')
     # ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_graph_with_circular_layout():
+    fig, ax = plt.subplots()
+    bg = BaseGraph(unbalanced_tree, node_layout='circular')
+    # ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig

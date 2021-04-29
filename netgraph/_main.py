@@ -18,7 +18,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
 )
-from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout
+from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout, get_circular_layout
 from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
@@ -863,6 +863,7 @@ class BaseGraph(object):
             If node_layout is a string, the node positions are computed internally
             using the indicated method:
             - 'random' : place nodes in random positions
+            - 'circular' : place nodes
             - 'spring' : place nodes using a force-directed layout (Fruchterman-Reingold algorithm)
             - 'dot'    : place nodes using the Sugiyama algorithm; requires a directed, acyclic graph
             If node_layout is a dict, keys are nodes and values are (x, y) positions.
@@ -872,6 +873,7 @@ class BaseGraph(object):
             See the documentation of the following functions for a full description
             of available options:
             - get_random_layout
+            - get_circular_layout
             - get_fruchterman_reingold_layout
             - get_sugiyama_layout
 
@@ -1174,13 +1176,15 @@ class BaseGraph(object):
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
         if node_layout == 'spring':
             return get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'circular':
+            return get_circular_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':
             return get_sugiyama_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'random':
             return get_random_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'dot', 'random']
-            msg = "Variable 'node_layout' one of:"
+            implemented = ['spring', 'dot', 'random', 'circular']
+            msg = f"Node layout {node_layout} not implemented. Available layouts are:"
             for method in implemented:
                 msg += f"\n\t{method}"
             raise NotImplementedError(msg)

@@ -19,6 +19,7 @@ from ._utils import (
     _edge_list_to_adjacency_list,
     _get_subgraph,
     _get_unique_nodes,
+    _get_n_points_on_a_circle,
 )
 
 
@@ -598,3 +599,30 @@ class vertex_view(object):
     def __init__(self, w, h):
         self.w = w
         self.h = h
+
+
+def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
+    """
+    Arguments:
+    ----------
+
+    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
+
+    origin : (float x, float y) tuple (default (0, 0))
+        The lower left hand corner of the bounding box specifying the extent of the layout.
+
+    scale : (float width, float height) tuple (default (1, 1))
+        The width and height of the bounding box specifying the extent of the layout.
+
+    Returns:
+    --------
+    node_positions : dict key : (float, float)
+        Mapping of nodes to (x,y) positions
+
+    """
+    nodes = _get_unique_nodes(edge_list)
+    center = np.array(origin) + 0.5 * np.array(scale)
+    radius = np.min(scale) / 2
+    positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
+    return dict(zip(nodes, positions))
