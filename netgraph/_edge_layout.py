@@ -4,7 +4,7 @@ import numpy as np
 
 from uuid import uuid4
 
-from ._utils import _bspline, _get_n_points_on_a_circle, _get_signed_angle_between
+from ._utils import _bspline, _get_n_points_on_a_circle, _get_angle
 from ._node_layout import get_fruchterman_reingold_layout, _clip_to_frame
 
 # for profiling with kernprof/line_profiler
@@ -229,9 +229,9 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
     selfloop_center = node_positions[source] + selfloop_radius * unit_vector
 
     selfloop_control_point_positions = _get_n_points_on_a_circle(
-        selfloop_center, selfloop_radius, len(control_points),
-        _get_signed_angle_between(np.array([1., 0.]), node_positions[source] - selfloop_center)
-    )
+        selfloop_center, selfloop_radius, len(control_points)+1,
+        _get_angle(*unit_vector) + np.pi,
+    )[1:]
 
     # ensure that the loop stays within the bounding box
     selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)

@@ -12,6 +12,7 @@ from toy_graphs import unbalanced_tree
 from netgraph._main import Graph, draw_edges, draw_nodes, BaseGraph
 from netgraph._utils import _get_point_on_a_circle
 
+
 @pytest.mark.mpl_image_compare
 def test_Graph():
     fig, ax = plt.subplots()
@@ -50,22 +51,12 @@ def test_draw_curved_edges():
 
 @pytest.mark.mpl_image_compare
 def test_draw_selfloops():
+    nodes = list(range(17))
+    edges = list(zip(nodes[:-1], nodes[1:])) + [(nodes[-1], nodes[0])]
+    selfloops = [(node, node) for node in nodes]
+    edges = edges + selfloops
     fig, ax = plt.subplots()
-    edge_list = [
-        (0, 1),
-        (1, 1),
-        (0, 2),
-    ]
-    node_positions = {
-        0 : np.array([0.1, 0.1]),
-        1 : np.array([0.49, 0.51]),
-        2 : np.array([0.9, 0.9]),
-    }
-
-    draw_edges(edge_list, node_positions, curved=True, ax=ax)
-    draw_nodes(node_positions, ax=ax)
-    ax.set_aspect('equal')
-    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    BaseGraph(edges, node_layout='circular', edge_layout='curved', arrows=True)
     return fig
 
 

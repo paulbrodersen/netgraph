@@ -513,6 +513,8 @@ def _clip_to_frame(node_positions, origin, scale):
     # they end up being placed on a corner of the frame.
     # If more than one node ends up in one of the corners, we are in trouble,
     # as then the distance between them becomes zero.
+    origin = np.array(origin)
+    scale = np.array(scale)
     for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
         node_positions[:, ii] = np.clip(node_positions[:, ii], minimum, maximum)
     return node_positions
@@ -624,5 +626,6 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
     nodes = _get_unique_nodes(edge_list)
     center = np.array(origin) + 0.5 * np.array(scale)
     radius = np.min(scale) / 2
+    radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
     return dict(zip(nodes, positions))
