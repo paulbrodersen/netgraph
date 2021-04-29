@@ -919,6 +919,7 @@ class BaseGraph(object):
                 - horizontalalignment (default here: 'center')
                 - verticalalignment (default here: 'center')
                 - clip_on (default here: False)
+                - zorder (default here: inf)
 
         edge_width : float or dict (source, target) : width (default 1.)
             Line width of edges.
@@ -974,11 +975,11 @@ class BaseGraph(object):
             Keyword arguments passed to matplotlib.text.Text.
             For a full list of available arguments see the matplotlib documentation.
             The following default values differ from the defaults for matplotlib.text.Text:
-                - horizontalalignment (default here 'center'),
-                - verticalalignment (default here 'center')
-                - clip_on (default here False),
-                - bbox (default here dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-                - zorder (default here 1000),
+                - horizontalalignment (default here: 'center'),
+                - verticalalignment (default here: 'center')
+                - clip_on (default here: False),
+                - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
+                - zorder (default here: inf),
                 - rotation (determined by edge_label_rotate argument)
 
         origin : (float x, float y) tuple or None (default (0, 0))
@@ -1739,9 +1740,11 @@ class Graph(BaseGraph):
             # more pleasing results. Here we hence specify the relative order in
             # which edges are plotted according to the color of the edge.
             edge_zorder = _get_zorder(edge_color)
+            node_zorder = np.max(list(edge_zorder.values)) + 1
         else: # set to default
             edge_color = 'k'
             edge_zorder = 1
+            node_zorder = 2
 
         # Plot arrows if the graph has bi-directional edges.
         if directed:
@@ -1749,7 +1752,7 @@ class Graph(BaseGraph):
         else:
             arrows = False
 
-        super().__init__(edge_list, nodes, edge_color=edge_color,
+        super().__init__(edge_list, nodes, node_zorder=node_zorder, edge_color=edge_color,
                          edge_zorder=edge_zorder, arrows=arrows, *args, **kwargs)
 
 
