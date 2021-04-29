@@ -18,6 +18,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
     _flatten,
+    _rank,
 )
 from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout, get_circular_layout
 from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
@@ -220,10 +221,9 @@ def _get_zorder(color_dict):
     # reorder plot elements such that darker items are plotted last
     # and hence most prominent in the graph
     # TODO: assumes that background is white (or at least light); might want to reverse order for dark backgrounds
-    zorder = np.argsort(np.sum(list(color_dict.values()), axis=1)) # assumes RGB specification
+    zorder = _rank(np.sum(list(color_dict.values()), axis=1)) # assumes RGB specification
     zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
-    zorder = {key: index for key, index in zip(color_dict.keys(), zorder)}
-    return zorder
+    return {key: index for key, index in zip(color_dict.keys(), zorder)}
 
 
 def _get_font_size(ax, node_labels, **kwargs):
@@ -1373,8 +1373,7 @@ class BaseGraph(object):
 
         """
 
-        # Plot edges sorted by edge z-order.
-        for edge in sorted(edge_zorder, key=lambda k: edge_zorder[k]):
+        for edge in edge_path:
 
             curved = False if (len(edge_path[edge]) == 2) else True
 
@@ -1741,7 +1740,7 @@ class Graph(BaseGraph):
             # more pleasing results. Here we hence specify the relative order in
             # which edges are plotted according to the color of the edge.
             edge_zorder = _get_zorder(edge_color)
-            node_zorder = np.max(list(edge_zorder.values)) + 1
+            node_zorder = np.max(list(edge_zorder.values())) + 1
         else: # set to default
             edge_color = DEFAULT_COLOR
             edge_zorder = 1

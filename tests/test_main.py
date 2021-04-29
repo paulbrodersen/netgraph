@@ -340,3 +340,17 @@ def test_draw_graph_with_circular_layout():
     bg = BaseGraph(unbalanced_tree, node_layout='circular')
     # ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_draw_weighted_graph():
+    total_edges = 100
+    total_nodes = 20
+    edge_list = np.random.randint(0, total_nodes, size=(total_edges, 2))
+    edge_weights = 2 * np.random.randn(total_edges)
+    # edge_weights = 2 * np.random.rand(total_edges) - 1
+    edge_list = [(source, target, weight) for (source, target), weight in zip(edge_list, edge_weights)]
+    fig, ax = plt.subplots()
+    bg = Graph(edge_list, node_layout='spring', edge_layout='curved')
+    ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig

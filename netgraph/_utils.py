@@ -288,3 +288,10 @@ def _make_pretty(ax):
     ax.get_figure().set_facecolor('w')
     ax.set_frame_on(False)
     ax.get_figure().canvas.draw()
+
+
+def _rank(vec):
+    tmp = vec.argsort()
+    ranks = np.empty_like(vec)
+    ranks[tmp] = np.arange(len(vec))
+    return ranks
