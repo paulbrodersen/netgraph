@@ -524,6 +524,27 @@ def get_random_layout(edge_list, origin=(0,0), scale=(1,1)):
 
 @_handle_multiple_components
 def get_sugiyama_layout(edge_list, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+    """
+    Arguments:
+    ----------
+    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
+
+    origin : (float x, float y) tuple (default (0, 0))
+        The lower left hand corner of the bounding box specifying the extent of the layout.
+
+    scale : (float width, float height) tuple (default (1, 1))
+        The width and height of the bounding box specifying the extent of the layout.
+
+    total_iterations : int (default 3)
+        Increasing the number of iterations can lead to a reduction in edge crossings.
+
+    Returns:
+    --------
+    node_positions : dict key : (float, float)
+        Mapping of nodes to (x,y) positions
+
+    """
 
     # TODO potentially test that graph is a DAG
     nodes = _get_unique_nodes(edge_list)
