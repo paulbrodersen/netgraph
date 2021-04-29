@@ -327,6 +327,9 @@ def get_fruchterman_reingold_layout(edge_list,
         "Arguments `origin` (d={}) and `scale` (d={}) need to have the same number of dimensions!".format(len(origin), len(scale))
     dimensionality = len(origin)
 
+    if fixed_nodes is None:
+        fixed_nodes = []
+
     connected_nodes = _get_unique_nodes(edge_list)
 
     if node_positions is None: # assign random starting positions to all nodes
@@ -363,7 +366,6 @@ def get_fruchterman_reingold_layout(edge_list,
                     node_positions[node] = np.random.rand(2) * scale + origin
 
             unconnected_nodes = []
-            fixed_nodes = []
             for node in node_positions:
                 if not (node in connected_nodes):
                     unconnected_nodes.append(node)
