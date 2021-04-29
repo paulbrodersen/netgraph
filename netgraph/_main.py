@@ -27,6 +27,7 @@ from ._deprecated import deprecated
 
 
 BASE_SCALE = 1e-2
+DEFAULT_COLOR = '#2c404c' # '#677e8c' # '#121f26' # '#23343f' # 'k',
 
 
 @deprecated("Use Graph.draw() or InteractiveGraph.draw() instead.")
@@ -827,14 +828,14 @@ class BaseGraph(object):
                  node_size=3.,
                  node_edge_width=0.5,
                  node_color='w',
-                 node_edge_color='k',
+                 node_edge_color=DEFAULT_COLOR,
                  node_alpha=1.0,
                  node_zorder=2,
                  node_labels=None,
                  node_label_offset=(0., 0.),
                  node_label_fontdict=None,
                  edge_width=1.,
-                 edge_color='k',
+                 edge_color=DEFAULT_COLOR,
                  edge_alpha=1.,
                  edge_zorder=1,
                  arrows=False,
@@ -894,7 +895,7 @@ class BaseGraph(object):
         node_color : matplotlib color specification or dict node : color (default 'w')
            Node color.
 
-        node_edge_color : matplotlib color specification or dict node : color (default 'k')
+        node_edge_color : matplotlib color specification or dict node : color (default DEFAULT_COLOR)
            Node edge color.
 
         node_alpha : scalar or dict node : float (default 1.)
@@ -925,7 +926,7 @@ class BaseGraph(object):
             Line width of edges.
             NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
-        edge_color : matplotlib color specification or dict (source, target) : color (default 'k')
+        edge_color : matplotlib color specification or dict (source, target) : color (default DEFAULT_COLOR)
            Edge color.
 
         edge_alpha : float or dict (source, target) : float (default 1.)
@@ -1742,7 +1743,7 @@ class Graph(BaseGraph):
             edge_zorder = _get_zorder(edge_color)
             node_zorder = np.max(list(edge_zorder.values)) + 1
         else: # set to default
-            edge_color = 'k'
+            edge_color = DEFAULT_COLOR
             edge_zorder = 1
             node_zorder = 2
 
