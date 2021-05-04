@@ -1278,7 +1278,7 @@ class BaseGraph(object):
                                      linewidth=node_edge_width[node],
                                      alpha=node_alpha[node],
                                      zorder=node_zorder[node])
-            self.ax.add_artist(node_artist)
+            self.ax.add_patch(node_artist)
 
             if node in self.node_artists:
                 self.node_artists[node].remove()
@@ -1404,7 +1404,7 @@ class BaseGraph(object):
                 curved      = curved,
                 zorder      = edge_zorder[edge],
             )
-            self.ax.add_artist(edge_artist)
+            self.ax.add_patch(edge_artist)
 
             if edge in self.edge_artists:
                 self.edge_artists[edge].remove()
@@ -1683,17 +1683,15 @@ class BaseGraph(object):
         # when matplotlib sets axis limits automatically.
         # Hence we need to set them manually.
 
-        max_radius = np.max([artist.radius for artist in self.node_artists.values()])
+        # max_radius = np.max([artist.radius for artist in self.node_artists.values()])
+        # maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
+        # minx, miny = np.min(list(self.node_positions.values()), axis=0)
+        # w = maxx-minx
+        # h = maxy-miny
+        # padx, pady = 0.05*w + max_radius, 0.05*h + max_radius
+        # corners = (minx-padx, miny-pady), (maxx+padx, maxy+pady)
+        # self.ax.update_datalim(corners)
 
-        maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
-        minx, miny = np.min(list(self.node_positions.values()), axis=0)
-
-        w = maxx-minx
-        h = maxy-miny
-        padx, pady = 0.05*w + max_radius, 0.05*h + max_radius
-        corners = (minx-padx, miny-pady), (maxx+padx, maxy+pady)
-
-        self.ax.update_datalim(corners)
         self.ax.autoscale_view()
         self.ax.get_figure().canvas.draw()
 

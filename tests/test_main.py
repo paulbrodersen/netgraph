@@ -354,3 +354,16 @@ def test_draw_weighted_graph():
     bg = Graph(edge_list, node_layout='spring', edge_layout='curved')
     ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_update_view():
+    fig, ax = plt.subplots()
+    edge_list = [(0, 1)]
+    node_layout = {
+        0 : np.array([-1, -1]),
+        1 : np.array([0.5, 0.5])
+    }
+    g = BaseGraph(edge_list, node_layout=node_layout)
+    # ax.axis([-0.1, 1.1, -0.1, 1.1])
+    return fig
