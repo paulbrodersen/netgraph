@@ -296,8 +296,8 @@ def _get_path_through_control_points(edge_to_control_points, node_positions, con
     return edge_to_path
 
 
-def _fit_splines_through_edge_paths(edge_to_path):
-    return {edge : _bspline(path) for edge, path in edge_to_path.items()}
+def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
+    return {edge : _bspline(path, *args, **kwargs) for edge, path in edge_to_path.items()}
 
 
 @profile
@@ -382,7 +382,8 @@ def get_bundled_edge_paths(edge_list, node_positions,
     for (source, target) in reverse_edges:
         edge_to_control_points[(source, target)] = edge_to_control_points[(target, source)]
 
-    return edge_to_control_points
+    # return edge_to_control_points
+    return _fit_splines_through_edge_paths(edge_to_control_points, degree=3)
 
 
 def _get_k(edge_list, node_positions, k):
