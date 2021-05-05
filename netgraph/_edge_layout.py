@@ -126,40 +126,40 @@ def get_curved_edge_paths(edge_list, node_positions,
 
     """
 
-    expanded_edge_list, edge_to_control_points = _insert_control_points(
+    edge_to_control_points = _initialize_control_points(
         edge_list, total_control_points_per_edge)
 
     control_point_positions = _initialize_control_point_positions(
         edge_to_control_points, node_positions, selfloop_radius, origin, scale)
 
-    expanded_node_positions = _optimize_control_point_positions(
-        expanded_edge_list, node_positions, control_point_positions, total_control_points_per_edge,
+    control_point_positions = _optimize_control_point_positions(
+        edge_to_control_points, node_positions, control_point_positions, total_control_points_per_edge,
         origin, scale, k, initial_temperature, total_iterations, node_size,
     )
 
-    edge_to_path = _fit_splines_through_control_points(
-        edge_to_control_points, expanded_node_positions)
+    edge_to_path = _get_path_through_control_points(
+        edge_to_control_points, node_positions, control_point_positions)
+
+    edge_to_path = _fit_splines_through_edge_paths(edge_to_path)
 
     return edge_to_path
 
 
-def _insert_control_points(edge_list, total_control_points_per_edge=11):
+def _initialize_control_points(edge_list, total_control_points_per_edge=11):
+    return {edge : [uuid4() for _ in range(total_control_points_per_edge)] for edge in edge_list}
+
+
+def _expand_edges(edge_to_control_points):
     """
     Create a new, expanded edge list, in which each edge is split into multiple segments.
     There are total_control_points + 1 segments / edges for each original edge.
     """
     expanded_edge_list = []
-    edge_to_control_points = dict()
-
-    for source, target in edge_list:
-        control_points = [uuid4() for _ in range(total_control_points_per_edge)]
-        edge_to_control_points[(source, target)] = control_points
-
+    for (source, target), control_points in edge_to_control_points.items():
         sources = [source] + control_points
         targets = control_points + [target]
         expanded_edge_list.extend(zip(sources, targets))
-
-    return expanded_edge_list, edge_to_control_points
+    return expanded_edge_list
 
 
 def _initialize_control_point_positions(edge_to_control_points, node_positions,
@@ -244,8 +244,7 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
 
 
 def _optimize_control_point_positions(
-        expanded_edge_list, node_positions,
-        control_point_positions, total_control_points_per_edge,
+        edge_to_control_points, node_positions, control_point_positions, total_control_points_per_edge,
         origin                        = np.array([0, 0]),
         scale                         = np.array([1, 1]),
         k                             = None,
@@ -254,56 +253,51 @@ def _optimize_control_point_positions(
         node_size                     = 0.,
 ):
 
+    nodes = list(node_positions.keys())
+
     # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
     # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
     # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
-    unique_nodes = list(node_positions.keys())
     if k is None:
-        total_nodes = len(unique_nodes)
+        total_nodes = len(nodes)
         area = np.product(scale)
         k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
         k *= 0.5
 
-    control_point_positions.update(node_positions)
+    expanded_edge_list = _expand_edges(edge_to_control_points)
+    expanded_node_positions = control_point_positions.copy() # TODO: may need deepcopy here
+    expanded_node_positions.update(node_positions)
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
 
         expanded_node_positions = get_fruchterman_reingold_layout(
             expanded_edge_list,
-            node_positions      = control_point_positions,
+            node_positions      = expanded_node_positions,
             scale               = scale,
             origin              = origin,
             k                   = k,
             initial_temperature = initial_temperature,
             total_iterations    = total_iterations,
             node_size           = node_size,
-            fixed_nodes         = unique_nodes,
+            fixed_nodes         = nodes,
         )
 
-    return expanded_node_positions
+    return {node : xy for node, xy in expanded_node_positions.items() if node not in nodes}
 
 
-def _get_path_through_control_points(edge_to_control_points, expanded_node_positions):
+def _get_path_through_control_points(edge_to_control_points, node_positions, control_point_positions):
     edge_to_path = dict()
     for (source, target), control_points in edge_to_control_points.items():
-        control_point_positions = [expanded_node_positions[source]] \
-            + [expanded_node_positions[node] for node in control_points] \
-            + [expanded_node_positions[target]]
-        edge_to_path[(source, target)] = control_point_positions
+        path = [node_positions[source]] \
+            + [control_point_positions[node] for node in control_points] \
+            + [node_positions[target]]
+        edge_to_path[(source, target)] = np.array(path)
     return edge_to_path
 
 
-def _fit_splines_through_control_points(edge_to_control_points, expanded_node_positions):
-    # Fit a BSpline to each set of control points (+ anchors).
-    edge_to_path = dict()
-    for (source, target), control_points in edge_to_control_points.items():
-        control_point_positions = [expanded_node_positions[source]] \
-            + [expanded_node_positions[node] for node in control_points] \
-            + [expanded_node_positions[target]]
-        path = _bspline(np.array(control_point_positions))
-        edge_to_path[(source, target)] = path
-    return edge_to_path
+def _fit_splines_through_edge_paths(edge_to_path):
+    return {edge : _bspline(path) for edge, path in edge_to_path.items()}
 
 
 @profile
@@ -370,7 +364,7 @@ def get_bundled_edge_paths(edge_list, node_positions,
 
     edge_compatibility = _get_edge_compatibility(edge_list, node_positions, compatibility_threshold)
 
-    edge_to_control_points = _initialize_control_points(edge_list, node_positions)
+    edge_to_control_points = _initialize_bundled_control_points(edge_list, node_positions)
 
     for _ in range(total_cycles):
         edge_to_control_points = _expand_control_points(edge_to_control_points)
@@ -500,7 +494,7 @@ def _get_visibility(P, Q):
     return max(visibility, 0)
 
 
-def _initialize_control_points(edge_list, node_positions):
+def _initialize_bundled_control_points(edge_list, node_positions):
     edge_to_control_points = dict()
     for source, target in edge_list:
         edge_to_control_points[(source, target)] \
