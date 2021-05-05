@@ -1158,15 +1158,8 @@ class BaseGraph(object):
             return self._get_node_positions(node_layout, node_layout_kwargs, origin, scale)
 
         elif isinstance(node_layout, dict):
-            if set(node_layout.keys()).issuperset(self.nodes):
-                # TODO: assert that dictionary values are of the correct type
-                return node_layout
-            else:
-                missing = set(self.nodes) - set(list(node_layout.keys()))
-                msg = 'Some nodes are not assigned a position in the provided node layout:'
-                for node in missing:
-                    msg += f'\n\t{node}'
-                raise ValueError(msg)
+            self._check_completeness(set(node_layout), set(self.nodes), 'node_layout')
+            return node_layout
 
 
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
@@ -1208,15 +1201,9 @@ class BaseGraph(object):
             edge_paths = self._get_edge_paths(self.edge_list, self.node_positions,
                                               edge_layout, edge_layout_kwargs)
         elif isinstance(edge_layout, dict):
-            if set(edge_layout.keys()).issuperset(self.edge_list):
-                # TODO test of type of dict values
-                edge_paths = edge_layout
+            self._check_completeness(edge_layout, self.edge_list, 'edge_layout')
+            edge_paths = edge_layout
             else:
-                missing = set(self.edge_list) - set(list(edge_layout.keys()))
-                msg = 'Some edges do not have an edge path in the provided edge layout:'
-                for edge in missing:
-                    msg += f'\n\t{edge}'
-                raise ValueError(msg)
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
