@@ -1084,7 +1084,7 @@ class BaseGraph(object):
         if isinstance(numeric_or_dict, (int, float, np.integer, np.float)):
             return {key : numeric_or_dict for key in dict_keys}
         elif isinstance(numeric_or_dict, dict):
-            self._check_completeness(set(numeric_or_dict), dict_keys, variable_name)
+            self._check_completeness(numeric_or_dict, dict_keys, variable_name)
             self._check_types(numeric_or_dict.values(), (int, float, np.integer, np.float), variable_name)
             return numeric_or_dict
         else:
@@ -1094,6 +1094,11 @@ class BaseGraph(object):
 
 
     def _check_completeness(self, given_set, desired_set, variable_name):
+        # ensure that iterables are sets
+        # TODO: check that iterables can safely be converted to sets (unlike dict keys)
+        given_set = set(given_set)
+        desired_set = set(desired_set)
+
         complete = given_set.issuperset(desired_set)
         if not complete:
             missing = desired_set - given_set
