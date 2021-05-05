@@ -2150,20 +2150,8 @@ class AnnotateOnClick(object):
     def __init__(self, artist_to_data):
 
         self.artist_to_data = artist_to_data
-
-        self.annotatable_artists = artist_to_data.keys()
         self.annotated_artists = set()
         self.artist_to_text_object = dict()
-
-        try:
-            self.fig, = set(list(artist.figure for artist in self.annotatable_artists))
-        except ValueError:
-            raise Exception("All artists have to be on the same figure!")
-
-        try:
-            self.ax, = set(list(artist.axes for artist in self.annotatable_artists))
-        except ValueError:
-            raise Exception("All artists have to be on the same axis!")
 
         self.fig.canvas.mpl_connect("button_release_event", self._on_release)
 
@@ -2180,7 +2168,7 @@ class AnnotateOnClick(object):
                     return
 
             # clicked on un-annotated artist
-            for artist in self.annotatable_artists:
+            for artist in self.artist_to_data:
                 if artist.contains(event)[0]:
                     placement = self._get_annotation_placement(artist)
                     self._add_annotation(artist, *placement)
@@ -2219,7 +2207,7 @@ class AnnotateOnClick(object):
 
 
     def _get_centroid(self):
-        return np.mean([artist.xy for artist in self.annotatable_artists], axis=0)
+        return np.mean([artist.xy for artist in self.artist_to_data], axis=0)
 
 
     def _get_vector_pointing_outwards(self, xy):
@@ -2319,6 +2307,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             artist_to_data.update({self.node_artists[node] : data for node, data in kwargs['node_data'].items()})
         if 'edge_data' in kwargs:
             artist_to_data.update({self.edge_artists[edge] : data for edge, data in kwargs['edge_data'].items()})
+
         AnnotateOnClick.__init__(self, artist_to_data)
 
 
@@ -2330,10 +2319,12 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
     def _on_release(self, event):
         if self._currently_dragging is False:
             DraggableGraph._on_release(self, event)
-            AnnotateOnClickGraph._on_release(self, event)
+            if self.artist_to_data:
+                AnnotateOnClickGraph._on_release(self, event)
         else:
             DraggableGraph._on_release(self, event)
-            self._redraw_annotations(event)
+            if self.artist_to_data:
+                self._redraw_annotations(event)
 
 
     def _redraw_annotations(self, event):
