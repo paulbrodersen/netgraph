@@ -307,6 +307,7 @@ def get_bundled_edge_paths(edge_list, node_positions,
                            total_cycles            = 5,
                            total_iterations        = 50,
                            step_size               = 0.04,
+                           straighten_by           = 0.,
 ):
     """Bundle edges using the FDEB algorithm proposed by Holten & Wijk (2009).
 
@@ -339,6 +340,11 @@ def get_bundled_edge_paths(edge_list, node_positions,
 
     step_size : float (default 0.04)
         Maximum step size (S) in the first cycle. Step sizes are halved each cycle.
+
+    straighten_by : float [0, 1) (default 0.)
+        The amount of edge straightening applied after bundling.
+        A low amount of straightening provides an indication of the number of
+        edges comprising a bundle by widening the bundle.
 
     Returns:
     --------
@@ -378,12 +384,16 @@ def get_bundled_edge_paths(edge_list, node_positions,
         step_size /= 2.
         total_iterations = int(2/3 * total_iterations)
 
+    if straighten_by > 0.:
+        edge_to_control_points = _straighten_edges(edge_to_control_points, straighten_by)
+
+    edge_to_control_points = _fit_splines_through_edge_paths(edge_to_control_points, degree=10)
+
     # Add previously removed bi-directional edges back in.
     for (source, target) in reverse_edges:
-        edge_to_control_points[(source, target)] = edge_to_control_points[(target, source)]
+        edge_to_control_points[(source, target)] = edge_to_control_points[(target, source)][::-1]
 
-    # return edge_to_control_points
-    return _fit_splines_through_edge_paths(edge_to_control_points, degree=3)
+    return edge_to_control_points
 
 
 def _get_k(edge_list, node_positions, k):
@@ -573,3 +583,15 @@ def _update_control_point_positions(edge_to_control_points, F, step_size):
         displacement = displacement / displacement_length * np.clip(displacement_length, None, step_size)
         edge_to_control_points[edge] += displacement
     return edge_to_control_points
+
+
+def _straighten_edges(edge_to_path, straighten_by):
+    return {edge : _straighten_path(path, straighten_by) for edge, path in edge_to_path.items()}
+
+
+def _straighten_path(path, straighten_by):
+    p0 = path[0]
+    p1 = path[-1]
+    n = len(path)
+    return (1 - straighten_by) * path \
+        + straighten_by * (p0 + np.linspace(0, 1, n)[:, np.newaxis] * (p1 - p0))
