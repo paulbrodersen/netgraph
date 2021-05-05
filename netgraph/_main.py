@@ -1030,7 +1030,7 @@ class BaseGraph(object):
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
 
-        edge_paths, self.edge_layout_kwargs = self._initialize_edge_layout(
+        edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
             edge_layout, edge_layout_kwargs, origin, scale, edge_width)
 
         # Draw plot elements
@@ -1203,11 +1203,17 @@ class BaseGraph(object):
         elif isinstance(edge_layout, dict):
             self._check_completeness(edge_layout, self.edge_list, 'edge_layout')
             edge_paths = edge_layout
+
+            # determine a sensible edge_layout in case node positions change
+            path_lengths = np.array([len(path) for path in edge_paths.values()])
+            if np.any(path_lengths) > 2:
+                edge_layout = 'curved'
             else:
+                edge_layout = 'straight'
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
-        return edge_paths, edge_layout_kwargs
+        return edge_paths, edge_layout, edge_layout_kwargs
 
 
     def _initialize_axis(self, ax):
@@ -1400,6 +1406,17 @@ class BaseGraph(object):
             self.edge_artists[edge] = edge_artist
 
 
+    def _update_edge_paths(self, edges):
+        if self.edge_layout is 'straight':
+            self._update_straight_edge_paths(edges)
+
+        elif self.edge_layout is 'curved':
+            self._update_curved_edge_paths(edges)
+
+        elif self.edge_layout is 'bundled':
+            self._update_bundled_edge_paths(edges)
+
+
     def _update_straight_edge_paths(self, edges):
 
         # remove self-loops
@@ -1441,6 +1458,14 @@ class BaseGraph(object):
         fixed_positions.update(self.node_positions)
 
         edge_paths = get_curved_edge_paths(edges, fixed_positions, **self.edge_layout_kwargs)
+
+        for edge, path in edge_paths.items():
+            self.edge_artists[edge].update_midline(path)
+            self.ax.draw_artist(self.edge_artists[edge])
+
+
+    def _update_bundled_edge_paths(self, edges):
+        edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
@@ -2004,18 +2029,13 @@ class DraggableGraph(Graph, DraggableArtists):
 
 
     def _on_release(self, event):
-        if self._currently_dragging:
+        if self._currently_dragging and not (self.edge_layout is 'straight'):
             nodes = self._get_stale_nodes()
             edges = self._get_stale_edges(nodes)
+            self._update_edge_paths(edges)
 
-            # subselect curved edges; all other edges are already handled
-            edges = [edge for edge in edges if self.edge_artists[edge].curved]
-
-            if edges: # i.e. non-empty list
-                self._update_curved_edge_paths(edges)
-
-                if hasattr(self, 'edge_label_artists'): # move edge labels
-                    self._update_edge_label_positions(edges)
+            if hasattr(self, 'edge_label_artists'): # move edge labels
+                self._update_edge_label_positions(edges)
 
         super()._on_release(event)
 
