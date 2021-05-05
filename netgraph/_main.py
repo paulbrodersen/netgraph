@@ -1285,10 +1285,7 @@ class BaseGraph(object):
             self.node_artists[node] = node_artist
 
 
-    def _update_node_positions(self, nodes, node_positions=None):
-        if node_positions:
-            self.node_positions.update(node_positions)
-
+    def _update_node_artist_positions(self, nodes):
         for node in nodes:
             self.node_artists[node].xy = self.node_positions[node]
 
@@ -1980,43 +1977,32 @@ class DraggableGraph(Graph, DraggableArtists):
 
         cursor_position = np.array([event.xdata, event.ydata])
 
-        nodes = []
-        for artist in self._selected_artists:
-            node = self._draggable_artist_to_node[artist]
-            self.node_positions[node] = cursor_position + self._offset[artist]
-            nodes.append(node)
+        nodes = self._get_stale_nodes()
+        self._update_node_positions(nodes, cursor_position)
+        self._update_node_artist_positions(nodes)
 
-        self._update_subgraph_element_positions(nodes)
-
-
-    def _update_subgraph_element_positions(self, nodes=None):
-        """Determines stale nodes, edges, and labels (if any), and updates
-        their positions or paths."""
-
-        if nodes is None:
-            nodes = self._get_stale_nodes()
+        if hasattr(self, 'node_label_artists'):
+            self._update_node_label_positions(nodes)
 
         edges = self._get_stale_edges(nodes)
-
-        self._update_node_positions(nodes)
-
         # In the interest of speed, we only compute the straight edge paths here.
         # We will re-compute curved edge paths only on mouse button release,
         # i.e. when the dragging motion has stopped.
         self._update_straight_edge_paths(edges)
 
-        if hasattr(self, 'node_label_artists'):
-            self._update_node_label_positions(nodes)
-
         if hasattr(self, 'edge_label_artists'):
             self._update_edge_label_positions(edges)
 
-        # TODO: might want to force redraw after each individual update.
         self.fig.canvas.draw_idle()
 
 
     def _get_stale_nodes(self):
         return [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+
+    def _update_node_positions(self, nodes, cursor_position):
+        for node in nodes:
+            self.node_positions[node] = cursor_position + self._offset[self.node_artists[node]]
 
 
     def _get_stale_edges(self, nodes=None):
