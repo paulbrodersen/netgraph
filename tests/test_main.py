@@ -365,5 +365,4 @@ def test_update_view():
         1 : np.array([0.5, 0.5])
     }
     g = BaseGraph(edge_list, node_layout=node_layout)
-    # ax.axis([-0.1, 1.1, -0.1, 1.1])
     return fig
