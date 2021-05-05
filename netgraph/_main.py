@@ -2003,7 +2003,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
         edges = self._get_stale_edges(nodes)
         # In the interest of speed, we only compute the straight edge paths here.
-        # We will re-compute curved edge paths only on mouse button release,
+        # We will re-compute other edge layouts only on mouse button release,
         # i.e. when the dragging motion has stopped.
         self._update_straight_edge_paths(edges)
 
