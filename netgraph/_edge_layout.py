@@ -99,7 +99,7 @@ def get_curved_edge_paths(edge_list, node_positions,
 
     k : float or None (default None)
         Expected mean segment length. If None, initialized to :
-        sqrt(area / total nodes) / total control points + 1.
+        0.5 * sqrt(area / total nodes) / total control points + 1.
 
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the layout.
