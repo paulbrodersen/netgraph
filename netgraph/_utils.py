@@ -75,7 +75,7 @@ def _get_subgraph(edge_list, node_list):
 def _bspline(cv, n=100, degree=5, periodic=False):
     """ Calculate n samples on a bspline
 
-        cv :      Array ov control vertices
+        cv :      Array of control vertices
         n  :      Number of samples to return
         degree:   Curve degree
         periodic: True - Curve is closed
