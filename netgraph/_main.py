@@ -1465,7 +1465,8 @@ class BaseGraph(object):
 
 
     def _update_bundled_edge_paths(self, edges):
-        edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
+        # edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
+        edge_paths = get_bundled_edge_paths(self.edge_list, self.node_positions, **self.edge_layout_kwargs)
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
