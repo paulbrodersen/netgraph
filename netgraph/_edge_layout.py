@@ -2,6 +2,7 @@ import itertools
 import warnings
 import numpy as np
 
+from scipy.interpolate import UnivariateSpline
 from uuid import uuid4
 
 from ._utils import _bspline, _get_n_points_on_a_circle, _get_angle
@@ -387,7 +388,7 @@ def get_bundled_edge_paths(edge_list, node_positions,
     if straighten_by > 0.:
         edge_to_control_points = _straighten_edges(edge_to_control_points, straighten_by)
 
-    edge_to_control_points = _fit_splines_through_edge_paths(edge_to_control_points, degree=10)
+    edge_to_control_points = _smooth_edges(edge_to_control_points)
 
     # Add previously removed bi-directional edges back in.
     for (source, target) in reverse_edges:
@@ -583,6 +584,25 @@ def _update_control_point_positions(edge_to_control_points, F, step_size):
         displacement = displacement / displacement_length * np.clip(displacement_length, None, step_size)
         edge_to_control_points[edge] += displacement
     return edge_to_control_points
+
+
+def _smooth_edges(edge_to_path):
+    return {edge : _smooth_path(path) for edge, path in edge_to_path.items()}
+
+
+def _smooth_path(path):
+    # https://stackoverflow.com/a/52020098/2912349
+
+    # Compute the linear length along the line:
+    distance = np.cumsum( np.sqrt(np.sum( np.diff(path, axis=0)**2, axis=1 )) )
+    distance = np.insert(distance, 0, 0)/distance[-1]
+
+    # Compute a spline function for each dimension:
+    splines = [UnivariateSpline(distance, coords, k=3, s=.001) for coords in path.T]
+
+    # Computed the smoothed path:
+    alpha = np.linspace(0, 1, 100)
+    return np.vstack([spl(alpha) for spl in splines]).T
 
 
 def _straighten_edges(edge_to_path, straighten_by):
