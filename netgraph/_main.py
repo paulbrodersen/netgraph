@@ -20,8 +20,19 @@ from ._utils import (
     _flatten,
     _rank,
 )
-from ._node_layout import get_fruchterman_reingold_layout, get_random_layout, get_sugiyama_layout, get_circular_layout
-from ._edge_layout import get_straight_edge_paths, get_curved_edge_paths, get_bundled_edge_paths, _shift_edge
+from ._node_layout import (
+    get_fruchterman_reingold_layout,
+    get_random_layout,
+    get_sugiyama_layout,
+    get_circular_layout,
+    _reduce_node_overlap
+)
+from ._edge_layout import (
+    get_straight_edge_paths,
+    get_curved_edge_paths,
+    get_bundled_edge_paths,
+    _shift_edge
+)
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
 from ._deprecated import deprecated
@@ -1164,7 +1175,9 @@ class BaseGraph(object):
 
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
         if node_layout == 'spring':
-            return get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            node_positions = get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            node_positions = _reduce_node_overlap(node_positions, origin, scale)
+            return node_positions
         elif node_layout == 'circular':
             return get_circular_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':

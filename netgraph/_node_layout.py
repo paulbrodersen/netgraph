@@ -8,6 +8,7 @@ TODO:
 import warnings
 import numpy as np
 
+from scipy.spatial import Voronoi
 from rpack import pack
 from functools import wraps
 
@@ -516,19 +517,6 @@ def _rescale_to_frame(node_positions, origin, scale):
     return node_positions
 
 
-def _clip_to_frame(node_positions, origin, scale):
-    # This function does not work well with the FR algorithm:
-    # If the new node positions exceed the frame in more than one dimension,
-    # they end up being placed on a corner of the frame.
-    # If more than one node ends up in one of the corners, we are in trouble,
-    # as then the distance between them becomes zero.
-    origin = np.array(origin)
-    scale = np.array(scale)
-    for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
-        node_positions[:, ii] = np.clip(node_positions[:, ii], minimum, maximum)
-    return node_positions
-
-
 def get_random_layout(edge_list, origin=(0,0), scale=(1,1)):
     nodes = _get_unique_nodes(edge_list)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
@@ -638,3 +626,51 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
     radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
     return dict(zip(nodes, positions))
+
+
+def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.1, total_iterations=10):
+    """Use a constrained version of Lloyds algorithm to move nodes apart from each other.
+    """
+    # TODO use node radius to check for node overlaps; terminate once all overlaps are removed
+
+    unique_nodes = list(node_positions.keys())
+    positions = np.array(list(node_positions.values()))
+
+    if fixed_nodes:
+        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=np.bool)
+    else:
+        is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
+
+    for _ in range(total_iterations):
+        centroids = _get_voronoi_centroids(positions)
+        delta = centroids - positions
+        new = positions + eta * delta
+        # constrain Lloyd's algorithm by only updating positions where the new position is within the bbox
+        valid = _is_within_bbox(new, origin, scale)
+        mask = np.logical_and(valid, is_mobile)
+        positions[mask] = new[mask]
+
+    return dict(zip(unique_nodes, positions))
+
+
+def _get_voronoi_centroids(positions):
+    voronoi = Voronoi(positions)
+    centroids = np.zeros_like(positions)
+    for ii, idx in enumerate(voronoi.point_region):
+        region = [jj for jj in voronoi.regions[idx] if jj != -1] # i.e. ignore points at infinity; TODO: compute correctly clipped regions
+        centroids[ii] = _get_centroid(voronoi.vertices[region])
+    return centroids
+
+
+def _clip_to_frame(positions, origin, scale):
+    origin = np.array(origin)
+    scale = np.array(scale)
+    for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
+        positions[:, ii] = np.clip(positions[:, ii], minimum, maximum)
+    return positions
+
+
+def _get_centroid(polygon):
+    # TODO: formula may be incorrect; correct one here:
+    # https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
+    return np.mean(polygon, axis=0)
