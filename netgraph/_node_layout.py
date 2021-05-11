@@ -416,6 +416,10 @@ def get_fruchterman_reingold_layout(edge_list,
 
     # --------------------------------------------------------------------------------
     # format output
+
+    if np.all(is_mobile):
+        node_positions_as_array = _rescale_to_frame(node_positions_as_array, origin, scale)
+
     node_positions = dict(zip(unique_nodes, node_positions_as_array))
 
     return node_positions
