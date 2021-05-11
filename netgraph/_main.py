@@ -1088,6 +1088,10 @@ class BaseGraph(object):
             else:
                 msg = "There are some node IDs in the edgelist not present in `nodes`. "
                 msg += "`nodes` has to be the superset of `edge_list`."
+                msg += "\nThe following nodes are missing:"
+                missing = set(nodes_in_edge_list) - set(nodes)
+                for node in missing:
+                    msg += f"\n{node}"
                 raise ValueError(msg)
 
 
@@ -1175,15 +1179,19 @@ class BaseGraph(object):
 
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
         if node_layout == 'spring':
-            node_positions = get_fruchterman_reingold_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            node_positions = get_fruchterman_reingold_layout(
+                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions
         elif node_layout == 'circular':
-            return get_circular_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            return get_circular_layout(
+                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':
-            return get_sugiyama_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            return get_sugiyama_layout(
+                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'random':
-            return get_random_layout(self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+            return get_random_layout(
+                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         else:
             implemented = ['spring', 'dot', 'random', 'circular']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"

@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
+from itertools import combinations
 from toy_graphs import unbalanced_tree
 
 from netgraph._main import Graph, draw_edges, draw_nodes, BaseGraph
@@ -365,4 +366,41 @@ def test_update_view():
         1 : np.array([0.5, 0.5])
     }
     g = BaseGraph(edge_list, node_layout=node_layout)
+    return fig
+
+
+@pytest.fixture
+def multi_component_graph():
+    edge_list = []
+
+    # add 100 2-node components
+    edge_list.extend([(ii, ii+1) for ii in range(100, 200, 2)])
+
+    # add 33 3-node components
+    for ii in range(200, 300, 3):
+        edge_list.extend([(ii, ii+1), (ii, ii+2), (ii+1, ii+2)])
+
+    # add a couple of larger components
+    n = 300
+    for ii in np.random.randint(4, 30, size=10):
+        edge_list.extend(list(combinations(range(n, n+ii), 2)))
+        n += ii
+
+    nodes = list(range(n))
+    return nodes, edge_list
+
+
+@pytest.mark.mpl_image_compare
+def test_circular_layout_with_multiple_components(multi_component_graph):
+    nodes, edge_list = multi_component_graph
+    fig, ax = plt.subplots()
+    g = BaseGraph(edge_list, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_spring_layout_with_multiple_components(multi_component_graph):
+    nodes, edge_list = multi_component_graph
+    fig, ax = plt.subplots()
+    g = BaseGraph(edge_list, nodes=nodes, node_size=1, edge_width=0.3, node_layout='spring', ax=ax)
     return fig

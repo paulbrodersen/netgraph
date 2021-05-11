@@ -40,11 +40,17 @@ def _handle_multiple_components(layout_function):
 
     """
     @wraps(layout_function)
-    def wrapped_layout_function(edge_list, *args, **kwargs):
+    def wrapped_layout_function(edge_list, nodes=None, *args, **kwargs):
 
         # determine if there are more than one component
         adjacency_list = _edge_list_to_adjacency_list(edge_list)
         components = _get_connected_components(adjacency_list)
+
+        if nodes:
+            unconnected_nodes = set(nodes) - set(_get_unique_nodes(edge_list))
+            if unconnected_nodes:
+                for node in unconnected_nodes:
+                    components.append([node])
 
         if len(components) > 1:
             return get_layout_for_multiple_components(edge_list, components, layout_function, *args, **kwargs)
@@ -128,6 +134,7 @@ def get_layout_for_multiple_components(edge_list, components, layout_function,
         Bottom left corner of the frame / canvas containing the graph.
     scale : (float x, float y) 2-tuple (default (1, 1))
         Width, height of the frame.
+
     Returns:
     --------
     node_positions : dict node : (float x, float y)
@@ -187,7 +194,7 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
     # rpack only works on integers, hence multiply by some large scalar to retain some precision;
     # NB: for some strange reason, rpack's running time is sensitive to the size of the boxes, so don't make the scalar too large
     # TODO find alternative to rpack
-    scalar = 10
+    scalar = 20
     integer_dimensions = [(int(scalar*width), int(scalar*height)) for width, height in padded_dimensions]
     origins = pack(integer_dimensions) # NB: rpack claims to return upper-left corners, when it actually returns lower-left corners
 
@@ -517,6 +524,7 @@ def _rescale_to_frame(node_positions, origin, scale):
     return node_positions
 
 
+@_handle_multiple_components
 def get_random_layout(edge_list, origin=(0,0), scale=(1,1)):
     nodes = _get_unique_nodes(edge_list)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
@@ -600,6 +608,7 @@ class vertex_view(object):
         self.h = h
 
 
+@_handle_multiple_components
 def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
     """
     Arguments:
