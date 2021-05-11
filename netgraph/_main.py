@@ -847,7 +847,7 @@ class BaseGraph(object):
                  node_label_fontdict=None,
                  edge_width=1.,
                  edge_color=DEFAULT_COLOR,
-                 edge_alpha=1.,
+                 edge_alpha=0.5,
                  edge_zorder=1,
                  arrows=False,
                  edge_layout='straight',
