@@ -426,7 +426,9 @@ def get_fruchterman_reingold_layout(edge_list,
 
 
 def _is_within_bbox(points, origin, scale):
-    return np.all((points >= origin) * (points <= origin + scale), axis=1)
+    minima = np.array(origin)
+    maxima = minima + np.array(scale)
+    return np.all(np.logical_and(points >= minima, points <= maxima), axis=1)
 
 
 def _get_temperature_decay(initial_temperature, total_iterations, mode='quadratic', eps=1e-9):
