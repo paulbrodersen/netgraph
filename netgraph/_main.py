@@ -1211,7 +1211,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('edge_width', edge_width)
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('selfloop_radius', 0.1) # TODO: should probably depend on node_size
+            edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
