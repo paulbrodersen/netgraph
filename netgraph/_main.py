@@ -1222,7 +1222,8 @@ class BaseGraph(object):
             k *= 0.3
             edge_layout_kwargs.setdefault('k', k)
         elif edge_layout == 'bundled':
-            pass
+            edge_layout_kwargs.setdefault('k', 500)
+            edge_layout_kwargs.setdefault('total_cycles', 6)
 
         if isinstance(edge_layout, str):
             edge_paths = self._get_edge_paths(self.edge_list, self.node_positions,
