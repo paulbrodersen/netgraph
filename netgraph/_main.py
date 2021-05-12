@@ -1809,12 +1809,12 @@ class Graph(BaseGraph):
 
         # Plot arrows if the graph has bi-directional edges.
         if directed:
-            arrows = True
+            kwargs.setdefault('arrows', True)
         else:
-            arrows = False
+            kwargs.setdefault('arrows', False)
 
         super().__init__(edge_list, nodes, node_zorder=node_zorder, edge_color=edge_color,
-                         edge_zorder=edge_zorder, arrows=arrows, *args, **kwargs)
+                         edge_zorder=edge_zorder, *args, **kwargs)
 
 
 class DraggableArtists(object):
