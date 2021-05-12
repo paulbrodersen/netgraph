@@ -404,3 +404,15 @@ def test_spring_layout_with_multiple_components(multi_component_graph):
     fig, ax = plt.subplots()
     g = BaseGraph(edge_list, nodes=nodes, node_size=1, edge_width=0.3, node_layout='spring', ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_straight_edge_layout_with_selfloops():
+    edge_list = [(0, 0), (0, 1), (1, 1)]
+    node_positions = {
+        0 : (0.25, 0.25),
+        1 : (0.75, 0.75),
+    }
+    fig, ax = plt.subplots()
+    g = BaseGraph(edge_list, node_layout=node_positions, edge_layout='straight', arrows=True)
+    return fig

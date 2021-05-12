@@ -39,11 +39,10 @@ def get_straight_edge_paths(edge_list, node_positions, edge_width):
     """
     edge_paths = dict()
     for (source, target) in edge_list:
-
         if source == target:
-            msg = "Plotting of self-loops not supported for straight edges."
-            msg += "Ignoring edge ({}, {}).".format(source, target)
-            warnings.warn(msg)
+            # msg = "Plotting of self-loops not supported for straight edges."
+            # msg += "Ignoring edge ({}, {}).".format(source, target)
+            # warnings.warn(msg)
             continue
 
         x1, y1 = node_positions[source]
@@ -65,6 +64,48 @@ def _shift_edge(x1, y1, x2, y2, delta):
     v = v / np.linalg.norm(v) # unit
     dx, dy = delta * v
     return x1+dx, y1+dy, x2+dx, y2+dy
+
+
+def get_selfloop_paths(edge_list, node_positions, selfloop_radius, origin, scale):
+    edge_paths = dict()
+
+    for (source, target) in edge_list:
+        if source != target:
+            # msg = "Edges must be self-loops."
+            # msg += f"Ignoring edge ({source}, {target})."
+            # warnings.warn(msg)
+            continue
+
+        edge_paths[(source, target)] = _get_selfloop_path(
+            source, node_positions, selfloop_radius, origin, scale)
+
+    return edge_paths
+
+
+def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale):
+    x, y = node_positions[source]
+
+    # To minimise overlap with other edges, we want the loop to be
+    # on the side of the node away from the centroid of the graph.
+    if len(node_positions) > 1:
+        centroid = np.mean(list(node_positions.values()), axis=0)
+        delta = node_positions[source] - centroid
+        distance = np.linalg.norm(delta)
+        unit_vector = delta / distance
+    else: # single node in graph; self-loop points upwards
+        unit_vector = np.array([0, 1])
+
+    selfloop_center = node_positions[source] + selfloop_radius * unit_vector
+
+    selfloop_path = _get_n_points_on_a_circle(
+        selfloop_center, selfloop_radius, 100+1,
+        _get_angle(*unit_vector) + np.pi,
+    )[1:]
+
+    # ensure that the loop stays within the bounding box
+    selfloop_path = _clip_to_frame(selfloop_path, origin, scale)
+
+    return selfloop_path
 
 
 def get_curved_edge_paths(edge_list, node_positions,

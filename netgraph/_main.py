@@ -29,9 +29,11 @@ from ._node_layout import (
 )
 from ._edge_layout import (
     get_straight_edge_paths,
+    _shift_edge,
     get_curved_edge_paths,
     get_bundled_edge_paths,
-    _shift_edge
+    get_selfloop_paths,
+    _get_selfloop_path,
 )
 from ._artists import NodeArtist, EdgeArtist
 from ._data_io import parse_graph, _parse_edge_list
@@ -1206,6 +1208,9 @@ class BaseGraph(object):
 
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('edge_width', edge_width)
+            edge_layout_kwargs.setdefault('origin', origin)
+            edge_layout_kwargs.setdefault('scale', scale)
+            edge_layout_kwargs.setdefault('selfloop_radius', 0.1) # TODO: should probably depend on node_size
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
@@ -1341,7 +1346,10 @@ class BaseGraph(object):
         """
 
         if edge_layout is 'straight':
-            edge_paths = get_straight_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+            edge_paths = get_straight_edge_paths(edge_list, node_positions, edge_layout_kwargs['edge_width'])
+            selfloop_paths = get_selfloop_paths(
+                edge_list, node_positions, edge_layout_kwargs['selfloop_radius'], edge_layout_kwargs['origin'], edge_layout_kwargs['scale'])
+            edge_paths.update(selfloop_paths)
         elif edge_layout is 'curved':
             edge_paths = get_curved_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
         elif edge_layout is 'bundled':
@@ -1429,7 +1437,8 @@ class BaseGraph(object):
 
     def _update_edge_paths(self, edges):
         if self.edge_layout is 'straight':
-            self._update_straight_edge_paths(edges)
+            self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target])
+            self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target])
 
         elif self.edge_layout is 'curved':
             self._update_curved_edge_paths(edges)
@@ -1454,6 +1463,23 @@ class BaseGraph(object):
 
             # update midline & path
             self.edge_artists[(source, target)].update_midline(np.c_[[x0, x1], [y0, y1]])
+            self.ax.draw_artist(self.edge_artists[(source, target)])
+
+
+    def _update_selfloop_paths(self, edges):
+
+        # restrict to self-loopse
+        edges = [(source, target) for source, target in edges if source == target]
+
+        # move edges to new positions
+        for (source, target) in edges:
+            path = _get_selfloop_path(source,
+                                      node_positions  = self.node_positions,
+                                      selfloop_radius = self.edge_layout_kwargs['selfloop_radius'],
+                                      origin          = self.edge_layout_kwargs['origin'],
+                                      scale           = self.edge_layout_kwargs['scale']
+            )
+            self.edge_artists[(source, target)].update_midline(path)
             self.ax.draw_artist(self.edge_artists[(source, target)])
 
 
@@ -2027,7 +2053,8 @@ class DraggableGraph(Graph, DraggableArtists):
         # In the interest of speed, we only compute the straight edge paths here.
         # We will re-compute other edge layouts only on mouse button release,
         # i.e. when the dragging motion has stopped.
-        self._update_straight_edge_paths(edges)
+        self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target])
+        self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target])
 
         if hasattr(self, 'edge_label_artists'):
             self._update_edge_label_positions(edges)
