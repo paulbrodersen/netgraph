@@ -1183,7 +1183,8 @@ class BaseGraph(object):
         if node_layout == 'spring':
             node_positions = get_fruchterman_reingold_layout(
                 self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
-            node_positions = _reduce_node_overlap(node_positions, origin, scale)
+            if len(node_positions) > 3: # Qhull fails for 2 or less nodes
+                node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions
         elif node_layout == 'circular':
             return get_circular_layout(
