@@ -6,11 +6,13 @@ TODO:
 """
 
 import warnings
+import itertools
 import numpy as np
 
+from functools import wraps
 from scipy.spatial import Voronoi
 from rpack import pack
-from functools import wraps
+
 
 from grandalf.graphs import Vertex, Edge, Graph
 from grandalf.layouts import SugiyamaLayout
@@ -609,11 +611,10 @@ class vertex_view(object):
 
 
 @_handle_multiple_components
-def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
+def get_circular_layout(edge_list, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
     """
     Arguments:
     ----------
-
     edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
@@ -622,6 +623,10 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
 
     scale : (float width, float height) tuple (default (1, 1))
         The width and height of the bounding box specifying the extent of the layout.
+
+    reduce_edge_crossings : bool
+        If True, attempts to minimize edge crossings via the algorithm outlined in:
+        Bauer & Brandes (2005) Crossing reduction in circular layouts
 
     Returns:
     --------
@@ -634,7 +639,135 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1)):
     radius = np.min(scale) / 2
     radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
+
+    if reduce_edge_crossings:
+        nodes = _reduce_crossings(edge_list)
+
     return dict(zip(nodes, positions))
+
+
+def _reduce_crossings(edge_list):
+    """
+    Implements Bauer & Brandes (2005) Crossing reduction in circular layouts.
+    """
+    adjacency_list = _edge_list_to_adjacency_list(edge_list, directed=False)
+    node_order = _initialize_node_order(adjacency_list)
+    node_order = _optimize_node_order(adjacency_list, node_order)
+    return node_order
+
+
+def _initialize_node_order(node_to_neighbours):
+    """
+    Implements "Connectivity & Crossings" variant from Bauer & Brandes (2005).
+    """
+    nodes = list(node_to_neighbours.keys())
+    ordered = nodes[:1]
+    remaining = nodes[1:]
+    closed_edges = []
+    start, = ordered
+    open_edges = set([(start, neighbour) for neighbour in node_to_neighbours[start]])
+
+    while remaining:
+        minimum_unplaced_neighbours = np.inf
+        maximum_placed_neighbours = 0
+        for ii, node in enumerate(remaining):
+            placed_neighbours = len([neighbour for neighbour in node_to_neighbours[node] if neighbour in ordered])
+            unplaced_neighbours = len([neighbour for neighbour in node_to_neighbours[node] if neighbour not in ordered])
+            if (placed_neighbours > maximum_placed_neighbours) or \
+               ((placed_neighbours == maximum_placed_neighbours) and (unplaced_neighbours < minimum_unplaced_neighbours)):
+                maximum_placed_neighbours = placed_neighbours
+                minimum_unplaced_neighbours = unplaced_neighbours
+                selected = node
+                selected_idx = ii
+
+        remaining.pop(selected_idx)
+        closed_edges = set([(node, selected) for node in node_to_neighbours[selected] if node in ordered])
+        open_edges -= closed_edges
+        a = _get_total_crossings(ordered + [selected] + remaining, closed_edges, open_edges)
+        b = _get_total_crossings([selected] + ordered + remaining, closed_edges, open_edges)
+        if a < b:
+            ordered.append(selected)
+        else:
+            ordered.insert(0, selected)
+        open_edges |= set([(selected, node) for node in node_to_neighbours[selected] if node not in ordered])
+
+    return ordered
+
+
+def _get_total_crossings(node_order, edges1, edges2=None):
+    if edges2 is None:
+        edges2 = edges1
+    total_crossings = 0
+    for edge1, edge2 in itertools.product(edges1, edges2):
+        total_crossings += int(_is_cross(node_order, edge1, edge2))
+    return total_crossings
+
+
+def _is_cross(node_order, edge_1, edge_2):
+    (s1, t1), = np.where(np.in1d(node_order, edge_1, assume_unique=True))
+    (s2, t2), = np.where(np.in1d(node_order, edge_2, assume_unique=True))
+
+    if (s1 < s2 < t1 < t2) or (s2 < s1 < t2 < t2):
+        return True
+    else:
+        return False
+
+
+def _optimize_node_order(node_to_neighbours, node_order=None, max_iterations=100):
+    """
+    Implement circular sifting as outlined in Bauer & Brandes (2005).
+    """
+    if node_order is None:
+        node_order = list(node_to_neighbours.keys())
+    node_order = np.array(node_order)
+
+    node_to_edges = dict()
+    for node, neighbours in node_to_neighbours.items():
+        node_to_edges[node] = [(node, neighbour) for neighbour in neighbours]
+
+    undirected_edges = set()
+    for edges in node_to_edges.values():
+        for edge in edges:
+            if edge[::-1] not in undirected_edges:
+                undirected_edges.add(edge)
+    total_crossings = _get_total_crossings(node_order, undirected_edges)
+
+    total_nodes = len(node_order)
+    for iteration in range(max_iterations):
+        previous_best = total_crossings
+        for u in node_order.copy():
+            best_order = node_order.copy()
+            minimum_crossings = total_crossings
+            (ii,), = np.where(node_order == u)
+            for jj in range(ii+1, ii+total_nodes):
+                v = node_order[jj%total_nodes]
+                cuv = _get_total_crossings(node_order, node_to_edges[u], node_to_edges[v])
+                node_order = _swap_values(node_order, u, v)
+                cvu = _get_total_crossings(node_order, node_to_edges[u], node_to_edges[v])
+                total_crossings = total_crossings - cuv + cvu
+                if total_crossings < minimum_crossings:
+                    best_order = node_order.copy()
+                    minimum_crossings = total_crossings
+            node_order = best_order
+            total_crossings = minimum_crossings
+
+        improvement = previous_best - total_crossings
+        if not improvement:
+            break
+
+    if (iteration + 1) == max_iterations:
+        warnings.warn("Maximum number of iterations reached. Aborting further node layout optimisations.")
+
+    return node_order
+
+
+def _swap_values(arr, value_1, value_2):
+    arr = arr.copy()
+    is_value_1 = arr == value_1
+    is_value_2 = arr == value_2
+    arr[is_value_1] = value_2
+    arr[is_value_2] = value_1
+    return arr
 
 
 def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.1, total_iterations=10):

@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from itertools import combinations
-from toy_graphs import unbalanced_tree
+from toy_graphs import unbalanced_tree, cycle
 
 from netgraph._main import Graph, draw_edges, draw_nodes, BaseGraph
 from netgraph._utils import _get_point_on_a_circle
@@ -337,9 +337,9 @@ def test_draw_graph_with_sugiyama_layout():
 
 @pytest.mark.mpl_image_compare
 def test_draw_graph_with_circular_layout():
-    fig, ax = plt.subplots()
-    bg = BaseGraph(unbalanced_tree, node_layout='circular')
-    # ax.axis([-0.1, 1.1, -0.1, 1.1])
+    fig, axes = plt.subplots(1, 2)
+    BaseGraph(cycle, node_layout='circular', node_labels=True, ax=axes[0])
+    BaseGraph(unbalanced_tree, node_layout='circular', node_labels=True, ax=axes[1])
     return fig
 
 
