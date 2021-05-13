@@ -57,7 +57,10 @@ def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None, unique_nodes=No
     return adjacency_matrix
 
 
-def _edge_list_to_adjacency_list(edge_list):
+def _edge_list_to_adjacency_list(edge_list, directed=True):
+    if not directed:
+        edge_list = edge_list + [(target, source) for (source, target) in edge_list] # forces copy
+
     adjacency = dict()
     for source, target in edge_list:
         if source in adjacency:
