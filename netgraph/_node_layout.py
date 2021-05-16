@@ -12,7 +12,7 @@ import numpy as np
 from functools import wraps
 from scipy.spatial import Voronoi
 from rpack import pack
-
+from itertools import combinations
 
 from grandalf.graphs import Vertex, Edge, Graph
 from grandalf.layouts import SugiyamaLayout
@@ -641,7 +641,11 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1), reduce_edge_crossi
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
 
     if reduce_edge_crossings:
-        nodes = _reduce_crossings(edge_list)
+        # only optimize if the graph is not complete
+        for edge in combinations(nodes, 2):
+            if (edge not in edge_list) and (edge[::-1] not in edge_list):
+                nodes = _reduce_crossings(edge_list)
+                break
 
     return dict(zip(nodes, positions))
 
