@@ -70,9 +70,9 @@ def _edge_list_to_adjacency_list(edge_list, directed=True):
     return adjacency
 
 
-def _get_subgraph(edge_list, node_list):
-    subgraph_edge_list = [(source, target) for source, target in edge_list if (source in node_list) and (target in node_list)]
-    return subgraph_edge_list
+def _get_subgraph(edges, nodes):
+    return [(source, target) for source, target in edges \
+            if (source in nodes) and (target in nodes)]
 
 
 def _bspline(cv, n=100, degree=5, periodic=False):
