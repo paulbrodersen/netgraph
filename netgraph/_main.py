@@ -1009,13 +1009,6 @@ class BaseGraph(object):
         ax : matplotlib.axis instance or None (default None)
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-        See Also
-        --------
-        draw_nodes()
-        draw_edges()
-        draw_node_labels()
-        draw_edge_labels()
-
         """
         self.edge_list = edge_list
 
