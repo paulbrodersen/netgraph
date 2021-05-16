@@ -844,7 +844,7 @@ class BaseGraph(object):
                  node_edge_color=DEFAULT_COLOR,
                  node_alpha=1.0,
                  node_zorder=2,
-                 node_labels=None,
+                 node_labels=False,
                  node_label_offset=(0., 0.),
                  node_label_fontdict=None,
                  edge_width=1.,
@@ -854,7 +854,7 @@ class BaseGraph(object):
                  arrows=False,
                  edge_layout='straight',
                  edge_layout_kwargs=None,
-                 edge_labels=None,
+                 edge_labels=False,
                  edge_label_position=0.5,
                  edge_label_rotate=True,
                  edge_label_fontdict=None,
@@ -917,10 +917,11 @@ class BaseGraph(object):
         node_zorder : scalar or dict node : float (default 2)
            Order in which to plot the nodes.
 
-        node_labels : dict node : str (default None)
-           Mapping of nodes to node labels.
+        node_labels : bool or dict node : str (default False)
+           If True, the nodes are labelled with their node IDs.
+           If the node labels are supposed to be distinct from the node IDs,
+           supply a dictionary mapping nodes to node labels.
            Only nodes in the dictionary are labelled.
-           If 'graph' is an adjacency matrix, nodes must be integers in range 0 to number of nodes - 1.
 
         node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
             (x, y) offset from node centre of label position.
@@ -971,8 +972,10 @@ class BaseGraph(object):
             - get_curved_edge_paths
             - get_bundled_edge_paths
 
-        edge_labels : dict edge : str
-            Mapping of edges to edge labels.
+        edge_labels : bool or dict edge : str
+            If True, the edges are labelled with their edge IDs.
+            If the edge labels are supposed to be distinct from the edge IDs,
+            supply a dictionary mapping edges to edge labels.
             Only edges in the dictionary are labelled.
 
         edge_label_position : float
@@ -1056,12 +1059,16 @@ class BaseGraph(object):
         self._update_view()
 
         if node_labels:
+            if isinstance(node_labels, bool):
+                node_labels = dict(zip(self.nodes, self.nodes))
             node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
 
         if edge_labels:
+            if isinstance(edge_labels, bool):
+                edge_labels = dict(zip(self.edge_list, self.edge_list))
             edge_label_fontdict = self._initialize_edge_label_fontdict(edge_label_fontdict)
             self.edge_label_position = edge_label_position
             self.edge_label_rotate = edge_label_rotate
