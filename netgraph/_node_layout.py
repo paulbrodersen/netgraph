@@ -843,17 +843,26 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     """
 
     community_size = _get_community_sizes(node_to_community, scale)
-    pos_communities = _get_community_positions(edges, node_to_community, community_size, origin, scale)
-    pos_nodes = _get_node_positions(edges, node_to_community)
+    community_centroids = _get_community_positions(edges, node_to_community, community_size, origin, scale)
+    relative_node_positions = _get_node_positions(edges, node_to_community)
 
     # combine positions
-    pos = dict()
+    node_positions = dict()
     for node, community in node_to_community.items():
-        xy = pos_communities[community]
-        delta = pos_nodes[node] * community_size[community]
-        pos[node] = xy + delta
+        xy = community_centroids[community]
+        delta = relative_node_positions[node] * community_size[community]
+        node_positions[node] = xy + delta
 
-    return pos
+    return node_positions
+
+
+def _get_community_sizes(node_to_community, scale):
+    total_nodes = len(node_to_community)
+    max_radius = np.linalg.norm(scale) / 2
+    scalar = max_radius / total_nodes
+    community_to_nodes = _invert_dict(node_to_community)
+    community_size = {community : len(nodes) * scalar for community, nodes in community_to_nodes.items()}
+    return community_size
 
 
 def _get_community_positions(edges, node_to_community, community_size, origin, scale):
@@ -869,15 +878,6 @@ def _get_community_positions(edges, node_to_community, community_size, origin, s
     )
 
 
-def _get_community_sizes(node_to_community, scale):
-    total_nodes = len(node_to_community)
-    max_radius = np.linalg.norm(scale)
-    scalar = max_radius / total_nodes
-    community_to_nodes = _invert_dict(node_to_community)
-    community_size = {community : len(nodes) * scalar for community, nodes in community_to_nodes.items()}
-    return community_size
-
-
 def _find_between_community_edges(edges, node_to_community):
 
     between_community_edges = dict()
@@ -890,6 +890,7 @@ def _find_between_community_edges(edges, node_to_community):
             if (ci, cj) in between_community_edges:
                 between_community_edges[(ci, cj)] += 1
             elif (cj, ci) in between_community_edges:
+                # only compute the undirected graph
                 between_community_edges[(cj, ci)] += 1
             else:
                 between_community_edges[(ci, cj)] = 1
@@ -902,12 +903,11 @@ def _get_node_positions(edges, node_to_community):
     Positions nodes within communities.
     """
     community_to_nodes = _invert_dict(node_to_community)
-
-    pos = dict()
+    node_positions = dict()
     for nodes in community_to_nodes.values():
         subgraph = _get_subgraph(edges, list(nodes))
-        pos_subgraph = get_fruchterman_reingold_layout(
-            subgraph, origin=np.array([-0.5, -0.5]), scale=np.array([1, 1]))
-        pos.update(pos_subgraph)
+        subgraph_node_positions = get_fruchterman_reingold_layout(
+            subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
+        node_positions.update(subgraph_node_positions)
 
-    return pos
+    return node_positions
