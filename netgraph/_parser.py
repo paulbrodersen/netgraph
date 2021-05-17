@@ -3,8 +3,30 @@
 Functions for reading and writing graphs.
 """
 import numpy as np
+import warnings
+
+from functools import wraps
 
 from ._utils import _save_cast_float_to_int, _get_unique_nodes
+
+
+def _handle_multigraphs(parser):
+    def wrapped_parser(graph, *args, **kwargs):
+        nodes, edge_list, edge_weight = parser(graph, *args, **kwargs)
+
+        if len(set(edge_list)) < len(edge_list):
+            msg = "Multi-graphs are not properly supported. Removing duplicate edges before plotting."
+            warnings.warn(msg)
+            new_edge_list = []
+            for edge in edge_list:
+                if edge not in new_edge_list:
+                    new_edge_list.append(edge)
+            return nodes, new_edge_list, edge_weight
+
+        return nodes, edge_list, edge_weight
+
+    return wrapped_parser
+
 
 def parse_graph(graph):
     """
@@ -68,6 +90,7 @@ def parse_graph(graph):
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
 
 
+@_handle_multigraphs
 def _parse_sparse_matrix_format(adjacency):
     adjacency = np.array(adjacency)
     rows, columns = adjacency.shape
@@ -123,6 +146,7 @@ def _parse_adjacency_matrix(adjacency):
         return nodes, edge_list, edge_weights
 
 
+@_handle_multigraphs
 def _parse_networkx_graph(graph, attribute_name='weight'):
     edge_list = list(graph.edges)
     nodes = list(graph.nodes)
@@ -133,6 +157,7 @@ def _parse_networkx_graph(graph, attribute_name='weight'):
     return nodes, edge_list, edge_weights
 
 
+@_handle_multigraphs
 def _parse_igraph_graph(graph):
     edge_list = [(edge.source, edge.target) for edge in graph.es()]
     nodes = graph.vs.indices
