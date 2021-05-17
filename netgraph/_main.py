@@ -17,7 +17,6 @@ from ._utils import (
     _get_tangent_at_point,
     _get_text_object_dimensions,
     _make_pretty,
-    _flatten,
     _rank,
 )
 from ._node_layout import (
@@ -2328,7 +2327,7 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
                     connected_edges = [edge for edge in self.edge_artists.keys() if node in edge]
                     edge_artists = [self.edge_artists[edge] for edge in connected_edges]
                     emphasized_artists.extend(edge_artists)
-                    neighbours = _flatten(connected_edges)
+                    neighbours = _get_unique_nodes(connected_edges)
                     node_artists = [self.node_artists[neighbour] for neighbour in neighbours if neighbour != node]
                     emphasized_artists.extend(node_artists)
 
