@@ -1779,24 +1779,173 @@ class Graph(BaseGraph):
     def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
         """
         Parses the given graph and initialises the BaseGraph object.
-
-        Upon initialisation, it will try to do "the right thing". Specifically, it will:
-        - determine if the graph is weighted, and map weights to edge colors if that is the case;
-        - determine if the graph is directed, and set `arrows` to True is that is the case;
+        If the given graph includes edge weights, then these are mapped to
+        colors using the `edge_cmap` parameter.
 
         Arguments
         ----------
         graph: various formats
             Graph object to plot. Various input formats are supported.
             In order of precedence:
-                - Edge list:
-                    Iterable of (source, target) or (source, target, weight) tuples,
-                    or equivalent (m, 2) or (m, 3) ndarray.
-                - Adjacency matrix:
-                    Full-rank (n,n) ndarray, where n corresponds to the number of nodes.
-                    The absence of a connection is indicated by a zero.
-                - igraph.Graph object
-                - networkx.Graph object
+            - Edge list:
+                Iterable of (source, target) or (source, target, weight) tuples,
+                or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+            - Adjacency matrix:
+                Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+                The absence of a connection is indicated by a zero.
+                Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
+            - networkx.Graph or igraph.Graph object
+
+        node_layout : str or dict node : (float x, float y) (default 'spring')
+            If node_layout is a string, the node positions are computed using
+            the indicated method:
+            - 'random'    : place nodes in random positions;
+            - 'circular'  : place nodes regularly spaced on a circle;
+            - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+            - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+            - 'community' : place nodes such that nodes belonging to the same community are grouped together
+            If node_layout is a dict, keys are nodes and values are (x, y) positions.
+
+        node_layout_kwargs : dict (default None)
+            Keyword arguments passed to node layout functions.
+            See the documentation of the following functions for a full description
+            of available options:
+            - get_random_layout
+            - get_circular_layout
+            - get_fruchterman_reingold_layout
+            - get_sugiyama_layout
+            - get_community_layout
+
+        node_shape : string or dict node : string (default 'o')
+           The shape of the node. Specification is as for matplotlib.scatter
+           marker, i.e. one of 'so^>v<dph8'.
+           If a single string is provided all nodes will have the same shape.
+
+        node_size : scalar or dict node : float (default 3.)
+           Size (radius) of nodes.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+
+        node_edge_width : scalar or dict node : float (default 0.5)
+           Line width of node marker border.
+           NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+
+        node_color : matplotlib color specification or dict node : color (default 'w')
+           Node color.
+
+        node_edge_color : matplotlib color specification or dict node : color (default DEFAULT_COLOR)
+           Node edge color.
+
+        node_alpha : scalar or dict node : float (default 1.)
+           The node transparency.
+
+        node_zorder : scalar or dict node : float (default 2)
+           Order in which to plot the nodes.
+
+        node_labels : bool or dict node : str (default False)
+           If True, the nodes are labelled with their node IDs.
+           If the node labels are supposed to be distinct from the node IDs,
+           supply a dictionary mapping nodes to node labels.
+           Only nodes in the dictionary are labelled.
+
+        node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
+            (x, y) offset from node centre of label position.
+
+        node_label_fontdict : dict
+            Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - size (adjusted to fit into node artists if offset is (0, 0))
+                - horizontalalignment (default here: 'center')
+                - verticalalignment (default here: 'center')
+                - clip_on (default here: False)
+                - zorder (default here: inf)
+
+        edge_width : float or dict (source, target) : width (default 1.)
+            Line width of edges.
+            NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+
+        edge_cmap : matplotlib color map (default RdGy)
+            Color map used to map edge weights to edge colors. Should be diverging.
+            If edge weights are strictly positive, weights are mapped to the
+            left hand side of the color map with vmin=0 and vmax=np.max(weights).
+            If edge weights are positive and negative, then weights are mapped
+            to colors such that a weight of zero corresponds to the center of the
+            color map; the boundaries are set to +/- the maximum absolute weight.
+            If the graph is unweighted or the edge colors are specified explicitly,
+            this parameter is ignored.
+
+        edge_color : matplotlib color specification or dict (source, target) : color (default DEFAULT_COLOR)
+           Edge color.
+
+        edge_alpha : float or dict (source, target) : float (default 1.)
+            The edge transparency,
+
+        edge_zorder : int or dict (source, target) : int (default 1)
+            Order in which to plot the edges.
+            If None, the edges will be plotted in the order they appear in 'adjacency'.
+            Note: graphs typically appear more visually pleasing if darker edges
+            are plotted on top of lighter edges.
+
+        arrows : bool, optional (default False)
+            If True, draw edges with arrow heads.
+
+        edge_layout : str or dict edge : segments (default 'straight')
+            If edge_layout is a string, determine the layout internally:
+            - 'straight' : draw edges as straight lines
+            - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
+            - 'bundled'  : draw edges as edge bundles
+            If edge_layout is a dict, the keys are edges and the
+            values are edge paths in the form iterables of (x, y)
+            tuples, the edge segments.
+
+        edge_layout_kwargs : dict (default None)
+            Keyword arguments passed to edge layout functions.
+            See the documentation of the following functions for a full description
+            of available options:
+            - get_straight_edge_paths
+            - get_curved_edge_paths
+            - get_bundled_edge_paths
+
+        edge_labels : bool or dict edge : str
+            If True, the edges are labelled with their edge IDs.
+            If the edge labels are supposed to be distinct from the edge IDs,
+            supply a dictionary mapping edges to edge labels.
+            Only edges in the dictionary are labelled.
+
+        edge_label_position : float
+            Relative position along the edge where the label is placed.
+                head   : 0.
+                centre : 0.5 (default)
+                tail   : 1.
+
+        edge_label_rotate : bool (default True)
+            If True, edge labels are rotated such that they track the orientation of their edges.
+            If False, edge labels are not rotated; the angle of the text is parallel to the axis.
+
+        edge_label_fontdict : dict
+            Keyword arguments passed to matplotlib.text.Text.
+            For a full list of available arguments see the matplotlib documentation.
+            The following default values differ from the defaults for matplotlib.text.Text:
+                - horizontalalignment (default here: 'center'),
+                - verticalalignment (default here: 'center')
+                - clip_on (default here: False),
+                - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
+                - zorder (default here: inf),
+                - rotation (determined by edge_label_rotate argument)
+
+        origin : (float x, float y) tuple or None (default (0, 0))
+            The lower left hand corner of the bounding box specifying the extent of the canvas.
+
+        scale : (float delta x, float delta y) or None (default (1, 1))
+            The width and height of the bounding box specifying the extent of the canvas.
+
+        prettify : bool (default True)
+            If True, despine and remove ticks and tick labels.
+            Set figure background to white. Set axis aspect to equal.
+
+        ax : matplotlib.axis instance or None (default None)
+           Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
         """
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
