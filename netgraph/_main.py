@@ -1101,7 +1101,7 @@ class BaseGraph(object):
                 msg += "\nThe following nodes are missing:"
                 missing = set(nodes_in_edge_list) - set(nodes)
                 for node in missing:
-                    msg += f"\n{node}"
+                    msg += f"\n\t{node}"
                 raise ValueError(msg)
 
 
