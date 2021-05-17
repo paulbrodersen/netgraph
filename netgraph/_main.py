@@ -1021,7 +1021,7 @@ class BaseGraph(object):
            Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
         """
-        self.edge_list = edge_list
+        self.edge_list = _parse_edge_list(edge_list)
 
         self.nodes = self._initialize_nodes(nodes)
 
