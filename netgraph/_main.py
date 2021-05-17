@@ -25,7 +25,8 @@ from ._node_layout import (
     get_random_layout,
     get_sugiyama_layout,
     get_circular_layout,
-    _reduce_node_overlap
+    get_community_layout,
+    _reduce_node_overlap,
 )
 from ._edge_layout import (
     get_straight_edge_paths,
@@ -877,10 +878,11 @@ class BaseGraph(object):
         node_layout : str or dict node : (float x, float y) (default 'spring')
             If node_layout is a string, the node positions are computed using
             the indicated method:
-            - 'random'   : place nodes in random positions;
-            - 'circular' : place nodes regularly spaced on a circle;
-            - 'spring'   : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
-            - 'dot'      : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+            - 'random'    : place nodes in random positions;
+            - 'circular'  : place nodes regularly spaced on a circle;
+            - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+            - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+            - 'community' : place nodes such that nodes belonging to the same community are grouped together
             If node_layout is a dict, keys are nodes and values are (x, y) positions.
 
         node_layout_kwargs : dict (default None)
@@ -891,6 +893,7 @@ class BaseGraph(object):
             - get_circular_layout
             - get_fruchterman_reingold_layout
             - get_sugiyama_layout
+            - get_community_layout
 
         node_shape : string or dict node : string (default 'o')
            The shape of the node. Specification is as for matplotlib.scatter
@@ -1183,6 +1186,12 @@ class BaseGraph(object):
         if node_layout == 'spring':
             node_positions = get_fruchterman_reingold_layout(
                 self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+            if len(node_positions) > 3: # Qhull fails for 2 or less nodes
+                node_positions = _reduce_node_overlap(node_positions, origin, scale)
+            return node_positions
+        if node_layout == 'community':
+            node_positions = get_community_layout(
+                self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
                 node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions

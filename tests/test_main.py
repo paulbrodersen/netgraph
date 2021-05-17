@@ -6,6 +6,7 @@ Run tests.
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
+import networkx as nx
 
 from itertools import combinations
 from toy_graphs import unbalanced_tree, cycle
@@ -415,4 +416,45 @@ def test_straight_edge_layout_with_selfloops():
     }
     fig, ax = plt.subplots()
     g = BaseGraph(edge_list, node_layout=node_positions, edge_layout='straight', arrows=True)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_community_layout():
+
+    # total_communities = 5
+    # community_size = 10
+    # g = nx.connected_caveman_graph(total_communities, community_size)
+    # node_to_community = dict()
+    # node = 0
+    # for community in range(total_communities):
+    #     for _ in range(community_size):
+    #         node_to_community[node] = community
+    #         node += 1
+
+    partition_sizes = [10, 20, 30, 40]
+    connected = False
+    while not connected:
+        g = nx.random_partition_graph(partition_sizes, 0.25, 0.05)
+        connected = nx.components.is_connected(g)
+    node_to_community = dict()
+    node = 0
+    for pid, size in enumerate(partition_sizes):
+        for _ in range(size):
+            node_to_community[node] = pid
+            node += 1
+
+    community_to_color = {
+        0 : 'tab:blue',
+        1 : 'tab:orange',
+        2 : 'tab:green',
+        3 : 'tab:red',
+    }
+    node_color = {node: community_to_color[community] for node, community in node_to_community.items()}
+
+    fig, ax = plt.subplots()
+    Graph(g, node_color=node_color, node_edge_width=0, edge_alpha=0.1,
+          node_layout='community', node_layout_kwargs=dict(node_to_community=node_to_community),
+          edge_layout='bundled', edge_layout_kwargs=dict(k=2000),
+    )
     return fig
