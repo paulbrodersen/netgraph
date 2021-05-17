@@ -37,7 +37,7 @@ from ._edge_layout import (
     _get_selfloop_path,
 )
 from ._artists import NodeArtist, EdgeArtist
-from ._data_io import parse_graph, _parse_edge_list
+from ._parser import parse_graph, _parse_edge_list, _is_directed
 from ._deprecated import deprecated
 
 
@@ -101,7 +101,8 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     """
 
     # Accept a variety of formats and convert to common denominator.
-    edge_list, edge_weight, is_directed = parse_graph(graph)
+    nodes, edge_list, edge_weight = parse_graph(graph)
+    is_directed = _is_directed(edge_list)
 
     if edge_weight:
 
@@ -455,7 +456,7 @@ def draw_edges(edge_list,
     if ax is None:
         ax = plt.gca()
 
-    edge_list = _parse_edge_list(edge_list) # TODO: why?
+    edge_list = _parse_edge_list(edge_list)
     nodes = node_positions.keys()
 
     # convert node and edge to dictionaries if they are not dictionaries already;
@@ -1795,9 +1796,8 @@ class Graph(BaseGraph):
         """
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        # TODO: parse_graph also returns nodes
-        edge_list, edge_weight, directed = parse_graph(graph)
-        nodes = _get_unique_nodes(edge_list)
+        nodes, edge_list, edge_weight = parse_graph(graph)
+        kwargs.setdefault('nodes', nodes)
 
         # Color and reorder edges for weighted graphs.
         if edge_weight:
