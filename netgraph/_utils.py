@@ -302,3 +302,10 @@ def _rank(vec):
     ranks = np.empty_like(vec)
     ranks[tmp] = np.arange(len(vec))
     return ranks
+
+
+def _invert_dict(mydict):
+    inverse = dict()
+    for key, value in mydict.items():
+        inverse.setdefault(value, set()).add(key)
+    return inverse

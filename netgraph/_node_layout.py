@@ -24,6 +24,7 @@ from ._utils import (
     _get_unique_nodes,
     _get_n_points_on_a_circle,
     _get_subgraph,
+    _invert_dict,
 )
 
 
@@ -910,10 +911,3 @@ def _get_node_positions(edges, node_to_community):
         pos.update(pos_subgraph)
 
     return pos
-
-
-def _invert_dict(mydict):
-    inverse = dict()
-    for key, value in mydict.items():
-        inverse.setdefault(value, set()).add(key)
-    return inverse
