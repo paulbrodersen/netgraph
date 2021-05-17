@@ -291,7 +291,6 @@ def get_fruchterman_reingold_layout(edge_list,
         Size (radius) of nodes.
         Providing the correct node size minimises the overlap of nodes in the graph,
         which can otherwise occur if there are many nodes, or if the nodes differ considerably in size.
-        NOTE: Value is rescaled by BASE_SCALE (1e-2) to give comparable results to layout routines in igraph and networkx.
 
     node_positions : dict key : (float, float) or None (default None)
         Mapping of nodes to their (initial) x,y positions. If None are given,
@@ -389,9 +388,9 @@ def get_fruchterman_reingold_layout(edge_list,
     total_nodes = len(unique_nodes)
 
     if isinstance(node_size, (int, float)):
-        node_size = BASE_SCALE * node_size * np.ones((total_nodes))
+        node_size = node_size * np.ones((total_nodes))
     elif isinstance(node_size, dict):
-        node_size = np.array([BASE_SCALE * node_size[node] if node in node_size else 0. for node in unique_nodes])
+        node_size = np.array([node_size[node] if node in node_size else 0. for node in unique_nodes])
 
     if fixed_nodes:
         is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=np.bool)
