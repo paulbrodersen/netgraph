@@ -201,12 +201,9 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     keys = mydict.keys()
     values = np.array(list(mydict.values()), dtype=np.float64)
 
-    # apply edge_vmin, edge_vmax
-    if vmin:
-        values[values<vmin] = vmin
-
-    if vmax:
-        values[values>vmax] = vmax
+    # apply vmin, vmax
+    if vmin or vmax:
+        values = np.clip(values, vmin, vmax)
 
     def abs(value):
         try:
@@ -233,12 +230,19 @@ def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 
 
 def _get_zorder(color_dict):
-    # reorder plot elements such that darker items are plotted last
-    # and hence most prominent in the graph
-    # TODO: assumes that background is white (or at least light); might want to reverse order for dark backgrounds
-    zorder = _rank(np.sum(list(color_dict.values()), axis=1)) # assumes RGB specification
+    """
+    Reorder plot elements such that darker items are plotted last and hence most prominent in the graph.
+    This assumes that the background is white.
+    """
+    intensities = [rgba_to_grayscale(*v) for v in color_dict.values()]
+    zorder = _rank(intensities)
     zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
     return {key: index for key, index in zip(color_dict.keys(), zorder)}
+
+
+def rgba_to_grayscale(r, g, b, a=1):
+    # https://stackoverflow.com/a/689547/2912349
+    return (0.299 * r + 0.587 * g + 0.114 * b) * a
 
 
 def _get_font_size(ax, node_labels, **kwargs):
