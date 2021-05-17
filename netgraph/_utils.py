@@ -298,7 +298,7 @@ def _make_pretty(ax):
 
 
 def _rank(vec):
-    tmp = vec.argsort()
+    tmp = np.argsort(vec)
     ranks = np.empty_like(vec)
     ranks[tmp] = np.arange(len(vec))
     return ranks
