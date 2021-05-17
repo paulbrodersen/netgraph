@@ -13,7 +13,7 @@ from netgraph._artists import (
     NodeArtist,
     EdgeArtist,
 )
-from netgraph._utils import bspline
+from netgraph._utils import _bspline
 
 
 # set random seed for reproducibility
@@ -114,7 +114,7 @@ def test_simple_line():
 @pytest.mark.mpl_image_compare
 def test_complicated_line():
     random_points = np.random.rand(5, 2)
-    x, y = bspline(random_points, n=1000).T
+    x, y = _bspline(random_points, n=1000).T
     return plot_edge(x, y)
 
 
