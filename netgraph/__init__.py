@@ -78,30 +78,23 @@ __version__ = "3.1.6"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
-from ._main import (draw,
-                    draw_nodes,
-                    draw_node_labels,
-                    draw_edges,
-                    draw_edge_labels,
-                    parse_graph,
-                    get_color,
-                    BaseGraph,
-                    Graph,
-                    DraggableGraph,
-                    EmphasizeOnHoverGraph,
-                    AnnotateOnClickGraph,
-                    InteractiveGraph,
-)
-
-from ._interactive_variants import (InteractiveGrid,
-                                    InteractiveHypergraph,
-                                    InteractivelyConstructDestroyGraph
+from ._main import (
+    draw,
+    draw_nodes,
+    draw_node_labels,
+    draw_edges,
+    draw_edge_labels,
+    BaseGraph,
+    Graph,
+    InteractiveGraph,
 )
 
 from ._node_layout import (
     get_random_layout,
     get_fruchterman_reingold_layout,
     get_sugiyama_layout,
+    get_circular_layout,
+    get_community_layout,
 )
 
 from ._edge_layout import (
@@ -115,21 +108,15 @@ __all__ = ['draw',
            'draw_node_labels',
            'draw_edges',
            'draw_edge_labels',
-           'parse_graph',
-           'get_color',
            'get_random_layout',
            'get_fruchterman_reingold_layout',
            'get_sugiyama_layout',
-           'Basegraph',
-           'Graph',
-           'DraggableGraph',
-           'EmphasizeOnHoverGraph',
-           'AnnotateOnClickGraph',
-           'InteractiveGraph',
-           'InteractiveGrid',
-           'InteractiveHypergraph',
-           'InteractivelyConstructDestroyGraph',
+           'get_circular_layout',
+           'get_community_layout',
            'get_straight_edge_paths',
            'get_curved_edge_paths',
            'get_bundled_edge_paths',
+           'Basegraph',
+           'Graph',
+           'InteractiveGraph',
 ]
