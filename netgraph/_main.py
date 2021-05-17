@@ -1816,19 +1816,12 @@ class Graph(BaseGraph):
             # which edges are plotted according to the color of the edge.
             edge_zorder = _get_zorder(edge_color)
             node_zorder = np.max(list(edge_zorder.values())) + 1
-        else: # set to default
-            edge_color = DEFAULT_COLOR
-            edge_zorder = 1
-            node_zorder = 2
 
-        # Plot arrows if the graph has bi-directional edges.
-        if directed:
-            kwargs.setdefault('arrows', True)
-        else:
-            kwargs.setdefault('arrows', False)
+            kwargs.setdefault('edge_color', edge_color)
+            kwargs.setdefault('edge_zorder', edge_zorder)
+            kwargs.setdefault('node_zorder', node_zorder)
 
-        super().__init__(edge_list, nodes, node_zorder=node_zorder, edge_color=edge_color,
-                         edge_zorder=edge_zorder, *args, **kwargs)
+        super().__init__(edge_list, *args, **kwargs)
 
 
 class DraggableArtists(object):
