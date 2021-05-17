@@ -45,7 +45,7 @@ def _handle_multiple_components(layout_function):
     def wrapped_layout_function(edge_list, nodes=None, *args, **kwargs):
 
         # determine if there are more than one component
-        adjacency_list = _edge_list_to_adjacency_list(edge_list)
+        adjacency_list = _edge_list_to_adjacency_list(edge_list, directed=False)
         components = _get_connected_components(adjacency_list)
 
         if nodes:
