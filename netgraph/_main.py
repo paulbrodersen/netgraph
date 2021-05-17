@@ -110,7 +110,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
         # Edge width is another popular choice when visualising weighted networks,
         # but if the variance in weights is large, this typically results in less
         # visually pleasing results.
-        edge_color  = get_color(edge_weight, cmap=edge_cmap)
+        edge_color  = _get_color(edge_weight, cmap=edge_cmap)
         kwargs.setdefault('edge_color',  edge_color)
 
         # Plotting darker edges over lighter edges typically results in visually
@@ -171,7 +171,7 @@ def draw(graph, node_positions=None, node_labels=None, edge_labels=None, edge_cm
     return ax
 
 
-def get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     """
     Map positive and negative floats to a diverging colormap,
     such that
@@ -1958,7 +1958,7 @@ class Graph(BaseGraph):
             # Edge width is another popular choice when visualising weighted networks,
             # but if the variance in weights is large, this typically results in less
             # visually pleasing results.
-            edge_color = get_color(edge_weight, cmap=edge_cmap)
+            edge_color = _get_color(edge_weight, cmap=edge_cmap)
 
             # Plotting darker edges over lighter edges typically results in visually
             # more pleasing results. Here we hence specify the relative order in
