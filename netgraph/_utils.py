@@ -5,10 +5,9 @@ from scipy.interpolate import BSpline
 
 
 def _save_cast_float_to_int(num):
-    if isinstance(num, float) and np.isclose(num, int(num)):
+    if isinstance(num, (float, int)) and np.isclose(num, int(num)):
         return int(num)
-    else:
-        return num
+    return num
 
 
 def _get_unique_nodes(edge_list):
