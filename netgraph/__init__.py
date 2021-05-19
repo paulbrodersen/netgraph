@@ -37,14 +37,14 @@ import matplotlib.pyplot as plt
 from netgraph import Graph, InteractiveGraph
 
 # Several graph formats are supported:
-graph_obj = [(0, 1), (1, 1)] # edge list
-# graph_obj = [0, 1, 0.2), (1, 1, -0.4)] # edge list with weights
-# graph_obj = np.random.rand(10, 10) # full rank matrix
-# graph_object = networkx.karate_club_graph() # networkx Graph/DiGraph objects
-# graph_object = igraph.Graph.Famous('Zachary') # igraph Graph objects
+graph_data = [(0, 1), (1, 1)] # edge list
+# graph_data = [0, 1, 0.2), (1, 1, -0.4)] # edge list with weights
+# graph_data = np.random.rand(10, 10) # full rank matrix
+# graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
+# graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
 
 # Create a non-interactive plot:
-Graph(graph_obj)
+Graph(graph_data)
 plt.show()
 
 # Create an interactive plot.
@@ -52,13 +52,13 @@ plt.show()
 # Otherwise, the plot instance will be garbage collected after the initial draw
 # and you won't be able to move the plot elements around.
 plt.ion()
-plot_instance = InteractiveGraph(graph_obj)
+plot_instance = InteractiveGraph(graph_data)
 plt.show()
 ```
 
 """
 
-__version__ = "3.1.6"
+__version__ = "4.0.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
