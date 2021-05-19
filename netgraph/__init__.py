@@ -26,51 +26,35 @@ Netgraph
 
 Summary:
 --------
-Module to plot weighted, directed graphs of medium size (10-100 nodes).
-Unweighted, undirected graphs will look perfectly fine, too, but this module
-might be overkill for such a use case.
 
-Raison d'être:
---------------
-Existing draw routines for networks/graphs in python use fundamentally different
-length units for different plot elements. This makes it hard to
-    - provide a consistent layout for different axis / figure dimensions, and
-    - judge the relative sizes of elements a priori.
-This module amends these issues.
-
-Furthermore, this module allows to tweak node positions using the
-mouse after an initial draw.
+Python module to make high quality plots of networks.
 
 Example:
 --------
+
 import numpy as np
-import matplotlib.pyplot as plt; plt.ion()
-import netgraph
+import matplotlib.pyplot as plt
+from netgraph import Graph, InteractiveGraph
 
-# construct sparse, directed, weighted graph
-# with positive and negative edges
-n = 20
-w = np.random.randn(n,n)
-p = 0.2
-c = np.random.rand(n,n) <= p
-w[~c] = 0.
+# Several graph formats are supported:
+graph_obj = [(0, 1), (1, 1)] # edge list
+# graph_obj = [0, 1, 0.2), (1, 1, -0.4)] # edge list with weights
+# graph_obj = np.random.rand(10, 10) # full rank matrix
+# graph_object = networkx.karate_club_graph() # networkx Graph/DiGraph objects
+# graph_object = igraph.Graph.Famous('Zachary') # igraph Graph objects
 
-# plot
-netgraph.draw(w)
+# Create a non-interactive plot:
+Graph(graph_obj)
+plt.show()
 
-# If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
-# netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
-# If you would like to manually tweak the node positions using the mouse after the initial draw,
-# use the InteractiveGraph class:
-
-graph = netgraph.InteractiveGraph(w)
-
-# The new node positions can afterwards be retrieved via:
-pos = graph.node_positions
-
-# IMPORTANT NOTE:
-# You must retain a reference to the InteractiveGraph instance at all times (here `graph`).
-# Otherwise, the object will be garbage collected and you won't be able to alter the node positions interactively.
+# Create an interactive plot.
+# NOTE: you must retain a reference to the plot instance!
+# Otherwise, the plot instance will be garbage collected after the initial draw
+# and you won't be able to move the plot elements around.
+plt.ion()
+plot_instance = InteractiveGraph(graph_obj)
+plt.show()
+```
 
 """
 
