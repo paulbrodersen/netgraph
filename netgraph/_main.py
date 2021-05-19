@@ -1694,16 +1694,11 @@ class BaseGraph(object):
                 if angle < - 90:
                     angle += 180
 
-                # transform data coordinate angle to screen coordinate angle
-                xy = np.array((x, y))
-                trans_angle = self.ax.transData.transform_angles(np.array((angle,)),
-                                                                 xy.reshape((1, 2)))[0]
             else:
-                trans_angle = 0.0
+                angle = None
 
             edge_label_artist = self.ax.text(x, y, label,
-                                             rotation=trans_angle,
-                                             transform=self.ax.transData,
+                                             rotation=angle,
                                              **edge_label_fontdict)
 
             if edge in self.edge_label_artists:
