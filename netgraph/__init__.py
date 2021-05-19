@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# netgraph.py --- Plot weighted, directed graphs of medium size (10-100 nodes).
+# netgraph.py --- Python drawing utilities for publication quality plots of networks.
 
 # Copyright (C) 2016 Paul Brodersen <paulbrodersen+netgraph@gmail.com>
 
@@ -27,7 +27,7 @@ Netgraph
 Summary:
 --------
 
-Python module to make high quality plots of networks.
+Python drawing utilities for publication quality plots of networks.
 
 Example:
 --------
