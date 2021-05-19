@@ -1070,6 +1070,7 @@ class BaseGraph(object):
                 node_labels = dict(zip(self.nodes, self.nodes))
             node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
+            self.node_label_offset = node_label_offset
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
 
@@ -1622,7 +1623,7 @@ class BaseGraph(object):
         dx, dy = self.node_label_offset
         for node in nodes:
             x, y = node_label_positions[node]
-            self.node_label_artists[node].set_position(x + dx, y + dy)
+            self.node_label_artists[node].set_position((x + dx, y + dy))
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):
