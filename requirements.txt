@@ -1,2 +1,5 @@
 numpy
+scipy
 matplotlib >= 1.5
+rpack
+grandalf

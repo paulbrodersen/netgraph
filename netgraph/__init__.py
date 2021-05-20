@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# netgraph.py --- Plot weighted, directed graphs of medium size (10-100 nodes).
+# netgraph.py --- Python drawing utilities for publication quality plots of networks.
 
 # Copyright (C) 2016 Paul Brodersen <paulbrodersen+netgraph@gmail.com>
 
@@ -26,88 +26,85 @@ Netgraph
 
 Summary:
 --------
-Module to plot weighted, directed graphs of medium size (10-100 nodes).
-Unweighted, undirected graphs will look perfectly fine, too, but this module
-might be overkill for such a use case.
 
-Raison d'être:
---------------
-Existing draw routines for networks/graphs in python use fundamentally different
-length units for different plot elements. This makes it hard to
-    - provide a consistent layout for different axis / figure dimensions, and
-    - judge the relative sizes of elements a priori.
-This module amends these issues.
-
-Furthermore, this module allows to tweak node positions using the
-mouse after an initial draw.
+Python drawing utilities for publication quality plots of networks.
 
 Example:
 --------
+
 import numpy as np
-import matplotlib.pyplot as plt; plt.ion()
-import netgraph
+import matplotlib.pyplot as plt
+from netgraph import Graph, InteractiveGraph
 
-# construct sparse, directed, weighted graph
-# with positive and negative edges
-n = 20
-w = np.random.randn(n,n)
-p = 0.2
-c = np.random.rand(n,n) <= p
-w[~c] = 0.
+# Several graph formats are supported:
+graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
+# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
+# graph_data = np.random.rand(10, 10) # full rank matrix
+# graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
+# graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
 
-# plot
-netgraph.draw(w)
+# Create a non-interactive plot:
+Graph(graph_data)
+plt.show()
 
-# If no node positions are explicitly provided (via the `node_positions` argument to `draw`),
-# netgraph uses a spring layout to position nodes (Fruchtermann-Reingold algorithm).
-# If you would like to manually tweak the node positions using the mouse after the initial draw,
-# use the InteractiveGraph class:
-
-graph = netgraph.InteractiveGraph(w)
-
-# The new node positions can afterwards be retrieved via:
-pos = graph.node_positions
-
-# IMPORTANT NOTE:
-# You must retain a reference to the InteractiveGraph instance at all times (here `graph`).
-# Otherwise, the object will be garbage collected and you won't be able to alter the node positions interactively.
+# Create an interactive plot.
+# NOTE: you must retain a reference to the plot instance!
+# Otherwise, the plot instance will be garbage collected after the initial draw
+# and you won't be able to move the plot elements around.
+plt.ion()
+plot_instance = InteractiveGraph(graph_data)
+plt.show()
+```
 
 """
 
-__version__ = "3.1.8"
+__version__ = "4.0.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
-from ._main import (draw,
-                    draw_nodes,
-                    draw_node_labels,
-                    draw_edges,
-                    draw_edge_labels,
-                    parse_graph,
-                    get_color,
-                    fruchterman_reingold_layout,
-                    spring_layout,
-                    Graph,
-                    InteractiveGraph,
-                    test)
-
-from ._interactive_variants import (InteractiveGrid,
-                                    InteractiveHypergraph,
-                                    InteractivelyConstructDestroyGraph
+from ._main import (
+    draw,
+    draw_nodes,
+    draw_node_labels,
+    draw_edges,
+    draw_edge_labels,
+    BaseGraph,
+    Graph,
+    InteractiveGraph,
 )
+
+from ._node_layout import (
+    get_random_layout,
+    get_fruchterman_reingold_layout,
+    get_sugiyama_layout,
+    get_circular_layout,
+    get_community_layout,
+)
+
+from ._edge_layout import (
+    get_straight_edge_paths,
+    get_curved_edge_paths,
+    get_bundled_edge_paths,
+)
+
+from ._parser import parse_graph
+
 
 __all__ = ['draw',
            'draw_nodes',
            'draw_node_labels',
            'draw_edges',
            'draw_edge_labels',
-           'parse_graph',
-           'get_color',
-           'fruchterman_reingold_layout',
-           'spring_layout',
+           'get_random_layout',
+           'get_fruchterman_reingold_layout',
+           'get_sugiyama_layout',
+           'get_circular_layout',
+           'get_community_layout',
+           'get_straight_edge_paths',
+           'get_curved_edge_paths',
+           'get_bundled_edge_paths',
+           'Basegraph',
            'Graph',
            'InteractiveGraph',
-           'InteractiveGrid',
-           'InteractiveHypergraph',
-           'InteractivelyConstructDestroyGraph'
-           'test']
+           'parse_graph',
+]
