@@ -124,7 +124,7 @@ from netgraph import Graph
 Graph([(0, 1)],
     node_size=20,
     node_labels={0 : 'Lorem', 1 : 'ipsum'},
-    node_label_fontdict=dict(fontsize=20, fontfamily='Arial', fontweight='bold'),
+    node_label_fontdict=dict(size=18, fontfamily='Arial', fontweight='bold'),
     edge_labels={(0, 1) : 'dolor sit'},
     # blue bounding box with red edge:
     edge_label_fontdict=dict(bbox=dict(boxstyle='round',
