@@ -1247,6 +1247,7 @@ class BaseGraph(object):
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
+            edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
             edge_layout_kwargs.setdefault('total_control_points_per_edge', 7)
             area = np.product(scale)
             total_segments = edge_layout_kwargs['total_control_points_per_edge'] + 1
