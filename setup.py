@@ -19,4 +19,5 @@ setup(
     platforms=['Platform Independent'],
     packages=find_packages(),
     install_requires=['numpy', 'matplotlib', 'scipy', 'rectangle-packer', 'grandalf'],
+    extras_require={'tests' : ['pytest', 'pytest-mpl']},
 )
