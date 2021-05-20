@@ -394,9 +394,9 @@ def get_fruchterman_reingold_layout(edges,
         node_size = np.array([node_size[node] if node in node_size else 0. for node in unique_nodes])
 
     if fixed_nodes:
-        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=np.bool)
+        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
     else:
-        is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
+        is_mobile = np.ones((len(unique_nodes)), dtype=bool)
 
     adjacency = _edge_list_to_adjacency_matrix(
         edges, edge_weights=edge_weights, unique_nodes=unique_nodes)
@@ -783,9 +783,9 @@ def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.
     positions = np.array(list(node_positions.values()))
 
     if fixed_nodes:
-        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=np.bool)
+        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
     else:
-        is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
+        is_mobile = np.ones((len(unique_nodes)), dtype=bool)
 
     for _ in range(total_iterations):
         centroids = _get_voronoi_centroids(positions)

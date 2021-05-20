@@ -147,7 +147,7 @@ class EdgeArtist(PathPatchDataUnits):
         head_vertex_base = arrow_tail_midline[-1]
         (dx, dy), = _get_orthogonal_unit_vector(np.atleast_2d(head_vertex_tip - head_vertex_base)) * self.head_width / 2.
 
-        if self.shape is 'full':
+        if self.shape == 'full':
             tail_vertices_right = _get_parallel_line(arrow_tail_midline, -self.width / 2.)
             tail_vertices_left  = _get_parallel_line(arrow_tail_midline,  self.width / 2.)
             head_vertex_right = head_vertex_base - np.array([dx, dy])
@@ -170,7 +170,7 @@ class EdgeArtist(PathPatchDataUnits):
                 [Path.CLOSEPOLY] # tail_vertices_right[-1]
             ])
 
-        elif self.shape is 'right':
+        elif self.shape == 'right':
             tail_vertices_right = _get_parallel_line(arrow_tail_midline, -self.width / 2.)
             head_vertex_right  = head_vertex_base - np.array([dx, dy])
 
@@ -189,7 +189,7 @@ class EdgeArtist(PathPatchDataUnits):
                 [Path.CLOSEPOLY] # tail_vertices_right[-1]
             ])
 
-        elif self.shape is 'left':
+        elif self.shape == 'left':
             tail_vertices_left = _get_parallel_line(arrow_tail_midline,  self.width / 2.)
             head_vertex_left = head_vertex_base + np.array([dx, dy])
 
