@@ -1380,14 +1380,14 @@ class BaseGraph(object):
 
         """
 
-        if edge_layout is 'straight':
+        if edge_layout == 'straight':
             edge_paths = get_straight_edge_paths(edges, node_positions, edge_layout_kwargs['edge_width'])
             selfloop_paths = get_selfloop_paths(
                 edges, node_positions, edge_layout_kwargs['selfloop_radius'], edge_layout_kwargs['origin'], edge_layout_kwargs['scale'])
             edge_paths.update(selfloop_paths)
-        elif edge_layout is 'curved':
+        elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
-        elif edge_layout is 'bundled':
+        elif edge_layout == 'bundled':
             edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
         else:
             raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
@@ -1471,14 +1471,14 @@ class BaseGraph(object):
 
 
     def _update_edge_paths(self, edges):
-        if self.edge_layout is 'straight':
+        if self.edge_layout == 'straight':
             self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target])
             self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target])
 
-        elif self.edge_layout is 'curved':
+        elif self.edge_layout == 'curved':
             self._update_curved_edge_paths(edges)
 
-        elif self.edge_layout is 'bundled':
+        elif self.edge_layout == 'bundled':
             self._update_bundled_edge_paths(edges)
 
 
@@ -2267,7 +2267,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
 
     def _on_release(self, event):
-        if self._currently_dragging and not (self.edge_layout is 'straight'):
+        if self._currently_dragging and not (self.edge_layout == 'straight'):
             nodes = self._get_stale_nodes()
             edges = self._get_stale_edges(nodes)
             self._update_edge_paths(edges)
