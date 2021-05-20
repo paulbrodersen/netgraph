@@ -57,7 +57,7 @@ with the mouse after an initial draw (if you have any ideas about how
 to design an interface that facilitates edge routing with a mouse, I
 would love to hear them).
 
-![Demo of InteractiveGraph](https://media.giphy.com/media/xUOxfk8zazlkWLYtlC/giphy.gif)
+![Demo of InteractiveGraph](https://media.giphy.com/media/TttF8qWmd1rEJWpUrr/giphy.gif)
 
 The class `InteractiveGraph` also facilitates interactive data exploration.
 When hovering over a node, the node and all its neighbours in the graph are highlighted.
