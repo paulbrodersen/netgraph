@@ -18,5 +18,5 @@ setup(
     ],
     platforms=['Platform Independent'],
     packages=find_packages(),
-    install_requires=['numpy', 'matplotlib', 'scipy', 'rpack', 'grandalf'],
+    install_requires=['numpy', 'matplotlib', 'scipy', 'rectangle-packer', 'grandalf'],
 )
