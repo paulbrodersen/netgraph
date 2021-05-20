@@ -15,14 +15,14 @@ except NameError:
     profile = lambda x: x
 
 
-def get_straight_edge_paths(edge_list, node_positions, edge_width):
+def get_straight_edge_paths(edges, node_positions, edge_width):
     """Determine the edge layout, where edges are represented by straight
     lines connecting the source and target node. Bi-directional edges
     are offset from one another by one edge width.
 
     Arguments:
     ----------
-    edge_list : list of (source node ID, target node ID) 2-tuples
+    edges : list of (source node ID, target node ID) 2-tuples
         The edges.
 
     node_positions : dict node ID : (x, y) positions
@@ -38,7 +38,7 @@ def get_straight_edge_paths(edge_list, node_positions, edge_width):
 
     """
     edge_paths = dict()
-    for (source, target) in edge_list:
+    for (source, target) in edges:
         if source == target:
             # msg = "Plotting of self-loops not supported for straight edges."
             # msg += "Ignoring edge ({}, {}).".format(source, target)
@@ -48,7 +48,7 @@ def get_straight_edge_paths(edge_list, node_positions, edge_width):
         x1, y1 = node_positions[source]
         x2, y2 = node_positions[target]
 
-        if (target, source) in edge_list: # i.e. bidirectional
+        if (target, source) in edges: # i.e. bidirectional
             # shift edge to the right (looking along the arrow)
             x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=-0.5*edge_width[(source, target)])
 
@@ -66,10 +66,10 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def get_selfloop_paths(edge_list, node_positions, selfloop_radius, origin, scale):
+def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
     edge_paths = dict()
 
-    for (source, target) in edge_list:
+    for (source, target) in edges:
         if source != target:
             # msg = "Edges must be self-loops."
             # msg += f"Ignoring edge ({source}, {target})."
@@ -108,7 +108,7 @@ def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale):
     return selfloop_path
 
 
-def get_curved_edge_paths(edge_list, node_positions,
+def get_curved_edge_paths(edges, node_positions,
                           total_control_points_per_edge = 11,
                           selfloop_radius               = 0.1,
                           origin                        = np.array([0, 0]),
@@ -126,7 +126,7 @@ def get_curved_edge_paths(edge_list, node_positions,
 
     Arguments:
     ----------
-    edge_list : list of (source node ID, target node ID) 2-tuples
+    edges : list of (source node ID, target node ID) 2-tuples
         The edges.
 
     node_positions : dict node ID : (x, y) positions
@@ -169,7 +169,7 @@ def get_curved_edge_paths(edge_list, node_positions,
     """
 
     edge_to_control_points = _initialize_control_points(
-        edge_list, total_control_points_per_edge)
+        edges, total_control_points_per_edge)
 
     control_point_positions = _initialize_control_point_positions(
         edge_to_control_points, node_positions, selfloop_radius, origin, scale)
@@ -187,8 +187,8 @@ def get_curved_edge_paths(edge_list, node_positions,
     return edge_to_path
 
 
-def _initialize_control_points(edge_list, total_control_points_per_edge=11):
-    return {edge : [uuid4() for _ in range(total_control_points_per_edge)] for edge in edge_list}
+def _initialize_control_points(edges, total_control_points_per_edge=11):
+    return {edge : [uuid4() for _ in range(total_control_points_per_edge)] for edge in edges}
 
 
 def _expand_edges(edge_to_control_points):
@@ -196,12 +196,12 @@ def _expand_edges(edge_to_control_points):
     Create a new, expanded edge list, in which each edge is split into multiple segments.
     There are total_control_points + 1 segments / edges for each original edge.
     """
-    expanded_edge_list = []
+    expanded_edges = []
     for (source, target), control_points in edge_to_control_points.items():
         sources = [source] + control_points
         targets = control_points + [target]
-        expanded_edge_list.extend(zip(sources, targets))
-    return expanded_edge_list
+        expanded_edges.extend(zip(sources, targets))
+    return expanded_edges
 
 
 def _initialize_control_point_positions(edge_to_control_points, node_positions,
@@ -306,7 +306,7 @@ def _optimize_control_point_positions(
         k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
         k *= 0.5
 
-    expanded_edge_list = _expand_edges(edge_to_control_points)
+    expanded_edges = _expand_edges(edge_to_control_points)
     expanded_node_positions = control_point_positions.copy() # TODO: may need deepcopy here
     expanded_node_positions.update(node_positions)
 
@@ -314,7 +314,7 @@ def _optimize_control_point_positions(
         warnings.filterwarnings("ignore", category=UserWarning)
 
         expanded_node_positions = get_fruchterman_reingold_layout(
-            expanded_edge_list,
+            expanded_edges,
             node_positions      = expanded_node_positions,
             scale               = scale,
             origin              = origin,
@@ -343,7 +343,7 @@ def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
 
 
 @profile
-def get_bundled_edge_paths(edge_list, node_positions,
+def get_bundled_edge_paths(edges, node_positions,
                            k                       = 1000.,
                            compatibility_threshold = 0.05,
                            total_cycles            = 5,
@@ -361,7 +361,7 @@ def get_bundled_edge_paths(edge_list, node_positions,
 
     Arguments:
     ----------
-    edge_list : list
+    edges : list
         List of (source node, target node) 2-tuples.
 
     node_positions : dict node : (float x, float y)
@@ -396,23 +396,23 @@ def get_bundled_edge_paths(edge_list, node_positions,
     """
 
     # Filter out self-loops.
-    if np.any([source == target for source, target in edge_list]):
+    if np.any([source == target for source, target in edges]):
         warnings.warn('Edge-bundling of self-loops not supported. Self-loops are removed from the edge list.')
-        edge_list = [(source, target) for (source, target) in edge_list if source != target]
+        edges = [(source, target) for (source, target) in edges if source != target]
 
     # Filter out bi-directional edges.
     unidirectional_edges = set()
-    for (source, target) in edge_list:
+    for (source, target) in edges:
         if (target, source) not in unidirectional_edges:
             unidirectional_edges.add((source, target))
-    reverse_edges = list(set(edge_list) - unidirectional_edges)
-    edge_list = list(unidirectional_edges)
+    reverse_edges = list(set(edges) - unidirectional_edges)
+    edges = list(unidirectional_edges)
 
-    edge_to_k = _get_k(edge_list, node_positions, k)
+    edge_to_k = _get_k(edges, node_positions, k)
 
-    edge_compatibility = _get_edge_compatibility(edge_list, node_positions, compatibility_threshold)
+    edge_compatibility = _get_edge_compatibility(edges, node_positions, compatibility_threshold)
 
-    edge_to_control_points = _initialize_bundled_control_points(edge_list, node_positions)
+    edge_to_control_points = _initialize_bundled_control_points(edges, node_positions)
 
     for _ in range(total_cycles):
         edge_to_control_points = _expand_control_points(edge_to_control_points)
@@ -438,17 +438,17 @@ def get_bundled_edge_paths(edge_list, node_positions,
     return edge_to_control_points
 
 
-def _get_k(edge_list, node_positions, k):
-    return {(s, t) : k / np.linalg.norm(node_positions[t] - node_positions[s]) for (s, t) in edge_list}
+def _get_k(edges, node_positions, k):
+    return {(s, t) : k / np.linalg.norm(node_positions[t] - node_positions[s]) for (s, t) in edges}
 
 
 @profile
-def _get_edge_compatibility(edge_list, node_positions, threshold):
+def _get_edge_compatibility(edges, node_positions, threshold):
     # precompute edge segments, segment lengths and corresponding vectors
-    edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edge_list}
+    edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edges}
 
     edge_compatibility = list()
-    for e1, e2 in itertools.combinations(edge_list, 2):
+    for e1, e2 in itertools.combinations(edges, 2):
         P = edge_to_segment[e1]
         Q = edge_to_segment[e2]
 
@@ -547,9 +547,9 @@ def _get_visibility(P, Q):
     return max(visibility, 0)
 
 
-def _initialize_bundled_control_points(edge_list, node_positions):
+def _initialize_bundled_control_points(edges, node_positions):
     edge_to_control_points = dict()
-    for source, target in edge_list:
+    for source, target in edges:
         edge_to_control_points[(source, target)] \
             = np.array([node_positions[source], node_positions[target]])
     return edge_to_control_points

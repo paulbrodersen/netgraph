@@ -10,26 +10,26 @@ def _save_cast_float_to_int(num):
     return num
 
 
-def _get_unique_nodes(edge_list):
+def _get_unique_nodes(edges):
     """
     Using numpy.unique promotes nodes to numpy.float/numpy.int/numpy.str,
     and breaks for nodes that have a more complicated type such as a tuple.
     """
-    return list(set(_flatten(edge_list)))
+    return list(set(_flatten(edges)))
 
 
 def _flatten(nested_list):
     return [item for sublist in nested_list for item in sublist]
 
 
-def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None, unique_nodes=None):
+def _edge_list_to_adjacency_matrix(edges, edge_weights=None, unique_nodes=None):
 
-    sources = [s for (s, _) in edge_list]
-    targets = [t for (_, t) in edge_list]
+    sources = [s for (s, _) in edges]
+    targets = [t for (_, t) in edges]
     if edge_weights:
-        weights = [edge_weights[edge] for edge in edge_list]
+        weights = [edge_weights[edge] for edge in edges]
     else:
-        weights = np.ones((len(edge_list)))
+        weights = np.ones((len(edges)))
 
     if unique_nodes is None:
         # map nodes to consecutive integers
@@ -49,12 +49,12 @@ def _edge_list_to_adjacency_matrix(edge_list, edge_weights=None, unique_nodes=No
     return adjacency_matrix
 
 
-def _edge_list_to_adjacency_list(edge_list, directed=True):
+def _edge_list_to_adjacency_list(edges, directed=True):
     if not directed:
-        edge_list = edge_list + [(target, source) for (source, target) in edge_list] # forces copy
+        edges = edges + [(target, source) for (source, target) in edges] # forces copy
 
     adjacency = dict()
-    for source, target in edge_list:
+    for source, target in edges:
         if source in adjacency:
             adjacency[source] |= set([target])
         else:

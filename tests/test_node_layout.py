@@ -78,28 +78,28 @@ def test_community_layout():
 
 @pytest.fixture
 def multi_component_graph():
-    edge_list = []
+    edges = []
 
     # add 15 2-node components
-    edge_list.extend([(ii, ii+1) for ii in range(30, 60, 2)])
+    edges.extend([(ii, ii+1) for ii in range(30, 60, 2)])
 
     # add 10 3-node components
     for ii in range(60, 90, 3):
-        edge_list.extend([(ii, ii+1), (ii, ii+2), (ii+1, ii+2)])
+        edges.extend([(ii, ii+1), (ii, ii+2), (ii+1, ii+2)])
 
     # add a couple of larger components
     n = 90
     for ii in [10, 20, 30]:
-        edge_list.extend(list(combinations(range(n, n+ii), 2)))
+        edges.extend(list(combinations(range(n, n+ii), 2)))
         n += ii
 
     nodes = list(range(n))
-    return nodes, edge_list
+    return nodes, edges
 
 
 @pytest.mark.mpl_image_compare
 def test_circular_layout_with_multiple_components(multi_component_graph):
-    nodes, edge_list = multi_component_graph
+    nodes, edges = multi_component_graph
     fig, ax = plt.subplots()
-    g = Graph(edge_list, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
+    g = Graph(edges, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
     return fig

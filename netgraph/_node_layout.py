@@ -43,22 +43,22 @@ def _handle_multiple_components(layout_function):
 
     """
     @wraps(layout_function)
-    def wrapped_layout_function(edge_list, nodes=None, *args, **kwargs):
+    def wrapped_layout_function(edges, nodes=None, *args, **kwargs):
 
         # determine if there are more than one component
-        adjacency_list = _edge_list_to_adjacency_list(edge_list, directed=False)
+        adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
         components = _get_connected_components(adjacency_list)
 
         if nodes:
-            unconnected_nodes = set(nodes) - set(_get_unique_nodes(edge_list))
+            unconnected_nodes = set(nodes) - set(_get_unique_nodes(edges))
             if unconnected_nodes:
                 for node in unconnected_nodes:
                     components.append([node])
 
         if len(components) > 1:
-            return get_layout_for_multiple_components(edge_list, components, layout_function, *args, **kwargs)
+            return get_layout_for_multiple_components(edges, components, layout_function, *args, **kwargs)
         else:
-            return layout_function(edge_list, *args, **kwargs)
+            return layout_function(edges, *args, **kwargs)
 
     return wrapped_layout_function
 
@@ -115,7 +115,7 @@ def _dfs(adjacency_list, start, visited=None):
     return visited
 
 
-def get_layout_for_multiple_components(edge_list, components, layout_function,
+def get_layout_for_multiple_components(edges, components, layout_function,
                                        origin = (0, 0),
                                        scale  = (1, 1),
                                        *args, **kwargs):
@@ -126,7 +126,7 @@ def get_layout_for_multiple_components(edge_list, components, layout_function,
 
     Arguments:
     ----------
-    edge_list : list of (source node, target node) tuples
+    edges : list of (source node, target node) tuples
         The graph to plot.
     components : list of sets of node IDs
         The connected components of the graph.
@@ -150,7 +150,7 @@ def get_layout_for_multiple_components(edge_list, components, layout_function,
     node_positions = dict()
     for ii, (component, bbox) in enumerate(zip(components, bboxes)):
         if len(component) > 1:
-            subgraph = _get_subgraph(edge_list, component)
+            subgraph = _get_subgraph(edges, component)
             component_node_positions = layout_function(subgraph, origin=bbox[:2], scale=bbox[2:], *args, **kwargs)
             node_positions.update(component_node_positions)
         else:
@@ -246,7 +246,7 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
 
 
 @_handle_multiple_components
-def get_fruchterman_reingold_layout(edge_list,
+def get_fruchterman_reingold_layout(edges,
                                     edge_weights        = None,
                                     k                   = None,
                                     scale               = None,
@@ -262,7 +262,7 @@ def get_fruchterman_reingold_layout(edge_list,
     Arguments:
     ----------
 
-    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     edge_weights : dict edge : float
@@ -340,7 +340,7 @@ def get_fruchterman_reingold_layout(edge_list,
     if fixed_nodes is None:
         fixed_nodes = []
 
-    connected_nodes = _get_unique_nodes(edge_list)
+    connected_nodes = _get_unique_nodes(edges)
 
     if node_positions is None: # assign random starting positions to all nodes
         node_positions_as_array = np.random.rand(len(connected_nodes), dimensionality) * scale + origin
@@ -362,7 +362,7 @@ def get_fruchterman_reingold_layout(edge_list,
                     error_message += "\n{} : {}".format(node, position)
             raise ValueError(error_message)
 
-        # 2) handle discrepancies in nodes listed in node_positions and nodes extracted from edge_list
+        # 2) handle discrepancies in nodes listed in node_positions and nodes extracted from edges
         if set(node_positions.keys()) == set(connected_nodes):
             # all starting positions are given;
             # no superfluous nodes in node_positions;
@@ -399,7 +399,7 @@ def get_fruchterman_reingold_layout(edge_list,
         is_mobile = np.ones((len(unique_nodes)), dtype=np.bool)
 
     adjacency = _edge_list_to_adjacency_matrix(
-        edge_list, edge_weights=edge_weights, unique_nodes=unique_nodes)
+        edges, edge_weights=edge_weights, unique_nodes=unique_nodes)
 
     # Forces in FR are symmetric.
     # Hence we need to ensure that the adjacency matrix is also symmetric.
@@ -527,17 +527,17 @@ def _rescale_to_frame(node_positions, origin, scale):
 
 
 @_handle_multiple_components
-def get_random_layout(edge_list, origin=(0,0), scale=(1,1)):
-    nodes = _get_unique_nodes(edge_list)
+def get_random_layout(edges, origin=(0,0), scale=(1,1)):
+    nodes = _get_unique_nodes(edges)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
 
 
 @_handle_multiple_components
-def get_sugiyama_layout(edge_list, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
     """
     Arguments:
     ----------
-    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     origin : (float x, float y) tuple (default (0, 0))
@@ -557,8 +557,8 @@ def get_sugiyama_layout(edge_list, origin=(0,0), scale=(1,1), node_size=3, total
     """
 
     # TODO potentially test that graph is a DAG
-    nodes = _get_unique_nodes(edge_list)
-    graph = _get_grandalf_graph(edge_list, nodes, node_size)
+    nodes = _get_unique_nodes(edges)
+    graph = _get_grandalf_graph(edges, nodes, node_size)
 
     layout = SugiyamaLayout(graph.C[0])
     layout.init_all()
@@ -582,7 +582,7 @@ def get_sugiyama_layout(edge_list, origin=(0,0), scale=(1,1), node_size=3, total
     return dict(zip(nodes, positions))
 
 
-def _get_grandalf_graph(edge_list, nodes, node_size):
+def _get_grandalf_graph(edges, nodes, node_size):
     node_to_grandalf_vertex = dict()
     for node in nodes:
         # initialize vertex object
@@ -599,7 +599,7 @@ def _get_grandalf_graph(edge_list, nodes, node_size):
         node_to_grandalf_vertex[node] = vertex
 
     V = list(node_to_grandalf_vertex.values())
-    E = [Edge(node_to_grandalf_vertex[source], node_to_grandalf_vertex[target]) for source, target in edge_list]
+    E = [Edge(node_to_grandalf_vertex[source], node_to_grandalf_vertex[target]) for source, target in edges]
     G = Graph(V, E)
     return G
 
@@ -611,11 +611,11 @@ class vertex_view(object):
 
 
 @_handle_multiple_components
-def get_circular_layout(edge_list, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
+def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
     """
     Arguments:
     ----------
-    edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     origin : (float x, float y) tuple (default (0, 0))
@@ -634,7 +634,7 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1), reduce_edge_crossi
         Mapping of nodes to (x,y) positions
 
     """
-    nodes = _get_unique_nodes(edge_list)
+    nodes = _get_unique_nodes(edges)
     center = np.array(origin) + 0.5 * np.array(scale)
     radius = np.min(scale) / 2
     radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
@@ -643,18 +643,18 @@ def get_circular_layout(edge_list, origin=(0,0), scale=(1,1), reduce_edge_crossi
     if reduce_edge_crossings:
         # only optimize if the graph is not complete
         for edge in combinations(nodes, 2):
-            if (edge not in edge_list) and (edge[::-1] not in edge_list):
-                nodes = _reduce_crossings(edge_list)
+            if (edge not in edges) and (edge[::-1] not in edges):
+                nodes = _reduce_crossings(edges)
                 break
 
     return dict(zip(nodes, positions))
 
 
-def _reduce_crossings(edge_list):
+def _reduce_crossings(edges):
     """
     Implements Bauer & Brandes (2005) Crossing reduction in circular layouts.
     """
-    adjacency_list = _edge_list_to_adjacency_list(edge_list, directed=False)
+    adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
     node_order = _initialize_node_order(adjacency_list)
     node_order = _optimize_node_order(adjacency_list, node_order)
     return node_order

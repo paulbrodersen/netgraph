@@ -66,10 +66,10 @@ def test_labels():
 @pytest.mark.mpl_image_compare
 def test_update_view():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1)]
+    edges = [(0, 1)]
     node_layout = {
         0 : np.array([-1, -1]),
         1 : np.array([0.5, 0.5])
     }
-    Graph(edge_list, node_layout=node_layout)
+    Graph(edges, node_layout=node_layout)
     return fig

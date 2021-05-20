@@ -16,21 +16,21 @@ np.random.seed(42)
 
 @pytest.mark.mpl_image_compare
 def test_straight_edge_layout():
-    edge_list = [(0, 0), (0, 1), (1, 0), (1, 2), (2, 0)]
+    edges = [(0, 0), (0, 1), (1, 0), (1, 2), (2, 0)]
     node_positions = {
         0 : (0.2, 0.2),
         1 : (0.5, 0.8),
         2 : (0.8, 0.2),
     }
     fig, ax = plt.subplots()
-    Graph(edge_list, node_layout=node_positions, edge_layout='straight', arrows=True)
+    Graph(edges, node_layout=node_positions, edge_layout='straight', arrows=True)
     return fig
 
 
 @pytest.mark.mpl_image_compare
 def test_curved_edge_layout():
     fig, ax = plt.subplots()
-    edge_list = [
+    edges = [
         (0, 1),
         (1, 0),
         (0, 2),
@@ -41,7 +41,7 @@ def test_curved_edge_layout():
         1 : np.array([0.5, 0.5]),
         2 : np.array([0.9, 0.89]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='curved', edge_layout_kwargs=dict(k=0.025))
+    Graph(edges, node_layout=node_positions, edge_layout='curved', edge_layout_kwargs=dict(k=0.025))
     return fig
 
 
@@ -51,21 +51,21 @@ def test_curved_edge_layout():
 @pytest.mark.mpl_image_compare
 def test_draw_bundled_edges():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1), (2, 3)]
+    edges = [(0, 1), (2, 3)]
     node_positions = {
         0 : np.array([0, 0.25]),
         1 : np.array([1, 0.25]),
         2 : np.array([0, 0.75]),
         3 : np.array([1, 0.75]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='bundled', ax=ax)
+    Graph(edges, node_layout=node_positions, edge_layout='bundled', ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare
 def test_scale_compatibility():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1), (2, 3), (4, 5)]
+    edges = [(0, 1), (2, 3), (4, 5)]
     node_positions = {
         0 : np.array([ 0.0, 0.25]),
         1 : np.array([ 1.0, 0.25]),
@@ -74,7 +74,7 @@ def test_scale_compatibility():
         4 : np.array([-1.5, 0.75]),
         5 : np.array([ 2.5, 0.75]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='bundled', ax=ax)
+    Graph(edges, node_layout=node_positions, edge_layout='bundled', ax=ax)
     ax.axis([-1.6, 2.6, -0.1, 1.1])
     return fig
 
@@ -82,7 +82,7 @@ def test_scale_compatibility():
 @pytest.mark.mpl_image_compare
 def test_position_compatibility():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1), (2, 3), (4, 5)]
+    edges = [(0, 1), (2, 3), (4, 5)]
     node_positions = {
         0 : np.array([ 0.0, -1.0]),
         1 : np.array([ 1.0, -1.0]),
@@ -91,7 +91,7 @@ def test_position_compatibility():
         4 : np.array([ 0.0, 4.0]),
         5 : np.array([ 1.0, 4.0]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='bundled', ax=ax)
+    Graph(edges, node_layout=node_positions, edge_layout='bundled', ax=ax)
     ax.axis([-0.1, 1.1, -1.1, 4.1])
     return fig
 
@@ -99,7 +99,7 @@ def test_position_compatibility():
 @pytest.mark.mpl_image_compare
 def test_angle_compatibility():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1), (2, 3), (4, 5)]
+    edges = [(0, 1), (2, 3), (4, 5)]
     node_positions = {
         0 : np.array([ 0.0, 0.25]),
         1 : np.array([ 1.0, 0.25]),
@@ -108,14 +108,14 @@ def test_angle_compatibility():
         4 : np.array([ 0.0, 0.55]),
         5 : np.array([ 1.0, 0.95]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='bundled', ax=ax)
+    Graph(edges, node_layout=node_positions, edge_layout='bundled', ax=ax)
     return fig
 
 
 @pytest.mark.mpl_image_compare
 def test_visibility_compatibility():
     fig, ax = plt.subplots()
-    edge_list = [(0, 1), (2, 3), (4, 5)]
+    edges = [(0, 1), (2, 3), (4, 5)]
     node_positions = {
         0 : np.array([ 0.0, 0.]),
         1 : np.array([ 1.0, 0.]),
@@ -124,7 +124,7 @@ def test_visibility_compatibility():
         4 : np.array([ 0.0, -np.sqrt(2)]), # i.e. distance between midpoints from (0, 1) to (2, 3) the same as (0, 1) to (4, 5)
         5 : np.array([ 1.0, -np.sqrt(2)]),
     }
-    Graph(edge_list, node_layout=node_positions, edge_layout='bundled', ax=ax)
+    Graph(edges, node_layout=node_positions, edge_layout='bundled', ax=ax)
     ax.axis([-0.1, 2.1, -1.5, 1.1])
     return fig
 

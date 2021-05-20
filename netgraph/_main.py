@@ -841,11 +841,11 @@ class BaseGraph(object):
 
     Arguments
     ----------
-    edge_list : list of (source node, target node) 2-tuples
+    edges : list of (source node, target node) 2-tuples
         List of edges.
 
     nodes : list of node IDs or None (default None)
-        If None, `nodes` is initialised to the set of the flattened `edge_list`.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
 
     node_layout : str or dict node : (float x, float y) (default 'spring')
         If node_layout is a string, the node positions are computed using
@@ -1007,7 +1007,7 @@ class BaseGraph(object):
 
     """
 
-    def __init__(self, edge_list,
+    def __init__(self, edges,
                  nodes=None,
                  node_layout='spring',
                  node_layout_kwargs=None,
@@ -1038,7 +1038,7 @@ class BaseGraph(object):
                  ax=None,
                  *args, **kwargs
     ):
-        self.edge_list = _parse_edge_list(edge_list)
+        self.edges = _parse_edge_list(edges)
 
         self.nodes = self._initialize_nodes(nodes)
 
@@ -1050,10 +1050,10 @@ class BaseGraph(object):
         node_edge_color = self._normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
         node_alpha      = self._normalize_numeric_argument(node_alpha, self.nodes, 'node_alpha')
         node_zorder     = self._normalize_numeric_argument(node_zorder, self.nodes, 'node_zorder')
-        edge_width      = self._normalize_numeric_argument(edge_width, self.edge_list, 'edge_width')
-        edge_color      = self._normalize_color_argument(edge_color, self.edge_list, 'edge_color')
-        edge_alpha      = self._normalize_numeric_argument(edge_alpha, self.edge_list, 'edge_alpha')
-        edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edge_list, 'edge_zorder')
+        edge_width      = self._normalize_numeric_argument(edge_width, self.edges, 'edge_width')
+        edge_color      = self._normalize_color_argument(edge_color, self.edges, 'edge_color')
+        edge_alpha      = self._normalize_numeric_argument(edge_alpha, self.edges, 'edge_alpha')
+        edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edges, 'edge_zorder')
 
         # Rescale.
         node_size = self._rescale(node_size, BASE_SCALE)
@@ -1094,7 +1094,7 @@ class BaseGraph(object):
 
         if edge_labels:
             if isinstance(edge_labels, bool):
-                edge_labels = dict(zip(self.edge_list, self.edge_list))
+                edge_labels = dict(zip(self.edges, self.edges))
             edge_label_fontdict = self._initialize_edge_label_fontdict(edge_label_fontdict)
             self.edge_label_position = edge_label_position
             self.edge_label_rotate = edge_label_rotate
@@ -1107,17 +1107,17 @@ class BaseGraph(object):
 
 
     def _initialize_nodes(self, nodes):
-        nodes_in_edge_list = _get_unique_nodes(self.edge_list)
+        nodes_in_edges = _get_unique_nodes(self.edges)
         if nodes is None:
-            return nodes_in_edge_list
+            return nodes_in_edges
         else:
-            if set(nodes).issuperset(nodes_in_edge_list):
+            if set(nodes).issuperset(nodes_in_edges):
                 return nodes
             else:
                 msg = "There are some node IDs in the edgelist not present in `nodes`. "
-                msg += "`nodes` has to be the superset of `edge_list`."
+                msg += "`nodes` has to be the superset of `edges`."
                 msg += "\nThe following nodes are missing:"
-                missing = set(nodes_in_edge_list) - set(nodes)
+                missing = set(nodes_in_edges) - set(nodes)
                 for node in missing:
                     msg += f"\n\t{node}"
                 raise ValueError(msg)
@@ -1208,25 +1208,25 @@ class BaseGraph(object):
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
         if node_layout == 'spring':
             node_positions = get_fruchterman_reingold_layout(
-                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
                 node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions
         if node_layout == 'community':
             node_positions = get_community_layout(
-                self.edge_list, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
                 node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions
         elif node_layout == 'circular':
             return get_circular_layout(
-                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':
             return get_sugiyama_layout(
-                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'random':
             return get_random_layout(
-                self.edge_list, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         else:
             implemented = ['spring', 'dot', 'random', 'circular']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"
@@ -1259,10 +1259,10 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('total_cycles', 6)
 
         if isinstance(edge_layout, str):
-            edge_paths = self._get_edge_paths(self.edge_list, self.node_positions,
+            edge_paths = self._get_edge_paths(self.edges, self.node_positions,
                                               edge_layout, edge_layout_kwargs)
         elif isinstance(edge_layout, dict):
-            self._check_completeness(edge_layout, self.edge_list, 'edge_layout')
+            self._check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
 
             # determine a sensible edge_layout in case node positions change
@@ -1349,11 +1349,11 @@ class BaseGraph(object):
             self.node_artists[node].xy = self.node_positions[node]
 
 
-    def _get_edge_paths(self, edge_list, node_positions, edge_layout, edge_layout_kwargs):
+    def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
         """
         Arguments
         ----------
-        edge_list : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
             List of edges. Each tuple corresponds to an edge defined by (source, target).
 
         node_positions : dict node : (float, float)
@@ -1381,14 +1381,14 @@ class BaseGraph(object):
         """
 
         if edge_layout is 'straight':
-            edge_paths = get_straight_edge_paths(edge_list, node_positions, edge_layout_kwargs['edge_width'])
+            edge_paths = get_straight_edge_paths(edges, node_positions, edge_layout_kwargs['edge_width'])
             selfloop_paths = get_selfloop_paths(
-                edge_list, node_positions, edge_layout_kwargs['selfloop_radius'], edge_layout_kwargs['origin'], edge_layout_kwargs['scale'])
+                edges, node_positions, edge_layout_kwargs['selfloop_radius'], edge_layout_kwargs['origin'], edge_layout_kwargs['scale'])
             edge_paths.update(selfloop_paths)
         elif edge_layout is 'curved':
-            edge_paths = get_curved_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+            edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
         elif edge_layout is 'bundled':
-            edge_paths = get_bundled_edge_paths(edge_list, node_positions, **edge_layout_kwargs)
+            edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
         else:
             raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
 
@@ -1518,11 +1518,11 @@ class BaseGraph(object):
             self.ax.draw_artist(self.edge_artists[(source, target)])
 
 
-    def _update_curved_edge_paths(self, edges):
+    def _update_curved_edge_paths(self, stale_edges):
         """Compute a new layout for curved edges keeping all other edges constant."""
 
         fixed_positions = dict()
-        constant_edges = [edge for edge in self.edge_list if edge not in edges]
+        constant_edges = [edge for edge in self.edges if edge not in stale_edges]
         for edge in constant_edges:
             edge_artist = self.edge_artists[edge]
             if edge_artist.curved:
@@ -1539,7 +1539,7 @@ class BaseGraph(object):
                     fixed_positions[uuid4()] = m * delta + edge_origin
         fixed_positions.update(self.node_positions)
 
-        edge_paths = get_curved_edge_paths(edges, fixed_positions, **self.edge_layout_kwargs)
+        edge_paths = get_curved_edge_paths(stale_edges, fixed_positions, **self.edge_layout_kwargs)
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
@@ -1548,7 +1548,7 @@ class BaseGraph(object):
 
     def _update_bundled_edge_paths(self, edges):
         # edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
-        edge_paths = get_bundled_edge_paths(self.edge_list, self.node_positions, **self.edge_layout_kwargs)
+        edge_paths = get_bundled_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
@@ -1746,7 +1746,7 @@ class BaseGraph(object):
                 (x1, y1) = self.node_positions[n1]
                 (x2, y2) = self.node_positions[n2]
 
-                if (n2, n1) in self.edge_list: # i.e. bidirectional edge
+                if (n2, n1) in self.edges: # i.e. bidirectional edge
                     x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.5*self.edge_artists[(n1, n2)].width)
 
                 x, y = (x1 * self.edge_label_position + x2 * (1.0 - self.edge_label_position),
@@ -1981,7 +1981,7 @@ class Graph(BaseGraph):
     def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        nodes, edge_list, edge_weight = parse_graph(graph)
+        nodes, edges, edge_weight = parse_graph(graph)
         kwargs.setdefault('nodes', nodes)
 
         # Color and reorder edges for weighted graphs.
@@ -2002,7 +2002,7 @@ class Graph(BaseGraph):
             kwargs.setdefault('edge_zorder', edge_zorder)
             kwargs.setdefault('node_zorder', node_zorder)
 
-        super().__init__(edge_list, *args, **kwargs)
+        super().__init__(edges, *args, **kwargs)
 
 
 class DraggableArtists(object):
@@ -2263,7 +2263,7 @@ class DraggableGraph(Graph, DraggableArtists):
     def _get_stale_edges(self, nodes=None):
         if nodes is None:
             nodes = self._get_stale_nodes()
-        return [(source, target) for (source, target) in self.edge_list if (source in nodes) or (target in nodes)]
+        return [(source, target) for (source, target) in self.edges if (source in nodes) or (target in nodes)]
 
 
     def _on_release(self, event):

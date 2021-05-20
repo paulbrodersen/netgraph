@@ -12,18 +12,18 @@ from ._utils import _save_cast_float_to_int, _get_unique_nodes
 
 def _handle_multigraphs(parser):
     def wrapped_parser(graph, *args, **kwargs):
-        nodes, edge_list, edge_weight = parser(graph, *args, **kwargs)
+        nodes, edges, edge_weight = parser(graph, *args, **kwargs)
 
-        if len(set(edge_list)) < len(edge_list):
+        if len(set(edges)) < len(edges):
             msg = "Multi-graphs are not properly supported. Removing duplicate edges before plotting."
             warnings.warn(msg)
-            new_edge_list = []
-            for edge in edge_list:
-                if edge not in new_edge_list:
-                    new_edge_list.append(edge)
-            return nodes, new_edge_list, edge_weight
+            new_edges = []
+            for edge in edges:
+                if edge not in new_edges:
+                    new_edges.append(edge)
+            return nodes, new_edges, edge_weight
 
-        return nodes, edge_list, edge_weight
+        return nodes, edges, edge_weight
 
     return wrapped_parser
 
@@ -49,7 +49,7 @@ def parse_graph(graph):
     nodes : V-long list of node uids
         List of unique nodes.
 
-    edge_list: E-long list of 2-tuples
+    edges: E-long list of 2-tuples
         List of edges. Each tuple corresponds to an edge defined by (source, target).
 
     edge_weight: dict (source, target) : float or None
@@ -96,13 +96,13 @@ def _parse_sparse_matrix_format(adjacency):
     rows, columns = adjacency.shape
 
     if columns == 2:
-        edge_list = _parse_edge_list(adjacency)
-        nodes = _get_unique_nodes(edge_list)
-        return nodes, edge_list, None
+        edges = _parse_edge_list(adjacency)
+        nodes = _get_unique_nodes(edges)
+        return nodes, edges, None
 
     elif columns == 3:
-        edge_list = _parse_edge_list(adjacency[:, :2])
-        nodes = _get_unique_nodes(edge_list)
+        edges = _parse_edge_list(adjacency[:, :2])
+        nodes = _get_unique_nodes(edges)
         edge_weight = {(source, target) : weight for (source, target, weight) in adjacency}
 
         # In a sparse adjacency format with integer nodes and float weights,
@@ -115,13 +115,13 @@ def _parse_sparse_matrix_format(adjacency):
                 break
         if save:
             nodes = [_save_cast_float_to_int(node) for node in nodes]
-            edge_list = [(_save_cast_float_to_int(source), _save_cast_float_to_int(target)) for (source, target) in edge_list]
+            edges = [(_save_cast_float_to_int(source), _save_cast_float_to_int(target)) for (source, target) in edges]
             edge_weight = {(_save_cast_float_to_int(source), _save_cast_float_to_int(target)) : weight for (source, target), weight in edge_weight.items()}
 
         if len(set(edge_weight.values())) > 1:
-            return nodes, edge_list, edge_weight
+            return nodes, edges, edge_weight
         else:
-            return nodes, edge_list, None
+            return nodes, edges, None
 
     else:
         msg = "Graph specification in sparse matrix format needs to consist of an iterable of tuples of length 2 or 3."
@@ -129,48 +129,48 @@ def _parse_sparse_matrix_format(adjacency):
         raise ValueError(msg)
 
 
-def _parse_edge_list(edge_list):
+def _parse_edge_list(edges):
     # Edge list may be an array, or a list of lists. We want a list of tuples.
-    return [(source, target) for (source, target) in edge_list]
+    return [(source, target) for (source, target) in edges]
 
 
 def _parse_adjacency_matrix(adjacency):
     sources, targets = np.where(adjacency)
-    edge_list = list(zip(sources.tolist(), targets.tolist()))
+    edges = list(zip(sources.tolist(), targets.tolist()))
     nodes = list(range(adjacency.shape[0]))
-    edge_weights = {(source, target): adjacency[source, target] for (source, target) in edge_list}
+    edge_weights = {(source, target): adjacency[source, target] for (source, target) in edges}
 
     if len(set(list(edge_weights.values()))) == 1:
-        return nodes, edge_list, None
+        return nodes, edges, None
     else:
-        return nodes, edge_list, edge_weights
+        return nodes, edges, edge_weights
 
 
 @_handle_multigraphs
 def _parse_networkx_graph(graph, attribute_name='weight'):
-    edge_list = list(graph.edges)
+    edges = list(graph.edges)
     nodes = list(graph.nodes)
     try:
-        edge_weights = {edge : graph.get_edge_data(*edge)[attribute_name] for edge in edge_list}
+        edge_weights = {edge : graph.get_edge_data(*edge)[attribute_name] for edge in edges}
     except KeyError: # no weights
         edge_weights = None
-    return nodes, edge_list, edge_weights
+    return nodes, edges, edge_weights
 
 
 @_handle_multigraphs
 def _parse_igraph_graph(graph):
-    edge_list = [(edge.source, edge.target) for edge in graph.es()]
+    edges = [(edge.source, edge.target) for edge in graph.es()]
     nodes = graph.vs.indices
     if graph.is_weighted():
         edge_weights = {(edge.source, edge.target) : edge['weight'] for edge in graph.es()}
     else:
         edge_weights = None
-    return nodes, edge_list, edge_weights
+    return nodes, edges, edge_weights
 
 
-def _is_directed(edge_list):
+def _is_directed(edges):
     # test for bi-directional edges
-    for (source, target) in edge_list:
-        if ((target, source) in edge_list) and (source != target):
+    for (source, target) in edges:
+        if ((target, source) in edges) and (source != target):
             return True
     return False
