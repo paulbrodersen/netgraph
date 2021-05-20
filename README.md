@@ -14,12 +14,13 @@ pip install netgraph
 Import module and plot with:
 
 ``` python
+import numpy as np
 import matplotlib.pyplot as plt
 from netgraph import Graph, InteractiveGraph
 
 # Several graph formats are supported:
-graph_data = [(0, 1), (1, 1)] # edge list
-# graph_data = [0, 1, 0.2), (1, 1, -0.4)] # edge list with weights
+graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
+# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
 # graph_data = np.random.rand(10, 10) # full rank matrix
 # graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
 # graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
@@ -89,9 +90,9 @@ plt.show()
 import matplotlib.pyplot as plt
 from netgraph import Graph
 
-Graph([(0, 1), (1, 1)],
-      edge_color={(0, 1) : np.array([255, 0, 0]), (1, 1) : lightblue'},
-      node_size={0 : 20, 1 : np.pi},
+Graph([(0, 1), (1, 2), (2, 0)],
+      edge_color={(0, 1) : 'g', (1, 2) : 'lightblue', (2, 0) : np.array([1, 0, 0])},
+      node_size={0 : 20, 1 : 4.2, 2 : np.pi},
 )
 plt.show()
 ```
@@ -103,11 +104,11 @@ import matplotlib.pyplot as plt; plt.ion()
 from netgraph import Graph
 
 fig, ax = plt.subplots()
-g = Graph([(0, 1), (1, 1)], ax=ax)
+g = Graph([(0, 1), (1, 2), (2, 0)], ax=ax)
 
 # make some changes
-g.edge_artists[(1, 1)].set_facecolor('red')
-g.edge_artists[(1, 1)].set_facecolor('lightblue')
+g.edge_artists[(0, 1)].set_facecolor('red')
+g.edge_artists[(1, 2)].set_facecolor('lightblue')
 
 # force redraw to display changes
 fig.canvas.draw()
@@ -121,13 +122,14 @@ import matplotlib.pyplot as plt
 from netgraph import Graph
 
 Graph([(0, 1)],
+    node_size=20,
     node_labels={0 : 'Lorem', 1 : 'ipsum'},
-    node_label_fontdict=dict(fontsize=12, fontfamily='Arial', fontweight='bold'),
+    node_label_fontdict=dict(fontsize=20, fontfamily='Arial', fontweight='bold'),
     edge_labels={(0, 1) : 'dolor sit'},
     # blue bounding box with red edge:
     edge_label_fontdict=dict(bbox=dict(boxstyle='round',
                                        ec=(1.0, 0.0, 0.0),
-                                       fc=(0.0, 0.0, 1.0))),
+                                       fc=(0.5, 0.5, 1.0))),
 )
 plt.show()
 ```
@@ -140,6 +142,7 @@ from netgraph import Graph
 
 fig, ax = plt.subplots()
 g = Graph([(0, 1)],
+    node_size=20,
     node_labels={0 : 'Lorem', 1 : 'ipsum'},
     edge_labels={(0, 1) : 'dolor sit'},
     ax=ax
@@ -212,9 +215,3 @@ not see your emails for several weeks, potentially longer. Also, I have a
 job that I love and that pays my bills, and thus takes priority. That
 being said, the blue little notification dot on github is surprisingly
 effective at getting my attention. So please just raise an issue.
-
-
-## License
-
-The library is licensed under GPLv3. If you would like to purchase a
-license for commercial purposes, please be in touch.

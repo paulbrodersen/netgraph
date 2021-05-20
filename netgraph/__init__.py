@@ -37,8 +37,8 @@ import matplotlib.pyplot as plt
 from netgraph import Graph, InteractiveGraph
 
 # Several graph formats are supported:
-graph_data = [(0, 1), (1, 1)] # edge list
-# graph_data = [0, 1, 0.2), (1, 1, -0.4)] # edge list with weights
+graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
+# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
 # graph_data = np.random.rand(10, 10) # full rank matrix
 # graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
 # graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
