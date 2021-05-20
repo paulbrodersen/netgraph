@@ -87,6 +87,9 @@ from ._edge_layout import (
     get_bundled_edge_paths,
 )
 
+from ._parser import parse_graph
+
+
 __all__ = ['draw',
            'draw_nodes',
            'draw_node_labels',
@@ -103,4 +106,5 @@ __all__ = ['draw',
            'Basegraph',
            'Graph',
            'InteractiveGraph',
+           'parse_graph',
 ]
