@@ -2412,10 +2412,10 @@ class AnnotateOnClick(object):
                     self.fig.canvas.draw()
                     return
 
-            # clicked outside of any artist
-            for artist in list(self.annotated_artists): # list to force copy
-                self._remove_annotation(artist)
-            self.fig.canvas.draw()
+            # # clicked outside of any artist
+            # for artist in list(self.annotated_artists): # list to force copy
+            #     self._remove_annotation(artist)
+            # self.fig.canvas.draw()
 
 
     def _get_annotation_placement(self, artist):
