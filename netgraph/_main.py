@@ -897,8 +897,11 @@ class BaseGraph(object):
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
@@ -1087,9 +1090,10 @@ class BaseGraph(object):
                 node_labels = dict(zip(self.nodes, self.nodes))
             node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
-            self.node_label_offset = node_label_offset
+            self.node_label_offset, self._recompute_node_label_offsets =\
+                self._initialize_node_label_offset(node_label_offset)
             self.node_label_artists = dict()
-            self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
+            self.draw_node_labels(node_labels, node_label_fontdict)
 
         if edge_labels:
             if isinstance(edge_labels, bool):
@@ -1554,6 +1558,45 @@ class BaseGraph(object):
             self.ax.draw_artist(self.edge_artists[edge])
 
 
+    def _initialize_node_label_offset(self, node_label_offset):
+        if isinstance(node_label_offset, (int, float)):
+            node_label_offset = self._get_node_label_offsets(node_label_offset)
+            recompute = True
+            return node_label_offset, recompute
+        elif isinstance(node_label_offset, (tuple, list, np.ndarray)):
+            if len(node_label_offset) == 2:
+                node_label_offset = {node : node_label_offset for node in self.nodes}
+                recompute = False
+                return node_label_offset, recompute
+            else:
+                msg = "If the variable `node_label_offset` is an iterable, it should have length 2."
+                msg+= f"Current length: {len(node_label_offset)}."
+                raise ValueError(msg)
+        else:
+            msg = "The variable `node_label_offset` has to be either a float, an int, a tuple, a list, or a numpy ndarray."
+            msg += f"\nCurrent type: {type(node_label_offset)}."
+            raise TypeError(msg)
+
+
+    def _get_node_label_offsets(self, distance):
+        node_label_offset = dict()
+        for node, xy in self.node_positions.items():
+            node_label_offset[node] = distance * self._get_vector_pointing_outwards(xy)
+        return node_label_offset
+
+
+    def _get_centroid(self):
+        return np.mean([position for position in self.node_positions.values()], axis=0)
+
+
+    def _get_vector_pointing_outwards(self, xy):
+        centroid = self._get_centroid()
+        delta = xy - centroid
+        distance = np.linalg.norm(delta)
+        unit_vector = delta / distance
+        return unit_vector
+
+
     def _initialize_node_label_fontdict(self, node_label_fontdict, node_labels, node_label_offset):
         if node_label_fontdict is None:
             node_label_fontdict = dict()
@@ -1595,7 +1638,7 @@ class BaseGraph(object):
         return size
 
 
-    def draw_node_labels(self, node_labels, node_label_offset, node_label_fontdict):
+    def draw_node_labels(self, node_labels, node_label_fontdict):
         """
         Draw node labels.
 
@@ -1624,9 +1667,9 @@ class BaseGraph(object):
 
         """
 
-        dx, dy = node_label_offset
         for node, label in node_labels.items():
             x, y = self.node_positions[node]
+            dx, dy = self.node_label_offset[node]
             artist = self.ax.text(x+dx, y+dy, label, **node_label_fontdict)
 
             if node in self.node_label_artists:
@@ -1638,10 +1681,22 @@ class BaseGraph(object):
         if node_label_positions is None:
             node_label_positions = self.node_positions
 
-        dx, dy = self.node_label_offset
+        if self._recompute_node_label_offsets:
+            self.node_label_offset = self._update_node_label_offsets()
+
         for node in nodes:
             x, y = node_label_positions[node]
+            dx, dy = self.node_label_offset[node]
             self.node_label_artists[node].set_position((x + dx, y + dy))
+
+
+    def _update_node_label_offsets(self):
+        # node_label_offset = dict()
+        # for node, xy in self.node_positions.items():
+        #     distance = np.linalg.norm(self.node_label_offset[node])
+        #     node_label_offset[node] = distance * self._get_vector_pointing_outwards(xy)
+        # return node_label_offset
+        return {node : np.linalg.norm(self.node_label_offset[node]) * self._get_vector_pointing_outwards(xy) for node, xy in self.node_positions.items()}
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):
@@ -1858,8 +1913,11 @@ class Graph(BaseGraph):
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
@@ -2425,24 +2483,6 @@ class AnnotateOnClick(object):
         return x, y, horizontalalignment, verticalalignment
 
 
-    def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
-
-        if isinstance(self.artist_to_data[artist], str):
-            self.artist_to_text_object[artist] = self.ax.text(
-                x, y, self.artist_to_data[artist],
-                horizontalalignment=horizontalalignment,
-                verticalalignment=verticalalignment,
-            )
-        elif isinstance(self.artist_to_data[artist], dict):
-            params = self.artist_to_data[artist].copy()
-            params.setdefault('horizontalalignment', horizontalalignment)
-            params.setdefault('verticalalignment', verticalalignment)
-            self.artist_to_text_object[artist] = self.ax.text(
-                x, y, **params
-            )
-        self.annotated_artists.add(artist)
-
-
     def _get_centroid(self):
         return np.mean([artist.xy for artist in self.artist_to_data], axis=0)
 
@@ -2475,6 +2515,24 @@ class AnnotateOnClick(object):
         return horizontalalignment, verticalalignment
 
 
+    def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
+
+        if isinstance(self.artist_to_data[artist], str):
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, self.artist_to_data[artist],
+                horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment,
+            )
+        elif isinstance(self.artist_to_data[artist], dict):
+            params = self.artist_to_data[artist].copy()
+            params.setdefault('horizontalalignment', horizontalalignment)
+            params.setdefault('verticalalignment', verticalalignment)
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, **params
+            )
+        self.annotated_artists.add(artist)
+
+
     def _remove_annotation(self, artist):
         text_object = self.artist_to_text_object[artist]
         text_object.remove()
@@ -2497,7 +2555,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
 
     def _get_centroid(self):
-        return np.mean([position for position in self.node_positions.values()], axis=0)
+        return Graph._get_centroid(self)
 
 
     def _get_annotation_placement(self, artist):
@@ -2613,8 +2671,11 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
