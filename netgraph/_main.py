@@ -1347,7 +1347,7 @@ class BaseGraph(object):
             self.node_artists[node] = node_artist
 
 
-    def _update_node_artist_positions(self, nodes):
+    def _update_node_artists(self, nodes):
         for node in nodes:
             self.node_artists[node].xy = self.node_positions[node]
 
@@ -2290,7 +2290,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
         nodes = self._get_stale_nodes()
         self._update_node_positions(nodes, cursor_position)
-        self._update_node_artist_positions(nodes)
+        self._update_node_artists(nodes)
 
         if hasattr(self, 'node_label_artists'):
             self._update_node_label_positions(nodes)
