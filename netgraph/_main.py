@@ -1560,7 +1560,11 @@ class BaseGraph(object):
 
     def _initialize_node_label_offset(self, node_label_offset):
         if isinstance(node_label_offset, (int, float)):
-            node_label_offset = self._get_node_label_offsets(node_label_offset)
+            # node_label_offset = self._get_node_label_offsets(node_label_offset)
+            distance = node_label_offset
+            node_label_offset = dict()
+            for node, xy in self.node_positions.items():
+                node_label_offset[node] = distance * self._get_vector_pointing_outwards(xy)
             recompute = True
             return node_label_offset, recompute
         elif isinstance(node_label_offset, (tuple, list, np.ndarray)):
@@ -1576,13 +1580,6 @@ class BaseGraph(object):
             msg = "The variable `node_label_offset` has to be either a float, an int, a tuple, a list, or a numpy ndarray."
             msg += f"\nCurrent type: {type(node_label_offset)}."
             raise TypeError(msg)
-
-
-    def _get_node_label_offsets(self, distance):
-        node_label_offset = dict()
-        for node, xy in self.node_positions.items():
-            node_label_offset[node] = distance * self._get_vector_pointing_outwards(xy)
-        return node_label_offset
 
 
     def _get_centroid(self):
@@ -1677,26 +1674,54 @@ class BaseGraph(object):
             self.node_label_artists[node] = artist
 
 
-    def _update_node_label_positions(self, nodes, node_label_positions=None):
-        if node_label_positions is None:
-            node_label_positions = self.node_positions
-
+    def _update_node_label_positions(self):
         if self._recompute_node_label_offsets:
-            self.node_label_offset = self._update_node_label_offsets()
+            self._update_node_label_offsets()
 
-        for node in nodes:
-            x, y = node_label_positions[node]
-            dx, dy = self.node_label_offset[node]
+        for node, (dx, dy) in self.node_label_offset.items():
+            x, y = self.node_positions[node]
             self.node_label_artists[node].set_position((x + dx, y + dy))
 
 
-    def _update_node_label_offsets(self):
-        # node_label_offset = dict()
-        # for node, xy in self.node_positions.items():
-        #     distance = np.linalg.norm(self.node_label_offset[node])
-        #     node_label_offset[node] = distance * self._get_vector_pointing_outwards(xy)
-        # return node_label_offset
-        return {node : np.linalg.norm(self.node_label_offset[node]) * self._get_vector_pointing_outwards(xy) for node, xy in self.node_positions.items()}
+    def _update_node_label_offsets(self, total_samples_per_edge=20, total_iterations=3):
+        fixed = []
+        for xy in self.node_positions.values():
+            fixed.append(xy)
+        for path in self.edge_paths.values():
+            fixed.extend([_get_point_along_spline(path, fraction) for fraction in np.arange(0, 1, 1./total_samples_per_edge)])
+        fixed = np.array(fixed)
+
+        offsets = np.array(list(self.node_label_offset.values()))
+        anchors = np.array([self.node_positions[node] for node in self.node_label_offset.keys()])
+
+        # Compute the net repulsion exerted on each label by nodes, edges and other labels.
+        # Place the label in the direction of net repulsion at the desired distance from the corresponding node (anchor).
+        # TODO Test if gradually stepping in the direction of net repulsion improves results.
+        for ii in range(total_iterations):
+            repulsion = self._get_repulsion(anchors + offsets, fixed)
+            directions = repulsion / np.linalg.norm(repulsion, axis=-1)[:, np.newaxis]
+            offsets = np.linalg.norm(offsets, axis=-1)[:, np.newaxis] * directions
+
+        for ii, node in enumerate(self.node_label_offset):
+            self.node_label_offset[node] = offsets[ii]
+
+
+    def _get_repulsion(self, mobile, fixed):
+        combined = np.concatenate([mobile, fixed], axis=0)
+
+        delta = mobile[np.newaxis, :, :] - combined[:, np.newaxis, :]
+        distance = np.linalg.norm(delta, axis=-1)
+
+        with np.errstate(divide='ignore', invalid='ignore'):
+            direction = delta / distance[..., None] # i.e. the unit vector
+            magnitude = 1. / distance
+
+        repulsion = direction * magnitude[..., None]
+
+        for ii in range(repulsion.shape[-1]):
+            np.fill_diagonal(repulsion[:, :, ii], 0)
+
+        return np.sum(repulsion, axis=0)
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):
@@ -2293,7 +2318,7 @@ class DraggableGraph(Graph, DraggableArtists):
         self._update_node_artists(nodes)
 
         if hasattr(self, 'node_label_artists'):
-            self._update_node_label_positions(nodes)
+            self._update_node_label_positions()
 
         edges = self._get_stale_edges(nodes)
         # In the interest of speed, we only compute the straight edge paths here.
