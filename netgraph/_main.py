@@ -1091,7 +1091,9 @@ class BaseGraph(object):
             node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
             self.node_label_offset, self._recompute_node_label_offsets =\
-                self._initialize_node_label_offset(node_label_offset)
+                self._initialize_node_label_offset(node_labels, node_label_offset)
+            if self._recompute_node_label_offsets:
+                self._update_node_label_offsets()
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, node_label_fontdict)
 
