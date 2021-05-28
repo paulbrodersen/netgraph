@@ -150,7 +150,7 @@ def _get_signed_angle_between(v1, v2, radians=False):
     return angle
 
 
-def _get_n_points_on_a_circle(xy, radius, n, start_angle):
+def _get_n_points_on_a_circle(xy, radius, n, start_angle=0):
     angles = np.linspace(0, 2*np.pi, n + 1)[:-1]
     angles = (angles + start_angle) % (2*np.pi)
     positions = np.array([_get_point_on_a_circle(xy, radius, angle) for angle in angles])
