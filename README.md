@@ -53,11 +53,8 @@ This is demonstrated by the plethora of different algorithms in use
 (if graph layout was a solved problem, there would only be one
 algorithm). To ameliorate this problem, this module contains an
 `InteractiveGraph` class, which allows node positions to be tweaked
-with the mouse after an initial draw (if you have any ideas about how
-to design an interface that facilitates edge routing with a mouse, I
-would love to hear them).
-
 ![Demo of InteractiveGraph](https://media.giphy.com/media/TttF8qWmd1rEJWpUrr/giphy.gif)
+with the mouse after an initial draw.
 
 The class `InteractiveGraph` also facilitates interactive data exploration.
 When hovering over a node, the node and all its neighbours in the graph are highlighted.
