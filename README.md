@@ -43,7 +43,7 @@ plt.show()
 
 ### Better layouts
 
-![Example visualisations](./figures/gallery.png)
+![Example visualisations](./figures/gallery_portrait.png)
 
 
 ### Interactive tweaking and data exploration
