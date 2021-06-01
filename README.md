@@ -43,7 +43,7 @@ plt.show()
 
 ### Better layouts
 
-![Example visualisations](./figures/gallery.png)
+![Example visualisations](./figures/gallery_portrait.png)
 
 
 ### Interactive tweaking and data exploration
@@ -53,11 +53,7 @@ This is demonstrated by the plethora of different algorithms in use
 (if graph layout was a solved problem, there would only be one
 algorithm). To ameliorate this problem, this module contains an
 `InteractiveGraph` class, which allows node positions to be tweaked
-with the mouse after an initial draw (if you have any ideas about how
-to design an interface that facilitates edge routing with a mouse, I
-would love to hear them).
-
-![Demo of InteractiveGraph](https://media.giphy.com/media/TttF8qWmd1rEJWpUrr/giphy.gif)
+with the mouse after an initial draw.
 
 The class `InteractiveGraph` also facilitates interactive data exploration.
 When hovering over a node, the node and all its neighbours in the graph are highlighted.
@@ -66,6 +62,31 @@ When hovering over an edge, the edge and its source and target nodes are highlig
 Apart from the labels, additional annotations can be passed in via the
 `node_data` and `edge_data` keyword arguments. The visibility of these
 annotations is toggled by clicking on the corresponding plot elements.
+
+![Demo of InteractiveGraph](https://media.giphy.com/media/clrtFvPW1ITjtGyPIU/giphy.gif)
+
+
+``` python
+import matplotlib.pyplot as plt
+import networkx as nx
+
+from netgraph import InteractiveGraph
+
+g = nx.house_x_graph()
+
+node_data = {
+    4 : dict(s = 'Additional annotations can be revealed\nby clicking on the corresponding plot element.', fontsize=20, backgroundcolor='white')
+}
+edge_data = {
+    (0, 1) : dict(s='Clicking on the same plot element\na second time hides the annotation again.', fontsize=20, backgroundcolor='white')
+}
+
+fig, ax = plt.subplots(figsize=(10, 10))
+plot_instance = InteractiveGraph(g, node_size=5, edge_width=3,
+                                 node_labels=True, node_label_offset=0.08, node_label_fontdict=dict(size=20),
+                                 node_data=node_data, edge_data=edge_data, ax=ax)
+plt.show()
+```
 
 
 ### Exquisite control over plot elements

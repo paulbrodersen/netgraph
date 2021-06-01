@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from netgraph._main import Graph
-from toy_graphs import cube
+from toy_graphs import cube, cycle
 
 np.random.seed(42)
 
@@ -72,4 +72,11 @@ def test_update_view():
         1 : np.array([0.5, 0.5])
     }
     Graph(edges, node_layout=node_layout)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_get_node_label_offset():
+    fig, ax = plt.subplots()
+    Graph(cycle, node_layout='circular', node_labels=True, node_label_offset=0.1)
     return fig

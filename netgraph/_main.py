@@ -7,6 +7,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 
 from uuid import uuid4
+from scipy.spatial import cKDTree
 
 from ._utils import (
     _get_unique_nodes,
@@ -18,6 +19,7 @@ from ._utils import (
     _get_text_object_dimensions,
     _make_pretty,
     _rank,
+    _get_n_points_on_a_circle,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -897,8 +899,11 @@ class BaseGraph(object):
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
@@ -1063,14 +1068,14 @@ class BaseGraph(object):
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
 
-        edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
+        self.edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
             edge_layout, edge_layout_kwargs, origin, scale, edge_width)
 
         # Draw plot elements
         self.ax = self._initialize_axis(ax)
 
         self.edge_artists = dict()
-        self.draw_edges(edge_paths, edge_width, edge_color, edge_alpha,
+        self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
                         edge_zorder, arrows, node_size)
 
         self.node_artists = dict()
@@ -1087,9 +1092,12 @@ class BaseGraph(object):
                 node_labels = dict(zip(self.nodes, self.nodes))
             node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
-            self.node_label_offset = node_label_offset
+            self.node_label_offset, self._recompute_node_label_offsets =\
+                self._initialize_node_label_offset(node_labels, node_label_offset)
+            if self._recompute_node_label_offsets:
+                self._update_node_label_offsets()
             self.node_label_artists = dict()
-            self.draw_node_labels(node_labels, node_label_offset, node_label_fontdict)
+            self.draw_node_labels(node_labels, node_label_fontdict)
 
         if edge_labels:
             if isinstance(edge_labels, bool):
@@ -1259,7 +1267,7 @@ class BaseGraph(object):
 
         if isinstance(edge_layout, str):
             edge_paths = self._get_edge_paths(self.edges, self.node_positions,
-                                              edge_layout, edge_layout_kwargs)
+                                                   edge_layout, edge_layout_kwargs)
         elif isinstance(edge_layout, dict):
             self._check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
@@ -1343,7 +1351,7 @@ class BaseGraph(object):
             self.node_artists[node] = node_artist
 
 
-    def _update_node_artist_positions(self, nodes):
+    def _update_node_artists(self, nodes):
         for node in nodes:
             self.node_artists[node].xy = self.node_positions[node]
 
@@ -1469,24 +1477,33 @@ class BaseGraph(object):
             self.edge_artists[edge] = edge_artist
 
 
-    def _update_edge_paths(self, edges):
+    def _update_edge_artists(self, edge_paths=None):
+        if edge_paths is None:
+            edge_paths = self.edge_paths
+
+        for edge, path in edge_paths.items():
+            self.edge_artists[edge].update_midline(path)
+            self.ax.draw_artist(self.edge_artists[edge])
+
+
+    def _update_edges(self, edges):
+        edge_paths = dict()
         if self.edge_layout == 'straight':
-            self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target])
-            self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target])
-
+            edge_paths.update(self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target]))
+            edge_paths.update(self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target]))
         elif self.edge_layout == 'curved':
-            self._update_curved_edge_paths(edges)
-
+            edge_paths.update(self._update_curved_edge_paths(edges))
         elif self.edge_layout == 'bundled':
-            self._update_bundled_edge_paths(edges)
+            edge_paths.update(self._update_bundled_edge_paths(edges))
+        self.edge_paths.update(edge_paths)
+        self._update_edge_artists(edge_paths)
 
 
     def _update_straight_edge_paths(self, edges):
-
         # remove self-loops
         edges = [(source, target) for source, target in edges if source != target]
 
-        # move edges to new positions
+        edge_paths = dict()
         for (source, target) in edges:
             x0, y0 = self.node_positions[source]
             x1, y1 = self.node_positions[target]
@@ -1495,26 +1512,25 @@ class BaseGraph(object):
             if (target, source) in edges:
                 x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=0.5*self.edge_artists[(source, target)].width)
 
-            # update midline & path
-            self.edge_artists[(source, target)].update_midline(np.c_[[x0, x1], [y0, y1]])
-            self.ax.draw_artist(self.edge_artists[(source, target)])
+            edge_paths[(source, target)] = np.c_[[x0, x1], [y0, y1]]
+
+        return edge_paths
 
 
     def _update_selfloop_paths(self, edges):
-
-        # restrict to self-loopse
+        # restrict to self-loops
         edges = [(source, target) for source, target in edges if source == target]
 
-        # move edges to new positions
+        edge_paths = dict()
         for (source, target) in edges:
-            path = _get_selfloop_path(source,
-                                      node_positions  = self.node_positions,
-                                      selfloop_radius = self.edge_layout_kwargs['selfloop_radius'],
-                                      origin          = self.edge_layout_kwargs['origin'],
-                                      scale           = self.edge_layout_kwargs['scale']
+            edge_paths[(source, target)] = _get_selfloop_path(
+                source,
+                node_positions  = self.node_positions,
+                selfloop_radius = self.edge_layout_kwargs['selfloop_radius'],
+                origin          = self.edge_layout_kwargs['origin'],
+                scale           = self.edge_layout_kwargs['scale']
             )
-            self.edge_artists[(source, target)].update_midline(path)
-            self.ax.draw_artist(self.edge_artists[(source, target)])
+        return edge_paths
 
 
     def _update_curved_edge_paths(self, stale_edges):
@@ -1538,20 +1554,44 @@ class BaseGraph(object):
                     fixed_positions[uuid4()] = m * delta + edge_origin
         fixed_positions.update(self.node_positions)
 
-        edge_paths = get_curved_edge_paths(stale_edges, fixed_positions, **self.edge_layout_kwargs)
-
-        for edge, path in edge_paths.items():
-            self.edge_artists[edge].update_midline(path)
-            self.ax.draw_artist(self.edge_artists[edge])
+        return get_curved_edge_paths(stale_edges, fixed_positions, **self.edge_layout_kwargs)
 
 
     def _update_bundled_edge_paths(self, edges):
         # edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
-        edge_paths = get_bundled_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
+        return get_bundled_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
 
-        for edge, path in edge_paths.items():
-            self.edge_artists[edge].update_midline(path)
-            self.ax.draw_artist(self.edge_artists[edge])
+
+    def _initialize_node_label_offset(self, node_labels, node_label_offset):
+        if isinstance(node_label_offset, (int, float)):
+            node_label_offset = {node : node_label_offset * self._get_vector_pointing_outwards(self.node_positions[node]) for node in node_labels}
+            recompute = True
+            return node_label_offset, recompute
+        elif isinstance(node_label_offset, (tuple, list, np.ndarray)):
+            if len(node_label_offset) == 2:
+                node_label_offset = {node : node_label_offset for node in node_labels}
+                recompute = False
+                return node_label_offset, recompute
+            else:
+                msg = "If the variable `node_label_offset` is an iterable, it should have length 2."
+                msg+= f"Current length: {len(node_label_offset)}."
+                raise ValueError(msg)
+        else:
+            msg = "The variable `node_label_offset` has to be either a float, an int, a tuple, a list, or a numpy ndarray."
+            msg += f"\nCurrent type: {type(node_label_offset)}."
+            raise TypeError(msg)
+
+
+    def _get_centroid(self):
+        return np.mean([position for position in self.node_positions.values()], axis=0)
+
+
+    def _get_vector_pointing_outwards(self, xy):
+        centroid = self._get_centroid()
+        delta = xy - centroid
+        distance = np.linalg.norm(delta)
+        unit_vector = delta / distance
+        return unit_vector
 
 
     def _initialize_node_label_fontdict(self, node_label_fontdict, node_labels, node_label_offset):
@@ -1595,7 +1635,7 @@ class BaseGraph(object):
         return size
 
 
-    def draw_node_labels(self, node_labels, node_label_offset, node_label_fontdict):
+    def draw_node_labels(self, node_labels, node_label_fontdict):
         """
         Draw node labels.
 
@@ -1624,9 +1664,9 @@ class BaseGraph(object):
 
         """
 
-        dx, dy = node_label_offset
         for node, label in node_labels.items():
             x, y = self.node_positions[node]
+            dx, dy = self.node_label_offset[node]
             artist = self.ax.text(x+dx, y+dy, label, **node_label_fontdict)
 
             if node in self.node_label_artists:
@@ -1634,14 +1674,80 @@ class BaseGraph(object):
             self.node_label_artists[node] = artist
 
 
-    def _update_node_label_positions(self, nodes, node_label_positions=None):
-        if node_label_positions is None:
-            node_label_positions = self.node_positions
+    def _update_node_label_positions(self):
+        if self._recompute_node_label_offsets:
+            self._update_node_label_offsets()
 
-        dx, dy = self.node_label_offset
-        for node in nodes:
-            x, y = node_label_positions[node]
+        for node, (dx, dy) in self.node_label_offset.items():
+            x, y = self.node_positions[node]
             self.node_label_artists[node].set_position((x + dx, y + dy))
+
+
+    def _update_node_label_offsets(self, total_samples_per_edge=100):
+        fixed = []
+        for xy in self.node_positions.values():
+            fixed.append(xy)
+        for path in self.edge_paths.values():
+            fixed.extend([_get_point_along_spline(path, fraction) for fraction in np.arange(0, 1, 1./total_samples_per_edge)])
+        fixed = np.array(fixed)
+
+        offsets = np.array(list(self.node_label_offset.values()))
+        anchors = np.array([self.node_positions[node] for node in self.node_label_offset.keys()])
+
+        offsets = self._optimise_offsets(anchors, offsets, fixed)
+
+        for ii, node in enumerate(self.node_label_offset):
+            self.node_label_offset[node] = offsets[ii]
+
+
+    # # Variant no 1: use force directed layout to determine a suitable node label placements
+    # # pros : labels repel each other
+    # # cons : does not work very well; the optimum placement can still result in a collision
+    # def _optimise_offsets(self, anchors, offsets, fixed, total_iterations=5):
+    #     # Compute the net repulsion exerted on each label by nodes, edges and other labels.
+    #     # Place the label in the direction of net repulsion at the desired distance from the corresponding node (anchor).
+    #     # TODO Test if gradually stepping in the direction of net repulsion improves results.
+    #     for ii in range(total_iterations):
+    #         repulsion = self._get_repulsion(anchors + offsets, fixed)
+    #         directions = repulsion / np.linalg.norm(repulsion, axis=-1)[:, np.newaxis]
+    #         offsets = np.linalg.norm(offsets, axis=-1)[:, np.newaxis] * directions
+    #     return offsets
+
+
+    # def _get_repulsion(self, mobile, fixed, minimum_distance=0.01):
+    #     combined = np.concatenate([mobile, fixed], axis=0)
+
+    #     delta = mobile[np.newaxis, :, :] - combined[:, np.newaxis, :]
+    #     distance = np.linalg.norm(delta, axis=-1)
+    #     direction = delta / distance[..., None] # i.e. the unit vector
+
+    #     # 1. We clip the distance as we want to reduce overlaps with
+    #     # all nearby plot elements, not just the one that overlaps the
+    #     # most.
+    #     # 2. We only care about interactions with nearby objects, so
+    #     # we heavily penalise repulsion from far away items by using a
+    #     # exponent.
+    #     magnitude = 1. / np.clip(distance, minimum_distance, np.inf)**6
+    #     repulsion = direction * magnitude[..., None]
+
+    #     for ii in range(repulsion.shape[-1]):
+    #         np.fill_diagonal(repulsion[:, :, ii], 0)
+
+    #     return np.sum(repulsion, axis=0)
+
+    # Variant no 2:
+    # pros : straightforward optimisation; works very well
+    # cons : labels can still collide with each other
+    def _optimise_offsets(self, anchors, offsets, fixed, total_queries_per_point=360):
+        tree = cKDTree(fixed)
+        output = np.zeros_like(offsets)
+        for ii, (anchor, offset) in enumerate(zip(anchors, offsets)):
+            x = _get_n_points_on_a_circle(anchor, np.linalg.norm(offset), total_queries_per_point)
+            # distances, _ = tree.query(x, 1) # can result in many ties; first element is arbitrarily chosen
+            # output[ii] = x[np.argmax(distances)]
+            distances, _ = tree.query(x, 2)
+            output[ii] = x[np.argmax(np.sum(distances, axis=1))]
+        return output - anchors
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):
@@ -1858,8 +1964,11 @@ class Graph(BaseGraph):
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
@@ -2232,17 +2341,20 @@ class DraggableGraph(Graph, DraggableArtists):
 
         nodes = self._get_stale_nodes()
         self._update_node_positions(nodes, cursor_position)
-        self._update_node_artist_positions(nodes)
+        self._update_node_artists(nodes)
 
         if hasattr(self, 'node_label_artists'):
-            self._update_node_label_positions(nodes)
+            self._update_node_label_positions()
 
         edges = self._get_stale_edges(nodes)
         # In the interest of speed, we only compute the straight edge paths here.
         # We will re-compute other edge layouts only on mouse button release,
         # i.e. when the dragging motion has stopped.
-        self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target])
-        self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target])
+        edge_paths = dict()
+        edge_paths.update(self._update_straight_edge_paths([(source, target) for (source, target) in edges if source != target]))
+        edge_paths.update(self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target]))
+        self.edge_paths.update(edge_paths)
+        self._update_edge_artists(edge_paths)
 
         if hasattr(self, 'edge_label_artists'):
             self._update_edge_label_positions(edges)
@@ -2269,7 +2381,7 @@ class DraggableGraph(Graph, DraggableArtists):
         if self._currently_dragging and not (self.edge_layout == 'straight'):
             nodes = self._get_stale_nodes()
             edges = self._get_stale_edges(nodes)
-            self._update_edge_paths(edges)
+            self._update_edges(edges)
 
             if hasattr(self, 'edge_label_artists'): # move edge labels
                 self._update_edge_label_positions(edges)
@@ -2412,10 +2524,10 @@ class AnnotateOnClick(object):
                     self.fig.canvas.draw()
                     return
 
-            # clicked outside of any artist
-            for artist in list(self.annotated_artists): # list to force copy
-                self._remove_annotation(artist)
-            self.fig.canvas.draw()
+            # # clicked outside of any artist
+            # for artist in list(self.annotated_artists): # list to force copy
+            #     self._remove_annotation(artist)
+            # self.fig.canvas.draw()
 
 
     def _get_annotation_placement(self, artist):
@@ -2423,24 +2535,6 @@ class AnnotateOnClick(object):
         x, y = artist.xy + 2 * artist.radius * vector
         horizontalalignment, verticalalignment = self._get_text_alignment(vector)
         return x, y, horizontalalignment, verticalalignment
-
-
-    def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
-
-        if isinstance(self.artist_to_data[artist], str):
-            self.artist_to_text_object[artist] = self.ax.text(
-                x, y, self.artist_to_data[artist],
-                horizontalalignment=horizontalalignment,
-                verticalalignment=verticalalignment,
-            )
-        elif isinstance(self.artist_to_data[artist], dict):
-            params = self.artist_to_data[artist].copy()
-            params.setdefault('horizontalalignment', horizontalalignment)
-            params.setdefault('verticalalignment', verticalalignment)
-            self.artist_to_text_object[artist] = self.ax.text(
-                x, y, **params
-            )
-        self.annotated_artists.add(artist)
 
 
     def _get_centroid(self):
@@ -2475,6 +2569,24 @@ class AnnotateOnClick(object):
         return horizontalalignment, verticalalignment
 
 
+    def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
+
+        if isinstance(self.artist_to_data[artist], str):
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, self.artist_to_data[artist],
+                horizontalalignment=horizontalalignment,
+                verticalalignment=verticalalignment,
+            )
+        elif isinstance(self.artist_to_data[artist], dict):
+            params = self.artist_to_data[artist].copy()
+            params.setdefault('horizontalalignment', horizontalalignment)
+            params.setdefault('verticalalignment', verticalalignment)
+            self.artist_to_text_object[artist] = self.ax.text(
+                x, y, **params
+            )
+        self.annotated_artists.add(artist)
+
+
     def _remove_annotation(self, artist):
         text_object = self.artist_to_text_object[artist]
         text_object.remove()
@@ -2497,7 +2609,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
 
     def _get_centroid(self):
-        return np.mean([position for position in self.node_positions.values()], axis=0)
+        return Graph._get_centroid(self)
 
 
     def _get_annotation_placement(self, artist):
@@ -2613,8 +2725,11 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
        supply a dictionary mapping nodes to node labels.
        Only nodes in the dictionary are labelled.
 
-    node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-        (x, y) offset from node centre of label position.
+    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+        A (dx, dy) tuple specifies the exact offset from the node position.
+        If a scalar delta is specified, the value is interpreted as a distance, and
+        the label is placed delta away from the node position while trying to
+        reduce node/label, node/edge, and label/label overlaps.
 
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
