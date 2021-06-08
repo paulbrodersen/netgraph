@@ -113,7 +113,7 @@ def get_curved_edge_paths(edges, node_positions,
                           origin                        = np.array([0, 0]),
                           scale                         = np.array([1, 1]),
                           k                             = None,
-                          initial_temperature           = 0.1,
+                          initial_temperature           = 0.01,
                           total_iterations              = 50,
                           node_size                     = 0.,
 ):
