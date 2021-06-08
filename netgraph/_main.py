@@ -1255,11 +1255,11 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
-            edge_layout_kwargs.setdefault('total_control_points_per_edge', 7)
             area = np.product(scale)
-            total_segments = edge_layout_kwargs['total_control_points_per_edge'] + 1
-            k = np.sqrt(area / float(len(self.nodes))) / total_segments
-            k *= 0.3
+            k = np.sqrt(area / float(len(self.nodes))) # expected distance between nodes
+            # As there are multiple control points per edge,
+            # edge segments should be much shorter. k hence needs to be smaller.
+            k *= 0.1
             edge_layout_kwargs.setdefault('k', k)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)

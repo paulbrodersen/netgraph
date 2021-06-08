@@ -109,7 +109,6 @@ def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale):
 
 
 def get_curved_edge_paths(edges, node_positions,
-                          total_control_points_per_edge = 11,
                           selfloop_radius               = 0.1,
                           origin                        = np.array([0, 0]),
                           scale                         = np.array([1, 1]),
@@ -136,12 +135,10 @@ def get_curved_edge_paths(edges, node_positions,
         Self-loops are drawn as circles adjacent to a node. This value determine
         the radius of the circle.
 
-    total_control_points_per_edge : int (default 11)
-        Number of control
-
     k : float or None (default None)
-        Expected mean segment length. If None, initialized to :
-        0.5 * sqrt(area / total nodes) / total control points + 1.
+        Spring constant, which controls the tautness of edges.
+        Small values will result in straight connections, large values in bulging arcs.
+        If None, initialized to: 0.1 * sqrt(area / total nodes)
 
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the layout.
@@ -168,14 +165,22 @@ def get_curved_edge_paths(edges, node_positions,
 
     """
 
-    edge_to_control_points = _initialize_control_points(
-        edges, total_control_points_per_edge)
+    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
+    # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
+    # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
+    if k is None:
+        total_nodes = len(nodes)
+        area = np.product(scale)
+        k = np.sqrt(area / float(total_nodes))
+        k *= 0.1
+
+    edge_to_control_points = _initialize_control_points(edges, node_positions, k)
 
     control_point_positions = _initialize_control_point_positions(
         edge_to_control_points, node_positions, selfloop_radius, origin, scale)
 
     control_point_positions = _optimize_control_point_positions(
-        edge_to_control_points, node_positions, control_point_positions, total_control_points_per_edge,
+        edge_to_control_points, node_positions, control_point_positions,
         origin, scale, k, initial_temperature, total_iterations, node_size,
     )
 
@@ -187,8 +192,17 @@ def get_curved_edge_paths(edges, node_positions,
     return edge_to_path
 
 
-def _initialize_control_points(edges, total_control_points_per_edge=11):
-    return {edge : [uuid4() for _ in range(total_control_points_per_edge)] for edge in edges}
+def _initialize_control_points(edges, node_positions, k):
+    edge_to_control_points = dict()
+    for start, stop in edges:
+        if start != stop:
+            distance = np.linalg.norm(node_positions[stop] - node_positions[start], axis=-1)
+            total_control_points = distance / np.pi / k # approximating the arc length with a half-circle
+            total_control_points = max(int(total_control_points), 1) # ensure that there is at least one point
+            edge_to_control_points[(start, stop)] = [uuid4() for _ in range(total_control_points)]
+        else: # self-loop
+            edge_to_control_points[(start, stop)] = [uuid4() for _ in range(5)]
+    return edge_to_control_points
 
 
 def _expand_edges(edge_to_control_points):
@@ -286,26 +300,10 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
 
 
 def _optimize_control_point_positions(
-        edge_to_control_points, node_positions, control_point_positions, total_control_points_per_edge,
-        origin                        = np.array([0, 0]),
-        scale                         = np.array([1, 1]),
-        k                             = None,
-        initial_temperature           = 0.1,
-        total_iterations              = 50,
-        node_size                     = 0.,
-):
+        edge_to_control_points, node_positions, control_point_positions,
+        origin, scale, k, initial_temperature, total_iterations, node_size):
 
     nodes = list(node_positions.keys())
-
-    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
-    # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
-    # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
-    if k is None:
-        total_nodes = len(nodes)
-        area = np.product(scale)
-        k = np.sqrt(area / float(total_nodes)) / (total_control_points_per_edge + 1)
-        k *= 0.5
-
     expanded_edges = _expand_edges(edge_to_control_points)
     expanded_node_positions = control_point_positions.copy() # TODO: may need deepcopy here
     expanded_node_positions.update(node_positions)
