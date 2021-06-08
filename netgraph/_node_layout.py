@@ -393,17 +393,36 @@ def get_fruchterman_reingold_layout(edges,
     elif isinstance(node_size, dict):
         node_size = np.array([node_size[node] if node in node_size else 0. for node in unique_nodes])
 
-    if fixed_nodes:
-        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
-    else:
-        is_mobile = np.ones((len(unique_nodes)), dtype=bool)
-
     adjacency = _edge_list_to_adjacency_matrix(
         edges, edge_weights=edge_weights, unique_nodes=unique_nodes)
 
     # Forces in FR are symmetric.
     # Hence we need to ensure that the adjacency matrix is also symmetric.
     adjacency = adjacency + adjacency.transpose()
+
+    if fixed_nodes:
+        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
+
+        mobile_positions = node_positions_as_array[is_mobile]
+        fixed_positions = node_positions_as_array[~is_mobile]
+
+        mobile_node_sizes = node_size[is_mobile]
+        fixed_node_sizes = node_size[~is_mobile]
+
+        # reorder adjacency
+        total_mobile = np.sum(is_mobile)
+        reordered = np.zeros((adjacency.shape[0], total_mobile))
+        reordered[:total_mobile, :total_mobile] = adjacency[is_mobile][:, is_mobile]
+        reordered[total_mobile:, :total_mobile] = adjacency[~is_mobile][:, is_mobile]
+        adjacency = reordered
+    else:
+        is_mobile = np.ones((total_nodes), dtype=bool)
+
+        mobile_positions = node_positions_as_array
+        fixed_positions = np.zeros((0, 2))
+
+        mobile_node_sizes = node_size
+        fixed_node_sizes = np.array([])
 
     if k is None:
         area = np.product(scale)
@@ -415,17 +434,16 @@ def get_fruchterman_reingold_layout(edges,
     # main loop
 
     for ii, temperature in enumerate(temperatures):
-        new_positions = _fruchterman_reingold(adjacency, node_positions_as_array,
-                                              temperature = temperature,
-                                              k           = k,
-                                              node_radii  = node_size,
-        )
-        is_valid = _is_within_bbox(new_positions, origin=origin, scale=scale)
-        mask = np.logical_and(is_mobile, is_valid)
-        node_positions_as_array[mask] = new_positions[mask]
+        candidate_positions = _fruchterman_reingold(mobile_positions, fixed_positions,
+                                                    mobile_node_sizes, fixed_node_sizes,
+                                                    adjacency, temperature, k)
+        is_valid = _is_within_bbox(candidate_positions, origin=origin, scale=scale)
+        mobile_positions[is_valid] = candidate_positions[is_valid]
 
     # --------------------------------------------------------------------------------
     # format output
+
+    node_positions_as_array[is_mobile] = mobile_positions
 
     if np.all(is_mobile):
         node_positions_as_array = _rescale_to_frame(node_positions_as_array, origin, scale)
@@ -452,16 +470,18 @@ def _get_temperature_decay(initial_temperature, total_iterations, mode='quadrati
     return initial_temperature * y
 
 
-def _fruchterman_reingold(adjacency, node_positions, temperature, k, node_radii):
+def _fruchterman_reingold(mobile_positions, fixed_positions,
+                          mobile_node_radii, fixed_node_radii,
+                          adjacency, temperature, k):
     """
     Inner loop of Fruchterman-Reingold layout algorithm.
     """
 
-    # compute distances and unit vectors between nodes
-    delta        = node_positions[None, :, ...] - node_positions[:, None, ...]
-    distance     = np.linalg.norm(delta, axis=-1)
+    combined_positions = np.concatenate([mobile_positions, fixed_positions], axis=0)
+    combined_node_radii = np.concatenate([mobile_node_radii, fixed_node_radii])
 
-    # assert np.sum(distance==0) - np.trace(distance==0) > 0, "No two node positions can be the same!"
+    delta = mobile_positions[np.newaxis, :, :] - combined_positions[:, np.newaxis, :]
+    distance = np.linalg.norm(delta, axis=-1)
 
     # alternatively: (hack adapted from igraph)
     if np.sum(distance==0) - np.trace(distance==0) > 0: # i.e. if off-diagonal entries in distance are zero
@@ -472,7 +492,7 @@ def _fruchterman_reingold(adjacency, node_positions, temperature, k, node_radii)
         distance = np.linalg.norm(delta, axis=-1)
 
     # subtract node radii from distances to prevent nodes from overlapping
-    distance -= node_radii[None, :] + node_radii[:, None]
+    distance -= mobile_node_radii[np.newaxis, :] + combined_node_radii[:, np.newaxis]
 
     # prevent distances from becoming less than zero due to overlap of nodes
     distance[distance <= 0.] = 1e-6 # 1e-13 is numerical accuracy, and we will be taking the square shortly
@@ -489,9 +509,9 @@ def _fruchterman_reingold(adjacency, node_positions, temperature, k, node_radii)
     displacement_length = np.linalg.norm(displacement, axis=-1)
     displacement = displacement / displacement_length[:, None] * np.clip(displacement_length, None, temperature)[:, None]
 
-    node_positions = node_positions + displacement
+    mobile_positions = mobile_positions + displacement
 
-    return node_positions
+    return mobile_positions
 
 
 def _get_fr_repulsion(distance, direction, k):
