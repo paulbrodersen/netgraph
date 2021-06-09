@@ -661,13 +661,24 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
 
     if reduce_edge_crossings:
-        # only optimize if the graph is not complete
-        for edge in combinations(nodes, 2):
-            if (edge not in edges) and (edge[::-1] not in edges):
-                nodes = _reduce_crossings(edges)
-                break
+        if not _is_complete(edges):
+            nodes = _reduce_crossings(edges)
 
     return dict(zip(nodes, positions))
+
+
+def _is_complete(edges):
+    nodes = _get_unique_nodes(edges)
+    minimal_complete_graph = list(combinations(nodes, 2))
+
+    if len(edges) < len(minimal_complete_graph):
+        return False
+
+    for edge in minimal_complete_graph:
+        if (edge not in edges) and (edge[::-1] not in edges):
+            return False
+
+    return True
 
 
 def _reduce_crossings(edges):
