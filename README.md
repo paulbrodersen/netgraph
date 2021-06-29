@@ -33,6 +33,8 @@ plt.show()
 # NOTE: you must retain a reference to the plot instance!
 # Otherwise, the plot instance will be garbage collected after the initial draw
 # and you won't be able to move the plot elements around.
+# For similar reasons, if you are using PyCharm, you have to execute the code in
+# a console (Alt+Shift+E).
 plt.ion()
 plot_instance = InteractiveGraph(graph_data)
 plt.show()
