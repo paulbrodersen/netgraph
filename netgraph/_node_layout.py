@@ -308,6 +308,8 @@ def get_fruchterman_reingold_layout(edges,
 
     """
 
+    assert len(edges) > 0, "The list of edges has to be non-empty."
+
     # This is just a wrapper around `_fruchterman_reingold`, which implements (the loop body of) the algorithm proper.
     # This wrapper handles the initialization of variables to their defaults (if not explicitely provided),
     # and checks inputs for self-consistency.
@@ -872,6 +874,17 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
         node positions
 
     """
+
+    # assert that there multiple communities in the graph; otherwise abort
+    nodes = _get_unique_nodes(edges)
+    communities = set([node_to_community[node] for node in nodes])
+    if len(communities) < 2:
+        warnings.warn("Graph contains a single community. Unable to compute a community layout. Computing spring layout instead.")
+        return get_fruchterman_reingold_layout(edges, origin=origin, scale=scale)
+
+    # assert that node_to_community is non-redundant,
+    # i.e. only contains nodes that are also present in edges
+    node_to_community = {node : node_to_community[node] for node in nodes}
 
     community_size = _get_community_sizes(node_to_community, scale)
     community_centroids = _get_community_positions(edges, node_to_community, community_size, origin, scale)
