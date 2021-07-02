@@ -25,6 +25,7 @@ from ._utils import (
     _get_n_points_on_a_circle,
     _get_subgraph,
     _invert_dict,
+    _get_connected_components,
 )
 
 
@@ -61,58 +62,6 @@ def _handle_multiple_components(layout_function):
             return layout_function(edges, *args, **kwargs)
 
     return wrapped_layout_function
-
-
-def _get_connected_components(adjacency_list):
-    """
-    Get the connected components given a graph in adjacency list format.
-
-    Arguments:
-    ----------
-    adjacency_list : dict node ID : set of node IDs
-        Adjacency list, i.e. a mapping from each node to its neighbours.
-
-    Returns:
-    --------
-    components : list of sets of node IDs
-        The unconnected components of the graph.
-
-    """
-
-    components = []
-    not_visited = set(list(adjacency_list.keys()))
-    while not_visited: # i.e. while stack is non-empty (empty set is interpreted as `False`)
-        start = not_visited.pop()
-        component = _dfs(adjacency_list, start)
-        components.append(component)
-
-        #  remove nodes that are in the component that we just found
-        for node in component:
-            try:
-                not_visited.remove(node)
-            except KeyError:
-                # KeyErrors occur when we try to remove
-                # 1) the start node (which we already popped), or
-                # 2) leaf nodes, i.e. nodes with no outgoing edges
-                pass
-
-    # Often, we are only interested in the largest component,
-    # hence we return the list of components sorted by size, largest first.
-    components = sorted(components, key=len, reverse=True)
-
-    return components
-
-
-def _dfs(adjacency_list, start, visited=None):
-    if visited is None:
-        visited = set()
-    visited.add(start)
-    for node in adjacency_list[start] - visited:
-        if node in adjacency_list:
-            _dfs(adjacency_list, node, visited)
-        else: # otherwise no outgoing edge
-            visited.add(node)
-    return visited
 
 
 def get_layout_for_multiple_components(edges, components, layout_function,

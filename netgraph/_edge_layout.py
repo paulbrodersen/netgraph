@@ -2,10 +2,17 @@ import itertools
 import warnings
 import numpy as np
 
+from functools import wraps
 from scipy.interpolate import UnivariateSpline
 from uuid import uuid4
 
-from ._utils import _bspline, _get_n_points_on_a_circle, _get_angle
+from ._utils import (
+    _bspline,
+    _get_n_points_on_a_circle,
+    _get_angle,
+    _edge_list_to_adjacency_list,
+    _get_connected_components,
+)
 from ._node_layout import get_fruchterman_reingold_layout, _clip_to_frame
 
 # for profiling with kernprof/line_profiler
@@ -13,6 +20,32 @@ try:
     profile
 except NameError:
     profile = lambda x: x
+
+
+def _handle_multiple_components(layout_function):
+    @wraps(layout_function)
+    def wrapped_layout_function(edges, node_positions=None, *args, **kwargs):
+
+        # determine if there are more than one component
+        adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
+        components = _get_connected_components(adjacency_list)
+
+        if len(components) > 1:
+            return _get_layout_for_multiple_components(edges, node_positions, components, layout_function, *args, **kwargs)
+        else:
+            return layout_function(edges, node_positions, *args, **kwargs)
+
+    return wrapped_layout_function
+
+
+def _get_layout_for_multiple_components(edges, node_positions, components, layout_function, *args, **kwargs):
+    edge_paths = dict()
+    for component in components:
+        component_edges = [(source, target) for (source, target) in edges if (source in component) and (target in component)]
+        component_node_positions = {node : xy for node, xy in node_positions.items() if node in component}
+        component_edge_paths = layout_function(component_edges, component_node_positions, *args, **kwargs)
+        edge_paths.update(component_edge_paths)
+    return edge_paths
 
 
 def get_straight_edge_paths(edges, node_positions, edge_width):
@@ -341,6 +374,7 @@ def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
 
 
 @profile
+@_handle_multiple_components
 def get_bundled_edge_paths(edges, node_positions,
                            k                       = 1000.,
                            compatibility_threshold = 0.05,
