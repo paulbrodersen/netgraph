@@ -15,7 +15,7 @@ from rpack import pack
 from itertools import combinations
 
 from grandalf.graphs import Vertex, Edge, Graph
-from grandalf.layouts import SugiyamaLayout
+from grandalf.layouts import SugiyamaLayout, DummyVertex
 
 from ._utils import (
     _edge_list_to_adjacency_matrix,
@@ -539,7 +539,12 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
     node_positions = dict()
     for layer in layout.layers:
         for vertex in layer:
-            node_positions[vertex.data] = vertex.view.xy
+            if not isinstance(vertex, DummyVertex):
+                # The DummyVertex class is used by the sugiyama layout to represent
+                # *long* edges, i.e. edges that span over several ranks.
+                # For these edges, a DummyVertex is inserted in every inner layer.
+                # Here we ignore them, as they are not part of the final layout.
+                node_positions[vertex.data] = vertex.view.xy
 
     # rescale to canvas
     # TODO: by rescaling, we effectively ignore the node_size argument
