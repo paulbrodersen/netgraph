@@ -2139,7 +2139,7 @@ class DraggableArtists(object):
         self.fig.canvas.mpl_connect('key_press_event',      self._on_key_press)
         self.fig.canvas.mpl_connect('key_release_event',    self._on_key_release)
 
-        self._draggable_artists = artists
+        self._draggable_artists = list(artists)
         self._clicked_artist = None
         self._control_is_held = False
         self._currently_clicking_on_artist = False

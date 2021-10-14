@@ -5,16 +5,17 @@
 InteractiveGraph variants.
 """
 
+import itertools
+from functools import partial
+
 import numpy as np
 import matplotlib.pyplot as plt
-import itertools
-
-from functools import partial
 from matplotlib.patches import Rectangle
 
 try:
     from ._main import InteractiveGraph, BASE_SCALE
     from ._line_supercover import line_supercover
+    from ._artists import NodeArtist, EdgeArtist
 except ValueError:
     from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
@@ -256,13 +257,13 @@ class InteractiveHypergraph(InteractiveGraph):
         self._create_hypernode(nodes, hypernode)
 
         # create corresponding edges
-        new_edge_list = self._transfer_edges_to_hypernode(self.edge_list, nodes, hypernode)
-        new_edges = [edge for edge in new_edge_list if not edge in self.edge_list]
-        old_edges = [edge for edge in self.edge_list if not edge in new_edge_list]
+        new_edge_list = self._transfer_edges_to_hypernode(self.edges, nodes, hypernode)
+        new_edges = [edge for edge in new_edge_list if not edge in self.edges]
+        old_edges = [edge for edge in self.edges if not edge in new_edge_list]
         self._create_hypernode_edges(old_edges, new_edges)
 
         # update graph structure
-        self.edge_list = list(set(new_edge_list))
+        self.edges = list(set(new_edge_list))
 
         # clean up data structures and remove obsolote artists
         for edge in old_edges:
@@ -447,7 +448,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
     def __init__(self, *args, **kwargs):
 
-        super(InteractivelyConstructDestroyGraph, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+
+        self._last_selected_node = next(iter(self.node_artists.values()))
+        self._last_selected_edge = next(iter(self.edge_artists.values()))
 
         # link node/edge construction/destruction to key presses
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
@@ -470,6 +474,17 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         self.fig.canvas.draw_idle()
 
 
+    def _on_press(self, event):
+        super()._on_press(event)
+
+        for artist in self.artist_to_key:
+            if artist.contains(event)[0]:
+                if isinstance(artist, NodeArtist):
+                    self._last_selected_node = artist
+                elif isinstance(artist, EdgeArtist):
+                    self._last_selected_edge = artist
+
+
     def _add_node(self, event):
 
         # create node ID; use smallest unused int
@@ -479,31 +494,52 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # get position of cursor place node at cursor position
         pos = event.xdata, event.ydata
+
+        # copy attributes of last selected artist;
+        # if none is selected, use a random artist
+        if self._selected_artists:
+            model_artist = self._selected_artists[-1]
+        else:
+            model_artist = self._last_selected_node
+
+        artist = NodeArtist(
+            shape     = model_artist.shape,
+            xy        = pos,
+            radius    = model_artist.radius,
+            facecolor = model_artist.get_facecolor(),
+            edgecolor = model_artist.get_edgecolor(),
+            linewidth = model_artist._lw_data,
+            alpha     = self.artist_to_alpha[model_artist],
+            zorder    = model_artist.get_zorder()
+        )
+
+        # Update data structures in parent classes:
+        # 1) InteractiveGraph
+        self.artist_to_key[artist] = node
+        # 2a) DraggableGraph
+        self._node_to_draggable_artist[node] = artist
+        self._draggable_artist_to_node[artist] = node
+        # 2b) EmphasizeOnHoverGraph
+        self.artist_to_key[artist] = node
+        # 2c) AnnotateOnClickGraph
+        # None
+        # 3a) Graph
+        # None
+        # 3b) DraggableArtists
+        self._draggable_artists.append(artist)
+        self._base_alpha[artist] = artist.get_alpha()
+        # 3c) EmphasizeOnHover
+        self.emphasizeable_artists.append(artist)
+        self.artist_to_alpha[artist] = artist.get_alpha()
+        # 3d) AnnotateOnClick
+        # None
+        # 4) BaseGraph
+        self.nodes.append(node)
         self.node_positions[node] = pos
-
-        # draw node
-        self.draw_nodes({node:pos}, **self.kwargs)
-
-        # add to draggable artists
-        node_artist = self.node_face_artists[node]
-        self._draggable_artists.append(node_artist)
-        self._node_to_draggable_artist[node] = node_artist
-        self._draggable_artist_to_node[node_artist] = node
-        self._base_alpha[node_artist] = node_artist.get_alpha()
-
-
-    def _add_edges(self):
-
-        # translate selected artists into nodes
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
-
-        # iterate over all pairs of selected nodes and create edges between nodes that are not already connected
-        # new_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source != target) and (not (source, target) in self.edge_list)] # bidirectional
-        new_edges = [(source, target) for source, target in itertools.combinations(nodes, 2) if (source != target) and (not (source, target) in self.edge_list)] # unidirectional
-
-        # add new edges to edge_list and corresponding artists to canvas
-        self.edge_list.extend(new_edges)
-        self.draw_edges(self.edge_list, node_positions=self.node_positions, **self.kwargs)
+        self.node_artists[node] = artist
+        self.ax.add_patch(artist)
+        # self.node_label_artists # TODO (potentially)
+        # self.node_label_offset  # TODO (potentially)
 
 
     def _delete_nodes(self):
@@ -511,7 +547,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
         # delete edges to and from selected nodes
-        edges = [(source, target) for (source, target) in self.edge_list if ((source in nodes) or (target in nodes))]
+        edges = [(source, target) for (source, target) in self.edges if ((source in nodes) or (target in nodes))]
         for edge in edges:
             self._delete_edge(edge)
 
@@ -521,63 +557,146 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
 
     def _delete_node(self, node):
-        # c.f. InteractiveHypergraph !
-
-        if hasattr(self, 'node_labels'):
-            self.node_label_artists[node].remove()
-            del self.node_label_artists[node]
-
+        # print(f"Deleting node {node}.")
         artist = self._node_to_draggable_artist[node]
-        del self._draggable_artist_to_node[artist]
 
-        # del self._node_to_draggable_artist[node] # -> self.node_face_artists[node].remove()
-        self.node_face_artists[node].remove()
-        self.node_edge_artists[node].remove()
-        del self.node_face_artists[node]
-        del self.node_edge_artists[node]
+        # Update data structures in parent classes:
+        # 1) InteractiveGraph
+        del self.artist_to_key[artist]
+
+        # 2a) DraggableGraph
+        # del self._node_to_draggable_artist[node] # copy of self.node_artists
+        del self._draggable_artist_to_node[artist]
+        # 2b) EmphasizeOnHoverGraph
+        # None
+        # 2c) AnnotateOnClickGraph
+        # None
+        # 3a) Graph
+        # None
+        # 3b) DraggableArtists
+        self._draggable_artists.remove(artist)
+        self._selected_artists.remove(artist)
+        del self._base_alpha[artist]
+        # 3c) EmphasizeOnHover
+        self.emphasizeable_artists.remove(artist)
+        del self.artist_to_alpha[artist]
+        # 3d) AnnotateOnClick
+        # None
+        # 4) BaseGraph
+        self.nodes.remove(node)
+        del self.node_positions[node]
+        del self.node_artists[node]
+        if hasattr(self, 'node_label_artists'):
+            try:
+                self.node_label_artists[node].remove()
+                del self.node_label_artists[node]
+            except KeyError:
+                pass
+        if hasattr(self, 'node_label_offset'):
+            try:
+                del self.node_label_offset[node]
+            except KeyError:
+                pass
+        artist.remove()
+
+
+    def _add_edges(self):
+        # translate selected artists into nodes
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+
+        # iterate over all pairs of selected nodes and create edges between nodes that are not already connected
+        # new_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source != target) and (not (source, target) in self.edges)] # bidirectiona
+        new_edges = [(source, target) for source, target in itertools.combinations(nodes, 2) if (source != target) and (not (source, target) in self.edges)] # unidirectional
+
+        for edge in new_edges:
+            self._add_edge(edge)
+
+
+    def _add_edge(self, edge, model_artist=None):
+        source, target = edge
+        path = np.array([self.node_positions[source], self.node_positions[target]])
+
+        # create artist
+        if not model_artist:
+            model_artist = self._last_selected_edge
+
+        artist = EdgeArtist(
+            midline     = path,
+            width       = model_artist.width,
+            facecolor   = model_artist.get_facecolor(),
+            alpha       = self.artist_to_alpha[model_artist],
+            head_length = model_artist.head_length,
+            head_width  = model_artist.head_width,
+            edgecolor   = 'none',
+            linewidth   = 0.1,
+            offset      = model_artist.offset, # TODO: need to get node_size of target node instead
+            shape       = model_artist.shape,
+            curved      = model_artist.curved,
+            zorder      = model_artist.get_zorder(),
+        )
+
+        # update data structures in parent classes
+        # 1) InteractiveGraph
+        self.artist_to_key[artist] = edge
+        # 2a) DraggableGraph
+        # None
+        # 2b) EmphasizeOnHoverGraph
+        # None
+        # 2c) AnnotateOnClickGraph
+        # None
+        # 3a) Graph
+        # None
+        # 3b) DraggableArtists
+        # None
+        # 3c) EmphasizeOnHover
+        self.emphasizeable_artists.append(artist)
+        self.artist_to_alpha[artist] = artist.get_alpha()
+        # 3d) AnnotateOnClick
+        # None
+        # 4) BaseGraph
+        self.edges.append(edge)
+        self.edge_paths[edge] = path
+        self.edge_artists[edge] = artist
+        self.ax.add_patch(artist)
 
 
     def _delete_edges(self):
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
-
-        # delete edges between selected nodes
-        edges = [(source, target) for (source, target) in self.edge_list if ((source in nodes) and (target in nodes))]
+        edges = [(source, target) for (source, target) in self.edges if ((source in nodes) and (target in nodes))]
         for edge in edges:
             self._delete_edge(edge)
 
 
     def _delete_edge(self, edge):
-        # c.f. InteractiveHypergraph !
+        artist = self.edge_artists[edge]
 
-        # delete attributes of edge
-        if hasattr(self, 'edge_weight'):
-            if isinstance(self.edge_weight, dict):
-                if edge in self.edge_weight:
-                    del self.edge_weight[edge]
-
-        if hasattr(self, 'edge_color'):
-            if isinstance(self.edge_color, dict):
-                if edge in self.edge_color:
-                    del self.edge_color[edge]
-
-        if hasattr(self, 'edge_zorder'):
-            if isinstance(self.edge_zorder, dict):
-                if edge in self.edge_zorder:
-                    del self.edge_zorder[edge]
-
-        # delete artists
-        source, target = edge
-        if source != target: # i.e. skip self-loops as they have no corresponding artist
-            self.edge_artists[edge].remove()
-            del self.edge_artists[edge]
-
-            if hasattr(self, 'edge_labels'):
-                del self.edge_labels[edge]
-                self.edge_label_artists[edge].remove()
-                del self.edge_label_artists[edge]
-
-        # delete edge
-        self.edge_list.remove(edge)
+        # update data structures in parent classes
+        # 1) InteractiveGraph
+        del self.artist_to_key[artist]
+        # 2a) DraggableGraph
+        # None
+        # 2b) EmphasizeOnHoverGraph
+        # None
+        # 2c) AnnotateOnClickGraph
+        # None
+        # 3a) Graph
+        # None
+        # 3b) DraggableArtists
+        # None
+        # 3c) EmphasizeOnHover
+        self.emphasizeable_artists.remove(artist)
+        del self.artist_to_alpha[artist]
+        # 3d) AnnotateOnClick
+        # None
+        # 4) BaseGraph
+        self.edges.remove(edge)
+        del self.edge_paths[edge]
+        del self.edge_artists[edge]
+        if hasattr(self, 'edge_label_artists'):
+            self.edge_label_artists[edge].remove()
+            del self.edge_label_artists[edge]
+        # TODO remove edge data
+        artist.remove()
 
 
     def _reverse_edges(self):
@@ -585,36 +704,15 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
         # grab all edges between selected nodes
-        old_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edge_list]
+        old_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edges]
 
         # reverse edges
         new_edges = [edge[::-1] for edge in old_edges]
 
         # copy attributes
         for old_edge, new_edge in zip(old_edges, new_edges):
-            self._copy_edge_attributes(old_edge, new_edge)
+            self._add_edge(new_edge, self.edge_artists[old_edge])
 
         # remove edges that are being replaced
         for edge in old_edges:
             self._delete_edge(edge)
-
-        # add new edges to edge_list and corresponding artists to canvas
-        self.edge_list.extend(new_edges)
-        self.draw_edges(self.edge_list, node_positions=self.node_positions, **self.kwargs)
-
-
-    def _copy_edge_attributes(self, source, target):
-        if hasattr(self, 'edge_weight'):
-            if isinstance(self.edge_weight, dict):
-                if source in self.edge_weight:
-                    self.edge_weight[target] = self.edge_weight[source]
-
-        if hasattr(self, 'edge_color'):
-            if isinstance(self.edge_color, dict):
-                if source in self.edge_color:
-                    self.edge_color[target] = self.edge_color[source]
-
-        if hasattr(self, 'edge_zorder'):
-            if isinstance(self.edge_zorder, dict):
-                if source in self.edge_zorder:
-                    self.edge_zorder[target] = self.edge_zorder[source]

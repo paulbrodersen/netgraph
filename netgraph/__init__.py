@@ -87,6 +87,10 @@ from ._edge_layout import (
     get_bundled_edge_paths,
 )
 
+from ._interactive_variants import (
+    InteractivelyConstructDestroyGraph,
+)
+
 from ._parser import parse_graph
 
 
@@ -106,5 +110,6 @@ __all__ = ['draw',
            'Basegraph',
            'Graph',
            'InteractiveGraph',
+           'InteractivelyConstructDestroyGraph',
            'parse_graph',
 ]
