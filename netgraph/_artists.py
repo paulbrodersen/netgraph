@@ -171,7 +171,9 @@ class EdgeArtist(PathPatchDataUnits):
             ])
 
         elif self.shape == 'right':
-            tail_vertices_right = _get_parallel_line(arrow_tail_midline, -self.width / 2.)
+            # tail_vertices_right = _get_parallel_line(arrow_tail_midline, -self.width / 2.)
+            tail_vertices_right = _get_parallel_line(arrow_tail_midline, -0.6 * self.width)
+            arrow_tail_midline = _get_parallel_line(arrow_tail_midline, -0.1 * self.width)
             head_vertex_right  = head_vertex_base - np.array([dx, dy])
 
             vertices = np.concatenate([
@@ -190,7 +192,9 @@ class EdgeArtist(PathPatchDataUnits):
             ])
 
         elif self.shape == 'left':
-            tail_vertices_left = _get_parallel_line(arrow_tail_midline,  self.width / 2.)
+            # tail_vertices_left = _get_parallel_line(arrow_tail_midline,  self.width / 2.)
+            tail_vertices_left = _get_parallel_line(arrow_tail_midline,  0.6 * self.width)
+            arrow_tail_midline = _get_parallel_line(arrow_tail_midline,  0.1 * self.width)
             head_vertex_left = head_vertex_base + np.array([dx, dy])
 
             vertices = np.concatenate([

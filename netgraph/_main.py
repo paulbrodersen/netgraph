@@ -1508,9 +1508,9 @@ class BaseGraph(object):
             x0, y0 = self.node_positions[source]
             x1, y1 = self.node_positions[target]
 
-            # shift edge right if bi-directional
-            if (target, source) in edges:
-                x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=0.5*self.edge_artists[(source, target)].width)
+            # # shift edge right if bi-directional
+            # if (target, source) in edges:
+            #     x0, y0, x1, y1 = _shift_edge(x0, y0, x1, y1, delta=-0.1*self.edge_artists[(source, target)].width)
 
             edge_paths[(source, target)] = np.c_[[x0, x1], [y0, y1]]
 

@@ -81,9 +81,9 @@ def get_straight_edge_paths(edges, node_positions, edge_width):
         x1, y1 = node_positions[source]
         x2, y2 = node_positions[target]
 
-        if (target, source) in edges: # i.e. bidirectional
-            # shift edge to the right (looking along the arrow)
-            x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=-0.5*edge_width[(source, target)])
+        # if (target, source) in edges: # i.e. bidirectional
+        #     # shift edge to the right (looking along the arrow)
+        #     x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=-0.5*edge_width[(source, target)])
 
         edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
 
