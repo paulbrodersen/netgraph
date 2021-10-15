@@ -444,6 +444,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
     ------
     - When adding a new node, the properties of the last selected node will be used to style the node artist.
     - Analogous for edges.
+    - Edges can also be created by double-clicking on a node and then on another node.
+
     See also:
     ---------
     InteractiveGraph, Graph, draw
@@ -456,6 +458,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
         self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
+
+        self._nascent_edge_source = None
+        self._nascent_edge = None
 
         # link node/edge construction/destruction to key presses
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
@@ -487,6 +492,29 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             if artist.contains(event)[0]:
                 self._extract_artist_properties(artist)
                 break
+
+        if event.dblclick:
+            clicked_on_artist = False
+            for node, artist in self.node_artists.items():
+                if artist.contains(event)[0]:
+                    clicked_on_artist = True
+                    if self._nascent_edge_source:
+                        if (self._nascent_edge_source, node) not in self.edges:
+                            self._add_edge((self._nascent_edge_source, node))
+                            self._nascent_edge_source = None
+                            self._nascent_edge.remove()
+                        else:
+                            print("Edge already exists!")
+                    else:
+                        self._nascent_edge_source = node
+                        x0, y0 = self.node_positions[node]
+                        self._nascent_edge = plt.Line2D((x0, x0), (y0, y0), color='lightgray', linestyle='--')
+                        self.ax.add_artist(self._nascent_edge)
+                    break
+            if not clicked_on_artist:
+                if self._nascent_edge_source:
+                    self._nascent_edge_source = None
+                    self._nascent_edge.remove()
 
 
     def _extract_artist_properties(self, artist):
@@ -522,6 +550,15 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             curved      = edge_artist.curved,
             zorder      = edge_artist.get_zorder(),
         )
+
+
+    def _on_motion(self, event):
+        super()._on_motion(event)
+
+        if self._nascent_edge:
+            x, y = self._nascent_edge.get_data()
+            self._nascent_edge.set_data(((x[0], event.xdata), (y[0], event.ydata)))
+            self.fig.canvas.draw_idle()
 
 
     def _add_node(self, event):
