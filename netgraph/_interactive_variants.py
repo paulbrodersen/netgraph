@@ -546,7 +546,6 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             edgecolor   = 'none',
             linewidth   = 0.1,
             offset      = edge_artist.offset, # TODO: need to get node_size of target node instead
-            shape       = edge_artist.shape,
             curved      = edge_artist.curved,
             zorder      = edge_artist.get_zorder(),
         )
@@ -687,7 +686,14 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         if not edge_properties:
             edge_properties = self._last_selected_edge_properties
 
-        artist = EdgeArtist(midline = path, **edge_properties)
+        if (target, source) in self.edges:
+            shape = 'right'
+            self.edge_artists[(target, source)].shape = 'right'
+            self.edge_artists[(target, source)]._update_path()
+        else:
+            shape = 'full'
+
+        artist = EdgeArtist(midline=path, shape=shape, **edge_properties)
 
         # update data structures in parent classes
         # 1) InteractiveGraph
