@@ -440,6 +440,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
     Pressing 'd' will remove edges between all selected nodes.
     Pressing 'r' will reverse the direction of edges between all selected nodes.
 
+    Notes:
+    ------
+    - When adding a new node, the properties of the last selected node will be used to style the node artist.
+    - Analogous for edges.
     See also:
     ---------
     InteractiveGraph, Graph, draw
@@ -450,8 +454,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         super().__init__(*args, **kwargs)
 
-        self._last_selected_node = next(iter(self.node_artists.values()))
-        self._last_selected_edge = next(iter(self.edge_artists.values()))
+        self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
+        self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
 
         # link node/edge construction/destruction to key presses
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
@@ -475,14 +479,49 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
 
     def _on_press(self, event):
+        # TODO : trigger this code on any node or edge selection;
+        # clicking on a node or edge is just one of the ways to select them
         super()._on_press(event)
 
         for artist in self.artist_to_key:
             if artist.contains(event)[0]:
-                if isinstance(artist, NodeArtist):
-                    self._last_selected_node = artist
-                elif isinstance(artist, EdgeArtist):
-                    self._last_selected_edge = artist
+                self._extract_artist_properties(artist)
+                break
+
+
+    def _extract_artist_properties(self, artist):
+        if isinstance(artist, NodeArtist):
+            self._last_selected_node_properties = self._extract_node_properties(artist)
+        elif isinstance(artist, EdgeArtist):
+            self._last_selected_edge_properties = self._extract_edge_properties(artist)
+
+
+    def _extract_node_properties(self, node_artist):
+        return dict(
+            shape     = node_artist.shape,
+            radius    = node_artist.radius,
+            facecolor = node_artist.get_facecolor(),
+            edgecolor = node_artist.get_edgecolor(),
+            linewidth = node_artist._lw_data,
+            alpha     = self.artist_to_alpha[node_artist],
+            zorder    = node_artist.get_zorder()
+        )
+
+
+    def _extract_edge_properties(self, edge_artist):
+        return dict(
+            width       = edge_artist.width,
+            facecolor   = edge_artist.get_facecolor(),
+            alpha       = self.artist_to_alpha[edge_artist],
+            head_length = edge_artist.head_length,
+            head_width  = edge_artist.head_width,
+            edgecolor   = 'none',
+            linewidth   = 0.1,
+            offset      = edge_artist.offset, # TODO: need to get node_size of target node instead
+            shape       = edge_artist.shape,
+            curved      = edge_artist.curved,
+            zorder      = edge_artist.get_zorder(),
+        )
 
 
     def _add_node(self, event):
@@ -498,20 +537,11 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # copy attributes of last selected artist;
         # if none is selected, use a random artist
         if self._selected_artists:
-            model_artist = self._selected_artists[-1]
+            node_properties = self._extract_node_properties(self._selected_artists[-1])
         else:
-            model_artist = self._last_selected_node
+            node_properties = self._last_selected_node_properties
 
-        artist = NodeArtist(
-            shape     = model_artist.shape,
-            xy        = pos,
-            radius    = model_artist.radius,
-            facecolor = model_artist.get_facecolor(),
-            edgecolor = model_artist.get_edgecolor(),
-            linewidth = model_artist._lw_data,
-            alpha     = self.artist_to_alpha[model_artist],
-            zorder    = model_artist.get_zorder()
-        )
+        artist = NodeArtist(xy = pos, **node_properties)
 
         # Update data structures in parent classes:
         # 1) InteractiveGraph
@@ -612,28 +642,15 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             self._add_edge(edge)
 
 
-    def _add_edge(self, edge, model_artist=None):
+    def _add_edge(self, edge, edge_properties=None):
         source, target = edge
         path = np.array([self.node_positions[source], self.node_positions[target]])
 
         # create artist
-        if not model_artist:
-            model_artist = self._last_selected_edge
+        if not edge_properties:
+            edge_properties = self._last_selected_edge_properties
 
-        artist = EdgeArtist(
-            midline     = path,
-            width       = model_artist.width,
-            facecolor   = model_artist.get_facecolor(),
-            alpha       = self.artist_to_alpha[model_artist],
-            head_length = model_artist.head_length,
-            head_width  = model_artist.head_width,
-            edgecolor   = 'none',
-            linewidth   = 0.1,
-            offset      = model_artist.offset, # TODO: need to get node_size of target node instead
-            shape       = model_artist.shape,
-            curved      = model_artist.curved,
-            zorder      = model_artist.get_zorder(),
-        )
+        artist = EdgeArtist(midline = path, **edge_properties)
 
         # update data structures in parent classes
         # 1) InteractiveGraph
@@ -711,8 +728,6 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # copy attributes
         for old_edge, new_edge in zip(old_edges, new_edges):
-            self._add_edge(new_edge, self.edge_artists[old_edge])
-
-        # remove edges that are being replaced
-        for edge in old_edges:
-            self._delete_edge(edge)
+            edge_properties = self._extract_edge_properties(self.edge_artists[old_edge])
+            self._delete_edge(old_edge)
+            self._add_edge(new_edge, edge_properties)
