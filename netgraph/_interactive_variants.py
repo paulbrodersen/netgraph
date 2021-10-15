@@ -763,14 +763,15 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # translate selected artists into nodes
         nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
 
-        # grab all edges between selected nodes
-        old_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edges]
+        # grab all edges between selected nodes and their properties
+        edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edges]
+        edge_properties = [self._extract_edge_properties(self.edge_artists[edge]) for edge in edges]
 
-        # reverse edges
-        new_edges = [edge[::-1] for edge in old_edges]
+        # delete old edges;
+        # note this step has to be completed before creating new edges,
+        # as bi-directional edges can pose a problem otherwise
+        for edge in edges:
+            self._delete_edge(edge)
 
-        # copy attributes
-        for old_edge, new_edge in zip(old_edges, new_edges):
-            edge_properties = self._extract_edge_properties(self.edge_artists[old_edge])
-            self._delete_edge(old_edge)
-            self._add_edge(new_edge, edge_properties)
+        for edge, properties in zip(edges, edge_properties):
+            self._add_edge(edge[::-1], properties)
