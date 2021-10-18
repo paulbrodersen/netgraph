@@ -2113,14 +2113,14 @@ class Graph(BaseGraph):
         super().__init__(edges, *args, **kwargs)
 
 
-class DraggableArtists(object):
-    """
+class ClickableArtists(object):
+    """Implements selection of matplotlib artists via the mouse left click (+/- ctrl key).
+
     Notes:
     ------
     Methods adapted with some modifications from:
     https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
     """
-
     def __init__(self, artists):
 
         try:
@@ -2134,20 +2134,94 @@ class DraggableArtists(object):
             raise Exception("All artists have to be on the same axis!")
 
         self.fig.canvas.mpl_connect('button_press_event',   self._on_press)
-        self.fig.canvas.mpl_connect('button_release_event', self._on_release)
-        self.fig.canvas.mpl_connect('motion_notify_event',  self._on_motion)
         self.fig.canvas.mpl_connect('key_press_event',      self._on_key_press)
         self.fig.canvas.mpl_connect('key_release_event',    self._on_key_release)
 
-        self._draggable_artists = list(artists)
-        self._clicked_artist = None
-        self._control_is_held = False
-        self._currently_clicking_on_artist = False
-        self._currently_dragging = False
-        self._currently_selecting = False
+        self._clickable_artists = list(artists)
         self._selected_artists = []
-        self._offset = dict()
+        self._control_is_held = False
         self._base_alpha = dict([(artist, artist.get_alpha()) for artist in artists])
+
+
+    def _on_press(self, event):
+
+        if event.inaxes:
+            for artist in self._clickable_artists:
+                # print("Clicked on artist.")
+                if artist.contains(event)[0]:
+                    if self._control_is_held:
+                        self._toggle_select_artist(artist)
+                    else:
+                        self._deselect_all_artists()
+                        self._select_artist(artist)
+                        # NOTE: if two artists are overlapping, only the first one encountered is selected!
+                    break
+            else:
+                # print("Did not click on artist.")
+                if not self._control_is_held:
+                    self._deselect_all_artists()
+        else:
+            print("Warning: clicked outside axis limits!")
+
+
+    def _on_key_press(self, event):
+       if event.key == 'control':
+           self._control_is_held = True
+
+
+    def _on_key_release(self, event):
+       if event.key == 'control':
+           self._control_is_held = False
+
+
+    def _toggle_select_artist(self, artist):
+        if artist in self._selected_artists:
+            self._deselect_artist(artist)
+        else:
+            self._select_artist(artist)
+
+
+    def _select_artist(self, artist):
+        if not (artist in self._selected_artists):
+            alpha = artist.get_alpha()
+            try:
+                artist.set_alpha(0.5 * alpha)
+            except TypeError: # alpha not explicitly set
+                artist.set_alpha(0.5)
+            self._selected_artists.append(artist)
+            self.fig.canvas.draw_idle()
+
+
+    def _deselect_artist(self, artist):
+        if artist in self._selected_artists:
+            artist.set_alpha(self._base_alpha[artist])
+            self._selected_artists = [a for a in self._selected_artists if not (a is artist)]
+            self.fig.canvas.draw_idle()
+
+
+    def _deselect_all_artists(self):
+        for artist in self._selected_artists:
+            artist.set_alpha(self._base_alpha[artist])
+        self._selected_artists = []
+        self.fig.canvas.draw_idle()
+
+
+class SelectableArtists(ClickableArtists):
+    """Augments ClickableArtists with a rectangle selector.
+
+    Notes:
+    ------
+    Methods adapted with some modifications from:
+    https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+    """
+    def __init__(self, artists):
+        super().__init__(artists)
+
+        self.fig.canvas.mpl_connect('button_release_event', self._on_release)
+        self.fig.canvas.mpl_connect('motion_notify_event',  self._on_motion)
+
+        self._selectable_artists = list(artists)
+        self._currently_selecting = False
 
         self._rect = plt.Rectangle((0, 0), 1, 1, linestyle="--", edgecolor="crimson", fill=False)
         self.ax.add_patch(self._rect)
@@ -2157,6 +2231,88 @@ class DraggableArtists(object):
         self._y0 = 0
         self._x1 = 0
         self._y1 = 0
+
+
+    def _on_press(self, event):
+        super()._on_press(event)
+
+        if event.inaxes:
+            # reset rectangle
+            self._x0 = event.xdata
+            self._y0 = event.ydata
+            self._x1 = event.xdata
+            self._y1 = event.ydata
+
+            for artist in self._clickable_artists:
+                if artist.contains(event)[0]:
+                    break
+            else:
+                # start window select
+                self._currently_selecting = True
+
+
+    def _on_release(self, event):
+        if self._currently_selecting:
+            # select artists inside window
+            for artist in self._selectable_artists:
+                if self._is_inside_rect(*artist.xy):
+                    if self._control_is_held:               # if/else probably superfluouos
+                        self._toggle_select_artist(artist)  # as no artists will be selected
+                    else:                                   # if control is not held previously
+                        self._select_artist(artist)         #
+
+            # stop window selection and draw new state
+            self._currently_selecting = False
+            self._rect.set_visible(False)
+            self.fig.canvas.draw_idle()
+
+
+    def _on_motion(self, event):
+        if event.inaxes:
+            if self._currently_selecting:
+                self._x1 = event.xdata
+                self._y1 = event.ydata
+                # add rectangle for selection here
+                self._selector_on()
+
+
+    def _is_inside_rect(self, x, y):
+        xlim = np.sort([self._x0, self._x1])
+        ylim = np.sort([self._y0, self._y1])
+        if (xlim[0]<=x) and (x<xlim[1]) and (ylim[0]<=y) and (y<ylim[1]):
+            return True
+        else:
+            return False
+
+
+    def _selector_on(self):
+        self._rect.set_visible(True)
+        xlim = np.sort([self._x0, self._x1])
+        ylim = np.sort([self._y0, self._y1])
+        self._rect.set_xy((xlim[0],ylim[0] ) )
+        self._rect.set_width(np.diff(xlim))
+        self._rect.set_height(np.diff(ylim))
+        self.fig.canvas.draw_idle()
+
+
+class DraggableArtists(SelectableArtists):
+    """Augments SelectableArtists to support dragging of artists by holding the left mouse button.
+
+    Notes:
+    ------
+    Methods adapted with some modifications from:
+    https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+    """
+
+    def __init__(self, artists):
+        super().__init__(artists)
+
+        self._draggable_artists = list(artists)
+        self._clicked_artist = None
+        self._currently_clicking_on_artist = False
+        self._currently_dragging = False
+        self._offset = dict()
+
 
     def _on_press(self, event):
 
@@ -2213,112 +2369,32 @@ class DraggableArtists(object):
 
 
     def _on_release(self, event):
+        super()._on_release(event)
 
-        if self._currently_selecting:
-
-            # select artists inside window
-            for artist in self._draggable_artists:
-                if self._is_inside_rect(*artist.xy):
-                    if self._control_is_held:               # if/else probably superfluouos
-                        self._toggle_select_artist(artist)  # as no artists will be selected
-                    else:                                   # if control is not held previously
-                        self._select_artist(artist)         #
-
-            # stop window selection and draw new state
-            self._currently_selecting = False
-            self._rect.set_visible(False)
-            self.fig.canvas.draw_idle()
-
-        elif self._currently_clicking_on_artist:
-
+        if self._currently_clicking_on_artist:
             if (self._clicked_artist is not None) & (self._currently_dragging is False):
                 if self._control_is_held:
                     self._toggle_select_artist(self._clicked_artist)
                 else:
                     self._deselect_all_artists()
                     self._select_artist(self._clicked_artist)
-
             self._currently_clicking_on_artist = False
             self._currently_dragging = False
 
 
     def _on_motion(self, event):
+        super()._on_motion(event)
+
         if event.inaxes:
             if self._currently_clicking_on_artist:
                 self._currently_dragging = True
                 self._move(event)
-            elif self._currently_selecting:
-                self._x1 = event.xdata
-                self._y1 = event.ydata
-                # add rectangle for selection here
-                self._selector_on()
 
 
     def _move(self, event):
         cursor_position = np.array([event.xdata, event.ydata])
         for artist in self._selected_artists:
             artist.xy = cursor_position + self._offset[artist]
-        self.fig.canvas.draw_idle()
-
-
-    def _on_key_press(self, event):
-       if event.key == 'control':
-           self._control_is_held = True
-
-
-    def _on_key_release(self, event):
-       if event.key == 'control':
-           self._control_is_held = False
-
-
-    def _is_inside_rect(self, x, y):
-        xlim = np.sort([self._x0, self._x1])
-        ylim = np.sort([self._y0, self._y1])
-        if (xlim[0]<=x) and (x<xlim[1]) and (ylim[0]<=y) and (y<ylim[1]):
-            return True
-        else:
-            return False
-
-
-    def _toggle_select_artist(self, artist):
-        if artist in self._selected_artists:
-            self._deselect_artist(artist)
-        else:
-            self._select_artist(artist)
-
-
-    def _select_artist(self, artist):
-        if not (artist in self._selected_artists):
-            alpha = artist.get_alpha()
-            try:
-                artist.set_alpha(0.5 * alpha)
-            except TypeError: # alpha not explicitly set
-                artist.set_alpha(0.5)
-            self._selected_artists.append(artist)
-            self.fig.canvas.draw_idle()
-
-
-    def _deselect_artist(self, artist):
-        if artist in self._selected_artists:
-            artist.set_alpha(self._base_alpha[artist])
-            self._selected_artists = [a for a in self._selected_artists if not (a is artist)]
-            self.fig.canvas.draw_idle()
-
-
-    def _deselect_all_artists(self):
-        for artist in self._selected_artists:
-            artist.set_alpha(self._base_alpha[artist])
-        self._selected_artists = []
-        self.fig.canvas.draw_idle()
-
-
-    def _selector_on(self):
-        self._rect.set_visible(True)
-        xlim = np.sort([self._x0, self._x1])
-        ylim = np.sort([self._y0, self._y1])
-        self._rect.set_xy((xlim[0],ylim[0] ) )
-        self._rect.set_width(np.diff(xlim))
-        self._rect.set_height(np.diff(ylim))
         self.fig.canvas.draw_idle()
 
 
