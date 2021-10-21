@@ -2133,28 +2133,27 @@ class ClickableArtists(object):
         except ValueError:
             raise Exception("All artists have to be on the same axis!")
 
-        self.fig.canvas.mpl_connect('button_press_event',   self._on_press)
+        # self.fig.canvas.mpl_connect('button_press_event', self._on_press)
+        self.fig.canvas.mpl_connect('button_release_event', self._on_release)
 
         self._clickable_artists = list(artists)
         self._selected_artists = []
         self._base_alpha = dict([(artist, artist.get_alpha()) for artist in artists])
 
 
-    def _on_press(self, event):
-
+    # def _on_press(self, event):
+    def _on_release(self, event):
         if event.inaxes == self.ax:
             for artist in self._clickable_artists:
                 if artist.contains(event)[0]:
-                    # print("Clicked on artist.")
                     if event.key == 'control':
                         self._toggle_select_artist(artist)
                     else:
-                        self._deselect_all_artists()
-                        self._select_artist(artist)
+                        self._deselect_all_other_artists(artist)
+                        self._toggle_select_artist(artist)
                         # NOTE: if two artists are overlapping, only the first one encountered is selected!
                     break
             else:
-                # print("Did not click on artist.")
                 if not event.key == 'control':
                     self._deselect_all_artists()
         else:
@@ -2180,9 +2179,9 @@ class ClickableArtists(object):
 
 
     def _deselect_artist(self, artist):
-        if artist in self._selected_artists:
+        if artist in self._selected_artists: # should always be true?
             artist.set_alpha(self._base_alpha[artist])
-            self._selected_artists = [a for a in self._selected_artists if not (a is artist)]
+            self._selected_artists.remove(artist)
             self.fig.canvas.draw_idle()
 
 
@@ -2190,6 +2189,19 @@ class ClickableArtists(object):
         for artist in self._selected_artists:
             artist.set_alpha(self._base_alpha[artist])
         self._selected_artists = []
+        self.fig.canvas.draw_idle()
+
+
+    def _deselect_all_other_artists(self, artist_to_keep):
+        for artist in self._selected_artists:
+            if artist != artist_to_keep:
+                artist.set_alpha(self._base_alpha[artist])
+                # self._selected_artists.remove(artist) # seems to remove random artists?
+        if artist_to_keep in self._selected_artists:
+            self._selected_artists = [artist_to_keep]
+        else:
+            self._selected_artists = []
+
         self.fig.canvas.draw_idle()
 
 
@@ -2204,7 +2216,8 @@ class SelectableArtists(ClickableArtists):
     def __init__(self, artists):
         super().__init__(artists)
 
-        self.fig.canvas.mpl_connect('button_release_event', self._on_release)
+        self.fig.canvas.mpl_connect('button_press_event', self._on_press)
+        # self.fig.canvas.mpl_connect('button_release_event', self._on_release)
         self.fig.canvas.mpl_connect('motion_notify_event',  self._on_motion)
 
         self._selectable_artists = list(artists)
@@ -2221,7 +2234,7 @@ class SelectableArtists(ClickableArtists):
 
 
     def _on_press(self, event):
-        super()._on_press(event)
+        # super()._on_press(event)
 
         if event.inaxes == self.ax:
             # reset rectangle
@@ -2234,16 +2247,17 @@ class SelectableArtists(ClickableArtists):
                 if artist.contains(event)[0]:
                     break
             else:
-                # start window select
                 self._currently_selecting = True
 
 
     def _on_release(self, event):
+        super()._on_release(event)
+
         if self._currently_selecting:
             # select artists inside window
             for artist in self._selectable_artists:
                 if self._is_inside_rect(*artist.xy):
-                    if event.key == 'control':               # if/else probably superfluouos
+                    if event.key == 'control':              # if/else probably superfluouos
                         self._toggle_select_artist(artist)  # as no artists will be selected
                     else:                                   # if control is not held previously
                         self._select_artist(artist)         #
@@ -2295,77 +2309,21 @@ class DraggableArtists(SelectableArtists):
         super().__init__(artists)
 
         self._draggable_artists = list(artists)
-        self._clicked_artist = None
-        self._currently_clicking_on_artist = False
+        self._currently_clicking_on_artist = None
         self._currently_dragging = False
         self._offset = dict()
 
 
     def _on_press(self, event):
+        super()._on_press(event)
 
         if event.inaxes == self.ax:
-
-            # reset rectangle
-            self._x0 = event.xdata
-            self._y0 = event.ydata
-            self._x1 = event.xdata
-            self._y1 = event.ydata
-
-            self._clicked_artist = None
-
-            # is the press over some artist
             for artist in self._draggable_artists:
-
                 if artist.contains(event)[0]:
-                    if artist in self._selected_artists:
-                        # print("Clicked on previously selected artist.")
-                        # Some artists are already selected,
-                        # and the user clicked on an already selected artist.
-                        # It remains to be seen if the user wants to
-                        # 1) start dragging, or
-                        # 2) deselect everything else and select only the last selected artist.
-                        # Hence we will defer decision until the user releases mouse button.
-                        self._clicked_artist = artist
-
-                    else:
-                        # print("Clicked on new artist.")
-                        # the user wants to select artist and drag
-                        if not event.key == 'control':
-                            self._deselect_all_artists()
-                        self._select_artist(artist)
-
-                    # prepare dragging
-                    self._currently_clicking_on_artist = True
-                    self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
-
-                    # do not check anything else
-                    # NOTE: if two artists are overlapping, only the first one encountered is selected!
+                    self._currently_clicking_on_artist = artist
                     break
-
-            else:
-                # print("Did not click on artist.")
-                if not event.key == 'control':
-                    self._deselect_all_artists()
-
-                # start window select
-                self._currently_selecting = True
-
         else:
             print("Warning: clicked outside axis limits!")
-
-
-    def _on_release(self, event):
-        super()._on_release(event)
-
-        if self._currently_clicking_on_artist:
-            if (self._clicked_artist is not None) & (self._currently_dragging is False):
-                if event.key == 'control':
-                    self._toggle_select_artist(self._clicked_artist)
-                else:
-                    self._deselect_all_artists()
-                    self._select_artist(self._clicked_artist)
-            self._currently_clicking_on_artist = False
-            self._currently_dragging = False
 
 
     def _on_motion(self, event):
@@ -2373,8 +2331,24 @@ class DraggableArtists(SelectableArtists):
 
         if event.inaxes == self.ax:
             if self._currently_clicking_on_artist:
+                if self._currently_clicking_on_artist not in self._selected_artists:
+                    if not event.key == 'control':
+                        self._deselect_all_artists()
+                    self._select_artist(self._currently_clicking_on_artist)
+                self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
+                self._currently_clicking_on_artist = None
                 self._currently_dragging = True
+
+            if self._currently_dragging:
                 self._move(event)
+
+
+    def _on_release(self, event):
+        if self._currently_dragging:
+            self._currently_dragging = False
+        else:
+            self._currently_clicking_on_artist = None
+            super()._on_release(event)
 
 
     def _move(self, event):
