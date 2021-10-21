@@ -2134,12 +2134,9 @@ class ClickableArtists(object):
             raise Exception("All artists have to be on the same axis!")
 
         self.fig.canvas.mpl_connect('button_press_event',   self._on_press)
-        self.fig.canvas.mpl_connect('key_press_event',      self._on_key_press)
-        self.fig.canvas.mpl_connect('key_release_event',    self._on_key_release)
 
         self._clickable_artists = list(artists)
         self._selected_artists = []
-        self._control_is_held = False
         self._base_alpha = dict([(artist, artist.get_alpha()) for artist in artists])
 
 
@@ -2147,9 +2144,9 @@ class ClickableArtists(object):
 
         if event.inaxes == self.ax:
             for artist in self._clickable_artists:
-                # print("Clicked on artist.")
                 if artist.contains(event)[0]:
-                    if self._control_is_held:
+                    # print("Clicked on artist.")
+                    if event.key == 'control':
                         self._toggle_select_artist(artist)
                     else:
                         self._deselect_all_artists()
@@ -2158,20 +2155,10 @@ class ClickableArtists(object):
                     break
             else:
                 # print("Did not click on artist.")
-                if not self._control_is_held:
+                if not event.key == 'control':
                     self._deselect_all_artists()
         else:
             print("Warning: clicked outside axis limits!")
-
-
-    def _on_key_press(self, event):
-       if event.key == 'control':
-           self._control_is_held = True
-
-
-    def _on_key_release(self, event):
-       if event.key == 'control':
-           self._control_is_held = False
 
 
     def _toggle_select_artist(self, artist):
@@ -2256,7 +2243,7 @@ class SelectableArtists(ClickableArtists):
             # select artists inside window
             for artist in self._selectable_artists:
                 if self._is_inside_rect(*artist.xy):
-                    if self._control_is_held:               # if/else probably superfluouos
+                    if event.key == 'control':               # if/else probably superfluouos
                         self._toggle_select_artist(artist)  # as no artists will be selected
                     else:                                   # if control is not held previously
                         self._select_artist(artist)         #
@@ -2344,7 +2331,7 @@ class DraggableArtists(SelectableArtists):
                     else:
                         # print("Clicked on new artist.")
                         # the user wants to select artist and drag
-                        if not self._control_is_held:
+                        if not event.key == 'control':
                             self._deselect_all_artists()
                         self._select_artist(artist)
 
@@ -2358,7 +2345,7 @@ class DraggableArtists(SelectableArtists):
 
             else:
                 # print("Did not click on artist.")
-                if not self._control_is_held:
+                if not event.key == 'control':
                     self._deselect_all_artists()
 
                 # start window select
@@ -2373,7 +2360,7 @@ class DraggableArtists(SelectableArtists):
 
         if self._currently_clicking_on_artist:
             if (self._clicked_artist is not None) & (self._currently_dragging is False):
-                if self._control_is_held:
+                if event.key == 'control':
                     self._toggle_select_artist(self._clicked_artist)
                 else:
                     self._deselect_all_artists()
