@@ -2314,7 +2314,6 @@ class DraggableArtists(SelectableArtists):
             self._clicked_artist = None
 
             # is the press over some artist
-            is_on_artist = False
             for artist in self._draggable_artists:
 
                 if artist.contains(event)[0]:
