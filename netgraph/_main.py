@@ -2145,7 +2145,7 @@ class ClickableArtists(object):
 
     def _on_press(self, event):
 
-        if event.inaxes:
+        if event.inaxes == self.ax:
             for artist in self._clickable_artists:
                 # print("Clicked on artist.")
                 if artist.contains(event)[0]:
@@ -2236,7 +2236,7 @@ class SelectableArtists(ClickableArtists):
     def _on_press(self, event):
         super()._on_press(event)
 
-        if event.inaxes:
+        if event.inaxes == self.ax:
             # reset rectangle
             self._x0 = event.xdata
             self._y0 = event.ydata
@@ -2268,7 +2268,7 @@ class SelectableArtists(ClickableArtists):
 
 
     def _on_motion(self, event):
-        if event.inaxes:
+        if event.inaxes == self.ax:
             if self._currently_selecting:
                 self._x1 = event.xdata
                 self._y1 = event.ydata
@@ -2316,7 +2316,7 @@ class DraggableArtists(SelectableArtists):
 
     def _on_press(self, event):
 
-        if event.inaxes:
+        if event.inaxes == self.ax:
 
             # reset rectangle
             self._x0 = event.xdata
@@ -2385,7 +2385,7 @@ class DraggableArtists(SelectableArtists):
     def _on_motion(self, event):
         super()._on_motion(event)
 
-        if event.inaxes:
+        if event.inaxes == self.ax:
             if self._currently_clicking_on_artist:
                 self._currently_dragging = True
                 self._move(event)
