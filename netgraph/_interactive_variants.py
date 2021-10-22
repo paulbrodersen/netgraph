@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
 try:
-    from ._main import InteractiveGraph, BASE_SCALE
+    from ._main import InteractiveGraph, BASE_SCALE, DraggableGraph
     from ._line_supercover import line_supercover
     from ._artists import NodeArtist, EdgeArtist
 except ValueError:
@@ -435,7 +435,7 @@ class NascentEdge(plt.Line2D):
         super().__init__(p1, p2, color='lightgray', linestyle='--')
 
 
-class InteractivelyConstructDestroyGraph(InteractiveGraph):
+class InteractivelyConstructDestroyGraph(DraggableGraph):
     """
     Interactively add and remove nodes and edges.
 
@@ -453,7 +453,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
     See also:
     ---------
-    InteractiveGraph, Graph, draw
+    InteractiveGraph, Graph
 
     """
 
@@ -505,10 +505,11 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
                         # connect edge to target node
                         if (self._nascent_edge_source, node) not in self.edges:
                             self._add_edge((self._nascent_edge_source, node))
-                            self._nascent_edge_source = None
-                            self._nascent_edge.remove()
                         else:
                             print("Edge already exists!")
+                        self._nascent_edge_source = None
+                        self._nascent_edge.remove()
+                        self._nascent_edge = None
                     else:
                         # initiate edge
                         self._nascent_edge_source = node
@@ -520,6 +521,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
                 if self._nascent_edge:
                     self._nascent_edge_source = None
                     self._nascent_edge.remove()
+                    self._nascent_edge = None
 
 
     def _extract_artist_properties(self, artist):
@@ -536,7 +538,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
             facecolor = node_artist.get_facecolor(),
             edgecolor = node_artist.get_edgecolor(),
             linewidth = node_artist._lw_data,
-            alpha     = self.artist_to_alpha[node_artist],
+            alpha     = self._base_alpha[node_artist],
             zorder    = node_artist.get_zorder()
         )
 
@@ -545,7 +547,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         return dict(
             width       = edge_artist.width,
             facecolor   = edge_artist.get_facecolor(),
-            alpha       = self.artist_to_alpha[edge_artist],
+            alpha       = self._base_alpha[edge_artist],
             head_length = edge_artist.head_length,
             head_width  = edge_artist.head_width,
             edgecolor   = 'none',
@@ -586,11 +588,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # Update data structures in parent classes:
         # 1) InteractiveGraph
-        self.artist_to_key[artist] = node
         # 2a) DraggableGraph
         self._draggable_artist_to_node[artist] = node
         # 2b) EmphasizeOnHoverGraph
-        self.artist_to_key[artist] = node
+        # self.artist_to_key[artist] = node
         # 2c) AnnotateOnClickGraph
         # None
         # 3a) Graph
@@ -601,8 +602,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         self._draggable_artists.append(artist)
         self._base_alpha[artist] = artist.get_alpha()
         # 3c) EmphasizeOnHover
-        self.emphasizeable_artists.append(artist)
-        self.artist_to_alpha[artist] = artist.get_alpha()
+        # self.emphasizeable_artists.append(artist)
+        # self.artist_to_alpha[artist] = artist.get_alpha()
         # 3d) AnnotateOnClick
         # None
         # 4) BaseGraph
@@ -634,11 +635,11 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # Update data structures in parent classes:
         # 1) InteractiveGraph
-        del self.artist_to_key[artist]
-
+        # None
         # 2a) DraggableGraph
         del self._draggable_artist_to_node[artist]
         # 2b) EmphasizeOnHoverGraph
+        # del self.artist_to_key[artist]
         # None
         # 2c) AnnotateOnClickGraph
         # None
@@ -651,8 +652,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         self._selected_artists.remove(artist)
         del self._base_alpha[artist]
         # 3c) EmphasizeOnHover
-        self.emphasizeable_artists.remove(artist)
-        del self.artist_to_alpha[artist]
+        # self.emphasizeable_artists.remove(artist)
+        # del self.artist_to_alpha[artist]
         # 3d) AnnotateOnClick
         # None
         # 4) BaseGraph
@@ -675,7 +676,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
     def _add_edges(self):
         # translate selected artists into nodes
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists if artist in self._draggable_artists]
 
         # iterate over all pairs of selected nodes and create edges between nodes that are not already connected
         # new_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source != target) and (not (source, target) in self.edges)] # bidirectiona
@@ -704,10 +705,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # update data structures in parent classes
         # 1) InteractiveGraph
-        self.artist_to_key[artist] = edge
         # 2a) DraggableGraph
         # None
         # 2b) EmphasizeOnHoverGraph
+        # self.artist_to_key[artist] = edge
         # None
         # 2c) AnnotateOnClickGraph
         # None
@@ -716,9 +717,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
         self._clickable_artists.append(artist)
         self._selectable_artists.append(artist)
+        self._base_alpha[artist] = artist.get_alpha()
         # 3c) EmphasizeOnHover
-        self.emphasizeable_artists.append(artist)
-        self.artist_to_alpha[artist] = artist.get_alpha()
+        # self.emphasizeable_artists.append(artist)
+        # self.artist_to_alpha[artist] = artist.get_alpha()
         # 3d) AnnotateOnClick
         # None
         # 4) BaseGraph
@@ -740,11 +742,11 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
         # update data structures in parent classes
         # 1) InteractiveGraph
-        del self.artist_to_key[artist]
+        # None
         # 2a) DraggableGraph
         # None
         # 2b) EmphasizeOnHoverGraph
-        # None
+        # del self.artist_to_key[artist]
         # 2c) AnnotateOnClickGraph
         # None
         # 3a) Graph
@@ -753,9 +755,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         self._clickable_artists.remove(artist)
         self._selectable_artists.remove(artist)
         self._selected_artists.remove(artist)
+        del self._base_alpha[artist]
         # 3c) EmphasizeOnHover
-        self.emphasizeable_artists.remove(artist)
-        del self.artist_to_alpha[artist]
+        # self.emphasizeable_artists.remove(artist)
+        # del self.artist_to_alpha[artist]
         # 3d) AnnotateOnClick
         # None
         # 4) BaseGraph
