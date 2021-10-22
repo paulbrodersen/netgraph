@@ -494,10 +494,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
                 break
 
         if event.dblclick:
-            clicked_on_artist = False
             for node, artist in self.node_artists.items():
                 if artist.contains(event)[0]:
-                    clicked_on_artist = True
                     if self._nascent_edge_source:
                         if (self._nascent_edge_source, node) not in self.edges:
                             self._add_edge((self._nascent_edge_source, node))
@@ -511,8 +509,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
                         self._nascent_edge = plt.Line2D((x0, x0), (y0, y0), color='lightgray', linestyle='--')
                         self.ax.add_artist(self._nascent_edge)
                     break
-            if not clicked_on_artist:
-                if self._nascent_edge_source:
+            else:
+                if self._nascent_edge:
                     self._nascent_edge_source = None
                     self._nascent_edge.remove()
 
