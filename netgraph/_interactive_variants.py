@@ -493,7 +493,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # clicking on a node or edge is just one of the ways to select them
         super()._on_press(event)
 
-        for artist in self.artist_to_key:
+        for artist in self._clickable_artists:
             if artist.contains(event)[0]:
                 self._extract_artist_properties(artist)
                 break
@@ -714,7 +714,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # 3a) Graph
         # None
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
-        # None
+        self._clickable_artists.append(artist)
+        self._selectable_artists.append(artist)
         # 3c) EmphasizeOnHover
         self.emphasizeable_artists.append(artist)
         self.artist_to_alpha[artist] = artist.get_alpha()
@@ -749,7 +750,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # 3a) Graph
         # None
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
-        # None
+        self._clickable_artists.remove(artist)
+        self._selectable_artists.remove(artist)
+        self._selected_artists.remove(artist)
         # 3c) EmphasizeOnHover
         self.emphasizeable_artists.remove(artist)
         del self.artist_to_alpha[artist]

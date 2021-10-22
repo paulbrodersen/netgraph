@@ -2256,11 +2256,18 @@ class SelectableArtists(ClickableArtists):
         if self._currently_selecting:
             # select artists inside window
             for artist in self._selectable_artists:
-                if self._is_inside_rect(*artist.xy):
-                    if event.key == 'control':              # if/else probably superfluouos
-                        self._toggle_select_artist(artist)  # as no artists will be selected
-                    else:                                   # if control is not held previously
-                        self._select_artist(artist)         #
+                if isinstance(artist, NodeArtist):
+                    if self._is_inside_rect(*artist.xy):
+                        if event.key == 'control':              # if/else probably superfluouos
+                            self._toggle_select_artist(artist)  # as no artists will be selected
+                        else:                                   # if control is not held previously
+                            self._select_artist(artist)         #
+                elif isinstance(artist, EdgeArtist):
+                    if np.all([self._is_inside_rect(x, y) for x, y in artist.midline]):
+                        if event.key == 'control':              # if/else probably superfluouos
+                            self._toggle_select_artist(artist)  # as no artists will be selected
+                        else:                                   # if control is not held previously
+                            self._select_artist(artist)         #
 
             # stop window selection and draw new state
             self._currently_selecting = False
@@ -2335,7 +2342,7 @@ class DraggableArtists(SelectableArtists):
                     if not event.key == 'control':
                         self._deselect_all_artists()
                     self._select_artist(self._currently_clicking_on_artist)
-                self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists}
+                self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists if artist in self._draggable_artists}
                 self._currently_clicking_on_artist = None
                 self._currently_dragging = True
 
@@ -2365,6 +2372,10 @@ class DraggableGraph(Graph, DraggableArtists):
         DraggableArtists.__init__(self, self.node_artists.values())
 
         self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
+
+        self._clickable_artists.extend(list(self.edge_artists.values()))
+        self._selectable_artists.extend(list(self.edge_artists.values()))
+        self._base_alpha.update(dict([(artist, artist.get_alpha()) for artist in self.edge_artists.values()]))
 
         # # trigger resize of labels when canvas size changes
         # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
@@ -2398,7 +2409,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
 
     def _get_stale_nodes(self):
-        return [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+        return [self._draggable_artist_to_node[artist] for artist in self._selected_artists if artist in self._draggable_artists]
 
 
     def _update_node_positions(self, nodes, cursor_position):
