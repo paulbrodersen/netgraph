@@ -439,17 +439,15 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
     """
     Interactively add and remove nodes and edges.
 
-    Pressing 'A' will add a node to the graph.
-    Pressing 'D' will remove a selected node.
-    Pressing 'a' will add edges between all selected nodes.
-    Pressing 'd' will remove edges between all selected nodes.
-    Pressing 'r' will reverse the direction of edges between all selected nodes.
+    Double clicking on two nodes successively will create an edge between them.
+    Pressing 'insert' will add a new node to the graph.
+    Pressing 'delete' will remove selected nodes and edges.
+    Pressing '&' will reverse the direction of selected edges.
 
     Notes:
     ------
-    - When adding a new node, the properties of the last selected node will be used to style the node artist.
-    - Analogous for edges.
-    - Edges can also be created by double-clicking on a node and then on another node.
+    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
     See also:
     ---------
@@ -461,26 +459,23 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
         super().__init__(*args, **kwargs)
 
+        self._reverse_node_artists = {artist : node for node, artist in self.node_artists.items()}
+        self._reverse_edge_artists = {artist : edge for edge, artist in self.edge_artists.items()}
         self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
         self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
-
         self._nascent_edge_source = None
         self._nascent_edge = None
 
-        # link node/edge construction/destruction to key presses
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
 
 
     def _on_key_add_or_destroy(self, event):
-        if event.key == 'A':
+        if event.key == 'insert':
             self._add_node(event)
-        elif event.key == 'a':
-            self._add_edges()
-        elif event.key == 'D':
+        elif event.key == 'delete':
             self._delete_nodes()
-        elif event.key == 'd':
             self._delete_edges()
-        elif event.key == 'r':
+        elif event.key == '&':
             self._reverse_edges()
         else:
             pass
@@ -586,6 +581,8 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
         artist = NodeArtist(xy = pos, **node_properties)
 
+        self._reverse_node_artists[artist] = node
+
         # Update data structures in parent classes:
         # 1) InteractiveGraph
         # 2a) DraggableGraph
@@ -617,7 +614,7 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
     def _delete_nodes(self):
         # translate selected artists into nodes
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
+        nodes = [self._reverse_node_artists[artist] for artist in self._selected_artists if isinstance(artist, NodeArtist)]
 
         # delete edges to and from selected nodes
         edges = [(source, target) for (source, target) in self.edges if ((source in nodes) or (target in nodes))]
@@ -631,7 +628,9 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
     def _delete_node(self, node):
         # print(f"Deleting node {node}.")
-        artist = self.node_artist[node]
+        artist = self.node_artists[node]
+
+        del self._reverse_node_artists[artist]
 
         # Update data structures in parent classes:
         # 1) InteractiveGraph
@@ -674,18 +673,6 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
         artist.remove()
 
 
-    def _add_edges(self):
-        # translate selected artists into nodes
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists if artist in self._draggable_artists]
-
-        # iterate over all pairs of selected nodes and create edges between nodes that are not already connected
-        # new_edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source != target) and (not (source, target) in self.edges)] # bidirectiona
-        new_edges = [(source, target) for source, target in itertools.combinations(nodes, 2) if (source != target) and (not (source, target) in self.edges)] # unidirectional
-
-        for edge in new_edges:
-            self._add_edge(edge)
-
-
     def _add_edge(self, edge, edge_properties=None):
         source, target = edge
         path = np.array([self.node_positions[source], self.node_positions[target]])
@@ -702,6 +689,8 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
             shape = 'full'
 
         artist = EdgeArtist(midline=path, shape=shape, **edge_properties)
+
+        self._reverse_edge_artists[artist] = edge
 
         # update data structures in parent classes
         # 1) InteractiveGraph
@@ -731,14 +720,15 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
 
     def _delete_edges(self):
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
-        edges = [(source, target) for (source, target) in self.edges if ((source in nodes) and (target in nodes))]
+        edges = [self._reverse_edge_artists[artist] for artist in self._selected_artists if isinstance(artist, EdgeArtist)]
         for edge in edges:
             self._delete_edge(edge)
 
 
     def _delete_edge(self, edge):
         artist = self.edge_artists[edge]
+
+        del self._reverse_edge_artists[artist]
 
         # update data structures in parent classes
         # 1) InteractiveGraph
@@ -754,7 +744,10 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
         self._clickable_artists.remove(artist)
         self._selectable_artists.remove(artist)
-        self._selected_artists.remove(artist)
+        try:
+            self._selected_artists.remove(artist)
+        except ValueError:
+            pass
         del self._base_alpha[artist]
         # 3c) EmphasizeOnHover
         # self.emphasizeable_artists.remove(artist)
@@ -773,11 +766,7 @@ class InteractivelyConstructDestroyGraph(DraggableGraph):
 
 
     def _reverse_edges(self):
-        # translate selected artists into nodes
-        nodes = [self._draggable_artist_to_node[artist] for artist in self._selected_artists]
-
-        # grab all edges between selected nodes and their properties
-        edges = [(source, target) for source, target in itertools.permutations(nodes, 2) if (source, target) in self.edges]
+        edges = [self._reverse_edge_artists[artist] for artist in self._selected_artists if isinstance(artist, EdgeArtist)]
         edge_properties = [self._extract_edge_properties(self.edge_artists[edge]) for edge in edges]
 
         # delete old edges;
