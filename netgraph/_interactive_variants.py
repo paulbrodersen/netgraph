@@ -583,7 +583,6 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # 1) InteractiveGraph
         self.artist_to_key[artist] = node
         # 2a) DraggableGraph
-        self._node_to_draggable_artist[node] = artist
         self._draggable_artist_to_node[artist] = node
         # 2b) EmphasizeOnHoverGraph
         self.artist_to_key[artist] = node
@@ -624,14 +623,13 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
 
     def _delete_node(self, node):
         # print(f"Deleting node {node}.")
-        artist = self._node_to_draggable_artist[node]
+        artist = self.node_artist[node]
 
         # Update data structures in parent classes:
         # 1) InteractiveGraph
         del self.artist_to_key[artist]
 
         # 2a) DraggableGraph
-        # del self._node_to_draggable_artist[node] # copy of self.node_artists
         del self._draggable_artist_to_node[artist]
         # 2b) EmphasizeOnHoverGraph
         # None
