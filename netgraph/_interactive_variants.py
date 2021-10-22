@@ -430,6 +430,11 @@ class InteractiveHypergraph(InteractiveGraph):
             #     del self.edge_label_artists[edge] # TODO: get / set property for hyperedges; otherwise these raises KeyError
 
 
+class NascentEdge(plt.Line2D):
+    def __init__(self, p1, p2):
+        super().__init__(p1, p2, color='lightgray', linestyle='--')
+
+
 class InteractivelyConstructDestroyGraph(InteractiveGraph):
     """
     Interactively add and remove nodes and edges.
@@ -496,7 +501,8 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         if event.dblclick:
             for node, artist in self.node_artists.items():
                 if artist.contains(event)[0]:
-                    if self._nascent_edge_source:
+                    if self._nascent_edge_source is not None: # NB: node can have ID 0!
+                        # connect edge to target node
                         if (self._nascent_edge_source, node) not in self.edges:
                             self._add_edge((self._nascent_edge_source, node))
                             self._nascent_edge_source = None
@@ -504,9 +510,10 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
                         else:
                             print("Edge already exists!")
                     else:
+                        # initiate edge
                         self._nascent_edge_source = node
                         x0, y0 = self.node_positions[node]
-                        self._nascent_edge = plt.Line2D((x0, x0), (y0, y0), color='lightgray', linestyle='--')
+                        self._nascent_edge = NascentEdge((x0, x0), (y0, y0))
                         self.ax.add_artist(self._nascent_edge)
                     break
             else:
