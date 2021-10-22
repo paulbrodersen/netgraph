@@ -595,7 +595,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # None
         # 3a) Graph
         # None
-        # 3b) DraggableArtists
+        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
+        self._clickable_artists.append(artist)
+        self._selectable_artists.append(artist)
         self._draggable_artists.append(artist)
         self._base_alpha[artist] = artist.get_alpha()
         # 3c) EmphasizeOnHover
@@ -642,7 +644,9 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # None
         # 3a) Graph
         # None
-        # 3b) DraggableArtists
+        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
+        self._clickable_artists.remove(artist)
+        self._selectable_artists.remove(artist)
         self._draggable_artists.remove(artist)
         self._selected_artists.remove(artist)
         del self._base_alpha[artist]
@@ -709,7 +713,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # None
         # 3a) Graph
         # None
-        # 3b) DraggableArtists
+        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
         # None
         # 3c) EmphasizeOnHover
         self.emphasizeable_artists.append(artist)
@@ -744,7 +748,7 @@ class InteractivelyConstructDestroyGraph(InteractiveGraph):
         # None
         # 3a) Graph
         # None
-        # 3b) DraggableArtists
+        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
         # None
         # 3c) EmphasizeOnHover
         self.emphasizeable_artists.remove(artist)
