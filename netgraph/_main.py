@@ -1172,7 +1172,7 @@ class BaseGraph(object):
             return {key : str_or_dict for key in dict_keys}
         elif isinstance(str_or_dict, dict):
             self._check_completeness(set(str_or_dict), dict_keys, variable_name)
-            self._check_types(str_or_dict, str, variable_name)
+            self._check_types(str_or_dict.values(), str, variable_name)
             return str_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a str or a dict."
