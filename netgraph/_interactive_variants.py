@@ -435,7 +435,7 @@ class NascentEdge(plt.Line2D):
         super().__init__(p1, p2, color='lightgray', linestyle='--')
 
 
-class ModifiableGraph(InteractiveGraph):
+class MutableGraph(InteractiveGraph):
     """
     Interactively add and remove nodes and edges.
 
