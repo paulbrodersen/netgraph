@@ -2186,23 +2186,14 @@ class ClickableArtists(object):
 
 
     def _deselect_all_artists(self):
-        for artist in self._selected_artists:
-            artist.set_alpha(self._base_alpha[artist])
-        self._selected_artists = []
-        self.fig.canvas.draw_idle()
+        for artist in self._selected_artists[:]: # we make a copy of the list with [:], as we are modifying the list being iterated over
+            self._deselect_artist(artist)
 
 
     def _deselect_all_other_artists(self, artist_to_keep):
-        for artist in self._selected_artists:
+        for artist in self._selected_artists[:]:
             if artist != artist_to_keep:
-                artist.set_alpha(self._base_alpha[artist])
-                # self._selected_artists.remove(artist) # seems to remove random artists?
-        if artist_to_keep in self._selected_artists:
-            self._selected_artists = [artist_to_keep]
-        else:
-            self._selected_artists = []
-
-        self.fig.canvas.draw_idle()
+                self._deselect_artist(artist)
 
 
 class SelectableArtists(ClickableArtists):
