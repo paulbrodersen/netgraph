@@ -538,7 +538,7 @@ def draw_edges(edge_list,
             head_width  = head_width,
             zorder      = 1,
             edgecolor   = 'none',
-            linewidth   = 0.1,
+            linewidth   = 0.,
             offset      = offset,
             shape       = shape,
             curved      = curved,
@@ -1464,7 +1464,7 @@ class BaseGraph(object):
                 head_length = head_length,
                 head_width  = head_width,
                 edgecolor   = 'none',
-                linewidth   = 0.1,
+                linewidth   = 0.,
                 offset      = node_size[target],
                 shape       = shape,
                 curved      = curved,
@@ -2138,7 +2138,8 @@ class ClickableArtists(object):
 
         self._clickable_artists = list(artists)
         self._selected_artists = []
-        self._base_alpha = dict([(artist, artist.get_alpha()) for artist in artists])
+        self._base_linewidth = dict([(artist, artist._lw_data) for artist in artists])
+        self._base_edgecolor = dict([(artist, artist.get_edgecolor()) for artist in artists])
 
 
     # def _on_press(self, event):
@@ -2169,18 +2170,17 @@ class ClickableArtists(object):
 
     def _select_artist(self, artist):
         if not (artist in self._selected_artists):
-            alpha = artist.get_alpha()
-            try:
-                artist.set_alpha(0.5 * alpha)
-            except TypeError: # alpha not explicitly set
-                artist.set_alpha(0.5)
+            linewidth = artist._lw_data
+            artist.set_linewidth(max(1.5 * linewidth, 0.003))
+            artist.set_edgecolor('black')
             self._selected_artists.append(artist)
             self.fig.canvas.draw_idle()
 
 
     def _deselect_artist(self, artist):
         if artist in self._selected_artists: # should always be true?
-            artist.set_alpha(self._base_alpha[artist])
+            artist.set_linewidth(self._base_linewidth[artist])
+            artist.set_edgecolor(self._base_edgecolor[artist])
             self._selected_artists.remove(artist)
             self.fig.canvas.draw_idle()
 
@@ -2366,7 +2366,8 @@ class DraggableGraph(Graph, DraggableArtists):
 
         self._clickable_artists.extend(list(self.edge_artists.values()))
         self._selectable_artists.extend(list(self.edge_artists.values()))
-        self._base_alpha.update(dict([(artist, artist.get_alpha()) for artist in self.edge_artists.values()]))
+        self._base_linewidth.update(dict([(artist, artist._lw_data) for artist in self.edge_artists.values()]))
+        self._base_edgecolor.update(dict([(artist, artist.get_edgecolor()) for artist in self.edge_artists.values()]))
 
         # # trigger resize of labels when canvas size changes
         # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
