@@ -88,7 +88,7 @@ from ._edge_layout import (
 )
 
 from ._interactive_variants import (
-    InteractivelyConstructDestroyGraph,
+    ModifiableGraph,
 )
 
 from ._parser import parse_graph
@@ -110,6 +110,6 @@ __all__ = ['draw',
            'Basegraph',
            'Graph',
            'InteractiveGraph',
-           'InteractivelyConstructDestroyGraph',
+           'ModifiableGraph',
            'parse_graph',
 ]
