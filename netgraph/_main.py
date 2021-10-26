@@ -2438,7 +2438,7 @@ class EmphasizeOnHover(object):
     def __init__(self, artists):
 
         self.emphasizeable_artists = artists
-        self.artist_to_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
+        self._base_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
         self.deemphasized_artists = []
 
         try:
@@ -2467,14 +2467,14 @@ class EmphasizeOnHover(object):
             if selected_artist:
                 for artist in self.emphasizeable_artists:
                     if artist is not selected_artist:
-                        artist.set_alpha(self.artist_to_alpha[artist]/5)
+                        artist.set_alpha(self._base_alpha[artist]/5)
                         self.deemphasized_artists.append(artist)
                 self.fig.canvas.draw_idle()
 
             # not on any artist
             if (selected_artist is None) and self.deemphasized_artists:
                 for artist in self.deemphasized_artists:
-                    artist.set_alpha(self.artist_to_alpha[artist])
+                    artist.set_alpha(self._base_alpha[artist])
                 self.deemphasized_artists = []
                 self.fig.canvas.draw_idle()
 
@@ -2520,14 +2520,14 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
                 for artist in self.emphasizeable_artists:
                     if artist not in emphasized_artists:
-                        artist.set_alpha(self.artist_to_alpha[artist]/5)
+                        artist.set_alpha(self._base_alpha[artist]/5)
                         self.deemphasized_artists.append(artist)
                 self.fig.canvas.draw_idle()
 
             # not on any artist
             if (selected_artist is None) and self.deemphasized_artists:
                 for artist in self.deemphasized_artists:
-                    artist.set_alpha(self.artist_to_alpha[artist])
+                    artist.set_alpha(self._base_alpha[artist])
                 self.deemphasized_artists = []
                 self.fig.canvas.draw_idle()
 
