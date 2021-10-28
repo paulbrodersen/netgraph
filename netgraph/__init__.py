@@ -89,6 +89,7 @@ from ._edge_layout import (
 
 from ._interactive_variants import (
     MutableGraph,
+    EditableGraph,
 )
 
 from ._parser import parse_graph
@@ -111,5 +112,6 @@ __all__ = ['draw',
            'Graph',
            'InteractiveGraph',
            'MutableGraph',
+           'EditableGraph',
            'parse_graph',
 ]

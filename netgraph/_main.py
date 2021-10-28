@@ -1090,24 +1090,24 @@ class BaseGraph(object):
         if node_labels:
             if isinstance(node_labels, bool):
                 node_labels = dict(zip(self.nodes, self.nodes))
-            node_label_fontdict = self._initialize_node_label_fontdict(
+            self.node_label_fontdict = self._initialize_node_label_fontdict(
                 node_label_fontdict, node_labels, node_label_offset)
             self.node_label_offset, self._recompute_node_label_offsets =\
                 self._initialize_node_label_offset(node_labels, node_label_offset)
             if self._recompute_node_label_offsets:
                 self._update_node_label_offsets()
             self.node_label_artists = dict()
-            self.draw_node_labels(node_labels, node_label_fontdict)
+            self.draw_node_labels(node_labels, self.node_label_fontdict)
 
         if edge_labels:
             if isinstance(edge_labels, bool):
                 edge_labels = dict(zip(self.edges, self.edges))
-            edge_label_fontdict = self._initialize_edge_label_fontdict(edge_label_fontdict)
+            self.edge_label_fontdict = self._initialize_edge_label_fontdict(edge_label_fontdict)
             self.edge_label_position = edge_label_position
             self.edge_label_rotate = edge_label_rotate
             self.edge_label_artists = dict()
             self.draw_edge_labels(edge_labels, self.edge_label_position,
-                                  self.edge_label_rotate, edge_label_fontdict)
+                                  self.edge_label_rotate, self.edge_label_fontdict)
 
         if prettify:
             _make_pretty(self.ax)

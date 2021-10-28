@@ -11,6 +11,7 @@ from functools import partial
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
+from matplotlib.backend_bases import key_press_handler
 
 try:
     from ._main import InteractiveGraph, BASE_SCALE, DraggableGraph
@@ -451,7 +452,7 @@ class MutableGraph(InteractiveGraph):
 
     See also:
     ---------
-    InteractiveGraph, Graph
+    InteractiveGraph
 
     """
 
@@ -466,10 +467,10 @@ class MutableGraph(InteractiveGraph):
         self._nascent_edge_source = None
         self._nascent_edge = None
 
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_add_or_destroy)
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
 
 
-    def _on_key_add_or_destroy(self, event):
+    def _on_key_press(self, event):
         if event.key == 'insert':
             self._add_node(event)
         elif event.key == 'delete':
@@ -781,3 +782,93 @@ class MutableGraph(InteractiveGraph):
 
         for edge, properties in zip(edges, edge_properties):
             self._add_edge(edge[::-1], properties)
+
+
+class EditableGraph(MutableGraph):
+    """Extends MutableGraph to facilitate editing of node and edge labels.
+    To create or edit a node or edge label, select the node (or edge), press the 'enter' key, and type.
+    Terminate the action by pressing 'enter' again.
+
+    See also:
+    ---------
+    InteractiveGraph, MutableGraph
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # initiate node and edge label data structures if they don't exist
+        if not hasattr(self, 'node_label_artists'):
+            node_labels = {node : '' for node in self.nodes}
+            self.node_label_fontdict = self._initialize_node_label_fontdict(
+                kwargs.get('node_label_fontdict'), node_labels, kwargs.get('node_label_offset', (0., 0.)))
+            self.node_label_offset, self._recompute_node_label_offsets =\
+                self._initialize_node_label_offset(node_labels, kwargs.get('node_label_offset', (0., 0.)))
+            if self._recompute_node_label_offsets:
+                self._update_node_label_offsets()
+            self.node_label_artists = dict()
+            self.draw_node_labels(node_labels, self.node_label_fontdict)
+
+        if not hasattr(self, 'edge_label_artists'):
+            edge_labels = {edge : '' for edge in self.edges}
+            self.edge_label_fontdict = self._initialize_edge_label_fontdict(kwargs.get('edge_label_fontdict'))
+            self.edge_label_position = kwargs.get('edge_label_position', 0.5)
+            self.edge_label_rotate = kwargs.get('edge_label_rotate', True)
+            self.edge_label_artists = dict()
+            self.draw_edge_labels(edge_labels, self.edge_label_position,
+                                  self.edge_label_rotate, self.edge_label_fontdict)
+
+        self.currently_writing = False
+
+
+    def _on_key_press(self, event):
+        if event.key == 'enter':
+            if self.currently_writing:
+                self.currently_writing = False
+                self.fig.canvas.manager.key_press_handler_id \
+                    = self.fig.canvas.mpl_connect('key_press_event', self.fig.canvas.manager.key_press)
+            else:
+                self.currently_writing = True
+                self.fig.canvas.mpl_disconnect(self.fig.canvas.manager.key_press_handler_id)
+        else:
+            if self.currently_writing:
+                self._edit_labels(event.key)
+            else:
+                super()._on_key_press(event)
+
+
+    def _edit_labels(self, key):
+        for artist in self._selected_artists:
+            if isinstance(artist, NodeArtist):
+                self._edit_node_label(artist, key)
+            elif isinstance(artist, EdgeArtist):
+                self._edit_edge_label(artist, key)
+
+
+    def _edit_node_label(self, artist, key):
+        node = self.artist_to_key[artist]
+        if node not in self.node_label_artists:
+            # re-use a random offset to position node label;
+            # we will improve the placement by updating all node label offsets
+            self.node_label_offset[node] = next(iter(self.node_label_offset.values()))
+            self._update_node_label_offsets()
+            self.draw_node_labels({node : ''}, self.node_label_fontdict)
+
+        self._edit_text_object(self.node_label_artists[node], key)
+
+
+    def _edit_edge_label(self, artist, key):
+        edge = self.artist_to_key[artist]
+        if edge not in self.edge_label_artists:
+            self.draw_edge_labels({edge : ''}, self.edge_label_position,
+                                  self.edge_label_rotate, self.edge_label_fontdict)
+
+        self._edit_text_object(self.edge_label_artists[edge], key)
+
+
+    def _edit_text_object(self, text_object, key):
+        if len(key) == 1:
+            text_object.set_text(text_object.get_text() + key)
+        elif key == 'backspace':
+            text_object.set_text(text_object.get_text()[:-1])
+        self.fig.canvas.draw_idle()
