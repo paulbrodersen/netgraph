@@ -441,8 +441,8 @@ class MutableGraph(InteractiveGraph):
     Interactively add and remove nodes and edges.
 
     Double clicking on two nodes successively will create an edge between them.
-    Pressing 'insert' will add a new node to the graph.
-    Pressing 'delete' will remove selected nodes and edges.
+    Pressing 'insert' or '+' will add a new node to the graph.
+    Pressing 'delete' or '-' will remove selected nodes and edges.
     Pressing '&' will reverse the direction of selected edges.
 
     Notes:
@@ -471,9 +471,9 @@ class MutableGraph(InteractiveGraph):
 
 
     def _on_key_press(self, event):
-        if event.key == 'insert':
+        if event.key in ('insert', '+'):
             self._add_node(event)
-        elif event.key == 'delete':
+        elif event.key in ('delete', '-'):
             self._delete_nodes()
             self._delete_edges()
         elif event.key == '&':

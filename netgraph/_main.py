@@ -2114,7 +2114,7 @@ class Graph(BaseGraph):
 
 
 class ClickableArtists(object):
-    """Implements selection of matplotlib artists via the mouse left click (+/- ctrl key).
+    """Implements selection of matplotlib artists via the mouse left click (+/- ctrl or command key).
 
     Notes:
     ------
@@ -2141,13 +2141,19 @@ class ClickableArtists(object):
         self._base_linewidth = dict([(artist, artist._lw_data) for artist in artists])
         self._base_edgecolor = dict([(artist, artist.get_edgecolor()) for artist in artists])
 
+        if matplotlib.get_backend() == 'MacOSX':
+            msg  = "You appear to be using the MacOSX backend."
+            msg += "\nModifier key presses are bugged on this backend. See https://github.com/matplotlib/matplotlib/issues/20486"
+            msg += "\nConsider using a different backend, e.g. TkAgg (import matplotlib; matplotlib.use('TkAgg'))."
+            msg += "\nNote that you must set the backend before importing any package depending on matplotlib (includes pyplot, networkx, netgraph)."
+            warnings.warn(msg)
 
     # def _on_press(self, event):
     def _on_release(self, event):
         if event.inaxes == self.ax:
             for artist in self._clickable_artists:
                 if artist.contains(event)[0]:
-                    if event.key == 'control':
+                    if event.key in ('control', 'super+??', 'ctrl+??'):
                         self._toggle_select_artist(artist)
                     else:
                         self._deselect_all_other_artists(artist)
@@ -2155,7 +2161,7 @@ class ClickableArtists(object):
                         # NOTE: if two artists are overlapping, only the first one encountered is selected!
                     break
             else:
-                if not event.key == 'control':
+                if not event.key in ('control', 'super+??', 'ctrl+??'):
                     self._deselect_all_artists()
         else:
             print("Warning: clicked outside axis limits!")
@@ -2249,16 +2255,16 @@ class SelectableArtists(ClickableArtists):
             for artist in self._selectable_artists:
                 if isinstance(artist, NodeArtist):
                     if self._is_inside_rect(*artist.xy):
-                        if event.key == 'control':              # if/else probably superfluouos
-                            self._toggle_select_artist(artist)  # as no artists will be selected
-                        else:                                   # if control is not held previously
-                            self._select_artist(artist)         #
+                        if event.key in ('control', 'super+??', 'ctrl+??'): # if/else probably superfluouos
+                            self._toggle_select_artist(artist)              # as no artists will be selected
+                        else:                                               # if control is not held previously
+                            self._select_artist(artist)                     #
                 elif isinstance(artist, EdgeArtist):
                     if np.all([self._is_inside_rect(x, y) for x, y in artist.midline]):
-                        if event.key == 'control':              # if/else probably superfluouos
-                            self._toggle_select_artist(artist)  # as no artists will be selected
-                        else:                                   # if control is not held previously
-                            self._select_artist(artist)         #
+                        if event.key in ('control', 'super+??', 'ctrl+??'): # if/else probably superfluouos
+                            self._toggle_select_artist(artist)              # as no artists will be selected
+                        else:                                               # if control is not held previously
+                            self._select_artist(artist)                     #
 
             # stop window selection and draw new state
             self._currently_selecting = False
@@ -2330,7 +2336,7 @@ class DraggableArtists(SelectableArtists):
         if event.inaxes == self.ax:
             if self._currently_clicking_on_artist:
                 if self._currently_clicking_on_artist not in self._selected_artists:
-                    if not event.key == 'control':
+                    if event.key not in ('control', 'super+??', 'ctrl+??'):
                         self._deselect_all_artists()
                     self._select_artist(self._currently_clicking_on_artist)
                 self._offset = {artist : artist.xy - np.array([event.xdata, event.ydata]) for artist in self._selected_artists if artist in self._draggable_artists}
