@@ -658,8 +658,8 @@ class MutableGraph(InteractiveGraph):
         self.emphasizeable_artists.remove(artist)
         del self._base_alpha[artist]
         # 3d) AnnotateOnClick
-        if artist in self.artist_to_data:
-            del self.artist_to_data[artist]
+        if artist in self.artist_to_annotation:
+            del self.artist_to_annotation[artist]
         # 4) BaseGraph
         self.nodes.remove(node)
         del self.node_positions[node]
@@ -756,8 +756,8 @@ class MutableGraph(InteractiveGraph):
         self.emphasizeable_artists.remove(artist)
         del self._base_alpha[artist]
         # 3d) AnnotateOnClick
-        if artist in self.artist_to_data:
-            del self.artist_to_data[artist]
+        if artist in self.artist_to_annotation:
+            del self.artist_to_annotation[artist]
         # 4) BaseGraph
         self.edges.remove(edge)
         del self.edge_paths[edge]
@@ -908,14 +908,14 @@ class EditableGraph(MutableGraph):
     def _edit_annotations(self, key):
         for artist in self._selected_artists:
             if artist not in self.annotated_artists:
-                if artist not in self.artist_to_data:
-                    self.artist_to_data[artist] = ''
+                if artist not in self.artist_to_annotation:
+                    self.artist_to_annotation[artist] = ''
                 self.annotated_artists.add(artist)
                 placement = self._get_annotation_placement(artist)
                 self._add_annotation(artist, *placement)
 
             self._edit_text_object(self.artist_to_text_object[artist], key)
-            self.artist_to_data[artist] = self.artist_to_text_object[artist].get_text()
+            self.artist_to_annotation[artist] = self.artist_to_text_object[artist].get_text()
 
 
     def _edit_text_object(self, text_object, key):

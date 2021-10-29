@@ -2540,9 +2540,9 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
 class AnnotateOnClick(object):
 
-    def __init__(self, artist_to_data):
+    def __init__(self, artist_to_annotation):
 
-        self.artist_to_data = artist_to_data
+        self.artist_to_annotation = artist_to_annotation
         self.annotated_artists = set()
         self.artist_to_text_object = dict()
 
@@ -2561,7 +2561,7 @@ class AnnotateOnClick(object):
                     return
 
             # clicked on un-annotated artist
-            for artist in self.artist_to_data:
+            for artist in self.artist_to_annotation:
                 if artist.contains(event)[0]:
                     placement = self._get_annotation_placement(artist)
                     self._add_annotation(artist, *placement)
@@ -2582,7 +2582,7 @@ class AnnotateOnClick(object):
 
 
     def _get_centroid(self):
-        return np.mean([artist.xy for artist in self.artist_to_data], axis=0)
+        return np.mean([artist.xy for artist in self.artist_to_annotation], axis=0)
 
 
     def _get_vector_pointing_outwards(self, xy):
@@ -2615,14 +2615,14 @@ class AnnotateOnClick(object):
 
     def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
 
-        if isinstance(self.artist_to_data[artist], str):
+        if isinstance(self.artist_to_annotation[artist], str):
             self.artist_to_text_object[artist] = self.ax.text(
-                x, y, self.artist_to_data[artist],
+                x, y, self.artist_to_annotation[artist],
                 horizontalalignment=horizontalalignment,
                 verticalalignment=verticalalignment,
             )
-        elif isinstance(self.artist_to_data[artist], dict):
-            params = self.artist_to_data[artist].copy()
+        elif isinstance(self.artist_to_annotation[artist], dict):
+            params = self.artist_to_annotation[artist].copy()
             params.setdefault('horizontalalignment', horizontalalignment)
             params.setdefault('verticalalignment', verticalalignment)
             self.artist_to_text_object[artist] = self.ax.text(
@@ -2643,17 +2643,17 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
 
-        artist_to_data = dict()
+        artist_to_annotation = dict()
         if 'annotations' in kwargs:
             for key, annotation in kwargs['annotations'].items():
                 if key in self.nodes:
-                    artist_to_data[self.node_artists[key]] = annotation
+                    artist_to_annotation[self.node_artists[key]] = annotation
                 elif key in self.edges:
-                    artist_to_data[self.edge_artists[key]] = annotation
+                    artist_to_annotation[self.edge_artists[key]] = annotation
                 else:
                     raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
-        AnnotateOnClick.__init__(self, artist_to_data)
+        AnnotateOnClick.__init__(self, artist_to_annotation)
 
 
     def _get_centroid(self):
@@ -2857,6 +2857,10 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
         }
 
+    annotation_fontdict : dict
+        Keyword arguments passed to matplotlib.text.Text.
+        For a full list of available arguments see the matplotlib documentation.
+
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the canvas.
 
@@ -2915,17 +2919,17 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         self.artist_to_key = dict(zip(artists, keys))
         EmphasizeOnHover.__init__(self, artists)
 
-        artist_to_data = dict()
+        artist_to_annotation = dict()
         if 'annotations' in kwargs:
             for key, annotation in kwargs['annotations'].items():
                 if key in self.nodes:
-                    artist_to_data[self.node_artists[key]] = annotation
+                    artist_to_annotation[self.node_artists[key]] = annotation
                 elif key in self.edges:
-                    artist_to_data[self.edge_artists[key]] = annotation
+                    artist_to_annotation[self.edge_artists[key]] = annotation
                 else:
                     raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
-        AnnotateOnClick.__init__(self, artist_to_data)
+        AnnotateOnClick.__init__(self, artist_to_annotation)
 
 
     def _on_motion(self, event):
@@ -2936,11 +2940,11 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
     def _on_release(self, event):
         if self._currently_dragging is False:
             DraggableGraph._on_release(self, event)
-            if self.artist_to_data:
+            if self.artist_to_annotation:
                 AnnotateOnClickGraph._on_release(self, event)
         else:
             DraggableGraph._on_release(self, event)
-            if self.artist_to_data:
+            if self.artist_to_annotation:
                 self._redraw_annotations(event)
 
 
