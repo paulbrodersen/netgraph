@@ -2644,10 +2644,14 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
         Graph.__init__(self, *args, **kwargs)
 
         artist_to_data = dict()
-        if 'node_data' in kwargs:
-            artist_to_data.update({self.node_artists[node] : data for node, data in kwargs['node_data'].items()})
-        if 'edge_data' in kwargs:
-            artist_to_data.update({self.edge_artists[edge] : data for edge, data in kwargs['edge_data'].items()})
+        if 'annotations' in kwargs:
+            for key, annotation in kwargs['annotations'].items():
+                if key in self.nodes:
+                    artist_to_data[self.node_artists[key]] = annotation
+                elif key in self.edges:
+                    artist_to_data[self.edge_artists[key]] = annotation
+                else:
+                    raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
         AnnotateOnClick.__init__(self, artist_to_data)
 
@@ -2701,22 +2705,6 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             The absence of a connection is indicated by a zero.
             Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
         - networkx.Graph or igraph.Graph object
-
-    node_data : dict node : string or dict
-        Additional information that can be revealed/hidden by clicking on the corresponding node.
-        node_data = {
-            0 : 'Normal node',
-            1 : {s : 'Less important node', fontsize : 2},
-            2 : {s : 'Very important node', fontcolor : 'red'},
-        }
-
-    edge_data : dict edge : string or dict
-        Additional information that can be revealed/hidden by clicking on the corresponding edge.
-        edge_data = {
-            (0, 1) : 'Normal edge',
-            (1, 2) : {s : 'Less important edge', fontsize : 2},
-            (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
-        }
 
     node_layout : str or dict node : (float x, float y) (default 'spring')
         If node_layout is a string, the node positions are computed using
@@ -2858,6 +2846,17 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             - zorder (default here: inf),
             - rotation (determined by edge_label_rotate argument)
 
+    annotations : dict node/edge : string or dict
+        Additional information that can be revealed/hidden by clicking on the corresponding node or edge.
+        annotations = {
+            0 : 'Normal node',
+            1 : {s : 'Less important node', fontsize : 2},
+            2 : {s : 'Very important node', fontcolor : 'red'},
+            (0, 1) : 'Normal edge',
+            (1, 2) : {s : 'Less important edge', fontsize : 2},
+            (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
+        }
+
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the canvas.
 
@@ -2917,10 +2916,14 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         EmphasizeOnHover.__init__(self, artists)
 
         artist_to_data = dict()
-        if 'node_data' in kwargs:
-            artist_to_data.update({self.node_artists[node] : data for node, data in kwargs['node_data'].items()})
-        if 'edge_data' in kwargs:
-            artist_to_data.update({self.edge_artists[edge] : data for edge, data in kwargs['edge_data'].items()})
+        if 'annotations' in kwargs:
+            for key, annotation in kwargs['annotations'].items():
+                if key in self.nodes:
+                    artist_to_data[self.node_artists[key]] = annotation
+                elif key in self.edges:
+                    artist_to_data[self.edge_artists[key]] = annotation
+                else:
+                    raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
         AnnotateOnClick.__init__(self, artist_to_data)
 
