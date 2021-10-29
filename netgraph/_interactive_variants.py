@@ -564,6 +564,9 @@ class MutableGraph(InteractiveGraph):
 
 
     def _add_node(self, event):
+        if event.inaxes != self.ax:
+            print('Position outside of axis limits! Cannot create node.')
+            return
 
         # create node ID; use smallest unused int
         node = 0
