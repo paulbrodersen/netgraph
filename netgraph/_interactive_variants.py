@@ -438,22 +438,19 @@ class NascentEdge(plt.Line2D):
 
 class MutableGraph(InteractiveGraph):
     """
-    Interactively add and remove nodes and edges.
+    Add or remove nodes and edges:
+    -------------------------------
+    - Double clicking on two nodes successively will create an edge between them.
+    - Pressing 'insert' or '+' will add a new node to the graph.
+    - Pressing 'delete' or '-' will remove selected nodes and edges.
+    - Pressing '&' will reverse the direction of selected edges.
 
-    Double clicking on two nodes successively will create an edge between them.
-    Pressing 'insert' or '+' will add a new node to the graph.
-    Pressing 'delete' or '-' will remove selected nodes and edges.
-    Pressing '&' will reverse the direction of selected edges.
-
-    Notes:
-    ------
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
     See also:
     ---------
     InteractiveGraph
-
     """
 
     def __init__(self, *args, **kwargs):
@@ -788,16 +785,27 @@ class MutableGraph(InteractiveGraph):
 
 
 class EditableGraph(MutableGraph):
-    """Extends MutableGraph to facilitate editing of node and edge labels.
-    To create or edit a node or edge label, select the node (or edge), press the 'enter' key, and type.
-    Terminate the action by pressing 'enter' again.
+    """
+    Add or remove nodes and edges:
+    -------------------------------
+    - Double clicking on two nodes successively will create an edge between them.
+    - Pressing 'insert' or '+' will add a new node to the graph.
+    - Pressing 'delete' or '-' will remove selected nodes and edges.
+    - Pressing '&' will reverse the direction of selected edges.
 
-    To create or edit an annotation, select the node (or edge), press 'alt'+'enter', and type.
-    Terminate the action by pressing 'enter' or 'alt'+'enter' again.
+    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
+
+    Create or edit labels and annotations:
+    --------------------------------------
+    - To create or edit a node or edge label, select the node (or edge) artist, press the 'enter' key, and type.
+    - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
+
+    Terminate either action by pressing 'enter' or 'alt'+'enter' a second time.
 
     See also:
     ---------
-    InteractiveGraph, MutableGraph
+    InteractiveGraph
     """
 
     def __init__(self, *args, **kwargs):
