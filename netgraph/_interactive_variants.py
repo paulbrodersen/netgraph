@@ -643,7 +643,8 @@ class MutableGraph(InteractiveGraph):
         del self.artist_to_key[artist]
         # None
         # 2c) AnnotateOnClickGraph
-        # None
+        if artist in self.annotated_artists:
+            self._remove_annotation(artist)
         # 3a) Graph
         # None
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
@@ -657,22 +658,19 @@ class MutableGraph(InteractiveGraph):
         self.emphasizeable_artists.remove(artist)
         del self._base_alpha[artist]
         # 3d) AnnotateOnClick
-        # None
+        if artist in self.artist_to_data:
+            del self.artist_to_data[artist]
         # 4) BaseGraph
         self.nodes.remove(node)
         del self.node_positions[node]
         del self.node_artists[node]
         if hasattr(self, 'node_label_artists'):
-            try:
+            if node in self.node_label_artists:
                 self.node_label_artists[node].remove()
                 del self.node_label_artists[node]
-            except KeyError:
-                pass
         if hasattr(self, 'node_label_offset'):
-            try:
+            if node in self.node_label_offset:
                 del self.node_label_offset[node]
-            except KeyError:
-                pass
         artist.remove()
 
 
@@ -701,7 +699,6 @@ class MutableGraph(InteractiveGraph):
         # None
         # 2b) EmphasizeOnHoverGraph
         self.artist_to_key[artist] = edge
-        # None
         # 2c) AnnotateOnClickGraph
         # None
         # 3a) Graph
@@ -742,7 +739,8 @@ class MutableGraph(InteractiveGraph):
         # 2b) EmphasizeOnHoverGraph
         del self.artist_to_key[artist]
         # 2c) AnnotateOnClickGraph
-        # None
+        if artist in self.annotated_artists:
+            self._remove_annotation(artist)
         # 3a) Graph
         # None
         # 3b) ClickableArtists, SelectableArtists, DraggableArtists
@@ -758,14 +756,16 @@ class MutableGraph(InteractiveGraph):
         self.emphasizeable_artists.remove(artist)
         del self._base_alpha[artist]
         # 3d) AnnotateOnClick
-        # None
+        if artist in self.artist_to_data:
+            del self.artist_to_data[artist]
         # 4) BaseGraph
         self.edges.remove(edge)
         del self.edge_paths[edge]
         del self.edge_artists[edge]
         if hasattr(self, 'edge_label_artists'):
-            self.edge_label_artists[edge].remove()
-            del self.edge_label_artists[edge]
+            if edge in self.edge_label_artists:
+                self.edge_label_artists[edge].remove()
+                del self.edge_label_artists[edge]
         # TODO remove edge data
         artist.remove()
 
@@ -788,6 +788,9 @@ class EditableGraph(MutableGraph):
     """Extends MutableGraph to facilitate editing of node and edge labels.
     To create or edit a node or edge label, select the node (or edge), press the 'enter' key, and type.
     Terminate the action by pressing 'enter' again.
+
+    To create or edit an annotation, select the node (or edge), press 'alt'+'enter', and type.
+    Terminate the action by pressing 'enter' or 'alt'+'enter' again.
 
     See also:
     ---------
@@ -818,23 +821,48 @@ class EditableGraph(MutableGraph):
             self.draw_edge_labels(edge_labels, self.edge_label_position,
                                   self.edge_label_rotate, self.edge_label_fontdict)
 
-        self.currently_writing = False
+        self._currently_writing_labels = False
+        self._currently_writing_annotations = False
 
 
     def _on_key_press(self, event):
         if event.key == 'enter':
-            if self.currently_writing:
-                self.currently_writing = False
-                self.fig.canvas.manager.key_press_handler_id \
-                    = self.fig.canvas.mpl_connect('key_press_event', self.fig.canvas.manager.key_press)
+            if self._currently_writing_labels or self._currently_writing_annotations:
+                self._terminate_writing()
             else:
-                self.currently_writing = True
-                self.fig.canvas.mpl_disconnect(self.fig.canvas.manager.key_press_handler_id)
+                self._initiate_writing_labels()
+        elif event.key == 'alt+enter':
+            if self._currently_writing_annotations or self._currently_writing_labels:
+                self._terminate_writing()
+            else:
+                self._initiate_writing_annotations()
         else:
-            if self.currently_writing:
+            if self._currently_writing_labels:
                 self._edit_labels(event.key)
+            elif self._currently_writing_annotations:
+                self._edit_annotations(event.key)
             else:
                 super()._on_key_press(event)
+
+
+    def _terminate_writing(self):
+        self._currently_writing_labels = False
+        self._currently_writing_annotations = False
+        self.fig.canvas.manager.key_press_handler_id \
+            = self.fig.canvas.mpl_connect('key_press_event', self.fig.canvas.manager.key_press)
+        print('Finished writing.')
+
+
+    def _initiate_writing_labels(self):
+        self._currently_writing_labels = True
+        self.fig.canvas.mpl_disconnect(self.fig.canvas.manager.key_press_handler_id)
+        print('Initiated writing label(s).')
+
+
+    def _initiate_writing_annotations(self):
+        self._currently_writing_annotations = True
+        self.fig.canvas.mpl_disconnect(self.fig.canvas.manager.key_press_handler_id)
+        print('Initiated writing annotations(s).')
 
 
     def _edit_labels(self, key):
@@ -864,6 +892,19 @@ class EditableGraph(MutableGraph):
                                   self.edge_label_rotate, self.edge_label_fontdict)
 
         self._edit_text_object(self.edge_label_artists[edge], key)
+
+
+    def _edit_annotations(self, key):
+        for artist in self._selected_artists:
+            if artist not in self.annotated_artists:
+                if artist not in self.artist_to_data:
+                    self.artist_to_data[artist] = ''
+                self.annotated_artists.add(artist)
+                placement = self._get_annotation_placement(artist)
+                self._add_annotation(artist, *placement)
+
+            self._edit_text_object(self.artist_to_text_object[artist], key)
+            self.artist_to_data[artist] = self.artist_to_text_object[artist].get_text()
 
 
     def _edit_text_object(self, text_object, key):
