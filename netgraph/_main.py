@@ -2540,11 +2540,18 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
 class AnnotateOnClick(object):
 
-    def __init__(self, artist_to_annotation):
+    def __init__(self, artist_to_annotation, annotation_fontdict=None):
 
         self.artist_to_annotation = artist_to_annotation
         self.annotated_artists = set()
         self.artist_to_text_object = dict()
+        self.annotation_fontdict = dict(
+            backgroundcolor = 'white',
+            zorder          = np.inf,
+            clip_on         = False
+        )
+        if annotation_fontdict:
+            self.annotation_fontdict.update(annotation_fontdict)
 
         self.fig.canvas.mpl_connect("button_release_event", self._on_release)
 
@@ -2614,17 +2621,14 @@ class AnnotateOnClick(object):
 
 
     def _add_annotation(self, artist, x, y, horizontalalignment, verticalalignment):
-
+        params = self.annotation_fontdict.copy()
+        params.setdefault('horizontalalignment', horizontalalignment)
+        params.setdefault('verticalalignment', verticalalignment)
         if isinstance(self.artist_to_annotation[artist], str):
             self.artist_to_text_object[artist] = self.ax.text(
-                x, y, self.artist_to_annotation[artist],
-                horizontalalignment=horizontalalignment,
-                verticalalignment=verticalalignment,
-            )
+                x, y, self.artist_to_annotation[artist], **params)
         elif isinstance(self.artist_to_annotation[artist], dict):
-            params = self.artist_to_annotation[artist].copy()
-            params.setdefault('horizontalalignment', horizontalalignment)
-            params.setdefault('verticalalignment', verticalalignment)
+            params.update(self.artist_to_annotation[artist].copy())
             self.artist_to_text_object[artist] = self.ax.text(
                 x, y, **params
             )
@@ -2849,17 +2853,23 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
     annotations : dict node/edge : string or dict
         Additional information that can be revealed/hidden by clicking on the corresponding node or edge.
         annotations = {
-            0 : 'Normal node',
-            1 : {s : 'Less important node', fontsize : 2},
-            2 : {s : 'Very important node', fontcolor : 'red'},
+            0      : 'Normal node',
+            1      : {s : 'Less important node', fontsize : 2},
+            2      : {s : 'Very important node', fontcolor : 'red'},
             (0, 1) : 'Normal edge',
             (1, 2) : {s : 'Less important edge', fontsize : 2},
             (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
         }
 
     annotation_fontdict : dict
-        Keyword arguments passed to matplotlib.text.Text.
+        Keyword arguments passed to matplotlib.text.Text if only the annotation string is given.
         For a full list of available arguments see the matplotlib documentation.
+        The following default values differ from the defaults for matplotlib.text.Text:
+            - horizontalalignment (depends on node position or edge orientation),
+            - verticalalignment (depends on node position or edge orientation),
+            - clip_on (default here: False),
+            - backgroundcolor (default here: 'white'),
+            - zorder (default here: inf),
 
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the canvas.
@@ -2929,7 +2939,10 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
                 else:
                     raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
-        AnnotateOnClick.__init__(self, artist_to_annotation)
+        if 'annotation_fontdict' in kwargs:
+            AnnotateOnClick.__init__(self, artist_to_annotation, kwargs['annotation_fontdict'])
+        else:
+            AnnotateOnClick.__init__(self, artist_to_annotation)
 
 
     def _on_motion(self, event):
