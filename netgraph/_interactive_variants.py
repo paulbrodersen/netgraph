@@ -728,8 +728,12 @@ class MutableGraph(InteractiveGraph):
 
     def _delete_edge(self, edge):
         artist = self.edge_artists[edge]
-
         del self._reverse_edge_artists[artist]
+
+        source, target = edge
+        if (target, source) in self.edges:
+            self.edge_artists[(target, source)].shape = 'full'
+            self.edge_artists[(target, source)]._update_path()
 
         # update data structures in parent classes
         # 1) InteractiveGraph
