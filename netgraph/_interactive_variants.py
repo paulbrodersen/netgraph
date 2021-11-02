@@ -443,7 +443,7 @@ class MutableGraph(InteractiveGraph):
     - Double clicking on two nodes successively will create an edge between them.
     - Pressing 'insert' or '+' will add a new node to the graph.
     - Pressing 'delete' or '-' will remove selected nodes and edges.
-    - Pressing '&' will reverse the direction of selected edges.
+    - Pressing '@' will reverse the direction of selected edges.
 
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
@@ -473,7 +473,7 @@ class MutableGraph(InteractiveGraph):
         elif event.key in ('delete', '-'):
             self._delete_nodes()
             self._delete_edges()
-        elif event.key == '&':
+        elif event.key == '@':
             self._reverse_edges()
         else:
             pass
