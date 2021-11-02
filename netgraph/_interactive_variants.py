@@ -798,7 +798,7 @@ class EditableGraph(MutableGraph):
     - Pressing '&' will reverse the direction of selected edges.
 
     When adding a new node, the properties of the last selected node will be used to style the node artist.
-    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
+    Ditto for edges. If no node or edge has been previously selected, the first created node or edge artist will be used.
 
     Create or edit labels and annotations:
     --------------------------------------
