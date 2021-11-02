@@ -16,7 +16,7 @@ Import module and plot with:
 ``` python
 import numpy as np
 import matplotlib.pyplot as plt
-from netgraph import Graph, InteractiveGraph
+from netgraph import Graph, InteractiveGraph, EditableGraph
 
 # Several graph formats are supported:
 graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
@@ -35,9 +35,17 @@ plt.show()
 # and you won't be able to move the plot elements around.
 # For similar reasons, if you are using PyCharm, you have to execute the code in
 # a console (Alt+Shift+E).
-plt.ion()
 plot_instance = InteractiveGraph(graph_data)
 plt.show()
+
+# Create an editable plot.
+plot_instance = EditableGraph(graph_data)
+plt.show()
+
+# read the documentation
+help(Graph)
+help(InteractiveGraph)
+help(EditableGraph)
 ```
 
 ## Reasons why you might want to use netgraph
@@ -48,7 +56,7 @@ plt.show()
 ![Example visualisations](./figures/gallery_portrait.png)
 
 
-### Interactive tweaking and data exploration
+### Interactivity
 
 Algorithmically finding a visually pleasing graph layout is hard.
 This is demonstrated by the plethora of different algorithms in use
@@ -57,39 +65,99 @@ algorithm). To ameliorate this problem, this module contains an
 `InteractiveGraph` class, which allows node positions to be tweaked
 with the mouse after an initial draw.
 
-The class `InteractiveGraph` also facilitates interactive data exploration.
-When hovering over a node, the node and all its neighbours in the graph are highlighted.
-When hovering over an edge, the edge and its source and target nodes are highlighted.
+- Individual nodes and edges can be selected using the left-click.
+- Multiple nodes and or edges can be selected by holding `control`
+  while clicking, or by using the rectangle/window selector.
+- Selected plot elements can be dragged around by holding left-click
+  on a selected artist.
 
-Apart from the labels, additional annotations can be passed in via the
-`node_data` and `edge_data` keyword arguments. The visibility of these
-annotations is toggled by clicking on the corresponding plot elements.
-
-![Demo of InteractiveGraph](https://media.giphy.com/media/clrtFvPW1ITjtGyPIU/giphy.gif)
+![Demo of selecting, dragging, and hovering](https://media.giphy.com/media/yEysQUUTndLT6mI9cN/giphy.gif)
 
 
 ``` python
 import matplotlib.pyplot as plt
 import networkx as nx
-
 from netgraph import InteractiveGraph
 
 g = nx.house_x_graph()
 
-node_data = {
-    4 : dict(s = 'Additional annotations can be revealed\nby clicking on the corresponding plot element.', fontsize=20, backgroundcolor='white')
-}
-edge_data = {
-    (0, 1) : dict(s='Clicking on the same plot element\na second time hides the annotation again.', fontsize=20, backgroundcolor='white')
-}
+edge_color = dict()
+for ii, edge in enumerate(g.edges):
+    edge_color[edge] = 'tab:gray' if ii%2 else 'tab:orange'
 
-fig, ax = plt.subplots(figsize=(10, 10))
-plot_instance = InteractiveGraph(g, node_size=5, edge_width=3,
-                                 node_labels=True, node_label_offset=0.08, node_label_fontdict=dict(size=20),
-                                 node_data=node_data, edge_data=edge_data, ax=ax)
+node_color = dict()
+for node in g.nodes:
+    node_color[node] = 'tab:red' if node%2 else 'tab:blue'
+
+plot_instance = InteractiveGraph(
+    g, node_size=5, node_color=node_color,
+    node_labels=True, node_label_offset=0.1, node_label_fontdict=dict(size=20),
+    edge_color=edge_color, edge_width=2,
+    arrows=True, ax=ax)
+
 plt.show()
 ```
 
+There is also some experimental support for editing the graph
+elements interactively using the `EditableGraph` class.
+
+- Pressing `insert` or `+` will add a new node to the graph.
+- Double clicking on two nodes successively will create an edge between them.
+- Pressing `delete` or `-` will remove selected nodes and edges.
+- Pressing `@` will reverse the direction of selected edges.
+
+When adding a new node, the properties of the last selected node will
+be used to style the node artist. Ditto for edges. If no node or edge
+has been previously selected, the first created node or edge artist
+will be used.
+
+![Demo of interactive editing](https://media.giphy.com/media/TyiS2Pl1z9CFqYMYe7/giphy.gif)
+
+Finally, elements of the graph can be labeled and annotated. Labels
+remain always visible, whereas annotations can be toggled on and off by
+clicking on the corresponding node or edge.
+
+- To create or edit a node or edge label, select the node (or edge)
+  artist, press the `enter` key, and type.
+- To create or edit an annotation, select the node (or edge) artist,
+  press `alt + enter`, and type.
+- Terminate either action by pressing `enter` or `alt + enter` a
+  second time.
+
+![Demo of interactive labeling](https://media.giphy.com/media/OofBM1xtwfSpK7DPSU/giphy.gif)
+
+``` python
+import matplotlib.pyplot as plt
+import networkx as nx
+from netgraph import EditableGraph
+
+g = nx.house_x_graph()
+
+edge_color = dict()
+for ii, (source, target) in enumerate(g.edges):
+    edge_color[(source, target)] = 'tab:gray' if ii%2 else 'tab:orange'
+
+node_color = dict()
+for node in g.nodes:
+    node_color[node] = 'tab:red' if node%2 else 'tab:blue'
+
+annotations = {
+    4 : 'This is the representation of a node.',
+    (0, 1) : dict(s='This is not a node.', color='red')
+}
+
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+plot_instance = EditableGraph(
+    g, node_color=node_color, node_size=5,
+    node_labels=True, node_label_offset=0.1, node_label_fontdict=dict(size=20),
+    edge_color=edge_color, edge_width=2,
+    annotations=annotations, annotation_fontdict = dict(color='blue', fontsize=15),
+    arrows=True, ax=ax)
+
+plt.show()
+```
 
 ### Exquisite control over plot elements
 
@@ -120,7 +188,7 @@ Graph([(0, 1), (1, 2), (2, 0)],
 plt.show()
 ```
 
-3. By directly manipulating the node and edge artists (which are simply matplotlib PathPatch artists):
+3. By directly manipulating the node and edge artists (which are derived from matplotlib PathPatch artists):
 
 ``` python
 import matplotlib.pyplot as plt; plt.ion()
@@ -178,6 +246,13 @@ g.edge_label_artists[(0, 1)].set_style('italic')
 # force redraw to display changes
 fig.canvas.draw()
 plt.show()
+```
+
+For a full list of available arguments, please consult the docstrings
+of the `Graph` or `InteractiveGraph` class:
+
+```python
+from netgraph import Graph; help(Graph)
 ```
 
 ### Consistent length units
