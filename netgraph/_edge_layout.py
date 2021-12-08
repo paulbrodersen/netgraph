@@ -4,6 +4,7 @@ import numpy as np
 
 from functools import wraps
 from scipy.interpolate import UnivariateSpline
+from matplotlib.patches import ConnectionStyle
 from uuid import uuid4
 
 from ._utils import (
@@ -371,6 +372,58 @@ def _get_path_through_control_points(edge_to_control_points, node_positions, con
 
 def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
     return {edge : _bspline(path, *args, **kwargs) for edge, path in edge_to_path.items()}
+
+
+@_handle_multiple_components
+def get_arced_edge_paths(edges, node_positions, rad=1.,
+                         origin = np.array([0, 0]),
+                         scale  = np.array([1, 1]),
+):
+
+    """Determine the edge layout, where edges are represented by arcs
+connecting the source and target node.
+
+    Creates simple quadratic Bezier curves between nodes. The curves
+    are created so that the middle control points (C1) are located at
+    the same distance from the start (C0) and end points (C2) and the
+    distance of the C1 to the line connecting C0-C2 is rad times the
+    distance of C0-C2.
+
+    Arguments:
+    ----------
+    edges : list of (source node ID, target node ID) 2-tuples
+        The edges.
+
+    node_positions : dict node ID : (x, y) positions
+        The node positions.
+
+    rad : float (default 1.0)
+        The curvature of the arc.
+
+    origin : (float x, float y) tuple or None (default (0, 0))
+        The lower left hand corner of the bounding box specifying the extent of the layout.
+
+    scale : (float delta x, float delta y) or None (default (1, 1))
+        The width and height of the bounding box specifying the extent of the layout.
+
+    Returns:
+    --------
+    edge_paths : dict edge : ndarray
+        Dictionary mapping each edge to a list of edge segments.
+
+    """
+
+    edge_paths = dict()
+    for source, target in edges:
+        arc_factory = ConnectionStyle.Arc3(rad=rad)
+        path = arc_factory(
+            node_positions[source],
+            node_positions[target],
+            shrinkA=0., shrinkB=0.
+        )
+        edge_paths[(source, target)] = _bspline(path.vertices, 100)
+
+    return edge_paths
 
 
 @profile

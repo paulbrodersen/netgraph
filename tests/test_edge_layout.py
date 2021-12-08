@@ -45,6 +45,20 @@ def test_curved_edge_layout():
     return fig
 
 
+@pytest.mark.mpl_image_compare
+def test_arced_edge_layout():
+    fig, ax = plt.subplots()
+    edges = [
+        (0, 1),
+    ]
+    node_positions = {
+        0 : np.array([0.1, 0.5]),
+        1 : np.array([0.9, 0.5])
+    }
+    Graph(edges, node_layout=node_positions, edge_layout='arc', edge_layout_kwargs=dict(rad=1.))
+    return fig
+
+
 # --------------------------------------------------------------------------------
 # bundled edge layout
 

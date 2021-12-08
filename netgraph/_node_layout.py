@@ -810,6 +810,43 @@ def _get_centroid(polygon):
 
 
 @_handle_multiple_components
+def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
+    """
+    Arguments:
+    ----------
+    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
+        List of edges. Each tuple corresponds to an edge defined by (source, target).
+
+    origin : (float x, float y) tuple (default (0, 0))
+        The lower left hand corner of the bounding box specifying the extent of the layout.
+
+    scale : (float width, float height) tuple (default (1, 1))
+        The width and height of the bounding box specifying the extent of the layout.
+
+    reduce_edge_crossings : bool
+        If True, attempts to minimize edge crossings via the algorithm outlined in:
+        Bauer & Brandes (2005) Crossing reduction in circular layouts
+
+    Returns:
+    --------
+    node_positions : dict key : (float, float)
+        Mapping of nodes to (x,y) positions
+
+    """
+    nodes = _get_unique_nodes(edges)
+    total_nodes = len(nodes)
+    x = np.linspace(origin[0], origin[0] + scale[0], total_nodes+2)[1:-1]
+    y = np.full(total_nodes, origin[1] + 0.5 * scale[1])
+    positions = np.c_[x, y]
+
+    if reduce_edge_crossings:
+        if not _is_complete(edges):
+            nodes = _reduce_crossings(edges)
+
+    return dict(zip(nodes, positions))
+
+
+@_handle_multiple_components
 def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     """
     Compute the layout for a modular graph.

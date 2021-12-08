@@ -26,6 +26,7 @@ from ._node_layout import (
     get_random_layout,
     get_sugiyama_layout,
     get_circular_layout,
+    get_linear_layout,
     get_community_layout,
     _reduce_node_overlap,
 )
@@ -33,6 +34,7 @@ from ._edge_layout import (
     get_straight_edge_paths,
     _shift_edge,
     get_curved_edge_paths,
+    get_arced_edge_paths,
     get_bundled_edge_paths,
     get_selfloop_paths,
     _get_selfloop_path,
@@ -856,6 +858,7 @@ class BaseGraph(object):
         - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
         - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
         - 'community' : place nodes such that nodes belonging to the same community are grouped together
+        - 'linear'    : place nodes on a line (for arc diagrams)
         If node_layout is a dict, keys are nodes and values are (x, y) positions.
 
     node_layout_kwargs : dict (default None)
@@ -867,6 +870,7 @@ class BaseGraph(object):
         - get_fruchterman_reingold_layout
         - get_sugiyama_layout
         - get_community_layout
+        - get_linear_layout
 
     node_shape : string or dict node : string (default 'o')
        The shape of the node. Specification is as for matplotlib.scatter
@@ -938,6 +942,7 @@ class BaseGraph(object):
         If edge_layout is a string, determine the layout internally:
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
+        - 'arc'      : draw edges as arcs with a fixed curvature
         - 'bundled'  : draw edges as edge bundles
         If edge_layout is a dict, the keys are edges and the
         values are edge paths in the form iterables of (x, y)
@@ -1228,6 +1233,9 @@ class BaseGraph(object):
         elif node_layout == 'circular':
             return get_circular_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'linear':
+            return get_linear_layout(
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':
             return get_sugiyama_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
@@ -1235,7 +1243,7 @@ class BaseGraph(object):
             return get_random_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'dot', 'random', 'circular']
+            implemented = ['spring', 'dot', 'random', 'circular', 'linear']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"
             for method in implemented:
                 msg += f"\n\t{method}"
@@ -1261,6 +1269,10 @@ class BaseGraph(object):
             # edge segments should be much shorter. k hence needs to be smaller.
             k *= 0.1
             edge_layout_kwargs.setdefault('k', k)
+        elif edge_layout == 'arc':
+            edge_layout_kwargs.setdefault('rad', 1.)
+            edge_layout_kwargs.setdefault('origin', origin)
+            edge_layout_kwargs.setdefault('scale', scale)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)
             edge_layout_kwargs.setdefault('total_cycles', 6)
@@ -1394,10 +1406,12 @@ class BaseGraph(object):
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
+        elif edge_layout == 'arc':
+            edge_paths = get_arced_edge_paths(edges, node_positions, **edge_layout_kwargs)
         elif edge_layout == 'bundled':
             edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
         else:
-            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved' or 'bundled', not {edge_layout}")
+            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'arc' or 'bundled', not {edge_layout}")
 
         return edge_paths
 

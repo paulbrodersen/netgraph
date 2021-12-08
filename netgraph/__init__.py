@@ -78,12 +78,14 @@ from ._node_layout import (
     get_fruchterman_reingold_layout,
     get_sugiyama_layout,
     get_circular_layout,
+    get_linear_layout,
     get_community_layout,
 )
 
 from ._edge_layout import (
     get_straight_edge_paths,
     get_curved_edge_paths,
+    get_arced_edge_paths,
     get_bundled_edge_paths,
 )
 
@@ -104,9 +106,11 @@ __all__ = ['draw',
            'get_fruchterman_reingold_layout',
            'get_sugiyama_layout',
            'get_circular_layout',
+           'get_linear_layout',
            'get_community_layout',
            'get_straight_edge_paths',
            'get_curved_edge_paths',
+           'get_arced_edge_paths',
            'get_bundled_edge_paths',
            'Basegraph',
            'Graph',

@@ -31,6 +31,15 @@ def test_circular_layout():
 
 
 @pytest.mark.mpl_image_compare
+def test_linear_layout():
+    # Simple cycles and trees can always be drawn without edge crossings.
+    fig, axes = plt.subplots(1, 2)
+    Graph(cycle, node_layout='linear', node_labels=True, edge_layout='arc', ax=axes[0])
+    Graph(unbalanced_tree, node_layout='linear', node_labels=True, edge_layout='arc', ax=axes[1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_spring_layout():
     fig, axes = plt.subplots(1, 3)
     Graph(triangle, node_layout='spring', ax=axes[0])
