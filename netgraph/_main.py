@@ -2691,8 +2691,91 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
         return x, y, horizontalalignment, verticalalignment
 
 
+class TableOnClick(object):
 
-class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph):
+    def __init__(self, artist_to_table, table_kwargs=None):
+
+        self.artist_to_table = artist_to_table
+        self.table = None
+        self.table_fontsize = None
+        self.table_kwargs = dict(
+            # bbox = [1.1, 0.1, 0.5, 0.8],
+            # edges = 'horizontal',
+        )
+
+        if table_kwargs:
+            if 'fontsize' in table_kwargs:
+                self.table_fontsize = table_kwargs['fontsize']
+            self.table_kwargs.update(table_kwargs)
+
+        try:
+            self.fig, = set(list(artist.figure for artist in artist_to_table))
+        except ValueError:
+            raise Exception("All artists have to be on the same figure!")
+
+        try:
+            self.ax, = set(list(artist.axes for artist in artist_to_table))
+        except ValueError:
+            raise Exception("All artists have to be on the same axis!")
+
+        self.fig.canvas.mpl_connect("button_release_event", self._on_release)
+
+
+    def _on_release(self, event):
+        if event.inaxes == self.ax:
+            for artist in self.artist_to_table:
+                if artist.contains(event)[0]:
+                    if self.table:
+                        self._remove_table()
+                    self._add_table(artist)
+                    self.fig.canvas.draw()
+                    break
+            else:
+                if self.table:
+                    self._remove_table()
+                    self.fig.canvas.draw()
+
+
+    def _add_table(self, artist):
+        df = self.artist_to_table[artist]
+        self.table = self.ax.table(
+            cellText = df.values.tolist(),
+            rowLabels = df.index.values,
+            colLabels = df.columns.values,
+            **self.table_kwargs,
+        )
+
+        if self.table_fontsize:
+            self.table.auto_set_font_size(False)
+            self.table.set_fontsize(self.table_fontsize)
+
+    def _remove_table(self):
+        self.table.remove()
+        self.table = None
+
+
+class TableOnClickGraph(Graph, TableOnClick):
+
+    def __init__(self, *args, **kwargs):
+        Graph.__init__(self, *args, **kwargs)
+
+        artist_to_table = dict()
+        if 'tables' in kwargs:
+            for key, table in kwargs['tables'].items():
+                if key in self.nodes:
+                    artist_to_table[self.node_artists[key]] = table
+                elif key in self.edges:
+                    artist_to_table[self.edge_artists[key]] = table
+                else:
+                    raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
+
+        if 'table_kwargs' in kwargs:
+            TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
+        else:
+            TableOnClick.__init__(self, artist_to_table)
+
+
+class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
     """
     Initializes an interactive Graph instance.
 
@@ -2871,6 +2954,12 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             - backgroundcolor (default here: 'white'),
             - zorder (default here: inf),
 
+    tables : dict node/edge : pandas dataframe
+        Tabular information that can be displayed by clicking on the corresponding node or edge.
+
+    table_kwargs : dict
+        Keyword arguments passed to matplotlib.pyplot.table.
+
     origin : (float x, float y) tuple or None (default (0, 0))
         The lower left hand corner of the bounding box specifying the extent of the canvas.
 
@@ -2944,6 +3033,21 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         else:
             AnnotateOnClick.__init__(self, artist_to_annotation)
 
+        artist_to_table = dict()
+        if 'tables' in kwargs:
+            for key, table in kwargs['tables'].items():
+                if key in self.nodes:
+                    artist_to_table[self.node_artists[key]] = table
+                elif key in self.edges:
+                    artist_to_table[self.edge_artists[key]] = table
+                else:
+                    raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
+
+        if 'table_kwargs' in kwargs:
+            TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
+        else:
+            TableOnClick.__init__(self, artist_to_table)
+
 
     def _on_motion(self, event):
         DraggableGraph._on_motion(self, event)
@@ -2955,6 +3059,8 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             DraggableGraph._on_release(self, event)
             if self.artist_to_annotation:
                 AnnotateOnClickGraph._on_release(self, event)
+            if self.artist_to_table:
+                TableOnClickGraph._on_release(self, event)
         else:
             DraggableGraph._on_release(self, event)
             if self.artist_to_annotation:
