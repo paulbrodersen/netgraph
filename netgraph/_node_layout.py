@@ -207,8 +207,7 @@ def get_fruchterman_reingold_layout(edges,
                                     fixed_nodes         = None,
                                     *args, **kwargs
 ):
-    """
-    Arguments:
+    """Arguments:
     ----------
 
     edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
@@ -245,7 +244,9 @@ def get_fruchterman_reingold_layout(edges,
     node_positions : dict key : (float, float) or None (default None)
         Mapping of nodes to their (initial) x,y positions. If None are given,
         nodes are initially placed randomly within the bounding box defined by `origin`
-        and `scale`.
+        and `scale`. If the graph has multiple components, explicit initial
+        positions may result in a ValueError, if the initial positions fall
+        outside of the area allocated to that specific component.
 
     fixed_nodes : list of nodes (default None)
         Nodes to keep fixed at their initial positions.
@@ -306,11 +307,13 @@ def get_fruchterman_reingold_layout(edges,
         is_valid = _is_within_bbox(list(node_positions.values()), origin=origin, scale=scale)
         if not np.all(is_valid):
             error_message = "Some given node positions are not within the data range specified by `origin` and `scale`!"
-            error_message += "\nOrigin : {}, {}".format(*origin)
-            error_message += "\nScale  : {}, {}".format(*scale)
+            error_message += "\n\tOrigin : {}, {}".format(*origin)
+            error_message += "\n\tScale  : {}, {}".format(*scale)
+            error_message += "\nThe following nodes do not fall within this range:"
             for ii, (node, position) in enumerate(node_positions.items()):
                 if not is_valid[ii]:
-                    error_message += "\n{} : {}".format(node, position)
+                    error_message += "\n\t{} : {}".format(node, position)
+            error_message += "\nThis error can occur if the graph contains multiple components but some or all node positions are initialised explicitly (i.e. node_positions != None)."
             raise ValueError(error_message)
 
         # 2) handle discrepancies in nodes listed in node_positions and nodes extracted from edges
