@@ -8,7 +8,7 @@ def read_file(filename):
 
 setup(
     name='netgraph',
-    version='4.1.0',
+    version='4.1.1',
     description='Python drawing utilities for publication quality plots of networks.',
     long_description=read_file('README.md'),
     long_description_content_type='text/markdown',
