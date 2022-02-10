@@ -149,3 +149,30 @@ def plot_edge(x, y, shape='full'):
     ax.plot(x, y, color='black', alpha=0.1) # plot path for reference
     ax.set_aspect("equal")
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_update_width():
+    x = np.linspace(-1, 1, 1000)
+    y = np.sqrt(1. - x**2)
+    midline = np.c_[x, y]
+    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
+    for ax in axes:
+        arrow = EdgeArtist(midline,
+                           width       = 0.05,
+                           head_width  = 0.1,
+                           head_length = 0.15,
+                           offset      = 0.1,
+                           facecolor   = 'red',
+                           edgecolor   = 'black',
+                           linewidth   = 0.005,
+                           alpha       = 0.5,
+                           shape       = 'full',
+        )
+        ax.add_patch(arrow)
+        ax.set_aspect("equal")
+    arrow.update_width(0.1)
+    fig.canvas.draw()
+    axes[0].set_title('Before')
+    axes[1].set_title('After')
+    return fig

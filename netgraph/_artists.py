@@ -137,6 +137,7 @@ class EdgeArtist(PathPatchDataUnits):
         self._update_path() # sets self._path
         super().__init__(self._path, *args, **kwargs)
 
+
     def _update_path(self):
         # Determine the actual endpoint (and hence midline) of the arrow given the offset;
         # assume an ordered midline from source to target, i.e. from arrow base to arrow head.
@@ -217,6 +218,20 @@ class EdgeArtist(PathPatchDataUnits):
 
         self._path = Path(vertices, codes)
 
+
     def update_midline(self, midline):
         self.midline = midline
+        self._update_path()
+
+
+    def update_width(self, width, arrow=True):
+        """
+        Adjust the edge width. If arrow is True, the arrow head length and
+        width are rescaled by the ratio new width / old width.
+        """
+        if arrow:
+            ratio = width / self.width
+            self.head_length *= ratio
+            self.head_width *= ratio
+        self.width = width
         self._update_path()
