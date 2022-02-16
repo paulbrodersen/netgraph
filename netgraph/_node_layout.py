@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# coding: utf-8
+
 """
 TODO:
 - suppress warnings for divide by zero on diagonal -- masked arrays?
@@ -33,16 +35,15 @@ DEBUG = False
 
 
 def _handle_multiple_components(layout_function):
-    """
-    Most layout algorithms only handle graphs that consist of a giant
+    """Most layout algorithms only handle graphs that consist of a giant
     single component, and fail to find a suitable layout if the graph
     consists of more than component. This decorator wraps a given
     layout function such that if the graph contains more than one
     component, the layout is first applied to each individual
     component, and then the component layouts are combined using
     rectangle packing.
-
     """
+
     @wraps(layout_function)
     def wrapped_layout_function(edges, nodes=None, *args, **kwargs):
 
@@ -68,29 +69,28 @@ def get_layout_for_multiple_components(edges, components, layout_function,
                                        origin = (0, 0),
                                        scale  = (1, 1),
                                        *args, **kwargs):
-    """
-    Determine suitable bounding box dimensions and placement for each
+    """Determine suitable bounding box dimensions and placement for each
     component in the graph, and then compute the layout of each
     individual component given the constraint of the bounding box.
 
-    Arguments:
+    Parameters
     ----------
-    edges : list of (source node, target node) tuples
-        The graph to plot.
-    components : list of sets of node IDs
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    components : list of sets
         The connected components of the graph.
-    layout_function : function handle
+    layout_function : function
         Handle to the function computing the relative positions of each node within a component.
         The args and kwargs are passed through to this function.
-    origin : (float x, float y) 2-tuple (default (0, 0))
-        Bottom left corner of the frame / canvas containing the graph.
-    scale : (float x, float y) 2-tuple (default (1, 1))
-        Width, height of the frame.
+    origin : tuple, default (0, 0)
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1, 1)
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
 
-    Returns:
-    --------
-    node_positions : dict node : (float x, float y)
-        The position of all nodes in the graph.
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
     """
 
@@ -110,29 +110,24 @@ def get_layout_for_multiple_components(edges, components, layout_function,
 
 
 def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
-    """
-    Partition the canvas given by origin and scale into bounding boxes, one for each component.
+    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
 
-    Arguments:
+    Parameters
     ----------
-    components : list of sets of node IDs
-        The unconnected components of the graph.
-    origin : D-tuple or None (default None, which implies (0, 0))
-        Bottom left corner of the frame / canvas containing the graph.
-        If None, it defaults to (0, 0) or the minimum of `node_positions`
-        (whichever is smaller).
-    scale : D-tuple or None (default None, which implies (1, 1)).
-        Width, height, etc of the frame. If None, it defaults to (1, 1) or the
-        maximum distance of nodes in `node_positions` to the `origin`
-        (whichever is greater).
-    power : float (default 0.8)
+    components : list of sets
+        The connected components of the graph.
+    origin : tuple, default (0, 0)
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1, 1)
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    power : float, default 0.8
         The dimensions each bounding box are given by |V|^power by |V|^power,
         where |V| are the total number of nodes.
 
-    Returns:
-    --------
-    bboxes : list of (min x, min y, width height) tuples
-        The bounding box for each component.
+    Returns
+    -------
+    bboxes : list of tuples
+        The (left, bottom, width height) bounding boxes for each component.
     """
 
     relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
@@ -167,12 +162,14 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
 
 
 def _get_bbox_dimensions(n, power=0.5):
+    """Given n nodes, compute appropriately scaled square bbox dimensions."""
     # TODO: factor in the dimensions of the canvas
     # such that the rescaled boxes are approximately square
     return (n**power, n**power)
 
 
 def _rescale_bboxes_to_canvas(bboxes, origin, scale):
+    """Convert relative bbox dimensions to absolute bbox dimensions given the dimensions of the available canvas."""
     lower_left_hand_corners = [(x, y) for (x, y, _, _) in bboxes]
     upper_right_hand_corners = [(x+w, y+h) for (x, y, w, h) in bboxes]
     minimum = np.min(lower_left_hand_corners, axis=0)
@@ -205,57 +202,55 @@ def get_fruchterman_reingold_layout(edges,
                                     node_size           = 0,
                                     node_positions      = None,
                                     fixed_nodes         = None,
-                                    *args, **kwargs
-):
-    """Arguments:
+                                    *args, **kwargs):
+    """Use the Fruchterman-Reingold algorithm [1] to compute node positions.
+
+    This algorithm simulates the graph as a physical system, in which nodes repell each other.
+    For connected nodes, this repulsion is counteracted by an attractive force exerted by the edges, which are simulated as springs.
+    The resulting layout is hence often referred to as a 'spring' layout.
+
+    Parameters
     ----------
-
-    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-    edge_weights : dict edge : float
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    edge_weights : dict
         Mapping of edges to edge weights.
-
-    k : float or None (default None)
+    k : float or None, default None
         Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
-
-    origin : (float x, float y) tuple or None (default None -> (0, 0))
-        The lower left hand corner of the bounding box specifying the extent of the layout.
+    origin : tuple or None, default None
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
         If None is given, the origin is placed at (0, 0).
-
-    scale : (float delta x, float delta y) or None (default None -> (1, 1))
-        The width and height of the bounding box specifying the extent of the layout.
+    scale : tuple or None, default None
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
         If None is given, the scale is set to (1, 1).
-
-    total_iterations : int (default 50)
+    total_iterations : int, default 50
         Number of iterations.
-
-    initial_temperature: float (default 1.)
+    initial_temperature: float, default 1.
         Temperature controls the maximum node displacement on each iteration.
-        Temperature is decreased on each iteration to eventually force the algorithm
-        into a particular solution. The size of the initial temperature determines how
-        quickly that happens. Values should be much smaller than the values of `scale`.
-
-    node_size : scalar or dict key : float (default 0.)
+        Temperature is decreased on each iteration to eventually force the algorithm into a particular solution.
+        The size of the initial temperature determines how quickly that happens.
+        Values should be much smaller than the values of `scale`.
+    node_size : scalar or dict, default 0.
         Size (radius) of nodes.
         Providing the correct node size minimises the overlap of nodes in the graph,
         which can otherwise occur if there are many nodes, or if the nodes differ considerably in size.
-
-    node_positions : dict key : (float, float) or None (default None)
+    node_positions : dict or None, default None
         Mapping of nodes to their (initial) x,y positions. If None are given,
-        nodes are initially placed randomly within the bounding box defined by `origin`
-        and `scale`. If the graph has multiple components, explicit initial
-        positions may result in a ValueError, if the initial positions fall
-        outside of the area allocated to that specific component.
-
-    fixed_nodes : list of nodes (default None)
+        nodes are initially placed randomly within the bounding box defined by `origin` and `scale`.
+        If the graph has multiple components, explicit initial positions may result in a ValueError,
+        if the initial positions fall outside of the area allocated to that specific component.
+    fixed_nodes : list or None, default None
         Nodes to keep fixed at their initial positions.
 
-    Returns:
-    --------
-    node_positions : dict key : (float, float)
-        Mapping of nodes to (x,y) positions
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
+    References
+    ----------
+    .. [1] Fruchterman, TMJ and Reingold, EM (1991) ‘Graph drawing by force‐directed placement’,
+           Software: Practice and Experience
     """
 
     assert len(edges) > 0, "The list of edges has to be non-empty."
@@ -408,12 +403,14 @@ def get_fruchterman_reingold_layout(edges,
 
 
 def _is_within_bbox(points, origin, scale):
+    """Check if each of the given points is within the bounding box given by origin and scale."""
     minima = np.array(origin)
     maxima = minima + np.array(scale)
     return np.all(np.logical_and(points >= minima, points <= maxima), axis=1)
 
 
 def _get_temperature_decay(initial_temperature, total_iterations, mode='quadratic', eps=1e-9):
+    """Compute all temperature values for a given initial temperature and decay model."""
     x = np.linspace(0., 1., total_iterations)
     if mode == 'quadratic':
         y = (x - 1.)**2 + eps
@@ -427,9 +424,7 @@ def _get_temperature_decay(initial_temperature, total_iterations, mode='quadrati
 def _fruchterman_reingold(mobile_positions, fixed_positions,
                           mobile_node_radii, fixed_node_radii,
                           adjacency, temperature, k):
-    """
-    Inner loop of Fruchterman-Reingold layout algorithm.
-    """
+    """Inner loop of Fruchterman-Reingold layout algorithm."""
 
     combined_positions = np.concatenate([mobile_positions, fixed_positions], axis=0)
     combined_node_radii = np.concatenate([mobile_node_radii, fixed_node_radii])
@@ -469,6 +464,7 @@ def _fruchterman_reingold(mobile_positions, fixed_positions,
 
 
 def _get_fr_repulsion(distance, direction, k):
+    """Compute repulsive forces."""
     with np.errstate(divide='ignore', invalid='ignore'):
         magnitude = k**2 / distance
     vectors = direction * magnitude[..., None]
@@ -484,6 +480,7 @@ def _get_fr_repulsion(distance, direction, k):
 
 
 def _get_fr_attraction(distance, direction, adjacency, k):
+    """Compute attractive forces."""
     magnitude = 1./k * distance**2 * adjacency
     vectors = -direction * magnitude[..., None] # NB: the minus!
     for ii in range(vectors.shape[-1]):
@@ -492,6 +489,7 @@ def _get_fr_attraction(distance, direction, adjacency, k):
 
 
 def _rescale_to_frame(node_positions, origin, scale):
+    """Rescale node positions such that all nodes are within the bounding box."""
     node_positions = node_positions.copy() # force copy, as otherwise the `fixed_nodes` argument is effectively ignored
     node_positions -= np.min(node_positions, axis=0)
     node_positions /= np.max(node_positions, axis=0)
@@ -508,26 +506,32 @@ def get_random_layout(edges, origin=(0,0), scale=(1,1)):
 
 @_handle_multiple_components
 def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
-    """
-    Arguments:
+    """Use the Sugiyama algorithm [1] to compute node positions.
+
+    This function is a wrapper around the SugiyamaLayout class in grandalf.
+
+    Parameters
     ----------
-    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    origin : tuple or None, default None
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        If None is given, the origin is placed at (0, 0).
+    scale : tuple or None, default None
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+        If None is given, the scale is set to (1, 1).
+    total_iterations : int, default 50
+        Number of iterations.
 
-    origin : (float x, float y) tuple (default (0, 0))
-        The lower left hand corner of the bounding box specifying the extent of the layout.
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
-    scale : (float width, float height) tuple (default (1, 1))
-        The width and height of the bounding box specifying the extent of the layout.
-
-    total_iterations : int (default 3)
-        Increasing the number of iterations can lead to a reduction in edge crossings.
-
-    Returns:
-    --------
-    node_positions : dict key : (float, float)
-        Mapping of nodes to (x,y) positions
-
+    References
+    ----------
+    .. [1] Sugiyama, K; Tagawa, S; Toda, M (1981) 'Methods for visual understanding of hierarchical system structures',
+           IEEE Transactions on Systems, Man, and Cybernetics
     """
 
     # TODO potentially test that graph is a DAG
@@ -562,6 +566,7 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
 
 
 def _get_grandalf_graph(edges, nodes, node_size):
+    """Construct a grandalf.Graph object from the given edge list, node list, and node sizes."""
     node_to_grandalf_vertex = dict()
     for node in nodes:
         # initialize vertex object
@@ -591,26 +596,29 @@ class vertex_view(object):
 
 @_handle_multiple_components
 def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
-    """
-    Arguments:
+    """Compute a circular node layout.
+
+    By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are minimised.
+
+    Parameters
     ----------
-    edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    reduce_edge_crossings : bool, default True
+        If True, attempts to minimize edge crossings via the algorithm outlined in [1].
 
-    origin : (float x, float y) tuple (default (0, 0))
-        The lower left hand corner of the bounding box specifying the extent of the layout.
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
-    scale : (float width, float height) tuple (default (1, 1))
-        The width and height of the bounding box specifying the extent of the layout.
-
-    reduce_edge_crossings : bool
-        If True, attempts to minimize edge crossings via the algorithm outlined in:
-        Bauer & Brandes (2005) Crossing reduction in circular layouts
-
-    Returns:
-    --------
-    node_positions : dict key : (float, float)
-        Mapping of nodes to (x,y) positions
+    References
+    ----------
+    .. [1] Baur & Brandes (2005) Crossing reduction in circular layouts.
 
     """
     nodes = _get_unique_nodes(edges)
@@ -627,6 +635,7 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
 
 
 def _is_complete(edges):
+    """Check if the graph is fully connected."""
     nodes = _get_unique_nodes(edges)
     minimal_complete_graph = list(combinations(nodes, 2))
 
@@ -641,9 +650,7 @@ def _is_complete(edges):
 
 
 def _reduce_crossings(edges):
-    """
-    Implements Bauer & Brandes (2005) Crossing reduction in circular layouts.
-    """
+    """Implements Baur & Brandes (2005) Crossing reduction in circular layouts."""
     adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
     node_order = _initialize_node_order(adjacency_list)
     node_order = _optimize_node_order(adjacency_list, node_order)
@@ -651,9 +658,7 @@ def _reduce_crossings(edges):
 
 
 def _initialize_node_order(node_to_neighbours):
-    """
-    Implements "Connectivity & Crossings" variant from Bauer & Brandes (2005).
-    """
+    """Implements "Connectivity & Crossings" variant from Baur & Brandes (2005)."""
     nodes = list(node_to_neighbours.keys())
     ordered = nodes[:1]
     remaining = nodes[1:]
@@ -689,6 +694,7 @@ def _initialize_node_order(node_to_neighbours):
 
 
 def _get_total_crossings(node_order, edges1, edges2=None):
+    """Compute the number of crossings for a given node order."""
     if edges2 is None:
         edges2 = edges1
     total_crossings = 0
@@ -698,6 +704,7 @@ def _get_total_crossings(node_order, edges1, edges2=None):
 
 
 def _is_cross(node_order, edge_1, edge_2):
+    """Check if two edges cross, given the node order."""
     (s1, t1), = np.where(np.in1d(node_order, edge_1, assume_unique=True))
     (s2, t2), = np.where(np.in1d(node_order, edge_2, assume_unique=True))
 
@@ -708,9 +715,7 @@ def _is_cross(node_order, edge_1, edge_2):
 
 
 def _optimize_node_order(node_to_neighbours, node_order=None, max_iterations=100):
-    """
-    Implement circular sifting as outlined in Bauer & Brandes (2005).
-    """
+    """Implement circular sifting as outlined in Baur & Brandes (2005)."""
     if node_order is None:
         node_order = list(node_to_neighbours.keys())
     node_order = np.array(node_order)
@@ -756,6 +761,7 @@ def _optimize_node_order(node_to_neighbours, node_order=None, max_iterations=100
 
 
 def _swap_values(arr, value_1, value_2):
+    """Swap all occurrences of two values in a given array."""
     arr = arr.copy()
     is_value_1 = arr == value_1
     is_value_2 = arr == value_2
@@ -765,8 +771,7 @@ def _swap_values(arr, value_1, value_2):
 
 
 def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.1, total_iterations=10):
-    """Use a constrained version of Lloyds algorithm to move nodes apart from each other.
-    """
+    """Use a constrained version of Lloyds algorithm to move nodes apart from each other."""
     # TODO use node radius to check for node overlaps; terminate once all overlaps are removed
 
     unique_nodes = list(node_positions.keys())
@@ -790,6 +795,7 @@ def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.
 
 
 def _get_voronoi_centroids(positions):
+    """Construct a Voronoi diagram from the given node positions and determine the center of each cell."""
     voronoi = Voronoi(positions)
     centroids = np.zeros_like(positions)
     for ii, idx in enumerate(voronoi.point_region):
@@ -799,6 +805,7 @@ def _get_voronoi_centroids(positions):
 
 
 def _clip_to_frame(positions, origin, scale):
+    """Prevent node positions from leaving the bounding box given by origin and scale."""
     origin = np.array(origin)
     scale = np.array(scale)
     for ii, (minimum, maximum) in enumerate(zip(origin, origin+scale)):
@@ -807,6 +814,7 @@ def _clip_to_frame(positions, origin, scale):
 
 
 def _get_centroid(polygon):
+    """Compute the centroid of a polygon."""
     # TODO: formula may be incorrect; correct one here:
     # https://en.wikipedia.org/wiki/Centroid#Of_a_polygon
     return np.mean(polygon, axis=0)
@@ -814,22 +822,32 @@ def _get_centroid(polygon):
 
 @_handle_multiple_components
 def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
-    """
-    Compute the layout for a modular graph.
+    """Compute the node positions for a modular graph.
 
-    Arguments:
+    This implements the following steps:
+    1. Position the communities with respect to each other:
+       Create a new, weighted graph, where each node corresponds to a community,
+       and the weights correspond to the number of edges between communities.
+       Determine the centroid of each community using the FR algorithm, i.e. a spring layout.
+    2. Position the nodes within each community:
+       For each community, create a new graph. Find a layout for the subgraph.
+    3. Combine positions computed in in 1) and 3).
+
+    Parameters
     ----------
-    edges -- list of (source node ID, target node ID) 2-tuples
-        The graph
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    node_to_community : dict
+        The network partition, which maps each node ID to a community ID.
+    origin : tuple, default (0, 0)
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1, 1)
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
 
-    node_to_community -- dict mapping node -> community
-        Network partition, i.e. a mapping from node ID to a group ID.
-
-    Returns:
-    --------
-    pos -- dict mapping int node -> (float x, float y)
-        node positions
-
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
     """
 
     # assert that there multiple communities in the graph; otherwise abort
@@ -858,6 +876,7 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
 
 
 def _get_community_sizes(node_to_community, scale):
+    """Compute the area of the canvas reserved for each community."""
     total_nodes = len(node_to_community)
     max_radius = np.linalg.norm(scale) / 2
     scalar = max_radius / total_nodes
@@ -867,7 +886,7 @@ def _get_community_sizes(node_to_community, scale):
 
 
 def _get_community_positions(edges, node_to_community, community_size, origin, scale):
-
+    """Compute a centroid position for each community."""
     # create a weighted graph, in which each node corresponds to a community,
     # and each edge weight to the number of edges between communities
     between_community_edges = _find_between_community_edges(edges, node_to_community)
@@ -880,7 +899,7 @@ def _get_community_positions(edges, node_to_community, community_size, origin, s
 
 
 def _find_between_community_edges(edges, node_to_community):
-
+    """Convert the graph into a weighted network of communities."""
     between_community_edges = dict()
 
     for (ni, nj) in edges:
@@ -900,9 +919,7 @@ def _find_between_community_edges(edges, node_to_community):
 
 
 def _get_node_positions(edges, node_to_community):
-    """
-    Positions nodes within communities.
-    """
+    """Positions nodes within communities."""
     community_to_nodes = _invert_dict(node_to_community)
     node_positions = dict()
     for nodes in community_to_nodes.values():

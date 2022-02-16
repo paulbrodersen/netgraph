@@ -18,7 +18,23 @@ from ._utils import (
 
 
 class PathPatchDataUnits(PathPatch):
-    # adapted from https://stackoverflow.com/a/42972469/2912349
+    """PathPatch in which the linewidth is also given in data units.
+
+    Parameters
+    ----------
+    *args, **kwargs
+        All arguments are passed through to PathPatch.
+
+    Notes
+    -----
+    Adapted from [1].
+
+    References
+    ----------
+    .. [1] https://stackoverflow.com/a/42972469/2912349
+
+    """
+
     def __init__(self, *args, **kwargs):
         _lw_data = kwargs.pop("linewidth", 1)
         super().__init__(*args, **kwargs)
@@ -40,9 +56,8 @@ class PathPatchDataUnits(PathPatch):
 
 
 class NodeArtist(PathPatchDataUnits):
+        """Implements the node artists class.
 
-    def __init__(self, shape, xy, radius, **kwargs):
-        """
         Parameters
         ----------
         shape : string
@@ -55,7 +70,10 @@ class NodeArtist(PathPatchDataUnits):
         **kwargs
             `Patch` properties:
             %(Patch_kwdoc)s
+
         """
+
+    def __init__(self, shape, xy, radius, **kwargs):
         self.shape = shape
         self.xy = xy
         self.radius = radius
@@ -115,7 +133,29 @@ class NodeArtist(PathPatchDataUnits):
 
 
 class EdgeArtist(PathPatchDataUnits):
+    """Implements the edge artist class.
 
+    Parameters
+    ----------
+    midline : ndarray
+        Array of (float x, float y) coordinates denoting the edge route.
+    width : float, default 0.05
+        The width of the edge (if shape is 'full').
+    head_width : float, default 0.10
+        Width of the arrow head.
+        Set to a value close to zero (but not zero) to suppress drawing of arrowheads.
+    head_length : float, default 0.15
+        Length of the arrow head.
+        Set to a value close to zero (but not zero) to suppress drawing of arrowheads.
+    offset : float, default 0.
+        For non-zero offset values, the end of the edge is offset from the target node.
+        The distance is calculated along the midline.
+    shape : {'full', 'left', 'right'}, default 'full'
+        The shape of the arrow.
+        For shapes 'left' and 'right' the arrow only one half of the arrow is plotted.
+    curved : bool, default False
+        Indicates if the midline is straight (False) or curved (True).
+    """
     def __init__(self, midline,
                  width       = 0.05,
                  head_width  = 0.10,
@@ -218,5 +258,6 @@ class EdgeArtist(PathPatchDataUnits):
         self._path = Path(vertices, codes)
 
     def update_midline(self, midline):
+        """Update the midline and recompute the edge path."""
         self.midline = midline
         self._update_path()

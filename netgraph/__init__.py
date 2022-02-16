@@ -24,12 +24,12 @@
 Netgraph
 ========
 
-Summary:
---------
+Summary
+-------
 
 Python drawing utilities for publication quality plots of networks.
 
-Example:
+Examples
 --------
 
 import numpy as np

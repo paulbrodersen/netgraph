@@ -180,21 +180,19 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
         2) values above and below the midpoint are mapped linearly and in equal measure
            to increases in color intensity.
 
-    Arguments:
+    Parameters
     ----------
-    mydict: dict key : float
+    mydict: dict
         Mapping of graph element (node, edge) to a float.
         For example (source, target) : edge weight.
-
-    cmap: str
+    cmap: str, default 'RdGy'
         Matplotlib colormap specification.
-
-    vmin, vmax: float
+    vmin, vmax: float or None, default None
         Minimum and maximum float corresponding to the dynamic range of the colormap.
 
     Returns:
     --------
-    newdict: dict key : (float, float, float, float)
+    newdict: dict
         Mapping of graph element to RGBA tuple.
 
     """
@@ -231,8 +229,7 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
 
 
 def _get_zorder(color_dict):
-    """
-    Reorder plot elements such that darker items are plotted last and hence most prominent in the graph.
+    """Reorder plot elements such that darker items are plotted last and hence most prominent in the graph.
     This assumes that the background is white.
     """
     intensities = [rgba_to_grayscale(*v) for v in color_dict.values()]
@@ -242,19 +239,22 @@ def _get_zorder(color_dict):
 
 
 def rgba_to_grayscale(r, g, b, a=1):
-    # https://stackoverflow.com/a/689547/2912349
+    """Convert RGBA values to grayscale.
+
+    Notes
+    -----
+    Adapted from: https://stackoverflow.com/a/689547/2912349
+    """
+
     return (0.299 * r + 0.587 * g + 0.114 * b) * a
 
 
 def _get_font_size(ax, node_labels, **kwargs):
-    """
-    Determine the maximum font size that results in labels that still all fit inside the node artist.
-
-    TODO:
-    -----
-    - add font / fontfamily as optional argument
-    - potentially, return a dictionary of font sizes instead; then rescale font sizes individually on a per node basis
-    """
+    """Determine the maximum font size that results in labels that still all fit inside the node artist."""
+    # TODO:
+    # -----
+    # - add font / fontfamily as optional argument
+    # - potentially, return a dictionary of font sizes instead; then rescale font sizes individually on a per node basis
 
     # check if there are relevant parameters in kwargs:
     #   - node size,
@@ -838,73 +838,72 @@ def _add_doc(value):
 
 
 class BaseGraph(object):
-    """The Graph base class.
+    f"""The Graph base class.
 
-    Arguments
+    Parameters
     ----------
-    edges : list of (source node, target node) 2-tuples
-        List of edges.
-
-    nodes : list of node IDs or None (default None)
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
         If None, `nodes` is initialised to the set of the flattened `edges`.
-
-    node_layout : str or dict node : (float x, float y) (default 'spring')
-        If node_layout is a string, the node positions are computed using
-        the indicated method:
+    node_layout : str or dict, default 'spring'
+        If `node_layout` is a string, the node positions are computed using the indicated method:
         - 'random'    : place nodes in random positions;
         - 'circular'  : place nodes regularly spaced on a circle;
         - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
         - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
         - 'community' : place nodes such that nodes belonging to the same community are grouped together
-        If node_layout is a dict, keys are nodes and values are (x, y) positions.
-
-    node_layout_kwargs : dict (default None)
+        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+    node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_random_layout
         - get_circular_layout
         - get_fruchterman_reingold_layout
         - get_sugiyama_layout
         - get_community_layout
-
-    node_shape : string or dict node : string (default 'o')
-       The shape of the node. Specification is as for matplotlib.scatter
-       marker, i.e. one of 'so^>v<dph8'.
-       If a single string is provided all nodes will have the same shape.
-
-    node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_edge_width : scalar or dict node : float (default 0.5)
-       Line width of node marker border.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_color : matplotlib color specification or dict node : color (default 'w')
-       Node color.
-
-    node_edge_color : matplotlib color specification or dict node : color (default DEFAULT_COLOR)
-       Node edge color.
-
-    node_alpha : scalar or dict node : float (default 1.)
-       The node transparency.
-
-    node_zorder : scalar or dict node : float (default 2)
-       Order in which to plot the nodes.
-
-    node_labels : bool or dict node : str (default False)
-       If True, the nodes are labelled with their node IDs.
-       If the node labels are supposed to be distinct from the node IDs,
-       supply a dictionary mapping nodes to node labels.
-       Only nodes in the dictionary are labelled.
-
-    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+    node_shape : str or dict, default 'o'
+        Node shape.
+        If the type is str, all nodes have the same shape.
+        If the type is dict, maps each node to an individual string representing the shape.
+        The string specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+    node_size : float or dict, default 3.
+        Node size (radius).
+        If the type is float, all nodes will have the same size.
+        If the type is dict, maps each node to an individual size.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_edge_width : float or dict, default 0.5
+        Line width of node marker border.
+        If the type is float, all nodes have the same line width.
+        If the type is dict, maps each node to an individual line width.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_color : matplotlib color specification or dict, default 'w'
+        Node color.
+        If the type is a string or RGBA array, all nodes have the same color.
+        If the type is dict, maps each node to an individual color.
+    node_edge_color : matplotlib color specification or dict, default {DEFAULT_COLOR}
+        Node edge color.
+        If the type is a string or RGBA array, all nodes have the same edge color.
+        If the type is dict, maps each node to an individual edge color.
+    node_alpha : scalar or dict, default 1.
+        Node transparency.
+        If the type is a float, all nodes have the same transparency.
+        If the type is dict, maps each node to an individual transparency.
+    node_zorder : int or dict, default 2
+        Order in which to plot the nodes.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
+    node_labels : bool or dict, (default False)
+        If False, the nodes are unlabelled.
+        If True, the nodes are labelled with their node IDs.
+        If the node labels are to be distinct from the node IDs, supply a dictionary mapping nodes to node labels.
+        Only nodes in the dictionary are labelled.
+    node_label_offset: float or tuple, default (0., 0.)
         A (dx, dy) tuple specifies the exact offset from the node position.
-        If a scalar delta is specified, the value is interpreted as a distance, and
-        the label is placed delta away from the node position while trying to
+        If a single scalar delta is specified, the value is interpreted as a distance,
+        and the label is placed delta away from the node position while trying to
         reduce node/label, node/edge, and label/label overlaps.
-
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -914,59 +913,53 @@ class BaseGraph(object):
             - verticalalignment (default here: 'center')
             - clip_on (default here: False)
             - zorder (default here: inf)
-
-    edge_width : float or dict (source, target) : width (default 1.)
-        Line width of edges.
+    edge_width : float or dict, default 1.
+        Width of edges.
+        If the type is a float, all edges have the same width.
+        If the type is dict, maps each edge to an individual width.
         NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    edge_color : matplotlib color specification or dict (source, target) : color (default DEFAULT_COLOR)
-       Edge color.
-
-    edge_alpha : float or dict (source, target) : float (default 1.)
+    edge_color : matplotlib color specification or dict, default {DEFAULT_COLOR}
+        Edge color.
+        If the type is a string or RGBA array, all edges have the same color.
+        If the type is dict, maps each edge to an individual color.
+    edge_alpha : float or dict, default 1.
         The edge transparency,
-
-    edge_zorder : int or dict (source, target) : int (default 1)
+        If the type is a float, all edges have the same transparency.
+        If the type is dict, maps each edge to an individual transparency.
+    edge_zorder : int or dict, default 1
         Order in which to plot the edges.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
         If None, the edges will be plotted in the order they appear in 'adjacency'.
-        Note: graphs typically appear more visually pleasing if darker edges
-        are plotted on top of lighter edges.
-
-    arrows : bool, optional (default False)
+        Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
+    arrows : bool, default False
         If True, draw edges with arrow heads.
-
-    edge_layout : str or dict edge : segments (default 'straight')
+    edge_layout : str or dict (default 'straight')
         If edge_layout is a string, determine the layout internally:
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
         - 'bundled'  : draw edges as edge bundles
-        If edge_layout is a dict, the keys are edges and the
-        values are edge paths in the form iterables of (x, y)
-        tuples, the edge segments.
-
-    edge_layout_kwargs : dict (default None)
+        If edge_layout is a dict, the keys are edges and the values are edge paths
+        in the form iterables of (x, y) tuples, the edge segments.
+    edge_layout_kwargs : dict, default None
         Keyword arguments passed to edge layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_straight_edge_paths
         - get_curved_edge_paths
         - get_bundled_edge_paths
-
-    edge_labels : bool or dict edge : str
+    edge_labels : bool or dict, default False
+        If False, the edges are unlabelled.
         If True, the edges are labelled with their edge IDs.
-        If the edge labels are supposed to be distinct from the edge IDs,
-        supply a dictionary mapping edges to edge labels.
+        If the edge labels are to be distinct from the edge IDs, supply a dictionary mapping edges to edge labels.
         Only edges in the dictionary are labelled.
-
-    edge_label_position : float
+    edge_label_position : float, default 0.5
         Relative position along the edge where the label is placed.
             head   : 0.
-            centre : 0.5 (default)
+            centre : 0.5
             tail   : 1.
-
-    edge_label_rotate : bool (default True)
-        If True, edge labels are rotated such that they track the orientation of their edges.
+    edge_label_rotate : bool, default True
+        If True, edge labels are rotated such that they have the same orientation as their edge.
         If False, edge labels are not rotated; the angle of the text is parallel to the axis.
-
     edge_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -977,38 +970,32 @@ class BaseGraph(object):
             - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
             - zorder (default here: inf),
             - rotation (determined by edge_label_rotate argument)
-
-    origin : (float x, float y) tuple or None (default (0, 0))
+    origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
-
-    scale : (float delta x, float delta y) or None (default (1, 1))
+    scale : tuple, default (1., 1.)
         The width and height of the bounding box specifying the extent of the canvas.
-
-    prettify : bool (default True)
+    prettify : bool, default True
         If True, despine and remove ticks and tick labels.
         Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-    ax : matplotlib.axis instance or None (default None)
-       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-
-    Attributes:
-    -----------
-    node_artists : dict node : NodeArtist instance
-        The node artists.
-
-    edge_artists : dict edge : EdgeArtist instance
-        The edge artists.
-
-    node_label_artists : dict node : matplotlib.Text
-        The node label text objects (if applicable).
-
-    edge_label_artists : dict edge : matplotlib.Text
-        The edge label text objects (if applicable).
-
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
     node_positions : dict node : (x, y) tuple
-        The node positions.
+        Mapping of node IDs to node positions.
 
+    See also
+    --------
+    Graph, InteractiveGraph
     """
 
     def __init__(self, edges,
@@ -1296,43 +1283,34 @@ class BaseGraph(object):
     def draw_nodes(self, nodes, node_positions, node_shape, node_size,
                    node_edge_width, node_color, node_edge_color, node_alpha,
                    node_zorder):
-        """
-        Draw node markers at specified positions.
+        """Draw or update node artists.
 
-        Arguments
+        Parameters
         ----------
         nodes : list
-            List of node IDs.
-
-        node_positions : dict node : (float, float)
+            List of nodes IDs.
+        node_positions : dict
             Mapping of nodes to (x, y) positions.
+        node_shape : dict
+            Mapping of nodes to shapes.
+            Specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+        node_size : dict
+            Mapping of nodes to sizes.
+        node_edge_width : dict
+            Mapping of nodes to marker edge widths.
+        node_color : dict
+            Mapping of nodes to valid matplotlib color specifications.
+        node_edge_color : dict
+            Mapping of nodes to valid matplotlib color specifications.
+        node_alpha : dict
+            Mapping of nodes to node transparencies.
+        node_zorder : dict
+            Mapping of nodes to z-orders.
 
-        node_shape : dict node : string
-           The shape of the node. Specification is as for matplotlib.scatter
-           marker, i.e. one of 'so^>v<dph8'.
-
-        node_size : dict node : float
-           Size (radius) of nodes.
-
-        node_edge_width : dict node : float
-           Line width of node marker border.
-
-        node_color : dict node : matplotlib color specification
-           Node color.
-
-        node_edge_color : dict node : matplotlib color specification
-           Node edge color.
-
-        node_alpha : dict node : float
-           The node transparency.
-
-        node_zorder : dict node : int
-            The z-order of nodes.
-
-        Updates
+        Returns
         -------
-        node_artists: dict node : artist
-            Mapping of nodes to the node artists.
+        node_artists: dict
+            Updates mapping of nodes to corresponding node artists.
 
         """
         for node in nodes:
@@ -1357,33 +1335,29 @@ class BaseGraph(object):
 
 
     def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
-        """
-        Arguments
+        """Compute the edge routing.
+
+        Parameters
         ----------
-        edges : m-long iterable of 2-tuples or equivalent (such as (m, 2) ndarray)
-            List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-        node_positions : dict node : (float, float)
-            Mapping of nodes to (x,y) positions
-
+        edges : list
+            The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+        node_positions : dict
+            Mapping of nodes to (x, y) positions
         edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
             If 'straight', draw edges as straight lines.
-            If 'curved', draw edges as curved splines. The spline control points
-            are optimised to avoid other nodes and edges.
+            If 'curved', draw edges as curved splines. The spline control points are optimised to avoid other nodes and edges.
             If 'bundled', draw edges as edge bundles.
-
         edge_layout_kwargs : dict
             Keyword arguments passed to edge layout functions.
-            See the documentation of the following functions for a full list of
-            available options:
+            See the documentation of the following functions for a full list of available options:
             - get_straight_edge_paths
             - get_curved_edge_paths
             - get_bundled_edge_paths
 
-        Returns:
-        --------
-        edge_paths : dict edge : path
-            Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
+        Returns
+        -------
+        edge_paths : dict
+            Mapping of edges to arrays of (x, y) tuples, the edge path coordinates.
 
         """
 
@@ -1404,38 +1378,29 @@ class BaseGraph(object):
 
     def draw_edges(self, edge_path, edge_width, edge_color, edge_alpha,
                    edge_zorder, arrows, node_size):
-        """
-        Draw the edges of the network.
+        """Draw or update edge artists.
 
-        Arguments
+        Parameters
         ----------
-        edge_path : dict edge : path
-            Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
-
-        edge_width : dict edge : width
-            Line width of edges.
-
-        edge_color :  dict edge : matplotlib color specification
-           Edge color.
-
-        edge_alpha : dict edge : float
-            The edge transparency,
-
-        edge_zorder : dict edge : int
-            Order in which to plot the edges.
-            Hint: graphs typically appear more visually pleasing if darker edges
-            are plotted on top of lighter edges.
-
+        edge_path : dict
+            Mapping of edges to arrays of (x, y) tuples, the edge path coordinates.
+        edge_width : dict
+            Mapping of edges to floats, the edge widths.
+        edge_color : dict
+            Mapping of edges to valid matplotlib color specifications, the edge colors.
+        edge_alpha : dict
+            Mapping of edges to floats, the edge transparencies.
+        edge_zorder : dict
+            Mapping of edges to ints, the edge z-order values.
         arrows : bool
-            If True, draws edges with arrow heads.
+            If True, draw edges with arrow heads.
+        node_size : dict
+            Mapping of nodes to node sizes. Required to offset edges from nodes.
 
-        node_size : dict node : float
-            Size (radius) of nodes. Required to offset edges from nodes.
-
-        Updates
+        Returns
         -------
-        self.edge_artists: dict (source, target) : artist
-            Mapping of edges to EdgeArtists.
+        self.edge_artists: dict
+            Updates mapping of edges to corresponding edge artists.
 
         """
 
@@ -1613,13 +1578,10 @@ class BaseGraph(object):
 
 
     def _get_font_size(self, node_labels, node_label_fontdict):
-        """
-        Determine the maximum font size such that all labels fit inside their node artist.
-
-        TODO:
-        -----
-        - potentially rescale font sizes individually on a per node basis
-        """
+        """Determine the maximum font size such that all labels fit inside their node artist."""
+        # TODO:
+        # -----
+        # - potentially rescale font sizes individually on a per node basis
 
         rescale_factor = np.inf
         for node, label in node_labels.items():
@@ -1636,18 +1598,15 @@ class BaseGraph(object):
 
 
     def draw_node_labels(self, node_labels, node_label_fontdict):
-        """
-        Draw node labels.
+        """Draw or update node labels.
 
-        Arguments
-        ---------
-        node_labels : dict key : str
-           Mapping of nodes to labels.
+        Parameters
+        ----------
+        node_labels : dict
+           Mapping of nodes to strings, the node labels.
            Only nodes in the dictionary are labelled.
-
-        node_label_offset: 2-tuple or equivalent iterable (default (0., 0.))
-            (x, y) offset from node centre of label position.
-
+        node_label_offset: tuple, default (0., 0.)
+            The (x, y) offset from node centre of label position.
         node_label_fontdict : dict
             Keyword arguments passed to matplotlib.text.Text.
             For a full list of available arguments see the matplotlib documentation.
@@ -1657,10 +1616,10 @@ class BaseGraph(object):
                 - verticalalignment (default here: 'center')
                 - clip_on (default here: False)
 
-        Updates:
-        --------
+        Returns
+        -------
         self.node_label_artists: dict
-            Dictionary mapping nodes to text objects.
+            Updates mapping of nodes to text objects, the node label artists.
 
         """
 
@@ -1766,32 +1725,28 @@ class BaseGraph(object):
 
     def draw_edge_labels(self, edge_labels, edge_label_position,
                          edge_label_rotate, edge_label_fontdict):
-        """
-        Draw edge labels.
+        """Draw or update edge labels.
 
-        Arguments
-        ---------
-        edge_labels : dict edge : str
-            Mapping of edges to edge labels.
+        Parameters
+        ----------
+        edge_labels : dict
+            Mapping of edges to strings, the edge labels.
             Only edges in the dictionary are labelled.
-
         edge_label_position : float
             Relative position along the edge where the label is placed.
                 head   : 0.
-                centre : 0.5 (default)
+                centre : 0.5
                 tail   : 1.
-
         edge_label_rotate : bool
-            If True, edge labels are rotated such that they track the orientation of their edges.
+            If True, edge labels are rotated such that they have the same orientation as their corresponding edge.
             If False, edge labels are not rotated; the angle of the text is parallel to the axis.
-
         edge_label_fontdict : dict
             Keyword arguments passed to matplotlib.text.Text.
 
-        Updates
+        Returns
         -------
-        self.edge_label_artists: dict edge : text object
-            Mapping of edges to edge label artists.
+        self.edge_label_artists: dict
+            Updates mapping of edges to text objects, the edge label artists.
 
         """
 
@@ -1894,82 +1849,79 @@ class BaseGraph(object):
 
 
 class Graph(BaseGraph):
-    """
-    Parses the given graph and initialises the BaseGraph object.
-    If the given graph includes edge weights, then these are mapped to
-    colors using the `edge_cmap` parameter.
+    """Parses the given graph and initialises the BaseGraph object.
+    If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
 
-    Arguments:
+    Parameters
     ----------
     graph: various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
         - Edge list:
             Iterable of (source, target) or (source, target, weight) tuples,
-            or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+            or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
         - Adjacency matrix:
-            Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+            Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
             The absence of a connection is indicated by a zero.
-            Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
+            **Note that if V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
         - networkx.Graph or igraph.Graph object
-
-    node_layout : str or dict node : (float x, float y) (default 'spring')
-        If node_layout is a string, the node positions are computed using
-        the indicated method:
+    node_layout : str or dict, default 'spring'
+        If `node_layout` is a string, the node positions are computed using the indicated method:
         - 'random'    : place nodes in random positions;
         - 'circular'  : place nodes regularly spaced on a circle;
         - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
         - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
         - 'community' : place nodes such that nodes belonging to the same community are grouped together
-        If node_layout is a dict, keys are nodes and values are (x, y) positions.
-
-    node_layout_kwargs : dict (default None)
+        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+    node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_random_layout
         - get_circular_layout
         - get_fruchterman_reingold_layout
         - get_sugiyama_layout
         - get_community_layout
-
-    node_shape : string or dict node : string (default 'o')
-       The shape of the node. Specification is as for matplotlib.scatter
-       marker, i.e. one of 'so^>v<dph8'.
-       If a single string is provided all nodes will have the same shape.
-
-    node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_edge_width : scalar or dict node : float (default 0.5)
-       Line width of node marker border.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_color : matplotlib color specification or dict node : color (default 'w')
-       Node color.
-
-    node_edge_color : matplotlib color specification or dict node : color (default DEFAULT_COLOR)
-       Node edge color.
-
-    node_alpha : scalar or dict node : float (default 1.)
-       The node transparency.
-
-    node_zorder : scalar or dict node : float (default 2)
-       Order in which to plot the nodes.
-
-    node_labels : bool or dict node : str (default False)
-       If True, the nodes are labelled with their node IDs.
-       If the node labels are supposed to be distinct from the node IDs,
-       supply a dictionary mapping nodes to node labels.
-       Only nodes in the dictionary are labelled.
-
-    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+    node_shape : str or dict, default 'o'
+        Node shape.
+        If the type is str, all nodes have the same shape.
+        If the type is dict, maps each node to an individual string representing the shape.
+        The string specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+    node_size : float or dict, default 3.
+        Node size (radius).
+        If the type is float, all nodes will have the same size.
+        If the type is dict, maps each node to an individual size.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_edge_width : float or dict, default 0.5
+        Line width of node marker border.
+        If the type is float, all nodes have the same line width.
+        If the type is dict, maps each node to an individual line width.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_color : matplotlib color specification or dict, default 'w'
+        Node color.
+        If the type is a string or RGBA array, all nodes have the same color.
+        If the type is dict, maps each node to an individual color.
+    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+        Node edge color.
+        If the type is a string or RGBA array, all nodes have the same edge color.
+        If the type is dict, maps each node to an individual edge color.
+    node_alpha : scalar or dict, default 1.
+        Node transparency.
+        If the type is a float, all nodes have the same transparency.
+        If the type is dict, maps each node to an individual transparency.
+    node_zorder : int or dict, default 2
+        Order in which to plot the nodes.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
+    node_labels : bool or dict, (default False)
+        If False, the nodes are unlabelled.
+        If True, the nodes are labelled with their node IDs.
+        If the node labels are to be distinct from the node IDs, supply a dictionary mapping nodes to node labels.
+        Only nodes in the dictionary are labelled.
+    node_label_offset: float or tuple, default (0., 0.)
         A (dx, dy) tuple specifies the exact offset from the node position.
-        If a scalar delta is specified, the value is interpreted as a distance, and
-        the label is placed delta away from the node position while trying to
+        If a single scalar delta is specified, the value is interpreted as a distance,
+        and the label is placed delta away from the node position while trying to
         reduce node/label, node/edge, and label/label overlaps.
-
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -1979,12 +1931,12 @@ class Graph(BaseGraph):
             - verticalalignment (default here: 'center')
             - clip_on (default here: False)
             - zorder (default here: inf)
-
-    edge_width : float or dict (source, target) : width (default 1.)
-        Line width of edges.
+    edge_width : float or dict, default 1.
+        Width of edges.
+        If the type is a float, all edges have the same width.
+        If the type is dict, maps each edge to an individual width.
         NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    edge_cmap : matplotlib color map (default RdGy)
+    edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
         If edge weights are strictly positive, weights are mapped to the
         left hand side of the color map with vmin=0 and vmax=np.max(weights).
@@ -1993,55 +1945,48 @@ class Graph(BaseGraph):
         color map; the boundaries are set to +/- the maximum absolute weight.
         If the graph is unweighted or the edge colors are specified explicitly,
         this parameter is ignored.
-
-    edge_color : matplotlib color specification or dict (source, target) : color (default DEFAULT_COLOR)
-       Edge color. Takes precent over edge_cmap.
-
-    edge_alpha : float or dict (source, target) : float (default 1.)
+    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+        Edge color. If provided explicitly, overrides `edge_cmap`.
+        If the type is a string or RGBA array, all edges have the same color.
+        If the type is dict, maps each edge to an individual color.
+    edge_alpha : float or dict, default 1.
         The edge transparency,
-
-    edge_zorder : int or dict (source, target) : int (default 1)
+        If the type is a float, all edges have the same transparency.
+        If the type is dict, maps each edge to an individual transparency.
+    edge_zorder : int or dict, default 1
         Order in which to plot the edges.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
         If None, the edges will be plotted in the order they appear in 'adjacency'.
-        Note: graphs typically appear more visually pleasing if darker edges
-        are plotted on top of lighter edges.
-
-    arrows : bool, optional (default False)
+        Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
+    arrows : bool, default False
         If True, draw edges with arrow heads.
-
-    edge_layout : str or dict edge : segments (default 'straight')
+    edge_layout : str or dict (default 'straight')
         If edge_layout is a string, determine the layout internally:
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
         - 'bundled'  : draw edges as edge bundles
-        If edge_layout is a dict, the keys are edges and the
-        values are edge paths in the form iterables of (x, y)
-        tuples, the edge segments.
-
-    edge_layout_kwargs : dict (default None)
+        If edge_layout is a dict, the keys are edges and the values are edge paths
+        in the form iterables of (x, y) tuples, the edge segments.
+    edge_layout_kwargs : dict, default None
         Keyword arguments passed to edge layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_straight_edge_paths
         - get_curved_edge_paths
         - get_bundled_edge_paths
-
-    edge_labels : bool or dict edge : str
+    edge_labels : bool or dict, default False
+        If False, the edges are unlabelled.
         If True, the edges are labelled with their edge IDs.
-        If the edge labels are supposed to be distinct from the edge IDs,
-        supply a dictionary mapping edges to edge labels.
+        If the edge labels are to be distinct from the edge IDs, supply a dictionary mapping edges to edge labels.
         Only edges in the dictionary are labelled.
-
-    edge_label_position : float
+    edge_label_position : float, default 0.5
         Relative position along the edge where the label is placed.
             head   : 0.
-            centre : 0.5 (default)
+            centre : 0.5
             tail   : 1.
-
-    edge_label_rotate : bool (default True)
-        If True, edge labels are rotated such that they track the orientation of their edges.
+    edge_label_rotate : bool, default True
+        If True, edge labels are rotated such that they have the same orientation as their edge.
         If False, edge labels are not rotated; the angle of the text is parallel to the axis.
-
     edge_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -2052,38 +1997,32 @@ class Graph(BaseGraph):
             - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
             - zorder (default here: inf),
             - rotation (determined by edge_label_rotate argument)
-
-    origin : (float x, float y) tuple or None (default (0, 0))
+    origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
-
-    scale : (float delta x, float delta y) or None (default (1, 1))
+    scale : tuple, default (1., 1.)
         The width and height of the bounding box specifying the extent of the canvas.
-
-    prettify : bool (default True)
+    prettify : bool, default True
         If True, despine and remove ticks and tick labels.
         Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-    ax : matplotlib.axis instance or None (default None)
-       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-
-    Attributes:
-    -----------
-    node_artists : dict node : NodeArtist instance
-        The node artists.
-
-    edge_artists : dict edge : EdgeArtist instance
-        The edge artists.
-
-    node_label_artists : dict node : matplotlib.Text
-        The node label text objects (if applicable).
-
-    edge_label_artists : dict edge : matplotlib.Text
-        The edge label text objects (if applicable).
-
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
     node_positions : dict node : (x, y) tuple
-        The node positions.
+        Mapping of node IDs to node positions.
 
+    See also
+    --------
+    BaseGraph, InteractiveGraph
     """
 
     def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
@@ -2118,8 +2057,7 @@ class ClickableArtists(object):
 
     Notes:
     ------
-    Methods adapted with some modifications from:
-    https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+    Adapted from: https://stackoverflow.com/a/47312637/2912349
     """
     def __init__(self, artists):
 
@@ -2207,8 +2145,7 @@ class SelectableArtists(ClickableArtists):
 
     Notes:
     ------
-    Methods adapted with some modifications from:
-    https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+    Adapted from: https://stackoverflow.com/a/47312637/2912349
     """
     def __init__(self, artists):
         super().__init__(artists)
@@ -2305,8 +2242,7 @@ class DraggableArtists(SelectableArtists):
 
     Notes:
     ------
-    Methods adapted with some modifications from:
-    https://stackoverflow.com/questions/47293499/window-select-multiple-artists-and-drag-them-on-canvas/47312637#47312637
+    Adapted from: https://stackoverflow.com/a/47312637/2912349
     """
 
     def __init__(self, artists):
@@ -2363,6 +2299,7 @@ class DraggableArtists(SelectableArtists):
 
 
 class DraggableGraph(Graph, DraggableArtists):
+    """Augments `Graph` to support selection and dragging of node artists with the mouse."""
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2440,6 +2377,7 @@ class DraggableGraph(Graph, DraggableArtists):
 
 
 class EmphasizeOnHover(object):
+    """Emphasize matplotlib artists when hovering over them by desaturating all other artists."""
 
     def __init__(self, artists):
 
@@ -2486,6 +2424,7 @@ class EmphasizeOnHover(object):
 
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
+    """Combines `EmphasizeOnHover` with the `Graph` class such that nodes are emphasized when hovering over them with the mouse."""
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2539,6 +2478,7 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
 
 class AnnotateOnClick(object):
+    """Show or hide annotations when clicking on matplotlib artists."""
 
     def __init__(self, artist_to_annotation, annotation_fontdict=None):
 
@@ -2643,6 +2583,7 @@ class AnnotateOnClick(object):
 
 
 class AnnotateOnClickGraph(Graph, AnnotateOnClick):
+    """Combines `AnnotateOnClick` with the `Graph` class such that nodes or edges can have toggleable annotations."""
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2692,6 +2633,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
 
 class TableOnClick(object):
+    """Show or hide tabular information when clicking on matplotlib artists."""
 
     def __init__(self, artist_to_table, table_kwargs=None):
 
@@ -2755,6 +2697,7 @@ class TableOnClick(object):
 
 
 class TableOnClickGraph(Graph, TableOnClick):
+    """Combines `TableOnClick` with the `Graph` class such that nodes or edges can have toggleable tabular annotations."""
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2776,80 +2719,83 @@ class TableOnClickGraph(Graph, TableOnClick):
 
 
 class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """
-    Initializes an interactive Graph instance.
+    f"""Extends the `Graph` class to support interactivity.
 
-    Arguments:
+    - Nodes can be selected and dragged around with the mouse.
+    - Nodes and edges are emphasized when hovering over them.
+    - Supports additional annotations that can be toggled on and off by clicking on the corresponding node or edge.
+    - These annotations can also be tables.
+
+    Parameters
     ----------
     graph: various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
         - Edge list:
             Iterable of (source, target) or (source, target, weight) tuples,
-            or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+            or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
         - Adjacency matrix:
-            Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+            Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
             The absence of a connection is indicated by a zero.
-            Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
+            **Note that if V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
         - networkx.Graph or igraph.Graph object
-
-    node_layout : str or dict node : (float x, float y) (default 'spring')
-        If node_layout is a string, the node positions are computed using
-        the indicated method:
+    node_layout : str or dict, default 'spring'
+        If `node_layout` is a string, the node positions are computed using the indicated method:
         - 'random'    : place nodes in random positions;
         - 'circular'  : place nodes regularly spaced on a circle;
         - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
         - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
         - 'community' : place nodes such that nodes belonging to the same community are grouped together
-        If node_layout is a dict, keys are nodes and values are (x, y) positions.
-
-    node_layout_kwargs : dict (default None)
+        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+    node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_random_layout
         - get_circular_layout
         - get_fruchterman_reingold_layout
         - get_sugiyama_layout
         - get_community_layout
-
-    node_shape : string or dict node : string (default 'o')
-       The shape of the node. Specification is as for matplotlib.scatter
-       marker, i.e. one of 'so^>v<dph8'.
-       If a single string is provided all nodes will have the same shape.
-
-    node_size : scalar or dict node : float (default 3.)
-       Size (radius) of nodes.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_edge_width : scalar or dict node : float (default 0.5)
-       Line width of node marker border.
-       NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    node_color : matplotlib color specification or dict node : color (default 'w')
-       Node color.
-
-    node_edge_color : matplotlib color specification or dict node : color (default DEFAULT_COLOR)
-       Node edge color.
-
-    node_alpha : scalar or dict node : float (default 1.)
-       The node transparency.
-
-    node_zorder : scalar or dict node : float (default 2)
-       Order in which to plot the nodes.
-
-    node_labels : bool or dict node : str (default False)
-       If True, the nodes are labelled with their node IDs.
-       If the node labels are supposed to be distinct from the node IDs,
-       supply a dictionary mapping nodes to node labels.
-       Only nodes in the dictionary are labelled.
-
-    node_label_offset: scalar or 2-tuple or equivalent iterable (default (0., 0.))
+    node_shape : str or dict, default 'o'
+        Node shape.
+        If the type is str, all nodes have the same shape.
+        If the type is dict, maps each node to an individual string representing the shape.
+        The string specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+    node_size : float or dict, default 3.
+        Node size (radius).
+        If the type is float, all nodes will have the same size.
+        If the type is dict, maps each node to an individual size.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_edge_width : float or dict, default 0.5
+        Line width of node marker border.
+        If the type is float, all nodes have the same line width.
+        If the type is dict, maps each node to an individual line width.
+        NOTE: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+    node_color : matplotlib color specification or dict, default 'w'
+        Node color.
+        If the type is a string or RGBA array, all nodes have the same color.
+        If the type is dict, maps each node to an individual color.
+    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+        Node edge color.
+        If the type is a string or RGBA array, all nodes have the same edge color.
+        If the type is dict, maps each node to an individual edge color.
+    node_alpha : scalar or dict, default 1.
+        Node transparency.
+        If the type is a float, all nodes have the same transparency.
+        If the type is dict, maps each node to an individual transparency.
+    node_zorder : int or dict, default 2
+        Order in which to plot the nodes.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
+    node_labels : bool or dict, (default False)
+        If False, the nodes are unlabelled.
+        If True, the nodes are labelled with their node IDs.
+        If the node labels are to be distinct from the node IDs, supply a dictionary mapping nodes to node labels.
+        Only nodes in the dictionary are labelled.
+    node_label_offset: float or tuple, default (0., 0.)
         A (dx, dy) tuple specifies the exact offset from the node position.
-        If a scalar delta is specified, the value is interpreted as a distance, and
-        the label is placed delta away from the node position while trying to
+        If a single scalar delta is specified, the value is interpreted as a distance,
+        and the label is placed delta away from the node position while trying to
         reduce node/label, node/edge, and label/label overlaps.
-
     node_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -2859,12 +2805,12 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             - verticalalignment (default here: 'center')
             - clip_on (default here: False)
             - zorder (default here: inf)
-
-    edge_width : float or dict (source, target) : width (default 1.)
-        Line width of edges.
+    edge_width : float or dict, default 1.
+        Width of edges.
+        If the type is a float, all edges have the same width.
+        If the type is dict, maps each edge to an individual width.
         NOTE: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
-
-    edge_cmap : matplotlib color map (default RdGy)
+    edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
         If edge weights are strictly positive, weights are mapped to the
         left hand side of the color map with vmin=0 and vmax=np.max(weights).
@@ -2873,55 +2819,48 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         color map; the boundaries are set to +/- the maximum absolute weight.
         If the graph is unweighted or the edge colors are specified explicitly,
         this parameter is ignored.
-
-    edge_color : matplotlib color specification or dict (source, target) : color (default DEFAULT_COLOR)
-       Edge color.
-
-    edge_alpha : float or dict (source, target) : float (default 1.)
+    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+        Edge color. If provided explicitly, overrides `edge_cmap`.
+        If the type is a string or RGBA array, all edges have the same color.
+        If the type is dict, maps each edge to an individual color.
+    edge_alpha : float or dict, default 1.
         The edge transparency,
-
-    edge_zorder : int or dict (source, target) : int (default 1)
+        If the type is a float, all edges have the same transparency.
+        If the type is dict, maps each edge to an individual transparency.
+    edge_zorder : int or dict, default 1
         Order in which to plot the edges.
+        If the type is an int, all nodes have the same zorder.
+        If the type is dict, maps each node to an individual zorder.
         If None, the edges will be plotted in the order they appear in 'adjacency'.
-        Note: graphs typically appear more visually pleasing if darker edges
-        are plotted on top of lighter edges.
-
-    arrows : bool, optional (default False)
+        Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
+    arrows : bool, default False
         If True, draw edges with arrow heads.
-
-    edge_layout : str or dict edge : segments (default 'straight')
+    edge_layout : str or dict (default 'straight')
         If edge_layout is a string, determine the layout internally:
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
         - 'bundled'  : draw edges as edge bundles
-        If edge_layout is a dict, the keys are edges and the
-        values are edge paths in the form iterables of (x, y)
-        tuples, the edge segments.
-
-    edge_layout_kwargs : dict (default None)
+        If edge_layout is a dict, the keys are edges and the values are edge paths
+        in the form iterables of (x, y) tuples, the edge segments.
+    edge_layout_kwargs : dict, default None
         Keyword arguments passed to edge layout functions.
-        See the documentation of the following functions for a full description
-        of available options:
+        See the documentation of the following functions for a full description of available options:
         - get_straight_edge_paths
         - get_curved_edge_paths
         - get_bundled_edge_paths
-
-    edge_labels : bool or dict edge : str
+    edge_labels : bool or dict, default False
+        If False, the edges are unlabelled.
         If True, the edges are labelled with their edge IDs.
-        If the edge labels are supposed to be distinct from the edge IDs,
-        supply a dictionary mapping edges to edge labels.
+        If the edge labels are to be distinct from the edge IDs, supply a dictionary mapping edges to edge labels.
         Only edges in the dictionary are labelled.
-
-    edge_label_position : float
+    edge_label_position : float, default 0.5
         Relative position along the edge where the label is placed.
             head   : 0.
-            centre : 0.5 (default)
+            centre : 0.5
             tail   : 1.
-
-    edge_label_rotate : bool (default True)
-        If True, edge labels are rotated such that they track the orientation of their edges.
+    edge_label_rotate : bool, default True
+        If True, edge labels are rotated such that they have the same orientation as their edge.
         If False, edge labels are not rotated; the angle of the text is parallel to the axis.
-
     edge_label_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text.
         For a full list of available arguments see the matplotlib documentation.
@@ -2932,9 +2871,9 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
             - zorder (default here: inf),
             - rotation (determined by edge_label_rotate argument)
-
-    annotations : dict node/edge : string or dict
-        Additional information that can be revealed/hidden by clicking on the corresponding node or edge.
+    annotations : dict
+        Mapping of nodes or edges to strings or dictionaries, the annotations.
+        The visibility of the annotations can be toggled on or off by clicking on the corresponding node or edge.
         annotations = {
             0      : 'Normal node',
             1      : {s : 'Less important node', fontsize : 2},
@@ -2943,7 +2882,6 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             (1, 2) : {s : 'Less important edge', fontsize : 2},
             (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
         }
-
     annotation_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text if only the annotation string is given.
         For a full list of available arguments see the matplotlib documentation.
@@ -2953,60 +2891,51 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             - clip_on (default here: False),
             - backgroundcolor (default here: 'white'),
             - zorder (default here: inf),
-
     tables : dict node/edge : pandas dataframe
-        Tabular information that can be displayed by clicking on the corresponding node or edge.
-
+        Mapping of nodes and/or edges to pandas dataframes.
+        The visibility of the tables that can toggled on or off by clicking on the corresponding node or edge.
     table_kwargs : dict
         Keyword arguments passed to matplotlib.pyplot.table.
-
-    origin : (float x, float y) tuple or None (default (0, 0))
+    origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
-
-    scale : (float delta x, float delta y) or None (default (1, 1))
+    scale : tuple, default (1., 1.)
         The width and height of the bounding box specifying the extent of the canvas.
-
-    prettify : bool (default True)
+    prettify : bool, default True
         If True, despine and remove ticks and tick labels.
         Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
-    ax : matplotlib.axis instance or None (default None)
-       Axis to plot onto; if none specified, one will be instantiated with plt.gca().
-
-
-    Attributes:
-    -----------
-    node_artists : dict node : NodeArtist instance
-        The node artists.
-
-    edge_artists : dict edge : EdgeArtist instance
-        The edge artists.
-
-    node_label_artists : dict node : matplotlib.Text
-        The node label text objects (if applicable).
-
-    edge_label_artists : dict edge : matplotlib.Text
-        The edge label text objects (if applicable).
-
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
     node_positions : dict node : (x, y) tuple
-        The node positions.
+        Mapping of node IDs to node positions.
 
+    See also
+    --------
+    Graph
 
-    NOTE:
+    Notes
     -----
     You must retain a reference to the plot instance!
     Otherwise, the plot instance will be garbage collected after the initial draw
     and you won't be able to move the plot elements around.
 
-
-    Example:
+    Examples
     --------
     >>> import matplotlib.pyplot as plt
     >>> from netgraph import InteractiveGraph
     >>> plt.ion()
-    >>> plot_instance = InteractiveGraph(graph_obj)
+    >>> plot_instance = InteractiveGraph(my_graph_obj)
     >>> plt.show()
-
     """
 
     def __init__(self, *args, **kwargs):
