@@ -66,13 +66,6 @@ def rgba_to_grayscale(r, g, b, a=1):
     return (0.299 * r + 0.587 * g + 0.114 * b) * a
 
 
-def _add_doc(value):
-    def _doc(func):
-        func.__doc__ = value
-        return func
-    return _doc
-
-
 class BaseGraph(object):
     f"""The Graph base class.
 
