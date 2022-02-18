@@ -56,22 +56,21 @@ class PathPatchDataUnits(PathPatch):
 
 
 class NodeArtist(PathPatchDataUnits):
-        """Implements the node artists class.
+    """Implements the node artists class.
 
-        Parameters
-        ----------
-        shape : string
-            The shape of the node. Specification is as for matplotlib.scatter
-            marker, i.e. one of 'so^>v<dph8'.
-        xy : (float, float)
-            The center position.
-        radius : float
-            The distance from the center to each of the vertices.
-        **kwargs
-            `Patch` properties:
-            %(Patch_kwdoc)s
+    Parameters
+    ----------
+    shape : str
+        The shape of the node. Specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+    xy : tuple
+        The (float x, float y) coordinates of the centroid.
+    radius : float
+        The distance from the center to each of the vertices.
+    **kwargs
+        `Patch` properties:
+        %(Patch_kwdoc)s
 
-        """
+    """
 
     def __init__(self, shape, xy, radius, **kwargs):
         self.shape = shape

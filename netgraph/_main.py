@@ -67,7 +67,7 @@ def rgba_to_grayscale(r, g, b, a=1):
 
 
 class BaseGraph(object):
-    f"""The Graph base class.
+    """The Graph base class.
 
     Parameters
     ----------
@@ -1948,7 +1948,7 @@ class TableOnClickGraph(Graph, TableOnClick):
 
 
 class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    f"""Extends the `Graph` class to support interactivity.
+    """Extends the `Graph` class to support interactivity.
 
     - Nodes can be selected and dragged around with the mouse.
     - Nodes and edges are emphasized when hovering over them.
