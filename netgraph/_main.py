@@ -3,7 +3,7 @@
 
 import warnings
 import numpy as np
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from uuid import uuid4
@@ -376,7 +376,7 @@ class BaseGraph(object):
 
 
     def _normalize_color_argument(self, color_or_dict, dict_keys, variable_name):
-        if matplotlib.colors.is_color_like(color_or_dict):
+        if mpl.colors.is_color_like(color_or_dict):
             return {key : color_or_dict for key in dict_keys}
         elif color_or_dict is None:
             return {key : color_or_dict for key in dict_keys}
@@ -482,7 +482,7 @@ class BaseGraph(object):
     def _initialize_axis(self, ax):
         if ax is None:
             return plt.gca()
-        elif isinstance(ax, matplotlib.axes._subplots.Axes):
+        elif isinstance(ax, mpl.axes._subplots.Axes):
             return ax
         else:
             raise TypeError(f"Variable 'ax' either None or a matplotlib axis instance. However, type(ax) is {type(ax)}.")
@@ -1307,7 +1307,7 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     values /= 2. # [0, 1]
 
     # convert value to color
-    mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
+    mapper = mpl.cm.ScalarMappable(cmap=cmap)
     mapper.set_clim(vmin=0., vmax=1.)
     colors = mapper.to_rgba(values)
 
@@ -1362,7 +1362,7 @@ class ClickableArtists(object):
         self._base_linewidth = dict([(artist, artist._lw_data) for artist in artists])
         self._base_edgecolor = dict([(artist, artist.get_edgecolor()) for artist in artists])
 
-        if matplotlib.get_backend() == 'MacOSX':
+        if mpl.get_backend() == 'MacOSX':
             msg  = "You appear to be using the MacOSX backend."
             msg += "\nModifier key presses are bugged on this backend. See https://github.com/matplotlib/matplotlib/issues/20486"
             msg += "\nConsider using a different backend, e.g. TkAgg (import matplotlib; matplotlib.use('TkAgg'))."

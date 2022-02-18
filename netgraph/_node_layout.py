@@ -12,9 +12,9 @@ import itertools
 import numpy as np
 
 from functools import wraps
+from itertools import combinations
 from scipy.spatial import Voronoi
 from rpack import pack
-from itertools import combinations
 
 from grandalf.graphs import Vertex, Edge, Graph
 from grandalf.layouts import SugiyamaLayout, DummyVertex

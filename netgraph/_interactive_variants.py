@@ -6,10 +6,10 @@ InteractiveGraph variants.
 """
 
 import itertools
-from functools import partial
-
 import numpy as np
 import matplotlib.pyplot as plt
+
+from functools import partial
 from matplotlib.patches import Rectangle
 from matplotlib.backend_bases import key_press_handler
 

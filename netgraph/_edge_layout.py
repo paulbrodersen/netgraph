@@ -4,9 +4,9 @@ import itertools
 import warnings
 import numpy as np
 
+from uuid import uuid4
 from functools import wraps
 from scipy.interpolate import UnivariateSpline
-from uuid import uuid4
 
 from ._utils import (
     _bspline,
