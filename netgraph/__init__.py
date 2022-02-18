@@ -63,11 +63,6 @@ __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
 from ._main import (
-    draw,
-    draw_nodes,
-    draw_node_labels,
-    draw_edges,
-    draw_edge_labels,
     BaseGraph,
     Graph,
     InteractiveGraph,
