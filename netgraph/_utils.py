@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# coding: utf-8
+"""
+Netgraph utility functions.
+"""
+
 import numpy as np
 
 from scipy.interpolate import BSpline

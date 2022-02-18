@@ -1,7 +1,9 @@
 #!/usr/bin/env python
+# coding: utf-8
 """
-Functions for reading and writing graphs.
+Functions for parsing various graph formats and converting them into a node list, edge list, and edge-to-weight mapping.
 """
+
 import warnings
 import numpy as np
 

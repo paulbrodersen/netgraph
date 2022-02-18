@@ -2,9 +2,7 @@
 # coding: utf-8
 
 """
-TODO:
-- suppress warnings for divide by zero on diagonal -- masked arrays?
-- ensure that the adjacency matrix has the correct dimensions even is one of the nodes is unconnected
+Node layout routines.
 """
 
 import warnings

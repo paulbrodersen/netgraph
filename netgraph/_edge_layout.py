@@ -1,4 +1,9 @@
+#!/usr/bin/env python
 # coding: utf-8
+
+"""
+Edge routing routines.
+"""
 
 import itertools
 import warnings

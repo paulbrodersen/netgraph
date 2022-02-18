@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
+"""
+Implements the BaseGraph, Graph, and InteractiveGraph classes.
+"""
 import warnings
 import numpy as np
 import matplotlib as mpl

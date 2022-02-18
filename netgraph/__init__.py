@@ -26,36 +26,32 @@ Netgraph
 
 Summary
 -------
-
 Python drawing utilities for publication quality plots of networks.
 
 Examples
 --------
-
-import numpy as np
-import matplotlib.pyplot as plt
-from netgraph import Graph, InteractiveGraph
-
-# Several graph formats are supported:
-graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
-# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
-# graph_data = np.random.rand(10, 10) # full rank matrix
-# graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
-# graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
-
-# Create a non-interactive plot:
-Graph(graph_data)
-plt.show()
-
-# Create an interactive plot.
-# NOTE: you must retain a reference to the plot instance!
-# Otherwise, the plot instance will be garbage collected after the initial draw
-# and you won't be able to move the plot elements around.
-plt.ion()
-plot_instance = InteractiveGraph(graph_data)
-plt.show()
-```
-
+>>> import numpy as np
+>>> import matplotlib.pyplot as plt
+>>> from netgraph import Graph, InteractiveGraph
+>>>
+>>> # Several graph formats are supported:
+>>> graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
+>>> # graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
+>>> # graph_data = np.random.rand(10, 10) # full rank matrix
+>>> # graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
+>>> # graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
+>>>
+>>> # Create a non-interactive plot:
+>>> Graph(graph_data)
+>>> plt.show()
+>>>
+>>> # Create an interactive plot.
+>>> # NOTE: you must retain a reference to the plot instance!
+>>> # Otherwise, the plot instance will be garbage collected after the initial draw
+>>> # and you won't be able to move the plot elements around.
+>>> plt.ion()
+>>> plot_instance = InteractiveGraph(graph_data)
+>>> plt.show()
 """
 
 __version__ = "4.0.5"
