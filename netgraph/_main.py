@@ -45,81 +45,6 @@ BASE_SCALE = 1e-2
 DEFAULT_COLOR = '#2c404c' # '#677e8c' # '#121f26' # '#23343f' # 'k',
 
 
-def _get_zorder(color_dict):
-    """Reorder plot elements such that darker items are plotted last and hence most prominent in the graph.
-    This assumes that the background is white.
-    """
-    intensities = [rgba_to_grayscale(*v) for v in color_dict.values()]
-    zorder = _rank(intensities)
-    zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
-    return {key: index for key, index in zip(color_dict.keys(), zorder)}
-
-
-def rgba_to_grayscale(r, g, b, a=1):
-    """Convert RGBA values to grayscale.
-
-    Notes
-    -----
-    Adapted from: https://stackoverflow.com/a/689547/2912349
-    """
-
-    return (0.299 * r + 0.587 * g + 0.114 * b) * a
-
-
-def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
-    """Map positive and negative floats to a diverging colormap, such that
-    - the midpoint of the colormap corresponds to a value of 0., and
-    - values above and below the midpoint are mapped linearly and in equal measure
-      to increases in color intensity.
-
-    Parameters
-    ----------
-    mydict: dict
-        Mapping of graph element (node, edge) to a float.
-        For example (source, target) : edge weight.
-    cmap: str, default 'RdGy'
-        Matplotlib colormap specification.
-    vmin, vmax: float or None, default None
-        Minimum and maximum float corresponding to the dynamic range of the colormap.
-
-    Returns
-    -------
-    newdict: dict
-        Mapping of graph elements to RGBA tuples.
-
-    """
-
-    keys = mydict.keys()
-    values = np.array(list(mydict.values()), dtype=np.float64)
-
-    # apply vmin, vmax
-    if vmin or vmax:
-        values = np.clip(values, vmin, vmax)
-
-    def abs(value):
-        try:
-            return np.abs(value)
-        except TypeError as e: # value is probably None
-            if isinstance(value, type(None)):
-                return 0
-            else:
-                raise e
-
-    # rescale values such that
-    #  - the colormap midpoint is at zero-value, and
-    #  - negative and positive values have comparable intensity values
-    values /= np.nanmax([np.nanmax(np.abs(values)), abs(vmax), abs(vmin)]) # [-1, 1]
-    values += 1. # [0, 2]
-    values /= 2. # [0, 1]
-
-    # convert value to color
-    mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
-    mapper.set_clim(vmin=0., vmax=1.)
-    colors = mapper.to_rgba(values)
-
-    return {key: color for (key, color) in zip(keys, colors)}
-
-
 class BaseGraph(object):
     """The Graph base class.
 
@@ -1333,6 +1258,81 @@ class Graph(BaseGraph):
             kwargs.setdefault('node_zorder', node_zorder)
 
         super().__init__(edges, *args, **kwargs)
+
+
+def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+    """Map positive and negative floats to a diverging colormap, such that
+    - the midpoint of the colormap corresponds to a value of 0., and
+    - values above and below the midpoint are mapped linearly and in equal measure
+      to increases in color intensity.
+
+    Parameters
+    ----------
+    mydict: dict
+        Mapping of graph element (node, edge) to a float.
+        For example (source, target) : edge weight.
+    cmap: str, default 'RdGy'
+        Matplotlib colormap specification.
+    vmin, vmax: float or None, default None
+        Minimum and maximum float corresponding to the dynamic range of the colormap.
+
+    Returns
+    -------
+    newdict: dict
+        Mapping of graph elements to RGBA tuples.
+
+    """
+
+    keys = mydict.keys()
+    values = np.array(list(mydict.values()), dtype=np.float64)
+
+    # apply vmin, vmax
+    if vmin or vmax:
+        values = np.clip(values, vmin, vmax)
+
+    def abs(value):
+        try:
+            return np.abs(value)
+        except TypeError as e: # value is probably None
+            if isinstance(value, type(None)):
+                return 0
+            else:
+                raise e
+
+    # rescale values such that
+    #  - the colormap midpoint is at zero-value, and
+    #  - negative and positive values have comparable intensity values
+    values /= np.nanmax([np.nanmax(np.abs(values)), abs(vmax), abs(vmin)]) # [-1, 1]
+    values += 1. # [0, 2]
+    values /= 2. # [0, 1]
+
+    # convert value to color
+    mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
+    mapper.set_clim(vmin=0., vmax=1.)
+    colors = mapper.to_rgba(values)
+
+    return {key: color for (key, color) in zip(keys, colors)}
+
+
+def _get_zorder(color_dict):
+    """Reorder plot elements such that darker items are plotted last and hence most prominent in the graph.
+    This assumes that the background is white.
+    """
+    intensities = [rgba_to_grayscale(*v) for v in color_dict.values()]
+    zorder = _rank(intensities)
+    zorder = np.max(zorder) - zorder # reverse order as greater values correspond to lighter colors
+    return {key: index for key, index in zip(color_dict.keys(), zorder)}
+
+
+def rgba_to_grayscale(r, g, b, a=1):
+    """Convert RGBA values to grayscale.
+
+    Notes
+    -----
+    Adapted from: https://stackoverflow.com/a/689547/2912349
+    """
+
+    return (0.299 * r + 0.587 * g + 0.114 * b) * a
 
 
 class ClickableArtists(object):
