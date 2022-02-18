@@ -66,6 +66,60 @@ def rgba_to_grayscale(r, g, b, a=1):
     return (0.299 * r + 0.587 * g + 0.114 * b) * a
 
 
+def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
+    """Map positive and negative floats to a diverging colormap, such that
+    - the midpoint of the colormap corresponds to a value of 0., and
+    - values above and below the midpoint are mapped linearly and in equal measure
+      to increases in color intensity.
+
+    Parameters
+    ----------
+    mydict: dict
+        Mapping of graph element (node, edge) to a float.
+        For example (source, target) : edge weight.
+    cmap: str, default 'RdGy'
+        Matplotlib colormap specification.
+    vmin, vmax: float or None, default None
+        Minimum and maximum float corresponding to the dynamic range of the colormap.
+
+    Returns
+    -------
+    newdict: dict
+        Mapping of graph elements to RGBA tuples.
+
+    """
+
+    keys = mydict.keys()
+    values = np.array(list(mydict.values()), dtype=np.float64)
+
+    # apply vmin, vmax
+    if vmin or vmax:
+        values = np.clip(values, vmin, vmax)
+
+    def abs(value):
+        try:
+            return np.abs(value)
+        except TypeError as e: # value is probably None
+            if isinstance(value, type(None)):
+                return 0
+            else:
+                raise e
+
+    # rescale values such that
+    #  - the colormap midpoint is at zero-value, and
+    #  - negative and positive values have comparable intensity values
+    values /= np.nanmax([np.nanmax(np.abs(values)), abs(vmax), abs(vmin)]) # [-1, 1]
+    values += 1. # [0, 2]
+    values /= 2. # [0, 1]
+
+    # convert value to color
+    mapper = matplotlib.cm.ScalarMappable(cmap=cmap)
+    mapper.set_clim(vmin=0., vmax=1.)
+    colors = mapper.to_rgba(values)
+
+    return {key: color for (key, color) in zip(keys, colors)}
+
+
 class BaseGraph(object):
     """The Graph base class.
 
