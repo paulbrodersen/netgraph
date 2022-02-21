@@ -37,15 +37,17 @@ def parse_graph(graph):
     Parameters
     ----------
     graph: various formats
+
         Graph object to plot. Various input formats are supported.
         In order of precedence:
+
         - Edge list:
-            Iterable of (source, target) or (source, target, weight) tuples,
-            or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
         - Adjacency matrix:
-            Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
-            The absence of a connection is indicated by a zero.
-            Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
+          Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+          The absence of a connection is indicated by a zero.
+          Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
         - networkx.Graph or igraph.Graph object
 
     Returns
@@ -56,6 +58,7 @@ def parse_graph(graph):
         List of E edges. Each tuple corresponds to an edge defined by (source node, target node).
     edge_weight: dict edge : float or None
         Dictionary mapping edges to weights. If the graph is unweighted, None is returned.
+
     """
 
     if isinstance(graph, (list, tuple, set)):

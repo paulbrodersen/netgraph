@@ -129,6 +129,7 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
     -------
     edge_paths : dict
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
+
     """
 
     edge_paths = dict()
@@ -216,6 +217,7 @@ def get_curved_edge_paths(edges, node_positions,
     -------
     edge_paths : dict
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
+
     """
 
     # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
@@ -262,6 +264,7 @@ def _initialize_control_points(edges, node_positions, k):
 def _expand_edges(edge_to_control_points):
     """Create a new, expanded edge list, in which each edge is split into multiple segments.
     There are total_control_points + 1 segments / edges for each original edge.
+
     """
     expanded_edges = []
     for (source, target), control_points in edge_to_control_points.items():
@@ -278,6 +281,7 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
     """Initialise the positions of the control points to positions on a straight
     line between source and target node. For self-loops, initialise the positions
     on a circle next to the node.
+
     """
 
     nonloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source != target}
@@ -407,13 +411,13 @@ def get_bundled_edge_paths(edges, node_positions,
                            step_size               = 0.04,
                            straighten_by           = 0.,
 ):
-    """Bundle edges using the FDEB algorithm as proposed in [1].
+    """Bundle edges using the FDEB algorithm as proposed in [Holten2009]_.
 
     This implementation follows the paper closely with the exception
     that instead of doubling the number of control point on each
     iteration (2n), a new control point is inserted between each
     existing pair of control points (2(n-1)+1), as proposed e.g. in Wu
-    et al. (2015).
+    et al. (2015) [Wu2015]_.
 
     Parameters
     ----------
@@ -447,12 +451,13 @@ def get_bundled_edge_paths(edges, node_positions,
 
     References
     ----------
-    .. [1] Holten D and Van Wijk JJ. (2009) ‘Force-Directed edge
-    bundling for graph visualization’, Computer Graphics Forum.
+    .. [Holten2009] Holten D and Van Wijk JJ. (2009) ‘Force-Directed edge
+       bundling for graph visualization’, Computer Graphics Forum.
 
-    .. [2] Wu J, Yu L, Yu H (2015) ‘Texture-based edge bundling: A
-    web-based approach for interactively visualizing large graphs’,
-    IEEE International Conference on Big Data.
+    .. [Wu2015] Wu J, Yu L, Yu H (2015) ‘Texture-based edge bundling: A
+       web-based approach for interactively visualizing large graphs’,
+       IEEE International Conference on Big Data.
+
     """
 
     # Filter out self-loops.
@@ -572,13 +577,17 @@ class Segment(object):
 
 def _get_angle_compatibility(P, Q):
     """Compute the angle compatibility between two segments P and Q.
-    The angle compatibility is high if the interior angle between them is small."""
+    The angle compatibility is high if the interior angle between them is small.
+
+    """
     return np.abs(np.clip(np.dot(P.unit_vector, Q.unit_vector), -1.0, 1.0))
 
 
 def _get_scale_compatibility(P, Q):
     """Compute the scale compatibility between two segments P and Q.
-    The scale compatibility is high if their lengths are similar."""
+    The scale compatibility is high if their lengths are similar.
+
+    """
     avg = 0.5 * (P.length + Q.length)
 
     # The definition in the paper is rubbish, as the result is not on the interval [0, 1].
@@ -594,7 +603,9 @@ def _get_scale_compatibility(P, Q):
 
 def _get_position_compatibility(P, Q):
     """Compute the position compatibility between two segments P and Q.
-    The position compatibility is high if the distance between their midpoints is small."""
+    The position compatibility is high if the distance between their midpoints is small.
+
+    """
     avg = 0.5 * (P.length + Q.length)
     distance_between_midpoints = np.linalg.norm(Q.midpoint - P.midpoint)
     # This is the definition from the paper, but the scaling should probably be more aggressive.
@@ -603,7 +614,9 @@ def _get_position_compatibility(P, Q):
 
 def _get_visibility_compatibility(P, Q):
     """Compute the visibility compatibility between two segments P and Q.
-    The visibility compatibility is low if bundling would occlude any of the end points of the segments."""
+    The visibility compatibility is low if bundling would occlude any of the end points of the segments.
+
+    """
     return min(_get_visibility(P, Q), _get_visibility(Q, P))
 
 
@@ -710,11 +723,8 @@ def _smooth_path(path):
 
     Notes
     -----
-    Adapted from [1].
+    Adapted from https://stackoverflow.com/a/52020098/2912349
 
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/52020098/2912349
     """
 
     # Compute the linear length along the line:
@@ -736,7 +746,9 @@ def _straighten_edges(edge_to_path, straighten_by):
 
 def _straighten_path(path, straighten_by):
     """Straigthen a path by computing the weighted average between the path and
-    a straight line connecting the end points."""
+    a straight line connecting the end points.
+
+    """
     p0 = path[0]
     p1 = path[-1]
     n = len(path)

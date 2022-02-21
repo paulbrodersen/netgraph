@@ -40,6 +40,7 @@ def _handle_multiple_components(layout_function):
     component, the layout is first applied to each individual
     component, and then the component layouts are combined using
     rectangle packing.
+
     """
 
     @wraps(layout_function)
@@ -126,6 +127,7 @@ def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
     -------
     bboxes : list of tuples
         The (left, bottom, width height) bounding boxes for each component.
+
     """
 
     relative_dimensions = [_get_bbox_dimensions(len(component), power=power) for component in components]
@@ -201,7 +203,7 @@ def get_fruchterman_reingold_layout(edges,
                                     node_positions      = None,
                                     fixed_nodes         = None,
                                     *args, **kwargs):
-    """Use the Fruchterman-Reingold algorithm [1] to compute node positions.
+    """Use the Fruchterman-Reingold algorithm [Fruchterman1991]_ to compute node positions.
 
     This algorithm simulates the graph as a physical system, in which nodes repell each other.
     For connected nodes, this repulsion is counteracted by an attractive force exerted by the edges, which are simulated as springs.
@@ -247,8 +249,9 @@ def get_fruchterman_reingold_layout(edges,
 
     References
     ----------
-    .. [1] Fruchterman, TMJ and Reingold, EM (1991) ‘Graph drawing by force‐directed placement’,
-           Software: Practice and Experience
+    .. [Fruchterman1991] Fruchterman, TMJ and Reingold, EM (1991) ‘Graph drawing by force‐directed placement’,
+       Software: Practice and Experience
+
     """
 
     assert len(edges) > 0, "The list of edges has to be non-empty."
@@ -504,7 +507,7 @@ def get_random_layout(edges, origin=(0,0), scale=(1,1)):
 
 @_handle_multiple_components
 def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
-    """Use the Sugiyama algorithm [1] to compute node positions.
+    """Use the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
 
     This function is a wrapper around the SugiyamaLayout class in grandalf.
 
@@ -528,8 +531,9 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
 
     References
     ----------
-    .. [1] Sugiyama, K; Tagawa, S; Toda, M (1981) 'Methods for visual understanding of hierarchical system structures',
+    .. [Sugiyama1981] Sugiyama, K; Tagawa, S; Toda, M (1981) 'Methods for visual understanding of hierarchical system structures',
            IEEE Transactions on Systems, Man, and Cybernetics
+
     """
 
     # TODO potentially test that graph is a DAG
@@ -607,7 +611,7 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     reduce_edge_crossings : bool, default True
-        If True, attempts to minimize edge crossings via the algorithm outlined in [1].
+        If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
 
     Returns
     -------
@@ -616,7 +620,7 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
 
     References
     ----------
-    .. [1] Baur & Brandes (2005) Crossing reduction in circular layouts.
+    .. [Baur2005] Baur & Brandes (2005) Crossing reduction in circular layouts.
 
     """
     nodes = _get_unique_nodes(edges)
@@ -823,6 +827,7 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     """Compute the node positions for a modular graph.
 
     This implements the following steps:
+
     1. Position the communities with respect to each other:
        Create a new, weighted graph, where each node corresponds to a community,
        and the weights correspond to the number of edges between communities.
@@ -846,6 +851,7 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     -------
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
     """
 
     # assert that there multiple communities in the graph; otherwise abort

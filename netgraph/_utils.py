@@ -32,6 +32,7 @@ def _get_unique_nodes(edges):
     -----
     We cannot use numpy.unique, as it promotes nodes to numpy.float/numpy.int/numpy.str,
     and breaks for nodes that have a more complicated type such as a tuple.
+
     """
     return list(set(_flatten(edges)))
 
@@ -57,6 +58,7 @@ def _edge_list_to_adjacency_matrix(edges, edge_weights=None, unique_nodes=None):
     -------
     adjacency_matrix : numpy.array
         The full rank adjacency/weight matrix.
+
     """
 
     sources = [s for (s, _) in edges]
@@ -98,6 +100,7 @@ def _edge_list_to_adjacency_list(edges, directed=True):
     -------
     adjacency : dict node : set of nodes
         Dictionary mapping nodes to their set of connected neighbours.
+
     """
     if not directed:
         edges = edges + [(target, source) for (source, target) in edges] # forces copy
@@ -125,6 +128,7 @@ def _get_subgraph(edges, nodes):
     -------
     subgraph_edges : list of tuple
         List of edges present in the subgraph.
+
     """
 
     return [(source, target) for source, target in edges \
@@ -152,11 +156,8 @@ def _bspline(cv, n=100, degree=5, periodic=False):
 
     Notes
     -----
-    Adapted from [1].
+    Adapted from https://stackoverflow.com/a/35007804/2912349
 
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/35007804/2912349
     """
 
     cv = np.asarray(cv)
@@ -214,15 +215,12 @@ def _get_interior_angle_between(v1, v2, radians=False):
 
     Notes
     -----
-    Adapted from [1].
-
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/13849249/2912349
+    Adapted from https://stackoverflow.com/a/13849249/2912349
 
     See also
     --------
     _get_signed_angle_between
+
     """
 
     v1_u = get_unit_vector(v1)
@@ -255,15 +253,12 @@ def _get_signed_angle_between(v1, v2, radians=False):
 
     Notes
     -----
-    Adapted from [1].
-
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/16544330/2912349
+    Adapted from https://stackoverflow.com/a/16544330/2912349
 
     See also
     --------
     _get_interior_angle_between
+
     """
 
     x1, y1 = v1
@@ -294,6 +289,7 @@ def _get_n_points_on_a_circle(xy, radius, n, start_angle=0):
     -------
     positions ; numpy.array
         Array of n (x, y) coordinates.
+
     """
 
     angles = np.linspace(0, 2*np.pi, n + 1)[:-1]
@@ -325,6 +321,7 @@ def _get_parallel_line(path, delta):
     -------
     path : numpy.array
         Array of (x, y) coordinates corresponding to the parallel path.
+
     """
 
     # initialise output
@@ -355,11 +352,8 @@ def _get_orthogonal_unit_vector(v):
 
     Notes
     -----
-    Adapted from [1].
+    Adapted from https://stackoverflow.com/a/16890776/2912349
 
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/16890776/2912349
     """
 
     v = v / np.linalg.norm(v, axis=-1)[:, None] # unit vector
@@ -382,6 +376,7 @@ def _shorten_line_by(path, distance):
     -------
     numpy.array
         Array of (x, y) coordinates of the shortened path.
+
     """
 
     distance_to_end = np.linalg.norm(path - path[-1], axis=1)
@@ -416,6 +411,7 @@ def _get_point_along_spline(spline, fraction):
     -------
     point : 2-tuple of floats
         The (x, y) point coordinates.
+
     """
 
     assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
@@ -443,6 +439,7 @@ def _get_tangent_at_point(spline, fraction):
     -------
     tangent : numpy.array
         The (dx, dy) tangent.
+
     """
 
     assert 0 <= fraction <= 1, "Fraction has to be a value between 0 and 1."
@@ -471,11 +468,8 @@ def _get_orthogonal_projection_onto_segment(point, segment):
 
     Notes
     -----
-    Adapted from [1].
+    Adapted from https://stackoverflow.com/a/61343727/2912349
 
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/61343727/2912349
     """
 
     p1, p2 = segment
@@ -508,6 +502,7 @@ def _get_text_object_dimensions(ax, string, *args, **kwargs):
     -------
     width, height : float
         The dimensions of the text box in data units.
+
     """
 
     text_object = ax.text(0., 0., string, *args, **kwargs)
@@ -525,11 +520,8 @@ def _find_renderer(fig):
 
     Notes
     -----
-    Adapted from [1].
+    Adapted from https://stackoverflow.com/a/22689498/2912349
 
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/22689498/2912349
     """
 
     if hasattr(fig.canvas, "get_renderer"):
@@ -587,6 +579,7 @@ def _get_connected_components(adjacency_list):
     -------
     components : list of sets of node IDs
         The unconnected components of the graph.
+
     """
 
     components = []
@@ -631,6 +624,7 @@ def _dfs(adjacency_list, start, visited=None):
     -------
     visited : set of node IDs or None, default None
         Previously and newly visited nodes.
+
     """
 
     if visited is None:

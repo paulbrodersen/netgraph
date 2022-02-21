@@ -27,11 +27,7 @@ class PathPatchDataUnits(PathPatch):
 
     Notes
     -----
-    Adapted from [1].
-
-    References
-    ----------
-    .. [1] https://stackoverflow.com/a/42972469/2912349
+    Adapted from https://stackoverflow.com/a/42972469/2912349
 
     """
 
@@ -154,6 +150,7 @@ class EdgeArtist(PathPatchDataUnits):
         For shapes 'left' and 'right' the arrow only one half of the arrow is plotted.
     curved : bool, default False
         Indicates if the midline is straight (False) or curved (True).
+
     """
     def __init__(self, midline,
                  width       = 0.05,
