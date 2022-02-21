@@ -40,8 +40,8 @@ class MutableGraph(InteractiveGraph):
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
-    See also:
-    ---------
+    See also
+    --------
     InteractiveGraph
     """
 
@@ -399,8 +399,8 @@ class EditableGraph(MutableGraph):
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
-    See also:
-    ---------
+    See also
+    --------
     InteractiveGraph
     """
 
