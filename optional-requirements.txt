@@ -2,3 +2,4 @@ pytest
 pytest-mpl
 sphinx
 numpydoc
+sphinx-rtd-theme
