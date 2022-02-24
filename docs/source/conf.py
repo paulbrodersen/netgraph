@@ -36,6 +36,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'numpydoc',
+    'sphinx_gallery.gen_gallery',
 ]
 
 autosummary_generate = True
@@ -62,3 +63,10 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# -- Options for Sphinx Gallery ------------------------------------------------
+
+sphinx_gallery_conf = {
+     'examples_dirs': '../../examples',   # path to your example scripts
+     'gallery_dirs': 'sphinx_gallery_output',  # path to where to save gallery generated output
+}
