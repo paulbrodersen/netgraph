@@ -22,7 +22,8 @@ copyright = '2022, Paul Brodersen'
 author = 'Paul Brodersen'
 
 # The full version, including alpha/beta/rc tags
-release = '4.1.0'
+import netgraph
+release = netgraph.__version__
 
 
 # -- General configuration ---------------------------------------------------
