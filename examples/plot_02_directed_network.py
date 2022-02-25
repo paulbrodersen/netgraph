@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Directed Graph
-==============
+Directed Graphs
+===============
 
 Default visualisation for a directed graph.
 """
@@ -20,13 +20,13 @@ cube = [
     (5, 6), # <-
     (6, 5), # <-
     (6, 7),
-    (7, 4),
     (0, 4),
+    (7, 4),
     (1, 5), # <-
     (5, 1), # <-
     (2, 6),
     (3, 7)
 ]
 
-Graph(cube, arrows=True)
+Graph(cube, edge_width=2., arrows=True)
 plt.show()

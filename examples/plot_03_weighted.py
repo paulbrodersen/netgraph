@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Weighted Graph
-==============
+Weighted Graphs (1)
+===================
 
 Default visualisation for a weighted graph.
 """
@@ -29,25 +29,25 @@ weighted_cube = [
 ]
 
 cmap = 'RdGy'
-Graph(weighted_cube, edge_cmap=cmap)
+Graph(weighted_cube, edge_cmap=cmap, edge_width=2., arrows=True)
 plt.show()
 
 ################################################################################
 # By default, different edge weights are represented by different colors.
-# The default colormap is 'RdGy' but any diverging matplotlib colormap can be used:
+# The default colormap is :code:`'RdGy'` but any diverging matplotlib colormap can be used:
 #
-# - 'PiYG'
-# - 'PRGn'
-# - 'BrBG'
-# - 'PuOr'
-# - 'RdGy' (default)
-# - 'RdBu'
-# - 'RdYlBu'
-# - 'RdYlGn'
-# - 'Spectral'
-# - 'coolwarm'
-# - 'bwr'
-# - 'seismic'
+# - :code:`'PiYG'`
+# - :code:`'PRGn'`
+# - :code:`'BrBG'`
+# - :code:`'PuOr'`
+# - :code:`'RdGy'` (default)
+# - :code:`'RdBu'`
+# - :code:`'RdYlBu'`
+# - :code:`'RdYlGn'`
+# - :code:`'Spectral'`
+# - :code:`'coolwarm'`
+# - :code:`'bwr'`
+# - :code:`'seismic'`
 #
 # If edge weights are strictly positive, weights are mapped to the
 # left hand side of the color map with :code:`vmin=0` and :code:`vmax=np.max(weights)`.

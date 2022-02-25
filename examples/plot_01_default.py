@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
-Default
-=======
+Default Design
+==============
 
 Default visualisation for an unweighted graph.
 """
@@ -20,8 +20,8 @@ cube = [
     (6, 7),
     (7, 4),
     (0, 4),
-    (1, 5),
     (2, 6),
+    (1, 5),
     (3, 7)
 ]
 

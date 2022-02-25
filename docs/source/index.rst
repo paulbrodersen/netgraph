@@ -94,7 +94,7 @@ __ https://stackoverflow.com/help/minimal-reproducible-example
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Examples
+   :caption: Gallery
 
    sphinx_gallery_output/index.rst
 

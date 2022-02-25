@@ -65,9 +65,13 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+
 # -- Options for Sphinx Gallery ------------------------------------------------
 
+from sphinx_gallery.sorting import FileNameSortKey
+
 sphinx_gallery_conf = {
-     'examples_dirs': '../../examples',   # path to your example scripts
-     'gallery_dirs': 'sphinx_gallery_output',  # path to where to save gallery generated output
+    'examples_dirs': '../../examples',        # path to your example scripts
+    'gallery_dirs': 'sphinx_gallery_output',  # path to where to save gallery generated output
+    'within_subsection_order': FileNameSortKey,
 }
