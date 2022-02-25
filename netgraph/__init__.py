@@ -24,38 +24,34 @@
 Netgraph
 ========
 
-Summary:
---------
-
+Summary
+-------
 Python drawing utilities for publication quality plots of networks.
 
-Example:
+Examples
 --------
-
-import numpy as np
-import matplotlib.pyplot as plt
-from netgraph import Graph, InteractiveGraph
-
-# Several graph formats are supported:
-graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
-# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
-# graph_data = np.random.rand(10, 10) # full rank matrix
-# graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
-# graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
-
-# Create a non-interactive plot:
-Graph(graph_data)
-plt.show()
-
-# Create an interactive plot.
-# NOTE: you must retain a reference to the plot instance!
-# Otherwise, the plot instance will be garbage collected after the initial draw
-# and you won't be able to move the plot elements around.
-plt.ion()
-plot_instance = InteractiveGraph(graph_data)
-plt.show()
-```
-
+>>> import numpy as np
+>>> import matplotlib.pyplot as plt
+>>> from netgraph import Graph, InteractiveGraph
+>>>
+>>> # Several graph formats are supported:
+>>> graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
+>>> # graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
+>>> # graph_data = np.random.rand(10, 10) # full rank matrix
+>>> # graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
+>>> # graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
+>>>
+>>> # Create a non-interactive plot:
+>>> Graph(graph_data)
+>>> plt.show()
+>>>
+>>> # Create an interactive plot.
+>>> # NOTE: you must retain a reference to the plot instance!
+>>> # Otherwise, the plot instance will be garbage collected after the initial draw
+>>> # and you won't be able to move the plot elements around.
+>>> plt.ion()
+>>> plot_instance = InteractiveGraph(graph_data)
+>>> plt.show()
 """
 
 __version__ = "4.1.1"
@@ -63,11 +59,6 @@ __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
 from ._main import (
-    draw,
-    draw_nodes,
-    draw_node_labels,
-    draw_edges,
-    draw_edge_labels,
     BaseGraph,
     Graph,
     InteractiveGraph,
@@ -95,23 +86,19 @@ from ._interactive_variants import (
 from ._parser import parse_graph
 
 
-__all__ = ['draw',
-           'draw_nodes',
-           'draw_node_labels',
-           'draw_edges',
-           'draw_edge_labels',
-           'get_random_layout',
-           'get_fruchterman_reingold_layout',
-           'get_sugiyama_layout',
-           'get_circular_layout',
-           'get_community_layout',
-           'get_straight_edge_paths',
-           'get_curved_edge_paths',
-           'get_bundled_edge_paths',
-           'Basegraph',
-           'Graph',
-           'InteractiveGraph',
-           'MutableGraph',
-           'EditableGraph',
-           'parse_graph',
+__all__ = [
+    'get_random_layout',
+    'get_fruchterman_reingold_layout',
+    'get_sugiyama_layout',
+    'get_circular_layout',
+    'get_community_layout',
+    'get_straight_edge_paths',
+    'get_curved_edge_paths',
+    'get_bundled_edge_paths',
+    'Basegraph',
+    'Graph',
+    'InteractiveGraph',
+    'MutableGraph',
+    'EditableGraph',
+    'parse_graph',
 ]

@@ -1,10 +1,17 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+"""
+Edge routing routines.
+"""
+
 import itertools
 import warnings
 import numpy as np
 
+from uuid import uuid4
 from functools import wraps
 from scipy.interpolate import UnivariateSpline
-from uuid import uuid4
 
 from ._utils import (
     _bspline,
@@ -23,10 +30,9 @@ except NameError:
 
 
 def _handle_multiple_components(layout_function):
+    """If the graph contains multiple components, apply the given layout to each component individually."""
     @wraps(layout_function)
     def wrapped_layout_function(edges, node_positions=None, *args, **kwargs):
-
-        # determine if there are more than one component
         adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
         components = _get_connected_components(adjacency_list)
 
@@ -39,6 +45,7 @@ def _handle_multiple_components(layout_function):
 
 
 def _get_layout_for_multiple_components(edges, node_positions, components, layout_function, *args, **kwargs):
+    """Partition network into given components and apply the given layout to each component individually."""
     edge_paths = dict()
     for component in components:
         component_edges = [(source, target) for (source, target) in edges if (source in component) and (target in component)]
@@ -53,21 +60,19 @@ def get_straight_edge_paths(edges, node_positions, edge_width):
     lines connecting the source and target node. Bi-directional edges
     are offset from one another by one edge width.
 
-    Arguments:
+    Parameters
     ----------
-    edges : list of (source node ID, target node ID) 2-tuples
-        The edges.
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+    edge_width: dict
+        Dictionary mapping each edge to a float, the edge width.
 
-    node_positions : dict node ID : (x, y) positions
-        The node positions.
-
-    edge_width: dict edge : float
-        The width of each edge.
-
-    Returns:
-    --------
-    edge_paths : dict edge : ndarray
-        Dictionary mapping each edge to a list of edge segments.
+    Returns
+    -------
+    edge_paths : dict
+        Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
     edge_paths = dict()
@@ -91,17 +96,43 @@ def get_straight_edge_paths(edges, node_positions, edge_width):
 
 
 def _shift_edge(x1, y1, x2, y2, delta):
-    # get orthogonal unit vector
-    v = np.r_[x2-x1, y2-y1] # original
-    v = np.r_[-v[1], v[0]] # orthogonal
-    v = v / np.linalg.norm(v) # unit
+    """Determine the parallel to a segment defined by points p1: (x1, y1) and p2 : (x2, y2) at a distance delta."""
+    # convert segment into a vector
+    v = np.r_[x2-x1, y2-y1]
+    # compute orthogonal vector
+    v = np.r_[-v[1], v[0]]
+    # convert to orthogonal unit vector
+    v = v / np.linalg.norm(v)
+    # compute offsets
     dx, dy = delta * v
+    # return new coordinates of point p1' and p2'
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
 def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
-    edge_paths = dict()
+    """Compute the edge paths for self-loops.
 
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+    selfloop_radius : float
+        The radius of the self-loops.
+    origin : numpy.array
+        A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : numpy.array
+        A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
+
+    Returns
+    -------
+    edge_paths : dict
+        Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
+
+    """
+
+    edge_paths = dict()
     for (source, target) in edges:
         if source != target:
             # msg = "Edges must be self-loops."
@@ -116,6 +147,8 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
 
 
 def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale):
+    """Compute the edge path for a single self-loop."""
+
     x, y = node_positions[source]
 
     # To minimise overlap with other edges, we want the loop to be
@@ -148,53 +181,42 @@ def get_curved_edge_paths(edges, node_positions,
                           k                             = None,
                           initial_temperature           = 0.01,
                           total_iterations              = 50,
-                          node_size                     = 0.,
-):
-
+                          node_size                     = 0.):
     """Determine the edge layout, where edges are represented by curved
     lines connecting the source and target node. Edges paths avoid
     nodes and each other. The edge layout is determined using the
     Fruchterman-Reingold algorithm.
 
-    Arguments:
+    Parameters
     ----------
-    edges : list of (source node ID, target node ID) 2-tuples
-        The edges.
-
-    node_positions : dict node ID : (x, y) positions
-        The node positions.
-
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
     selfloop_radius : float
-        Self-loops are drawn as circles adjacent to a node. This value determine
-        the radius of the circle.
-
-    k : float or None (default None)
+        The radius of the self-loops.
+    origin : numpy.array
+        A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : numpy.array
+        A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
+    k : float or None, default None
         Spring constant, which controls the tautness of edges.
         Small values will result in straight connections, large values in bulging arcs.
-        If None, initialized to: 0.1 * sqrt(area / total nodes)
-
-    origin : (float x, float y) tuple or None (default (0, 0))
-        The lower left hand corner of the bounding box specifying the extent of the layout.
-
-    scale : (float delta x, float delta y) or None (default (1, 1))
-        The width and height of the bounding box specifying the extent of the layout.
-
-    total_iterations : int (default 50)
+        If None, initialized to: 0.1 * sqrt(area / total nodes).
+    total_iterations : int, default 50
         Number of iterations in the Fruchterman-Reingold algorithm.
-
-    initial_temperature: float (default 1.)
+    initial_temperature: float, default 1.
         Temperature controls the maximum node displacement on each iteration.
         Temperature is decreased on each iteration to eventually force the algorithm
         into a particular solution. The size of the initial temperature determines how
         quickly that happens. Values should be much smaller than the values of `scale`.
+    node_size : dict
+        Dictionary mapping each node to a float, the node size. Used for node avoidance.
 
-    node_size : dict node ID : float
-        Size of nodes. Used for node avoidance.
-
-    Returns:
-    --------
-    edge_paths : dict edge : ndarray
-        Dictionary mapping each edge to a list of edge segments.
+    Returns
+    -------
+    edge_paths : dict
+        Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
 
@@ -226,6 +248,7 @@ def get_curved_edge_paths(edges, node_positions,
 
 
 def _initialize_control_points(edges, node_positions, k):
+    """Represent each edge with string of control points."""
     edge_to_control_points = dict()
     for start, stop in edges:
         if start != stop:
@@ -239,9 +262,9 @@ def _initialize_control_points(edges, node_positions, k):
 
 
 def _expand_edges(edge_to_control_points):
-    """
-    Create a new, expanded edge list, in which each edge is split into multiple segments.
+    """Create a new, expanded edge list, in which each edge is split into multiple segments.
     There are total_control_points + 1 segments / edges for each original edge.
+
     """
     expanded_edges = []
     for (source, target), control_points in edge_to_control_points.items():
@@ -254,11 +277,11 @@ def _expand_edges(edge_to_control_points):
 def _initialize_control_point_positions(edge_to_control_points, node_positions,
                                         selfloop_radius = 0.1,
                                         origin          = np.array([0, 0]),
-                                        scale           = np.array([1, 1])
-):
-    """
-    Initialise the positions of the control points to positions on a straight line between source and target node.
-    For self-loops, initialise the positions on a circle next to the node.
+                                        scale           = np.array([1, 1])):
+    """Initialise the positions of the control points to positions on a straight
+    line between source and target node. For self-loops, initialise the positions
+    on a circle next to the node.
+
     """
 
     nonloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source != target}
@@ -272,6 +295,7 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
 
 
 def _initialize_nonloops(edge_to_control_points, node_positions):
+    """Merge control point : position dictionary for different non self-loops into a single dictionary."""
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
         control_point_positions.update(_init_nonloop(source, target, control_points, node_positions))
@@ -279,6 +303,7 @@ def _initialize_nonloops(edge_to_control_points, node_positions):
 
 
 def _init_nonloop(source, target, control_points, node_positions):
+    """Initialise the positions of the control points to positions on a straight line between source and target node."""
     delta = node_positions[target] - node_positions[source]
     output = dict()
     for ii, control_point in enumerate(control_points):
@@ -291,8 +316,8 @@ def _init_nonloop(source, target, control_points, node_positions):
 def _initialize_selfloops(edge_to_control_points, node_positions,
                           selfloop_radius = 0.1,
                           origin          = np.array([0, 0]),
-                          scale           = np.array([1, 1])
-):
+                          scale           = np.array([1, 1])):
+    """Merge control point : position dictionary for different self-loops into a single dictionary."""
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
         # Source and target have the same position, such that
@@ -305,6 +330,7 @@ def _initialize_selfloops(edge_to_control_points, node_positions,
 
 
 def _init_selfloop(source, control_points, node_positions, selfloop_radius, origin, scale):
+    """Initialise the positions of control points to positions on a circle next to the node."""
     # To minimise overlap with other edges, we want the loop to be
     # on the side of the node away from the centroid of the graph.
     if len(node_positions) > 1:
@@ -335,7 +361,7 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
 def _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
         origin, scale, k, initial_temperature, total_iterations, node_size):
-
+    """Optimise the position of control points using the FR algorithm."""
     nodes = list(node_positions.keys())
     expanded_edges = _expand_edges(edge_to_control_points)
     expanded_node_positions = control_point_positions.copy() # TODO: may need deepcopy here
@@ -360,6 +386,7 @@ def _optimize_control_point_positions(
 
 
 def _get_path_through_control_points(edge_to_control_points, node_positions, control_point_positions):
+    """Map each edge to an array of (optimised) control points positions."""
     edge_to_path = dict()
     for (source, target), control_points in edge_to_control_points.items():
         path = [node_positions[source]] \
@@ -370,6 +397,7 @@ def _get_path_through_control_points(edge_to_control_points, node_positions, con
 
 
 def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
+    """Fit splines through edge paths for smoother edge routing."""
     return {edge : _bspline(path, *args, **kwargs) for edge, path in edge_to_path.items()}
 
 
@@ -383,47 +411,52 @@ def get_bundled_edge_paths(edges, node_positions,
                            step_size               = 0.04,
                            straighten_by           = 0.,
 ):
-    """Bundle edges using the FDEB algorithm proposed by Holten & Wijk (2009).
+    """Bundle edges using the FDEB algorithm as proposed in [Holten2009]_.
 
     This implementation follows the paper closely with the exception
     that instead of doubling the number of control point on each
     iteration (2n), a new control point is inserted between each
     existing pair of control points (2(n-1)+1), as proposed e.g. in Wu
-    et al. (2015).
+    et al. (2015) [Wu2015]_.
 
-    Arguments:
+    Parameters
     ----------
+
     edges : list
-        List of (source node, target node) 2-tuples.
-
-    node_positions : dict node : (float x, float y)
-        Dictionary mapping nodes to (x, y) positions.
-
-    k : float (default 1000.)
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+    k : float, default 1000.
         The stiffness of the springs that connect control points.
-
-    compatibility_threshold : float [0, 1] (default 0.05)
+    compatibility_threshold : float, default 0.05
         Edge pairs with a lower compatibility score are not bundled together.
         Set to zero to bundle all edges with each other regardless of compatibility.
-
-    total_cycles : int (default 5)
+        Set to one to prevent bundling of any (non-identical) edges.
+    total_cycles : int, default 5
         The number of cycles. The number of control points (P) is doubled each cycle.
-
-    total_iterations : int (default 50)
+    total_iterations : int, default 50
         Number of iterations (I) in the first cycle. Iterations are reduced by 1/3 with each cycle.
-
-    step_size : float (default 0.04)
+    step_size : float, default 0.04
         Maximum step size (S) in the first cycle. Step sizes are halved each cycle.
-
-    straighten_by : float [0, 1) (default 0.)
+    straighten_by : float, default 0.
         The amount of edge straightening applied after bundling.
-        A low amount of straightening provides an indication of the number of
+        A small amount of straightening can help indicating the number of
         edges comprising a bundle by widening the bundle.
+        If set to one, edges are fully un-bundled and plotted as stright lines.
 
-    Returns:
-    --------
-    edge_to_paths : dict edge : path
-        Dictionary mapping edges to arrays of (x, y) tuples, the edge segments.
+    Returns
+    -------
+    edge_paths : dict
+        Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
+
+    References
+    ----------
+    .. [Holten2009] Holten D and Van Wijk JJ. (2009) ‘Force-Directed edge
+       bundling for graph visualization’, Computer Graphics Forum.
+
+    .. [Wu2015] Wu J, Yu L, Yu H (2015) ‘Texture-based edge bundling: A
+       web-based approach for interactively visualizing large graphs’,
+       IEEE International Conference on Big Data.
 
     """
 
@@ -471,11 +504,13 @@ def get_bundled_edge_paths(edges, node_positions,
 
 
 def _get_k(edges, node_positions, k):
+    """Assign each edge a stiffness depending on its length and the global stiffness constant."""
     return {(s, t) : k / np.linalg.norm(node_positions[t] - node_positions[s]) for (s, t) in edges}
 
 
 @profile
 def _get_edge_compatibility(edges, node_positions, threshold):
+    """Compute the compatibility between all edge pairs."""
     # precompute edge segments, segment lengths and corresponding vectors
     edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edges}
 
@@ -541,10 +576,18 @@ class Segment(object):
 
 
 def _get_angle_compatibility(P, Q):
+    """Compute the angle compatibility between two segments P and Q.
+    The angle compatibility is high if the interior angle between them is small.
+
+    """
     return np.abs(np.clip(np.dot(P.unit_vector, Q.unit_vector), -1.0, 1.0))
 
 
 def _get_scale_compatibility(P, Q):
+    """Compute the scale compatibility between two segments P and Q.
+    The scale compatibility is high if their lengths are similar.
+
+    """
     avg = 0.5 * (P.length + Q.length)
 
     # The definition in the paper is rubbish, as the result is not on the interval [0, 1].
@@ -559,6 +602,10 @@ def _get_scale_compatibility(P, Q):
 
 
 def _get_position_compatibility(P, Q):
+    """Compute the position compatibility between two segments P and Q.
+    The position compatibility is high if the distance between their midpoints is small.
+
+    """
     avg = 0.5 * (P.length + Q.length)
     distance_between_midpoints = np.linalg.norm(Q.midpoint - P.midpoint)
     # This is the definition from the paper, but the scaling should probably be more aggressive.
@@ -566,6 +613,10 @@ def _get_position_compatibility(P, Q):
 
 
 def _get_visibility_compatibility(P, Q):
+    """Compute the visibility compatibility between two segments P and Q.
+    The visibility compatibility is low if bundling would occlude any of the end points of the segments.
+
+    """
     return min(_get_visibility(P, Q), _get_visibility(Q, P))
 
 
@@ -580,6 +631,7 @@ def _get_visibility(P, Q):
 
 
 def _initialize_bundled_control_points(edges, node_positions):
+    """Initialise each edge with two control points, the positions of the source and target nodes."""
     edge_to_control_points = dict()
     for source, target in edges:
         edge_to_control_points[(source, target)] \
@@ -605,6 +657,7 @@ def _expand_control_points(edge_to_control_points):
 
 
 def _get_Fs(edge_to_control_points, k):
+    """Compute all spring forces."""
     out = dict()
     for edge, control_points in edge_to_control_points.items():
         delta = np.zeros_like(control_points)
@@ -618,7 +671,7 @@ def _get_Fs(edge_to_control_points, k):
 
 @profile
 def _get_Fe(edge_to_control_points, edge_compatibility, out):
-
+    """Compute all electrostatic forces."""
     for e1, e2, compatibility, reverse in edge_compatibility:
         P = edge_to_control_points[e1]
         Q = edge_to_control_points[e2]
@@ -652,6 +705,7 @@ def _get_Fe(edge_to_control_points, edge_compatibility, out):
 
 
 def _update_control_point_positions(edge_to_control_points, F, step_size):
+    """Update control point positions using the calculated net forces."""
     for edge, displacement in F.items():
         displacement_length = np.clip(np.linalg.norm(displacement), 1e-12, None) # prevent divide by 0 error in next line
         displacement = displacement / displacement_length * np.clip(displacement_length, None, step_size)
@@ -660,11 +714,18 @@ def _update_control_point_positions(edge_to_control_points, F, step_size):
 
 
 def _smooth_edges(edge_to_path):
+    """Wraps _smooth_path()."""
     return {edge : _smooth_path(path) for edge, path in edge_to_path.items()}
 
 
 def _smooth_path(path):
-    # https://stackoverflow.com/a/52020098/2912349
+    """Smooth a path by fitting a univariate spline.
+
+    Notes
+    -----
+    Adapted from https://stackoverflow.com/a/52020098/2912349
+
+    """
 
     # Compute the linear length along the line:
     distance = np.cumsum( np.sqrt(np.sum( np.diff(path, axis=0)**2, axis=1 )) )
@@ -679,10 +740,15 @@ def _smooth_path(path):
 
 
 def _straighten_edges(edge_to_path, straighten_by):
+    """Wraps _straigthen_path()"""
     return {edge : _straighten_path(path, straighten_by) for edge, path in edge_to_path.items()}
 
 
 def _straighten_path(path, straighten_by):
+    """Straigthen a path by computing the weighted average between the path and
+    a straight line connecting the end points.
+
+    """
     p0 = path[0]
     p1 = path[-1]
     n = len(path)

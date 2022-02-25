@@ -1,2 +1,7 @@
 pytest
 pytest-mpl
+sphinx
+numpydoc
+sphinx-rtd-theme
+sphinx-gallery
+Pillow

@@ -1,10 +1,25 @@
 import numpy as np
 
 def line_supercover(y0, x0, y1, x1):
-    """
+    """Returns all grid squares on line connecting points (x0, y0) and (x1, y1).
+
+    Parameters
+    ----------
+    y0, x0 : float
+        Coordinates of the start point of the line.
+    y1, x1 : float
+        Coordinates of the end point of the line.
+
+    Returns
+    -------
+    np.array of int with shape (n, 2)
+        List of row, col indices of the covered grid squares.
+
+    Notes
+    -----
     Adapted from:
-    https://github.com/scikit-image/scikit-image/issues/2232
-    https://gist.github.com/amccaugh/f459e45650915351bb65070141a28e3f
+    .. [1] https://github.com/scikit-image/scikit-image/issues/2232
+    .. [2] https://gist.github.com/amccaugh/f459e45650915351bb65070141a28e3f
     """
 
     dx = np.abs(x1-x0)
