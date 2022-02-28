@@ -1,6 +1,8 @@
 # netgraph
 
-Python drawing utilities for publication quality plots of networks.
+Netgraph is a python library for creating publication quality plots of networks.
+Netgraph is compatible with a variety of network data formats, including `networkx` and `igraph` `Graph` objects.
+
 
 ## Installation
 
@@ -35,9 +37,11 @@ Or without pip:
 python setup.py install
 ```
 
+
 ## Documentation
 
 The documentation of the full API, as well as numerous code examples can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
+
 
 ## Quickstart
 
@@ -89,6 +93,7 @@ help(Graph)
 help(InteractiveGraph)
 help(EditableGraph)
 ```
+
 
 ## Reasons why you might want to use netgraph
 
@@ -296,43 +301,6 @@ of the `Graph` or `InteractiveGraph` class:
 ```python
 from netgraph import Graph; help(Graph)
 ```
-
-### Consistent length units
-
-Existing drawing routines for networks in python (networkx, igraph)
-use fundamentally different length units for different plot elements.
-For example, networkx uses data units to specify node positions but
-display units for node sizes. This makes it difficult to judge the
-relative sizes of plot elements a priori. Also, layouts cannot be
-exactly reproduced on different computers, if their display sizes
-differ.
-
-This module amends these issues by having a single reference frame
-that derives from the data. Specifically, node positions and edge
-paths are specified in data units, and node sizes and edge widths are
-given in 1/100 of data units (i.e. a node with `node_size=2` has a
-radius of 0.02 in data units). Rescaling by 1/100 makes the node sizes
-and edge widths more comparable to typical node sizes in igraph and
-networkx.
-
-
-### Compatibility with igraph and networkx
-
-Many people that analyse networks in python use several network analysis libraries, e.g. igraph and networkx.
-To facilitate interoperability, various network formats are supported:
-
-1. Edge lists:
-
-   Iterable of (source, target) or (source, target, weight) tuples,
-   or equivalent (m, 2) or (m, 3) ndarray.
-
-2. Adjacency matrices:
-
-   Full-rank (n, n) ndarray, where n corresponds to the number of nodes.
-   The absence of a connection is indicated by a zero.
-
-3. igraph.Graph or networkx.Graph objects
-
 
 ## Help, I don't know how to do ...!
 
