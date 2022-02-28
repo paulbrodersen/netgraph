@@ -2,14 +2,39 @@
 
 Python drawing utilities for publication quality plots of networks.
 
+## Installation
 
-Install with:
+Install the current release of `netgraph` with:
 
 ``` shell
 pip install netgraph
 ```
 
-Import module and plot with:
+To upgrade to a newer version, use the `--upgrade` flag:
+
+``` shell
+pip install --upgrade netgraph
+```
+
+If you do not have permission to install software systemwide, you can install into your user directory using the --user flag:
+
+``` shell
+pip install --user netgraph
+```
+
+Alternatively, you can manually download netgraph from [GitHub](https://github.com/paulbrodersen/netgraph) or [PyPI](https://pypi.org/project/netgraph/).
+To install one of these versions, unpack it and run the following from the top-level source directory using the terminal:
+
+``` shell
+pip install .
+```
+
+Or without pip:
+
+``` shell
+python setup.py install
+```
+
 ## Documentation
 
 The documentation of the full API, as well as numerous code examples can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
@@ -176,7 +201,7 @@ plot_instance = EditableGraph(
 plt.show()
 ```
 
-### Exquisite control over plot elements
+### Fine control over plot elements
 
 High quality figures require fine control over plot elements.
 To that end, all node artist and edge artist properties can be specified in three ways:
