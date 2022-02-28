@@ -56,7 +56,7 @@ from netgraph import Graph
 
 fig, (ax1, ax2) = plt.subplots(1, 2)
 
-triangle = [(0, 1), (1, 1), (1, 2), (2, 0), (0, 2)]
+triangle = [(0, 1), (0, 2), (1, 1), (1, 2), (2, 0)]
 
 node_positions = {
     0 : np.array([0.2, 0.2]),

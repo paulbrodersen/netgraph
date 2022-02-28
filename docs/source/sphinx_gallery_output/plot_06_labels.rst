@@ -78,7 +78,7 @@ within that distance from node centres while avoiding collisions with node and e
 
     fig, (ax1, ax2) = plt.subplots(1, 2)
 
-    triangle = [(0, 1), (1, 1), (1, 2), (2, 0), (0, 2)]
+    triangle = [(0, 1), (0, 2), (1, 1), (1, 2), (2, 0)]
 
     node_positions = {
         0 : np.array([0.2, 0.2]),
@@ -135,7 +135,7 @@ initial draw using the standard :code:`matplotlib.text.Text` methods:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.643 seconds)
+   **Total running time of the script:** ( 0 minutes  0.558 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_06_labels.py:

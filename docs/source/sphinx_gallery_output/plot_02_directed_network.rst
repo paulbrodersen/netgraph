@@ -55,8 +55,8 @@ Default visualisation for a directed graph.
         (6, 7),
         (0, 4),
         (7, 4),
-        (1, 5), # <-
         (5, 1), # <-
+        (1, 5), # <-
         (2, 6),
         (3, 7)
     ]
@@ -67,7 +67,7 @@ Default visualisation for a directed graph.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.127 seconds)
+   **Total running time of the script:** ( 0 minutes  0.158 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_02_directed_network.py:
