@@ -17,6 +17,5 @@ backup.*
 figures/*
 
 # several sphinx-gallery files
-*.ipynb
 *.zip
 *.pickle
