@@ -12,6 +12,10 @@ pip install netgraph
 ```
 
 Import module and plot with:
+## Documentation
+
+The documentation of the full API, as well as numerous code examples can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
+
 
 ``` python
 import numpy as np
