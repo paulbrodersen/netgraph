@@ -3,3 +3,4 @@ sphinx-rtd-theme
 numpydoc
 sphinx-gallery
 Pillow
+networkx
