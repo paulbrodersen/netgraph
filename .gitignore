@@ -15,3 +15,8 @@ backup.*
 
 # all figures unless already added 
 figures/*
+
+# several sphinx-gallery files
+*.ipynb
+*.zip
+*.pickle
