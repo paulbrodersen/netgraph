@@ -11,12 +11,12 @@ Animation Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Visualise changes in edge weights over time. Here, we change both, the colour and the width of ...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, we demonstrate how to visualise changes in connectivity over time. ">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_01_dynamic_network_thumb.gif
-     :alt: Dynamic Networks
+     :alt: Visualise Changes in Connectivity
 
      :ref:`sphx_glr_sphinx_gallery_animations_plot_01_dynamic_network.py`
 
@@ -29,6 +29,48 @@ Animation Examples
    :hidden:
 
    /sphinx_gallery_animations/plot_01_dynamic_network
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, we demonstrate how to visualise changes in edge weights over time. We change both, the co...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_02_animate_edges_thumb.gif
+     :alt: Visualise Changes in Edge Weights
+
+     :ref:`sphx_glr_sphinx_gallery_animations_plot_02_animate_edges.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_animations/plot_02_animate_edges
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, we visualise changes in the nodes of a network. We change both, the colour and the size o...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_03_animate_nodes_thumb.gif
+     :alt: Visualise Changes in Node Properties
+
+     :ref:`sphx_glr_sphinx_gallery_animations_plot_03_animate_nodes.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_animations/plot_03_animate_nodes
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 """
-Dynamic Networks
-================
+Visualise Changes in Connectivity
+=================================
 
-Visualise changes in edge weights over time.
-Here, we change both, the colour and the width of the edges depending on the weight.
+Here, we demonstrate how to visualise changes in connectivity over time.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -15,34 +14,21 @@ from netgraph import Graph
 # Simulate a dynamic network with
 # - 5 frames / network states,
 # - with 10 nodes at each time point,
-# - an expected edge density of 25%, and
-# - edge weights drawn from a Gaussian distribution.
-total_nodes = 10
+# - an expected edge density of 25% at each time point
 total_frames = 5
-adjacency_matrix = np.random.rand(total_nodes, total_nodes) < 0.25
-weight_matrix = np.random.randn(total_frames, total_nodes, total_nodes)
-
-# Normalise the weights, such that they are on the interval [0, 1].
-# They can then be passed directly to matplotlib colormaps (which expect floats on that interval).
-vmin, vmax = -2, 2
-weight_matrix[weight_matrix<vmin] = vmin
-weight_matrix[weight_matrix>vmax] = vmax
-weight_matrix -= vmin
-weight_matrix /= vmax - vmin
-
-cmap = plt.cm.RdGy
+total_nodes = 10
+adjacency_matrix = np.random.rand(total_frames, total_nodes, total_nodes) < 0.25
 
 fig, ax = plt.subplots()
-g = Graph(adjacency_matrix, edge_cmap=cmap, arrows=True, ax=ax)
+g = Graph(np.ones((total_nodes, total_nodes)), edge_width=1.5, arrows=True, ax=ax) # initialise with fully connected graph
 
 def update(ii):
-    artists = []
-    for jj, kk in zip(*np.where(adjacency_matrix)):
-        w = weight_matrix[ii, jj, kk]
-        artist = g.edge_artists[(jj, kk)]
-        artist.set_facecolor(cmap(w))
-        artist.update_width(0.03 * np.abs(w-0.5)) # np.abs(w-0.5) so that large negative edges are also wide
-        artists.append(artist)
-    return artists
+    for (jj, kk), artist in g.edge_artists.items():
+        # turn visibility of edge artists on or off, depending on the adjacency
+        if adjacency_matrix[ii, jj, kk]:
+            artist.set_visible(True)
+        else:
+            artist.set_visible(False)
+    return g.edge_artists.values()
 
 animation = FuncAnimation(fig, update, frames=total_frames, interval=200, blit=True)
