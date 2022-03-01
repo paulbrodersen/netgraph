@@ -71,7 +71,8 @@ html_static_path = ['_static']
 from sphinx_gallery.sorting import FileNameSortKey
 
 sphinx_gallery_conf = {
-    'examples_dirs': '../../examples',        # path to your example scripts
-    'gallery_dirs': 'sphinx_gallery_output',  # path to where to save gallery generated output
+    'examples_dirs': ['../../examples', '../../animations'],                 # path to your example scripts
+    'gallery_dirs': ['sphinx_gallery_output', 'sphinx_gallery_animations'],  # path to where to save gallery generated output
     'within_subsection_order': FileNameSortKey,
+    'matplotlib_animations': True,
 }
