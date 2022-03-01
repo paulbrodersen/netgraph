@@ -12,31 +12,6 @@ Install the current release of `netgraph` with:
 pip install netgraph
 ```
 
-To upgrade to a newer version, use the `--upgrade` flag:
-
-``` shell
-pip install --upgrade netgraph
-```
-
-If you do not have permission to install software systemwide, you can install into your user directory using the --user flag:
-
-``` shell
-pip install --user netgraph
-```
-
-Alternatively, you can manually download netgraph from [GitHub](https://github.com/paulbrodersen/netgraph) or [PyPI](https://pypi.org/project/netgraph/).
-To install one of these versions, unpack it and run the following from the top-level source directory using the terminal:
-
-``` shell
-pip install .
-```
-
-Or without pip:
-
-``` shell
-python setup.py install
-```
-
 
 ## Documentation
 

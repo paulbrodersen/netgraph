@@ -47,6 +47,7 @@ __ https://stackoverflow.com/help/minimal-reproducible-example
    installation.rst
    quickstart.rst
    sphinx_gallery_output/index.rst
+   interactivity.rst
    sphinx_gallery_animations/index.rst
 
 .. toctree::
