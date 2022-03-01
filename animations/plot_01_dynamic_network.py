@@ -4,6 +4,7 @@ Dynamic Networks
 ================
 
 Visualise changes in edge weights over time.
+Here, we change both, the colour and the width of the edges depending on the weight.
 """
 import numpy as np
 import matplotlib.pyplot as plt
