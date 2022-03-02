@@ -1093,7 +1093,8 @@ class BaseGraph(object):
 
 
 class Graph(BaseGraph):
-    """Parses the given graph and initialises the BaseGraph object.
+    """Parses the given graph data object and initialises the BaseGraph object.
+
     If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
 
     Parameters
@@ -2066,7 +2067,7 @@ class TableOnClickGraph(Graph, TableOnClick):
 
 
 class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """Extends the `Graph` class to support interactivity.
+    """Extends the `Graph` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.
     - Nodes and edges are emphasized when hovering over them.

@@ -203,8 +203,9 @@ def get_fruchterman_reingold_layout(edges,
                                     node_positions      = None,
                                     fixed_nodes         = None,
                                     *args, **kwargs):
-    """Use the Fruchterman-Reingold algorithm [Fruchterman1991]_ to compute node positions.
+    """'Spring' or Fruchterman-Reingold node layout.
 
+    Uses the Fruchterman-Reingold algorithm [Fruchterman1991]_ to compute node positions.
     This algorithm simulates the graph as a physical system, in which nodes repell each other.
     For connected nodes, this repulsion is counteracted by an attractive force exerted by the edges, which are simulated as springs.
     The resulting layout is hence often referred to as a 'spring' layout.
@@ -507,8 +508,9 @@ def get_random_layout(edges, origin=(0,0), scale=(1,1)):
 
 @_handle_multiple_components
 def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
-    """Use the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
+    """'Dot' or Sugiyama node layout.
 
+    Uses the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
     This function is a wrapper around the SugiyamaLayout class in grandalf.
 
     Parameters
@@ -598,7 +600,7 @@ class vertex_view(object):
 
 @_handle_multiple_components
 def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
-    """Compute a circular node layout.
+    """Circular node layout.
 
     By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are minimised.
 
@@ -866,7 +868,7 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=Tr
 
 @_handle_multiple_components
 def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
-    """Compute the node positions for a modular graph.
+    """Community node layout for modular graphs.
 
     This implements the following steps:
 
