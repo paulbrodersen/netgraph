@@ -56,9 +56,11 @@ def _get_layout_for_multiple_components(edges, node_positions, components, layou
 
 
 def get_straight_edge_paths(edges, node_positions, edge_width):
-    """Determine the edge layout, where edges are represented by straight
-    lines connecting the source and target node. Bi-directional edges
-    are offset from one another by one edge width.
+    """Edge routing using straight lines.
+
+    Computes the edge paths, such that edges are represented by
+    straight lines connecting the source and target node.
+    Bi-directional edges are offset from one another by one edge width.
 
     Parameters
     ----------
@@ -110,7 +112,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
 
 
 def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
-    """Compute the edge paths for self-loops.
+    """Edge routing for self-loops.
 
     Parameters
     ----------
@@ -182,7 +184,9 @@ def get_curved_edge_paths(edges, node_positions,
                           initial_temperature           = 0.01,
                           total_iterations              = 50,
                           node_size                     = 0.):
-    """Determine the edge layout, where edges are represented by curved
+    """Edge routing using curved paths that avoid nodes and other edges.
+
+    Computes the edge paths, such that edges are represented by curved
     lines connecting the source and target node. Edges paths avoid
     nodes and each other. The edge layout is determined using the
     Fruchterman-Reingold algorithm.
@@ -411,8 +415,9 @@ def get_bundled_edge_paths(edges, node_positions,
                            step_size               = 0.04,
                            straighten_by           = 0.,
 ):
-    """Bundle edges using the FDEB algorithm as proposed in [Holten2009]_.
+    """Edge routing with bundled edge paths.
 
+    Uses the FDEB algorithm as proposed in [Holten2009]_.
     This implementation follows the paper closely with the exception
     that instead of doubling the number of control point on each
     iteration (2n), a new control point is inserted between each

@@ -382,16 +382,16 @@ class MutableGraph(InteractiveGraph):
 
 
 class EditableGraph(MutableGraph):
-    """Extends `InteractiveGraph` to support:
+    """Extends `InteractiveGraph` to support adding, deleting, and editing graph elements interactively.
 
-    a) the addition and removal of nodes and edges;
+    a) Addition and removal of nodes and edges:
 
     - Double clicking on two nodes successively will create an edge between them.
     - Pressing 'insert' or '+' will add a new node to the graph.
     - Pressing 'delete' or '-' will remove selected nodes and edges.
     - Pressing '@' will reverse the direction of selected edges.
 
-    b) creation and editing of labels and annotations;
+    b) Creation and editing of labels and annotations:
 
     - To create or edit a node or edge label, select the node (or edge) artist, press the 'enter' key, and type.
     - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
