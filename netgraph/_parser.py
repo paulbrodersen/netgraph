@@ -1,9 +1,11 @@
 #!/usr/bin/env python
+# coding: utf-8
 """
-Functions for reading and writing graphs.
+Functions for parsing various graph formats and converting them into a node list, edge list, and edge-to-weight mapping.
 """
-import numpy as np
+
 import warnings
+import numpy as np
 
 from functools import wraps
 
@@ -11,6 +13,7 @@ from ._utils import _save_cast_float_to_int, _get_unique_nodes
 
 
 def _handle_multigraphs(parser):
+    """Raise a warning if the given graph appears to be a multigraph, and remove duplicate edges."""
     def wrapped_parser(graph, *args, **kwargs):
         nodes, edges, edge_weight = parser(graph, *args, **kwargs)
 
@@ -29,30 +32,31 @@ def _handle_multigraphs(parser):
 
 
 def parse_graph(graph):
-    """
-    Arguments
+    """Parse the given graph format and convert it into a node list, edge list, and edge_weight dictionary.
+
+    Parameters
     ----------
     graph: various formats
+
         Graph object to plot. Various input formats are supported.
         In order of precedence:
+
         - Edge list:
-            Iterable of (source, target) or (source, target, weight) tuples,
-            or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
         - Adjacency matrix:
-            Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
-            The absence of a connection is indicated by a zero.
-            Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
+          Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+          The absence of a connection is indicated by a zero.
+          Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
         - networkx.Graph or igraph.Graph object
 
-    Returns:
-    --------
-    nodes : V-long list of node uids
-        List of unique nodes.
-
-    edges: E-long list of 2-tuples
-        List of edges. Each tuple corresponds to an edge defined by (source, target).
-
-    edge_weight: dict (source, target) : float or None
+    Returns
+    -------
+    nodes : list
+        List of V unique nodes.
+    edges: list of 2-tuples
+        List of E edges. Each tuple corresponds to an edge defined by (source node, target node).
+    edge_weight: dict edge : float or None
         Dictionary mapping edges to weights. If the graph is unweighted, None is returned.
 
     """
@@ -92,6 +96,7 @@ def parse_graph(graph):
 
 @_handle_multigraphs
 def _parse_sparse_matrix_format(adjacency):
+    """Parse graphs given in a sparse format, i.e. edge lists or sparse matrix representations."""
     adjacency = np.array(adjacency)
     rows, columns = adjacency.shape
 
@@ -130,11 +135,13 @@ def _parse_sparse_matrix_format(adjacency):
 
 
 def _parse_edge_list(edges):
+    """Ensures that the type of edges is a list, and each edge is a 2-tuple."""
     # Edge list may be an array, or a list of lists. We want a list of tuples.
     return [(source, target) for (source, target) in edges]
 
 
 def _parse_adjacency_matrix(adjacency):
+    """Parse graphs given in adjacency matrix format, i.e. a full-rank matrix."""
     sources, targets = np.where(adjacency)
     edges = list(zip(sources.tolist(), targets.tolist()))
     nodes = list(range(adjacency.shape[0]))
@@ -148,6 +155,7 @@ def _parse_adjacency_matrix(adjacency):
 
 @_handle_multigraphs
 def _parse_networkx_graph(graph, attribute_name='weight'):
+    """Parse graphs represented as networkx.Graph or related objects."""
     edges = list(graph.edges)
     nodes = list(graph.nodes)
     try:
@@ -159,6 +167,7 @@ def _parse_networkx_graph(graph, attribute_name='weight'):
 
 @_handle_multigraphs
 def _parse_igraph_graph(graph):
+    """Parse graphs given as igraph.Graph or related objects."""
     edges = [(edge.source, edge.target) for edge in graph.es()]
     nodes = graph.vs.indices
     if graph.is_weighted():
@@ -169,7 +178,7 @@ def _parse_igraph_graph(graph):
 
 
 def _is_directed(edges):
-    # test for bi-directional edges
+    """Check if the edge list contains bi-directional edges, i.e. at least one edge (a, b) for which (b, a) also exists."""
     for (source, target) in edges:
         if ((target, source) in edges) and (source != target):
             return True

@@ -1,52 +1,74 @@
 # netgraph
 
-Python drawing utilities for publication quality plots of networks.
+Netgraph is a python library for creating publication quality plots of networks.
+Netgraph is compatible with a variety of network data formats, including `networkx` and `igraph` `Graph` objects.
 
 
-### Quickstart
+## Installation
 
-Install with:
+Install the current release of `netgraph` with:
 
 ``` shell
 pip install netgraph
 ```
 
-Import module and plot with:
+
+## Documentation
+
+The documentation of the full API, as well as numerous code examples can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
+
+
+## Quickstart
 
 ``` python
-import numpy as np
 import matplotlib.pyplot as plt
 from netgraph import Graph, InteractiveGraph, EditableGraph
 
 # Several graph formats are supported:
-graph_data = [(0, 1), (1, 2), (2, 0)] # edge list
-# graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)] # edge list with weights
-# graph_data = np.random.rand(10, 10) # full rank matrix
-# graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
-# graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
+
+# 1) edge lists
+graph_data = [(0, 1), (1, 2), (2, 0)]
+
+# 2) edge list with weights
+graph_data = [(0, 1, 0.2), (1, 2, -0.4), (2, 0, 0.7)]
+
+# 3) full rank matrices
+import numpy
+graph_data = np.random.rand(10, 10)
+
+# 4) networkx Graph and DiGraph objects (MultiGraph objects are not supported, yet)
+import networkx
+graph_data = networkx.karate_club_graph()
+
+# 5) igraph.Graph objects
+import igraph
+graph_data = igraph.Graph.Famous('Zachary')
 
 # Create a non-interactive plot:
 Graph(graph_data)
 plt.show()
 
-# Create an interactive plot.
+# Create an interactive plot, in which the nodes can be re-positioned with the mouse.
 # NOTE: you must retain a reference to the plot instance!
 # Otherwise, the plot instance will be garbage collected after the initial draw
 # and you won't be able to move the plot elements around.
-# For similar reasons, if you are using PyCharm, you have to execute the code in
+# For related reasons, if you are using PyCharm, you have to execute the code in
 # a console (Alt+Shift+E).
 plot_instance = InteractiveGraph(graph_data)
 plt.show()
 
-# Create an editable plot.
+# Create an editable plot, which is an interactive plot with the additions
+# that nodes and edges can be inserted or deleted, and labels and annotations
+# can be created, edited, or deleted as well.
 plot_instance = EditableGraph(graph_data)
 plt.show()
 
-# read the documentation
+# read the documentation for a full list of available arguments
 help(Graph)
 help(InteractiveGraph)
 help(EditableGraph)
 ```
+
 
 ## Reasons why you might want to use netgraph
 
@@ -159,7 +181,7 @@ plot_instance = EditableGraph(
 plt.show()
 ```
 
-### Exquisite control over plot elements
+### Fine control over plot elements
 
 High quality figures require fine control over plot elements.
 To that end, all node artist and edge artist properties can be specified in three ways:
@@ -254,43 +276,6 @@ of the `Graph` or `InteractiveGraph` class:
 ```python
 from netgraph import Graph; help(Graph)
 ```
-
-### Consistent length units
-
-Existing drawing routines for networks in python (networkx, igraph)
-use fundamentally different length units for different plot elements.
-For example, networkx uses data units to specify node positions but
-display units for node sizes. This makes it difficult to judge the
-relative sizes of plot elements a priori. Also, layouts cannot be
-exactly reproduced on different computers, if their display sizes
-differ.
-
-This module amends these issues by having a single reference frame
-that derives from the data. Specifically, node positions and edge
-paths are specified in data units, and node sizes and edge widths are
-given in 1/100 of data units (i.e. a node with `node_size=2` has a
-radius of 0.02 in data units). Rescaling by 1/100 makes the node sizes
-and edge widths more comparable to typical node sizes in igraph and
-networkx.
-
-
-### Compatibility with igraph and networkx
-
-Many people that analyse networks in python use several network analysis libraries, e.g. igraph and networkx.
-To facilitate interoperability, various network formats are supported:
-
-1. Edge lists:
-
-   Iterable of (source, target) or (source, target, weight) tuples,
-   or equivalent (m, 2) or (m, 3) ndarray.
-
-2. Adjacency matrices:
-
-   Full-rank (n, n) ndarray, where n corresponds to the number of nodes.
-   The absence of a connection is indicated by a zero.
-
-3. igraph.Graph or networkx.Graph objects
-
 
 ## Help, I don't know how to do ...!
 
