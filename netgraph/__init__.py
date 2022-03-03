@@ -85,6 +85,10 @@ from ._interactive_variants import (
     EditableGraph,
 )
 
+from ._named import (
+    BaseArcDiagram,
+)
+
 from ._parser import parse_graph
 
 

@@ -653,8 +653,11 @@ class BaseGraph(object):
             curved = False if (len(edge_path[edge]) == 2) else True
 
             source, target = edge
-            if ((target, source) in edge_path) and not curved: # i.e. bidirectional, straight edges
-                shape = 'right' # i.e. plot half arrow / thin line shifted to the right
+            if ((target, source) in edge_path) and (source != target): # i.e. bidirectional edges excluding self-loops
+                if np.allclose(edge_path[(source, target)], edge_path[(target, source)][::-1]): # i.e. same path
+                    shape = 'right' # i.e. plot half arrow / thin line shifted to the right
+                else:
+                    shape = 'full'
             else:
                 shape = 'full'
 
