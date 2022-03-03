@@ -277,6 +277,12 @@ of the `Graph` or `InteractiveGraph` class:
 from netgraph import Graph; help(Graph)
 ```
 
+## Recent changes
+
+- 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised withut tabular annotations
+- 4.2.1 Added online documentation
+
+
 ## Help, I don't know how to do ...!
 
 Please raise an issue. Include any relevant code and data in a

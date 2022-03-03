@@ -2327,8 +2327,8 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         else:
             AnnotateOnClick.__init__(self, artist_to_annotation)
 
-        artist_to_table = dict()
         if 'tables' in kwargs:
+            artist_to_table = dict()
             for key, table in kwargs['tables'].items():
                 if key in self.nodes:
                     artist_to_table[self.node_artists[key]] = table
@@ -2337,10 +2337,10 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
                 else:
                     raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
 
-        if 'table_kwargs' in kwargs:
-            TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
-        else:
-            TableOnClick.__init__(self, artist_to_table)
+            if 'table_kwargs' in kwargs:
+                TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
+            else:
+                TableOnClick.__init__(self, artist_to_table)
 
 
     def _on_motion(self, event):
@@ -2353,7 +2353,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
             DraggableGraph._on_release(self, event)
             if self.artist_to_annotation:
                 AnnotateOnClickGraph._on_release(self, event)
-            if self.artist_to_table:
+            if hasattr(self, 'artist_to_table'):
                 TableOnClickGraph._on_release(self, event)
         else:
             DraggableGraph._on_release(self, event)
