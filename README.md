@@ -1,5 +1,7 @@
 # netgraph
 
+[![Downloads](https://pepy.tech/badge/netgraph)](https://pepy.tech/project/netgraph)
+
 Netgraph is a python library for creating publication quality plots of networks.
 Netgraph is compatible with a variety of network data formats, including `networkx` and `igraph` `Graph` objects.
 
