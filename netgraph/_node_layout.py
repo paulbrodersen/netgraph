@@ -929,9 +929,11 @@ def _get_node_positions(edges, node_to_community):
     community_to_nodes = _invert_dict(node_to_community)
     node_positions = dict()
     for nodes in community_to_nodes.values():
-        subgraph = _get_subgraph(edges, list(nodes))
-        subgraph_node_positions = get_fruchterman_reingold_layout(
-            subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
-        node_positions.update(subgraph_node_positions)
-
+        if len(nodes) > 1:
+            subgraph = _get_subgraph(edges, list(nodes))
+            subgraph_node_positions = get_fruchterman_reingold_layout(
+                subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
+            node_positions.update(subgraph_node_positions)
+        elif len(nodes) == 1:
+            node_positions.update({nodes.pop() : np.array([0., 0.])})
     return node_positions
