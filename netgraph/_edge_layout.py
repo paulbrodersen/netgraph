@@ -18,6 +18,7 @@ from ._utils import (
     _bspline,
     _get_n_points_on_a_circle,
     _get_angle,
+    _get_unit_vector,
     _edge_list_to_adjacency_list,
     _get_connected_components,
 )
@@ -112,7 +113,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
+def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, angle=None):
     """Edge routing for self-loops.
 
     Parameters
@@ -127,6 +128,8 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
         A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
+    angle : float or None, default None
+        The starting angle of the self-loop in radians. If None, the self-loop is drawn opposite of the centroid of the graph.
 
     Returns
     -------
@@ -144,25 +147,28 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale):
             continue
 
         edge_paths[(source, target)] = _get_selfloop_path(
-            source, node_positions, selfloop_radius, origin, scale)
+            source, node_positions, selfloop_radius, origin, scale, angle)
 
     return edge_paths
 
 
-def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale):
+def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, angle):
     """Compute the edge path for a single self-loop."""
 
     x, y = node_positions[source]
 
-    # To minimise overlap with other edges, we want the loop to be
-    # on the side of the node away from the centroid of the graph.
-    if len(node_positions) > 1:
-        centroid = np.mean(list(node_positions.values()), axis=0)
-        delta = node_positions[source] - centroid
-        distance = np.linalg.norm(delta)
-        unit_vector = delta / distance
-    else: # single node in graph; self-loop points upwards
-        unit_vector = np.array([0, 1])
+    if angle is not None:
+        unit_vector = _get_unit_vector(np.array([np.cos(angle), np.sin(angle)]))
+    else:
+        # To minimise overlap with other edges, we want the loop to be
+        # on the side of the node away from the centroid of the graph.
+        if len(node_positions) > 1:
+            centroid = np.mean(list(node_positions.values()), axis=0)
+            delta = node_positions[source] - centroid
+            distance = np.linalg.norm(delta)
+            unit_vector = delta / distance
+        else: # single node in graph; self-loop points upwards
+            unit_vector = np.array([0, 1])
 
     selfloop_center = node_positions[source] + selfloop_radius * unit_vector
 
@@ -444,15 +450,20 @@ connecting the source and target node.
         Dictionary mapping each edge to a list of edge segments.
 
     """
-
+    # TODO: ensure that arcs are within bbox given by origin and scale
     edge_paths = dict()
     for source, target in edges:
+        if source == target:
+            # msg = "Plotting of self-loops not supported for straight edges."
+            # msg += "Ignoring edge ({}, {}).".format(source, target)
+            # warnings.warn(msg)
+            continue
         arc_factory = ConnectionStyle.Arc3(rad=rad)
         path = arc_factory(
             node_positions[source],
             node_positions[target],
             shrinkA=0., shrinkB=0.
-        )
+            )
         edge_paths[(source, target)] = _bspline(path.vertices, 100)
 
     return edge_paths
