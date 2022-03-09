@@ -57,7 +57,12 @@ def _handle_multiple_components(layout_function):
                     components.append([node])
 
         if len(components) > 1:
-            return get_layout_for_multiple_components(edges, components, layout_function, *args, **kwargs)
+            if layout_function.__name__ == 'get_linear_layout':
+                return get_layout_for_multiple_components(
+                    edges, components, layout_function, mode='side-by-side', *args, **kwargs)
+            else:
+                return get_layout_for_multiple_components(
+                    edges, components, layout_function, mode='packed', *args, **kwargs)
         else:
             return layout_function(edges, *args, **kwargs)
 
@@ -65,9 +70,7 @@ def _handle_multiple_components(layout_function):
 
 
 def get_layout_for_multiple_components(edges, components, layout_function,
-                                       origin = (0, 0),
-                                       scale  = (1, 1),
-                                       *args, **kwargs):
+                                       origin, scale, mode='packed', *args, **kwargs):
     """Determine suitable bounding box dimensions and placement for each
     component in the graph, and then compute the layout of each
     individual component given the constraint of the bounding box.
@@ -81,10 +84,19 @@ def get_layout_for_multiple_components(edges, components, layout_function,
     layout_function : function
         Handle to the function computing the relative positions of each node within a component.
         The args and kwargs are passed through to this function.
-    origin : tuple, default (0, 0)
+    origin : tuple
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple, default (1, 1)
+    scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    mode : str, default 'packed'
+        The way in which individual components are arranged w.r.t. each other.
+        One of:
+
+        - 'packed'       : Use rectangle packing to tightly arrange components.
+        - 'side-by-side' : Components are arranged next to each other.
+
+    *args, **kwargs
+        Passed through to layout_function
 
     Returns
     -------
@@ -93,7 +105,16 @@ def get_layout_for_multiple_components(edges, components, layout_function,
 
     """
 
-    bboxes = _get_component_bboxes(components, origin, scale)
+    if mode == 'packed':
+        bboxes = _get_packed_component_bboxes(components, origin, scale)
+    elif mode == 'side-by-side':
+        bboxes = _get_side_by_side_component_bboxes(components, origin, scale)
+    else:
+        msg = "Variable 'mode' is one of:"
+        msg += "\n    - 'packed'"
+        msg += "\n    - 'side-by-side'"
+        msg += f"\nCurrent value: '{mode}'"
+        raise ValueError(msg)
 
     node_positions = dict()
     for ii, (component, bbox) in enumerate(zip(components, bboxes)):
@@ -108,16 +129,18 @@ def get_layout_for_multiple_components(edges, components, layout_function,
     return node_positions
 
 
-def _get_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
+def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
     """Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Use rectangle packing to tightly arrange bounding boxes.
 
     Parameters
     ----------
     components : list of sets
         The connected components of the graph.
-    origin : tuple, default (0, 0)
+    origin : tuple
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple, default (1, 1)
+    scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     power : float, default 0.8
         The dimensions each bounding box are given by |V|^power by |V|^power,
@@ -189,6 +212,57 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
     rescaled_bboxes = [(x, y, w, h) for (x, y), (w, h) in zip(lower_left_hand_corners, dimensions)]
 
     return rescaled_bboxes
+
+
+def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
+    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Position bounding boxes next to each other.
+
+    Parameters
+    ----------
+    components : list of sets
+        The connected components of the graph.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+
+    Returns
+    -------
+    bboxes : list of tuples
+        The (left, bottom, width height) bounding boxes for each component.
+
+    """
+
+    relative_dimensions = [(len(component), 1) for component in components]
+
+    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
+    # We choose a padding proportional to the dimensions of the largest box.
+    maximum_dimensions = np.max(relative_dimensions, axis=0)
+    pad_x, pad_y = pad_by * maximum_dimensions
+    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
+
+    x = 0
+    origins = []
+    for (dx, _) in padded_dimensions:
+        origins.append((x, 0))
+        x += dx
+
+    bboxes = [(x, y, width, height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
+
+    # rescale boxes to canvas, effectively reversing the upscaling
+    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    if DEBUG:
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        fig, ax = plt.subplots(1,1)
+        for bbox in bboxes:
+            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+        plt.show()
+
+    return bboxes
 
 
 @_handle_multiple_components
