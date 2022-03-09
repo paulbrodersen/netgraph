@@ -633,6 +633,8 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
 
     if reduce_edge_crossings:
         if not _is_complete(edges):
+            # remove self-loops as these should have no bearing on the solution
+            edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
 
     return dict(zip(nodes, positions))
@@ -861,6 +863,8 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=Tr
 
     if reduce_edge_crossings:
         if not _is_complete(edges):
+            # remove self-loops as these should have no bearing on the solution
+            edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
 
     return dict(zip(nodes, positions))
