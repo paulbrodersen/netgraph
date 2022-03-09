@@ -26,21 +26,18 @@ from ._edge_layout import (
 
 class BaseArcDiagram(BaseGraph):
 
-    def __init__(self, edges, nodes=None,
-                 node_layout='linear', edge_layout='arc',
-                 arc_above=True, origin=(0, -0.5), scale=(1, 1),
-                 *args, **kwargs):
+    def __init__(self, edges, nodes=None, arc_above=True,
+                 origin=(0, -0.5), scale=(1, 1), *args, **kwargs):
 
         self.arc_above = arc_above
         super().__init__(edges, nodes=nodes,
-                         node_layout=node_layout, edge_layout=edge_layout,
-                         origin=origin, scale=scale,
-                         *args, **kwargs)
+                         node_layout='linear', edge_layout='arc',
+                         origin=origin, scale=scale, *args, **kwargs)
 
-    def _get_edge_paths(self, *args, **kwargs):
-        edge_paths = super()._get_edge_paths(*args, **kwargs)
+    def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
+        edge_paths = super()._get_edge_paths(edges, node_positions, edge_layout, edge_layout_kwargs)
+        print(node_positions)
         if self.arc_above:
-            edge_paths = {edge : np.c_[path[:,0],  np.abs(path[:,1])] for edge, path in edge_paths.items()}
+            return {edge : np.c_[path[:,0],  np.abs(path[:,1])] for edge, path in edge_paths.items()}
         else:
-            edge_paths = {edge : np.c_[path[:,0], -np.abs(path[:,1])] for edge, path in edge_paths.items()}
-        return edge_paths
+            return {edge : np.c_[path[:,0], -np.abs(path[:,1])] for edge, path in edge_paths.items()}

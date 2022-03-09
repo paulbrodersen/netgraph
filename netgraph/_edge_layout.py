@@ -419,7 +419,7 @@ def get_arced_edge_paths(edges, node_positions, rad=1.,
 ):
 
     """Determine the edge layout, where edges are represented by arcs
-connecting the source and target node.
+    connecting the source and target node.
 
     Creates simple quadratic Bezier curves between nodes. The curves
     are created so that the middle control points (C1) are located at

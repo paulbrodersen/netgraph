@@ -443,7 +443,7 @@ class BaseGraph(object):
             return node_positions
         if node_layout == 'community':
             node_positions = get_community_layout(
-                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
                 node_positions = _reduce_node_overlap(node_positions, origin, scale)
             return node_positions
@@ -497,7 +497,7 @@ class BaseGraph(object):
 
         if isinstance(edge_layout, str):
             edge_paths = self._get_edge_paths(self.edges, self.node_positions,
-                                                   edge_layout, edge_layout_kwargs)
+                                              edge_layout, edge_layout_kwargs)
         elif isinstance(edge_layout, dict):
             self._check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
@@ -605,9 +605,12 @@ class BaseGraph(object):
         """
 
         if edge_layout == 'straight':
-            edge_paths = get_straight_edge_paths(edges, node_positions, edge_layout_kwargs['edge_width'])
-            selfloop_paths = get_selfloop_paths(
-                edges, node_positions, edge_layout_kwargs['selfloop_radius'], edge_layout_kwargs['origin'], edge_layout_kwargs['scale'])
+            edge_paths = get_straight_edge_paths(edges, node_positions,
+                                                 edge_layout_kwargs['edge_width'])
+            selfloop_paths = get_selfloop_paths(edges, node_positions,
+                                                selfloop_radius=edge_layout_kwargs['selfloop_radius'],
+                                                origin=edge_layout_kwargs['origin'],
+                                                scale=edge_layout_kwargs['scale'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
