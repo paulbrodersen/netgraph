@@ -211,7 +211,10 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
     dimensions = [(w * scale_x, h * scale_y) for (_, _, w, h) in bboxes]
     rescaled_bboxes = [(x, y, w, h) for (x, y), (w, h) in zip(lower_left_hand_corners, dimensions)]
 
-    return rescaled_bboxes
+    # shift by origin
+    x0, y0 = origin
+    shifted_bboxes = [(x + x0, y + y0, w, h) for (x, y, w, h) in rescaled_bboxes]
+    return shifted_bboxes
 
 
 def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
