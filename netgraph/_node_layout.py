@@ -676,7 +676,7 @@ class vertex_view(object):
 
 
 @_handle_multiple_components
-def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
+def get_circular_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_edge_crossings=True):
     """Circular node layout.
 
     By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are minimised.
@@ -689,6 +689,9 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    node_order : list or None, default None
+        The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
+        Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
 
@@ -707,6 +710,9 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=
     radius = np.min(scale) / 2
     radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
+
+    if node_order:
+        nodes = [node for node in node_order if node in nodes]
 
     if reduce_edge_crossings:
         if not _is_complete(edges):
@@ -904,7 +910,7 @@ def _get_centroid(polygon):
 
 
 @_handle_multiple_components
-def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=True):
+def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_edge_crossings=True):
     """Linear node layout.
 
     If :code:`reduce_edge_crossings` is set to :code:`True`, the algorithm
@@ -918,6 +924,9 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=Tr
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    node_order : list or None, default None
+        The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
+        Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
 
@@ -937,6 +946,9 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), reduce_edge_crossings=Tr
     x = np.linspace(origin[0], origin[0] + scale[0], total_nodes+2)[1:-1]
     y = np.full(total_nodes, origin[1] + 0.5 * scale[1])
     positions = np.c_[x, y]
+
+    if node_order:
+        nodes = [node for node in node_order if node in nodes]
 
     if reduce_edge_crossings:
         if not _is_complete(edges):

@@ -32,8 +32,11 @@ from ._utils import (
 
 class BaseArcDiagram(BaseGraph):
 
-    def __init__(self, edges, nodes=None, above=True, *args, **kwargs):
+    def __init__(self, edges, nodes=None, node_order=None, above=True, *args, **kwargs):
         self.above = above
+        kwargs.setdefault('node_layout_kwargs', dict())
+        kwargs['node_layout_kwargs'].setdefault('node_order', node_order)
+        kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', False)
         super().__init__(edges, nodes=nodes, node_layout='linear', edge_layout='arc', *args, **kwargs)
 
     def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
