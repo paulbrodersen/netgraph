@@ -23,21 +23,30 @@ from ._edge_layout import (
     get_arced_edge_paths,
     get_selfloop_paths,
 )
+from ._utils import (
+    _get_gradient_and_intercept,
+    _is_above_line,
+    _reflect_across_line
+)
+
 
 class BaseArcDiagram(BaseGraph):
 
-    def __init__(self, edges, nodes=None, arc_above=True,
-                 origin=(0, -0.5), scale=(1, 1), *args, **kwargs):
-
-        self.arc_above = arc_above
-        super().__init__(edges, nodes=nodes,
-                         node_layout='linear', edge_layout='arc',
-                         origin=origin, scale=scale, *args, **kwargs)
+    def __init__(self, edges, nodes=None, above=True, *args, **kwargs):
+        self.above = above
+        super().__init__(edges, nodes=nodes, node_layout='linear', edge_layout='arc', *args, **kwargs)
 
     def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
         edge_paths = super()._get_edge_paths(edges, node_positions, edge_layout, edge_layout_kwargs)
-        print(node_positions)
-        if self.arc_above:
-            return {edge : np.c_[path[:,0],  np.abs(path[:,1])] for edge, path in edge_paths.items()}
-        else:
-            return {edge : np.c_[path[:,0], -np.abs(path[:,1])] for edge, path in edge_paths.items()}
+
+        for (source, target), path in edge_paths.items():
+            p1 = self.node_positions[source]
+            p2 = self.node_positions[target]
+            gradient, intercept = _get_gradient_and_intercept(p1, p2)
+            mask = _is_above_line(path, gradient, intercept)
+            if self.above:
+                mask = np.invert(mask)
+            path[mask] = _reflect_across_line(path[mask], gradient, intercept)
+            edge_paths[(source, target)] = path
+
+        return edge_paths

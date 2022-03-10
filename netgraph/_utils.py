@@ -636,3 +636,39 @@ def _dfs(adjacency_list, start, visited=None):
         else: # otherwise no outgoing edge
             visited.add(node)
     return visited
+
+
+def _get_gradient_and_intercept(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    gradient = (y2 - y1) / (x2 - x1)
+    intercept = (x2 * y1 - x1 * y2) / (x2 - x1)
+    return gradient, intercept
+
+
+def _is_above_line(points, gradient, intercept):
+    """Returns true for points above a given line.
+
+    Notes
+    -----
+    Adapted from https://stackoverflow.com/a/45769740/2912349
+
+    """
+    a = np.array([0, intercept])
+    b = np.array([1, intercept + gradient])
+    return np.cross(points-a, b-a) < 0
+
+
+def _reflect_across_line(points, gradient, intercept):
+    """Reflect a set of points across a given line.
+
+    Notes
+    -----
+    Adapted from https://stackoverflow.com/a/45769740/2912349
+
+    """
+    x0, y0 = points.T
+    d = (x0 + (y0 - intercept) * gradient) / (1 + gradient**2)
+    x1 = 2 * d - x0
+    y1 = 2 * d * gradient - y0 + 2 * intercept
+    return np.c_[x1, y1]
