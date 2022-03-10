@@ -56,7 +56,7 @@ def _handle_multiple_components(layout_function):
                 for node in unconnected_nodes:
                     components.append([node])
 
-        if len(components) > 1:
+        if (len(components) > 1) or not edges:
             return get_layout_for_multiple_components(edges, components, layout_function, *args, **kwargs)
         else:
             return layout_function(edges, *args, **kwargs)
