@@ -281,6 +281,8 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.2.4 Plotting of graphs with a single node is now supported.
+- 4.2.3 Fixed a bug that occurred when using the community layout with at least one community containing a single node
 - 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised withut tabular annotations
 - 4.2.1 Added online documentation
 
