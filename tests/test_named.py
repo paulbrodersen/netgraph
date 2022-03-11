@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from netgraph._named import BaseArcDiagram
+from netgraph._named import BaseArcDiagram, ArcDiagram
 
 np.random.seed(42)
 
@@ -37,4 +37,18 @@ def test_BaseArcDiagram_with_multiple_components():
 def test_BaseArcDiagram_with_custom_node_order():
     fig, ax = plt.subplots()
     BaseArcDiagram([(0, 1), (1, 2)], node_order=[2, 1, 0], node_labels=True, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ArcDiagram_defaults():
+    fig, ax = plt.subplots()
+    ArcDiagram([(0, 1)], ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_ArcDiagram_with_weights():
+    fig, ax = plt.subplots()
+    ArcDiagram([(0, 1, 1.), (1, 2, -1.), (2, 3, 0.5), (3, 1, -0.5)], ax=ax)
     return fig

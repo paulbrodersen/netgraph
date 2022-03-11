@@ -87,6 +87,7 @@ from ._interactive_variants import (
 
 from ._named import (
     BaseArcDiagram,
+    ArcDiagram,
 )
 
 from ._parser import parse_graph
