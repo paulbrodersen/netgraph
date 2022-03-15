@@ -476,7 +476,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
-            edge_layout_kwargs.setdefault('angle', None)
+            edge_layout_kwargs.setdefault('selfloop_angle', None)
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
@@ -492,7 +492,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
-            edge_layout_kwargs.setdefault('angle', np.pi/2)
+            edge_layout_kwargs.setdefault('selfloop_angle', np.pi/2)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)
             edge_layout_kwargs.setdefault('total_cycles', 6)
@@ -613,7 +613,7 @@ class BaseGraph(object):
                                                 edge_layout_kwargs['selfloop_radius'],
                                                 edge_layout_kwargs['origin'],
                                                 edge_layout_kwargs['scale'],
-                                                edge_layout_kwargs['angle'])
+                                                edge_layout_kwargs['selfloop_angle'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
@@ -626,7 +626,7 @@ class BaseGraph(object):
                                                 edge_layout_kwargs['selfloop_radius'],
                                                 edge_layout_kwargs['origin'],
                                                 edge_layout_kwargs['scale'],
-                                                edge_layout_kwargs['angle'])
+                                                edge_layout_kwargs['selfloop_angle'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'bundled':
             edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
@@ -760,7 +760,7 @@ class BaseGraph(object):
                 selfloop_radius = self.edge_layout_kwargs['selfloop_radius'],
                 origin          = self.edge_layout_kwargs['origin'],
                 scale           = self.edge_layout_kwargs['scale'],
-                angle           = self.edge_layout_kwargs['angle']
+                angle           = self.edge_layout_kwargs['selfloop_angle']
             )
         return edge_paths
 
