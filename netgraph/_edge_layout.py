@@ -152,7 +152,7 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, an
     return edge_paths
 
 
-def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, angle):
+def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, angle=None):
     """Compute the edge path for a single self-loop."""
 
     x, y = node_positions[source]

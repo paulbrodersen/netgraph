@@ -476,6 +476,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
+            edge_layout_kwargs.setdefault('angle', None)
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
@@ -491,6 +492,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
+            edge_layout_kwargs.setdefault('angle', np.pi/2)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)
             edge_layout_kwargs.setdefault('total_cycles', 6)
@@ -608,9 +610,10 @@ class BaseGraph(object):
             edge_paths = get_straight_edge_paths(edges, node_positions,
                                                  edge_layout_kwargs['edge_width'])
             selfloop_paths = get_selfloop_paths(edges, node_positions,
-                                                selfloop_radius=edge_layout_kwargs['selfloop_radius'],
-                                                origin=edge_layout_kwargs['origin'],
-                                                scale=edge_layout_kwargs['scale'])
+                                                edge_layout_kwargs['selfloop_radius'],
+                                                edge_layout_kwargs['origin'],
+                                                edge_layout_kwargs['scale'],
+                                                edge_layout_kwargs['angle'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
@@ -623,7 +626,7 @@ class BaseGraph(object):
                                                 edge_layout_kwargs['selfloop_radius'],
                                                 edge_layout_kwargs['origin'],
                                                 edge_layout_kwargs['scale'],
-                                                angle=np.pi/2)
+                                                edge_layout_kwargs['angle'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'bundled':
             edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
@@ -720,6 +723,9 @@ class BaseGraph(object):
             edge_paths.update(self._update_curved_edge_paths(edges))
         elif self.edge_layout == 'bundled':
             edge_paths.update(self._update_bundled_edge_paths(edges))
+        elif self.edge_layout == 'arc':
+            edge_paths.update(self._update_arced_edge_paths([(source, target) for (source, target) in edges if source != target]))
+            edge_paths.update(self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target]))
         self.edge_paths.update(edge_paths)
         self._update_edge_artists(edge_paths)
 
@@ -753,7 +759,8 @@ class BaseGraph(object):
                 node_positions  = self.node_positions,
                 selfloop_radius = self.edge_layout_kwargs['selfloop_radius'],
                 origin          = self.edge_layout_kwargs['origin'],
-                scale           = self.edge_layout_kwargs['scale']
+                scale           = self.edge_layout_kwargs['scale'],
+                angle           = self.edge_layout_kwargs['angle']
             )
         return edge_paths
 
@@ -785,6 +792,10 @@ class BaseGraph(object):
     def _update_bundled_edge_paths(self, edges):
         # edge_paths = get_bundled_edge_paths(edges, self.node_positions, **self.edge_layout_kwargs)
         return get_bundled_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
+
+
+    def _update_arced_edge_paths(self, edges):
+        return get_arced_edge_paths(edges, self.node_positions, rad=self.edge_layout_kwargs['rad'])
 
 
     def _initialize_node_label_offset(self, node_labels, node_label_offset):

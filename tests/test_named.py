@@ -41,6 +41,20 @@ def test_BaseArcDiagram_with_custom_node_order():
 
 
 @pytest.mark.mpl_image_compare
+def test_BaseArcDiagram_with_custom_node_positions():
+    fig, ax = plt.subplots()
+    BaseArcDiagram([(0, 1)], node_labels=True, node_layout={0 : (0.1, 0.1), 1 : (0.9, 0.9)}, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_BaseArcDiagram_with_selfloops():
+    fig, ax = plt.subplots()
+    BaseArcDiagram([(0, 0), (0, 1)], node_labels=True, above=False, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_ArcDiagram_defaults():
     fig, ax = plt.subplots()
     ArcDiagram([(0, 1)], ax=ax)
