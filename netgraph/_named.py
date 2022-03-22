@@ -516,3 +516,58 @@ class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
             if self._nascent_edge:
                 self._nascent_edge._update(event.xdata, event.ydata)
                 self.fig.canvas.draw_idle()
+
+
+class EditableArcDiagram(MutableArcDiagram, EditableGraph):
+    """Extends `InteractiveArcDiagram` to support adding, deleting, and editing graph elements interactively.
+
+    a) Addition and removal of nodes and edges:
+
+    - Double clicking on two nodes successively will create an edge between them.
+    - Pressing 'insert' or '+' will add a new node to the graph.
+    - Pressing 'delete' or '-' will remove selected nodes and edges.
+    - Pressing '@' will reverse the direction of selected edges.
+
+    b) Creation and editing of labels and annotations:
+
+    - To create or edit a node or edge label, select the node (or edge) artist, press the 'enter' key, and type.
+    - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
+    - Terminate either action by pressing 'enter' or 'alt'+'enter' a second time.
+
+    Notes
+    -----
+    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
+
+    See also
+    --------
+    ArcDiagram, InteractiveArcDiagram
+
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # initiate node and edge label data structures if they don't exist
+        if not hasattr(self, 'node_label_artists'):
+            node_labels = {node : '' for node in self.nodes}
+            self.node_label_fontdict = self._initialize_node_label_fontdict(
+                kwargs.get('node_label_fontdict'), node_labels, kwargs.get('node_label_offset', (0., 0.)))
+            self.node_label_offset, self._recompute_node_label_offsets =\
+                self._initialize_node_label_offset(node_labels, kwargs.get('node_label_offset', (0., 0.)))
+            if self._recompute_node_label_offsets:
+                self._update_node_label_offsets()
+            self.node_label_artists = dict()
+            self.draw_node_labels(node_labels, self.node_label_fontdict)
+
+        if not hasattr(self, 'edge_label_artists'):
+            edge_labels = {edge : '' for edge in self.edges}
+            self.edge_label_fontdict = self._initialize_edge_label_fontdict(kwargs.get('edge_label_fontdict'))
+            self.edge_label_position = kwargs.get('edge_label_position', 0.5)
+            self.edge_label_rotate = kwargs.get('edge_label_rotate', True)
+            self.edge_label_artists = dict()
+            self.draw_edge_labels(edge_labels, self.edge_label_position,
+                                  self.edge_label_rotate, self.edge_label_fontdict)
+
+        self._currently_writing_labels = False
+        self._currently_writing_annotations = False
