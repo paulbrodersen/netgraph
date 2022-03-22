@@ -23,8 +23,15 @@ except ValueError:
 
 
 class NascentEdge(plt.Line2D):
-    def __init__(self, p1, p2):
-        super().__init__(p1, p2, color='lightgray', linestyle='--')
+    def __init__(self, source, origin):
+        self.source = source
+        self.origin = origin
+        x0, y0 = origin
+        super().__init__([x0, x0], [y0, y0], color='lightgray', linestyle='--')
+
+    def _update(self, x1, y1):
+        x0, y0 = self.origin
+        super().set_data([[x0, x1], [y0, y1]])
 
 
 class MutableGraph(InteractiveGraph):
@@ -54,7 +61,6 @@ class MutableGraph(InteractiveGraph):
         self._reverse_edge_artists = {artist : edge for edge, artist in self.edge_artists.items()}
         self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
         self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
-        self._nascent_edge_source = None
         self._nascent_edge = None
 
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
@@ -79,35 +85,44 @@ class MutableGraph(InteractiveGraph):
         # clicking on a node or edge is just one of the ways to select them
         super()._on_press(event)
 
-        for artist in self._clickable_artists:
-            if artist.contains(event)[0]:
-                self._extract_artist_properties(artist)
-                break
-
-        if event.dblclick:
-            for node, artist in self.node_artists.items():
+        if event.inaxes == self.ax:
+            for artist in self._clickable_artists:
                 if artist.contains(event)[0]:
-                    if self._nascent_edge_source is not None: # NB: node can have ID 0!
-                        # connect edge to target node
-                        if (self._nascent_edge_source, node) not in self.edges:
-                            self._add_edge((self._nascent_edge_source, node))
-                        else:
-                            print("Edge already exists!")
-                        self._nascent_edge_source = None
-                        self._nascent_edge.remove()
-                        self._nascent_edge = None
-                    else:
-                        # initiate edge
-                        self._nascent_edge_source = node
-                        x0, y0 = self.node_positions[node]
-                        self._nascent_edge = NascentEdge((x0, x0), (y0, y0))
-                        self.ax.add_artist(self._nascent_edge)
+                    self._extract_artist_properties(artist)
                     break
-            else:
+
+            if event.dblclick:
+                self._add_or_remove_nascent_edge(event)
+
+
+    def _add_or_remove_nascent_edge(self, event):
+        for node, artist in self.node_artists.items():
+            if artist.contains(event)[0]:
                 if self._nascent_edge:
-                    self._nascent_edge_source = None
-                    self._nascent_edge.remove()
-                    self._nascent_edge = None
+                    # connect edge to target node
+                    if (self._nascent_edge.source, node) not in self.edges:
+                        self._add_edge((self._nascent_edge.source, node))
+                        self._update_edges([(self._nascent_edge.source, node)])
+                    else:
+                        print("Edge already exists!")
+                    self._remove_nascent_edge()
+                else:
+                    self._nascent_edge = self._add_nascent_edge(node)
+                break
+        else:
+            if self._nascent_edge:
+                self._remove_nascent_edge()
+
+
+    def _add_nascent_edge(self, node):
+        nascent_edge = NascentEdge(node, self.node_positions[node])
+        self.ax.add_artist(nascent_edge)
+        return nascent_edge
+
+
+    def _remove_nascent_edge(self):
+        self._nascent_edge.remove()
+        self._nascent_edge = None
 
 
     def _extract_artist_properties(self, artist):
@@ -147,10 +162,10 @@ class MutableGraph(InteractiveGraph):
     def _on_motion(self, event):
         super()._on_motion(event)
 
-        if self._nascent_edge:
-            x, y = self._nascent_edge.get_data()
-            self._nascent_edge.set_data(((x[0], event.xdata), (y[0], event.ydata)))
-            self.fig.canvas.draw_idle()
+        if event.inaxes == self.ax:
+            if self._nascent_edge:
+                self._nascent_edge._update(event.xdata, event.ydata)
+                self.fig.canvas.draw_idle()
 
 
     def _add_node(self, event):
@@ -268,6 +283,8 @@ class MutableGraph(InteractiveGraph):
 
 
     def _add_edge(self, edge, edge_properties=None):
+        # TODO: support non-straight edge paths when initializing the new edge.
+        # Currently, we circumvent the problem by calling _update_edges after edge creation.
         source, target = edge
         path = np.array([self.node_positions[source], self.node_positions[target]])
 
