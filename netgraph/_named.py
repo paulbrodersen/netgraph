@@ -7,6 +7,9 @@ edges as arcs. These special cases are implemented here.
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
+
+from matplotlib.patches import ConnectionStyle
 
 from ._main import (
     BaseGraph,
@@ -22,6 +25,7 @@ from ._main import (
     TableOnClickGraph,
 )
 from ._interactive_variants import (
+    MutableGraph,
     EditableGraph,
 )
 from ._node_layout import (
@@ -34,25 +38,29 @@ from ._edge_layout import (
 from ._utils import (
     _get_gradient_and_intercept,
     _is_above_line,
-    _reflect_across_line
+    _reflect_across_line,
+    _bspline,
 )
 
 
 def _lateralize_arced_edge_paths(edge_paths, node_positions, above):
     """Ensure that edge paths are all either above or below the line passing through nodes."""
     for (source, target), path in edge_paths.items():
-        p1 = node_positions[source]
-        p2 = node_positions[target]
-        if source != target:
-            gradient, intercept = _get_gradient_and_intercept(p1, p2)
-        else:
-            gradient, intercept = 0., p1[1]
-        mask = _is_above_line(path, gradient, intercept)
-        if above:
-            mask = np.invert(mask)
-        path[mask] = _reflect_across_line(path[mask], gradient, intercept)
-        edge_paths[(source, target)] = path
+        edge_paths[(source, target)] = \
+            _lateralize(path, node_positions[source], node_positions[target], above)
     return edge_paths
+
+
+def _lateralize(path, p1, p2, above):
+    if not np.all(np.isclose(p1, p2)):
+        gradient, intercept = _get_gradient_and_intercept(p1, p2)
+    else:
+        gradient, intercept = 0., p1[1]
+    mask = _is_above_line(path, gradient, intercept)
+    if above:
+        mask = np.invert(mask)
+    path[mask] = _reflect_across_line(path[mask], gradient, intercept)
+    return path
 
 
 class BaseArcDiagram(BaseGraph):
@@ -427,3 +435,84 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
                 placement = self._get_annotation_placement(artist)
                 self._add_annotation(artist, *placement)
             self.fig.canvas.draw()
+
+
+class NascentEdge(plt.Line2D):
+
+    def __init__(self, source, origin, rad=1., above=True):
+        self.source = source
+        self.origin = origin
+        self.rad = rad
+        self.above = above
+        x, y = self._get_arc(self.origin, self.origin).T
+        super().__init__(x, y, color='lightgray', linestyle='--')
+
+    def _get_arc(self, p0, p1):
+        arc_factory = ConnectionStyle.Arc3(rad=self.rad)
+        path = arc_factory(p0, p1, shrinkA=0., shrinkB=0.)
+        smoothed = _bspline(path.vertices, 100)
+        return _lateralize(smoothed, p0, p1, self.above)
+
+    def _update(self, x1, y1):
+        x, y = self._get_arc(self.origin, (x1, y1)).T
+        super().set_data(x, y)
+
+
+class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
+    """Extends `InteractiveArcDiagram` to support the addition or removal of nodes and edges.
+
+    - Double clicking on two nodes successively will create an edge between them.
+    - Pressing 'insert' or '+' will add a new node to the graph.
+    - Pressing 'delete' or '-' will remove selected nodes and edges.
+    - Pressing '@' will reverse the direction of selected edges.
+
+    Notes
+    -----
+    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
+
+    See also
+    --------
+    ArcDiagram, InteractiveArcDiagram
+
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self._reverse_node_artists = {artist : node for node, artist in self.node_artists.items()}
+        self._reverse_edge_artists = {artist : edge for edge, artist in self.edge_artists.items()}
+        self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
+        self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
+        self._nascent_edge = None
+
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
+
+
+    def _on_press(self, event):
+        InteractiveArcDiagram._on_press(self, event)
+
+        if event.inaxes == self.ax:
+            for artist in self._clickable_artists:
+                if artist.contains(event)[0]:
+                    self._extract_artist_properties(artist)
+                    break
+
+            if event.dblclick:
+                self._add_or_remove_nascent_edge(event)
+
+
+    def _add_nascent_edge(self, node):
+        nascent_edge = NascentEdge(node, self.node_positions[node], above=self.above)
+        self.ax.add_artist(nascent_edge)
+        return nascent_edge
+
+
+    def _on_motion(self, event):
+        super()._on_motion(event)
+
+        if event.inaxes == self.ax:
+            if self._nascent_edge:
+                self._nascent_edge._update(event.xdata, event.ydata)
+                self.fig.canvas.draw_idle()
