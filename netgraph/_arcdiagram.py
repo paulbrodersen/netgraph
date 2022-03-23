@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 """
-For some special (and often named) network visualisations, the node
-placement and edge routing are inseparable. For example, the placement
-of nodes in a line in arc-diagrams necessitates the representation of
-edges as arcs. These special cases are implemented here.
+Implements the ArcDiagram class and interactive and editable variants.
 """
 
 import numpy as np

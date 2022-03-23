@@ -85,9 +85,11 @@ from ._interactive_variants import (
     EditableGraph,
 )
 
-from ._named import (
+from ._arcdiagram import (
     BaseArcDiagram,
     ArcDiagram,
+    InteractiveArcDiagram,
+    EditableArcDiagram,
 )
 
 from ._parser import parse_graph
@@ -109,4 +111,8 @@ __all__ = [
     'MutableGraph',
     'EditableGraph',
     'parse_graph',
+    'ArcDiagram',
+    'InteractiveArcDiagram',
+    'MutableArcDiagram',
+    'EditableArcDiagram',
 ]
