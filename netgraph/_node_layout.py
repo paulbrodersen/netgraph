@@ -956,7 +956,27 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_
             edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
 
+            # The algorithm in _reduce_crossings assumes that nodes are arranged in a circle.
+            # As a consequence, when nodes are arranged along a line, a community may be split
+            # with members on both ends of the line.
+            # Here we find a better split by minimising the total edge length.
+            nodes = _minimize_total_edge_length(nodes, edges)
+
     return dict(zip(nodes, positions))
+
+
+def _minimize_total_edge_length(nodes, edges):
+    total_iterations = len(nodes)
+    output = nodes
+    optimum = np.inf
+    for ii in range(total_iterations):
+        node_to_position = dict(zip(nodes, range(len(nodes))))
+        total_edge_length = np.sum([np.abs(node_to_position[source] - node_to_position[target]) for (source, target) in edges])
+        if total_edge_length < optimum:
+            output = nodes
+            optimum = total_edge_length
+        nodes = np.r_[nodes[1:], nodes[0]]
+    return output
 
 
 @_handle_multiple_components
