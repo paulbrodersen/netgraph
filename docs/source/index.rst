@@ -58,5 +58,6 @@ __ https://stackoverflow.com/help/minimal-reproducible-example
    :caption: API Reference
 
    graph_classes.rst
+   arcdiagram_classes.rst
    node_layout.rst
    edge_layout.rst

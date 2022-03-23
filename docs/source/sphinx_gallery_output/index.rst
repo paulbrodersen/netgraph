@@ -260,6 +260,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_12_multicomponent_graphs
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Arc Diagrams">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_13_arcdiagram_thumb.png
+     :alt: Arc Diagrams
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_13_arcdiagram.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_13_arcdiagram
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
