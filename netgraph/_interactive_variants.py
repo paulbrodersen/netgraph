@@ -179,7 +179,7 @@ class MutableGraph(InteractiveGraph):
             node += 1
 
         # get position of cursor place node at cursor position
-        pos = event.xdata, event.ydata
+        pos = self._set_position_of_newly_created_node(event.xdata, event.ydata)
 
         # copy attributes of last selected artist;
         # if none is selected, use a random artist
@@ -220,6 +220,10 @@ class MutableGraph(InteractiveGraph):
         self.ax.add_patch(artist)
         # self.node_label_artists # TODO (potentially)
         # self.node_label_offset  # TODO (potentially)
+
+
+    def _set_position_of_newly_created_node(self, x, y):
+        return (x, y)
 
 
     def _delete_nodes(self):

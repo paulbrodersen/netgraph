@@ -37,6 +37,8 @@ from ._utils import (
     _is_above_line,
     _reflect_across_line,
     _bspline,
+    _are_collinear,
+    _get_orthogonal_projection_onto_segment,
 )
 
 
@@ -912,6 +914,14 @@ class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
             if self._nascent_edge:
                 self._nascent_edge._update(event.xdata, event.ydata)
                 self.fig.canvas.draw_idle()
+
+
+    def _set_position_of_newly_created_node(self, x, y):
+        node_positions = list(self.node_positions.values())
+        if _are_collinear(node_positions):
+            line = node_positions[:2]
+            x, y = _get_orthogonal_projection_onto_segment((x, y), line)
+        return (x, y)
 
 
 class EditableArcDiagram(MutableArcDiagram, EditableGraph):

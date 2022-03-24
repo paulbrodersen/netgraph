@@ -6,6 +6,7 @@ Netgraph utility functions.
 
 import numpy as np
 
+from numpy.linalg import matrix_rank
 from scipy.interpolate import BSpline
 
 
@@ -672,3 +673,11 @@ def _reflect_across_line(points, gradient, intercept):
     x1 = 2 * d - x0
     y1 = 2 * d * gradient - y0 + 2 * intercept
     return np.c_[x1, y1]
+
+
+def _are_collinear(points, tol=None):
+    "Test if the given points are collinear."
+    points = np.array(points)
+    points -= points.mean(axis=0)[np.newaxis, :]
+    rank = matrix_rank(points, tol=tol)
+    return rank == 1
