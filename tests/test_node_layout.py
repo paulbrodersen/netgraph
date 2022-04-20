@@ -16,6 +16,8 @@ from toy_graphs import (
     triangle,
     cube,
     star,
+    chain,
+    single_edge,
 )
 
 np.random.seed(1)
@@ -110,5 +112,14 @@ def multi_component_graph():
 def test_circular_layout_with_multiple_components(multi_component_graph):
     nodes, edges = multi_component_graph
     fig, ax = plt.subplots()
-    g = Graph(edges, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
+    Graph(edges, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_bipartite_layout():
+    fig, axes = plt.subplots(1, 3)
+    Graph(single_edge,                             node_layout='bipartite', node_labels=True, ax=axes[0])
+    Graph(chain,                                   node_layout='bipartite', node_labels=True, ax=axes[1])
+    Graph([(0, 1), (2, 3)], nodes=[0, 1, 2, 3, 4], node_layout='bipartite', node_labels=True, ax=axes[2])
     return fig

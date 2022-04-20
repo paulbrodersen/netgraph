@@ -10,7 +10,7 @@ import itertools
 import numpy as np
 
 from functools import wraps
-from itertools import combinations
+from itertools import combinations, product
 from scipy.spatial import Voronoi
 from rpack import pack
 
@@ -977,6 +977,140 @@ def _minimize_total_edge_length(nodes, edges):
             optimum = total_edge_length
         nodes = np.r_[nodes[1:], nodes[0]]
     return output
+
+
+def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True):
+    """Bipartite node layout.
+
+    By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are reduced.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    subsets : list
+        The two layers of the graph. If None, a two-coloring is used to separate the nodes into two subsets.
+        However, if the graph consists of multiple components, this partitioning into two layers is ambiguous, as multiple solutions exist.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    reduce_edge_crossings : bool, default True
+        If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    References
+    ----------
+    .. [Eades1994] Eades & Wormald (1994) Edge crossings in drawings of bipartite graphs.
+
+    """
+
+    adjacency_list = _edge_list_to_adjacency_list(edges, directed=False)
+
+    if nodes:
+        for node in nodes:
+            adjacency_list.setdefault(node, set())
+
+    if subsets:
+        left, right = subsets
+    else:
+        if len(_get_connected_components(adjacency_list)) > 1:
+            import warnings
+            msg = "The graph consistst of multiple components, and hence the partitioning into two subsets/layers is ambiguous!"
+            msg += "\n"
+            msg += "Use the `subsets` argument to explicitly specify the desired partitioning."
+            warnings.warn(msg)
+        left, right = _get_bipartite_sets(adjacency_list)
+
+    if reduce_edge_crossings:
+        if not _is_complete_bipartite(edges, left, right):
+            left, right = _reduce_crossings_bipartite(adjacency_list, left, right)
+
+    if len(left) > len(right):
+        spacing = scale[1] / (len(left) - 1)
+    else:
+        try:
+            spacing = scale[1] / (len(right) - 1)
+        except ZeroDivisionError:
+            # The graph consists of a single edge.
+            spacing = 1.
+
+    node_positions = dict()
+    for subset, xx in ((left, origin[0]), (right, origin[0] + scale[0])):
+        y = spacing * np.arange(len(subset))
+        y -= np.mean(y)
+        y += scale[1] / 2
+        for node, yy in zip(subset, y):
+            node_positions[node] = (xx, yy)
+
+    return node_positions
+
+
+def _get_bipartite_sets(adjacency_list):
+    colour = _get_two_colouring(adjacency_list)
+    left = [node for node in colour if colour[node] == 0]
+    right = [node for node in colour if colour[node] == 1]
+    return left, right
+
+
+def _get_two_colouring(adjacency_list):
+    # Adapted from networkx.algorithms.bipartite.color.
+    colour = dict()
+    for node in adjacency_list:
+        if (node in colour):
+            continue
+        elif len(adjacency_list[node]) == 0:
+            colour[node] = 0
+        else:
+            queue = [node]
+            colour[node] = 1
+            while queue:
+                node = queue.pop()
+                for neighbour in adjacency_list[node]:
+                    if neighbour in colour:
+                        if colour[neighbour] == colour[node]:
+                            raise Exception("Graph is not bipartite.")
+                    else:
+                        colour[neighbour] = 1 - colour[node]
+                        queue.append(neighbour)
+    return colour
+
+
+def _is_complete_bipartite(edges, left, right):
+    """Check if the bipartite graph is fully connected."""
+    minimal_complete_graph = list(product(left, right))
+
+    if len(edges) < len(minimal_complete_graph):
+        return False
+
+    for edge in minimal_complete_graph:
+        if (edge not in edges) and (edge[::-1] not in edges):
+            return False
+
+    return True
+
+
+def _reduce_crossings_bipartite(adjacency_list, left, right):
+    """Reduce the number of crossings in a bipartite graph using the median heuristic proposed in Eades & Wormald (1994)."""
+
+    left_ranks = {node : ii for ii, node in enumerate(left)}
+    right_ranks = dict()
+    for node in right:
+        neighbours = adjacency_list[node]
+        if neighbours:
+            right_ranks[node] = np.median([left_ranks[neighbour] for neighbour in neighbours])
+        else:
+            right_ranks[node] = 0
+
+    # TODO: break ties.
+    # If one node has an even number of neighbours and the other an odd number, than the odd one should have the lower rank.
+    # For the other two cases (even/even, odd/odd), no tie-break procedure seems specified in the paper.
+
+    return left, sorted(right_ranks, key=right_ranks.get)
 
 
 @_handle_multiple_components

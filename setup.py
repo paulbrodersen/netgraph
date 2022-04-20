@@ -8,14 +8,14 @@ def read_file(filename):
 
 setup(
     name='netgraph',
-    version='4.2.5',
+    version='4.3.0',
     description='Python drawing utilities for publication quality plots of networks.',
     long_description=read_file('README.md'),
     long_description_content_type='text/markdown',
     author='Paul Brodersen',
     author_email='paulbrodersen+netgraph@gmail.com',
     url='https://github.com/paulbrodersen/netgraph',
-    download_url='https://github.com/paulbrodersen/netgraph/archive/4.2.5.tar.gz',
+    download_url='https://github.com/paulbrodersen/netgraph/archive/4.3.0.tar.gz',
     keywords=['matplotlib', 'network', 'visualisation'],
     classifiers=[ # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         'Development Status :: 4 - Beta',

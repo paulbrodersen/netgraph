@@ -54,7 +54,7 @@ Examples
 >>> plt.show()
 """
 
-__version__ = "4.2.5"
+__version__ = "4.3.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
@@ -70,6 +70,7 @@ from ._node_layout import (
     get_sugiyama_layout,
     get_circular_layout,
     get_linear_layout,
+    get_bipartite_layout,
     get_community_layout,
 )
 
@@ -100,6 +101,8 @@ __all__ = [
     'get_fruchterman_reingold_layout',
     'get_sugiyama_layout',
     'get_circular_layout',
+    'get_linear_layout',
+    'get_bipartite_layout',
     'get_community_layout',
     'get_straight_edge_paths',
     'get_curved_edge_paths',
