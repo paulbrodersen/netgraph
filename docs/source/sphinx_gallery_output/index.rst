@@ -281,6 +281,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_13_arcdiagram
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Bipartite node layout">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_14_bipartite_layout_thumb.png
+     :alt: Bipartite node layout
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_14_bipartite_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_14_bipartite_layout
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
