@@ -281,6 +281,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.4.1 Corrected imports for testing _arcdiagram.py
 - 4.4.0 Added bipartite node layouts.
 - 4.3.0 Added the ArcDiagram class and interactive/editable variants.
 - 4.2.4 Plotting of graphs with a single node is now supported.

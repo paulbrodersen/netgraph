@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from netgraph._named import BaseArcDiagram, ArcDiagram
+from netgraph import BaseArcDiagram, ArcDiagram
 
 np.random.seed(42)
 
