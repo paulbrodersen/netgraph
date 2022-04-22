@@ -1131,7 +1131,7 @@ class Graph(BaseGraph):
 
     Parameters
     ----------
-    graph: various formats
+    graph : various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
 
@@ -2110,7 +2110,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
 
     Parameters
     ----------
-    graph: various formats
+    graph : various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
 

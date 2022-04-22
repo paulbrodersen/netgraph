@@ -277,7 +277,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
 
     Parameters
     ----------
-    graph: various formats
+    graph : various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
 
@@ -526,7 +526,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
 
     Parameters
     ----------
-    graph: various formats
+    graph : various formats
         Graph object to plot. Various input formats are supported.
         In order of precedence:
 
