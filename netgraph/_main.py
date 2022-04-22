@@ -22,6 +22,7 @@ from ._utils import (
     _make_pretty,
     _rank,
     _get_n_points_on_a_circle,
+    _edge_list_to_adjacency_list,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -1806,15 +1807,124 @@ class EmphasizeOnHover(object):
 
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
-    """Combines `EmphasizeOnHover` with the `Graph` class such that nodes are emphasized when hovering over them with the mouse."""
+    """Combines `EmphasizeOnHover` with the `Graph` class such that nodes are emphasized when hovering over them with the mouse.
 
-    def __init__(self, *args, **kwargs):
-        Graph.__init__(self, *args, **kwargs)
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
+
+        - networkx.Graph or igraph.Graph object
+
+    mouseover_highlight_mapping : dict or None, default None
+        Determines which nodes and/or edges are highlighted when hovering over any given node or edge.
+        The keys of the dictionary are node and/or edge IDs, while the values are iterables of node and/or edge IDs.
+        If the parameter is None, a default dictionary is constructed, which maps
+
+        - edges to themselves as well as their source and target nodes, and
+        - nodes to themselves as well as their immediate neighbours and any edges between them.
+
+    *args, **kwargs
+        Parameters passed through to `Graph`. See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
+    See also
+    --------
+    Graph
+
+    """
+
+    def __init__(self, graph, mouseover_highlight_mapping=None, *args, **kwargs):
+        Graph.__init__(self, graph, *args, **kwargs)
 
         artists = list(self.node_artists.values()) + list(self.edge_artists.values())
         keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
         self.artist_to_key = dict(zip(artists, keys))
         EmphasizeOnHover.__init__(self, artists)
+
+        if mouseover_highlight_mapping is None: # construct default mapping
+            self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
+        else: # this includes empty mappings!
+            self._check_mouseover_highlight_mapping(mouseover_highlight_mapping)
+            self.mouseover_highlight_mapping = mouseover_highlight_mapping
+
+
+    def _get_default_mouseover_highlight_mapping(self):
+        mapping = dict()
+
+        # mapping for edges: source node, target node and the edge itself
+        for (source, target) in self.edges:
+            mapping[(source, target)] = [(source, target), source, target]
+
+        # mapping for nodes: the node itself, its neighbours, and any edges between them
+        adjacency_list = _edge_list_to_adjacency_list(self.edges, directed=False)
+        for node, neighbours in adjacency_list.items():
+            mapping[node] = [node]
+            for neighbour in neighbours:
+                mapping[node].append(neighbour)
+                if (node, neighbour) in self.edge_artists:
+                    mapping[node].append((node, neighbour))
+                if (neighbour, node) in self.edge_artists:
+                    mapping[node].append((neighbour, node))
+
+        return mapping
+
+
+    def _check_mouseover_highlight_mapping(self, mapping):
+
+        if not isinstance(mapping, dict):
+            raise TypeError(f"Parameter `mouseover_highlight_mapping` is a dictionary, not {type(mapping)}.")
+
+        invalid_keys = []
+        for key in mapping:
+            if key in self.node_artists:
+                pass
+            elif key in self.edge_artists:
+                pass
+            else:
+                invalid_keys.append(key)
+        if invalid_keys:
+            msg = "Parameter `mouseover_highlight_mapping` contains invalid keys:"
+            for key in invalid_keys:
+                msg += f"\n\t- {key}"
+            raise ValueError(msg)
+
+        invalid_values = []
+        for values in mapping.values():
+            for value in values:
+                if value in self.node_artists:
+                    pass
+                elif value in self.edge_artists:
+                    pass
+                else:
+                    invalid_values.append(value)
+        if invalid_values:
+            msg = "Parameter `mouseover_highlight_mapping` contains invalid values:"
+            for value in set(invalid_values):
+                msg += f"\n\t- {value}"
+            raise ValueError(msg)
 
 
     def _on_motion(self, event):
@@ -1829,27 +1939,20 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
                     break
 
             if selected_artist:
-                emphasized_artists = [selected_artist]
+                key = self.artist_to_key[artist]
+                if key in self.mouseover_highlight_mapping:
+                    emphasized_artists = []
+                    for value in self.mouseover_highlight_mapping[key]:
+                        if value in self.node_artists:
+                            emphasized_artists.append(self.node_artists[value])
+                        elif value in self.edge_artists:
+                            emphasized_artists.append(self.edge_artists[value])
 
-                if isinstance(selected_artist, NodeArtist):
-                    node = self.artist_to_key[selected_artist]
-                    connected_edges = [edge for edge in self.edge_artists.keys() if node in edge]
-                    edge_artists = [self.edge_artists[edge] for edge in connected_edges]
-                    emphasized_artists.extend(edge_artists)
-                    neighbours = _get_unique_nodes(connected_edges)
-                    node_artists = [self.node_artists[neighbour] for neighbour in neighbours if neighbour != node]
-                    emphasized_artists.extend(node_artists)
-
-                elif isinstance(selected_artist, EdgeArtist):
-                    source, target = self.artist_to_key[selected_artist]
-                    emphasized_artists.append(self.node_artists[source])
-                    emphasized_artists.append(self.node_artists[target])
-
-                for artist in self.emphasizeable_artists:
-                    if artist not in emphasized_artists:
-                        artist.set_alpha(self._base_alpha[artist]/5)
-                        self.deemphasized_artists.append(artist)
-                self.fig.canvas.draw_idle()
+                    for artist in self.emphasizeable_artists:
+                        if artist not in emphasized_artists:
+                            artist.set_alpha(self._base_alpha[artist]/5)
+                            self.deemphasized_artists.append(artist)
+                    self.fig.canvas.draw_idle()
 
             # not on any artist
             if (selected_artist is None) and self.deemphasized_artists:
@@ -2360,6 +2463,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
         self.artist_to_key = dict(zip(artists, keys))
         EmphasizeOnHover.__init__(self, artists)
+        self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
 
         artist_to_annotation = dict()
         if 'annotations' in kwargs:

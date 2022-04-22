@@ -776,6 +776,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
         self.artist_to_key = dict(zip(artists, keys))
         EmphasizeOnHover.__init__(self, artists)
+        self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
 
         artist_to_annotation = dict()
         if 'annotations' in kwargs:
