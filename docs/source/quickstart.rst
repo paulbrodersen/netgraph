@@ -28,6 +28,10 @@ Quickstart
     import igraph
     graph_data = igraph.Graph.Famous('Zachary')
 
+    # 6) graph_tool.Graph objects
+    import graph_tool.collection
+    graph_data = graph_tool.collection.data["karate"]
+
     # Create a non-interactive plot:
     Graph(graph_data)
     plt.show()

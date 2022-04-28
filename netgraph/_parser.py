@@ -47,8 +47,10 @@ def parse_graph(graph):
         - Adjacency matrix:
           Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
           The absence of a connection is indicated by a zero.
-          Note that V > 3 as (2, 2) and (3, 3) matrices will be interpreted as edge lists.
-        - networkx.Graph or igraph.Graph object
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
+
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     Returns
     -------
@@ -89,8 +91,11 @@ def parse_graph(graph):
                                   "<class 'networkx.classes.multidigraph.MultiDiGraph'>"):
         return _parse_networkx_graph(graph)
 
+    elif str(graph.__class__) == "<class 'graph_tool.Graph'>":
+        return _parse_graph_tool_graph(graph)
+
     else:
-        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph']
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graphtool.Graph']
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
 
 
@@ -174,6 +179,16 @@ def _parse_igraph_graph(graph):
         edge_weights = {(edge.source, edge.target) : edge['weight'] for edge in graph.es()}
     else:
         edge_weights = None
+    return nodes, edges, edge_weights
+
+
+@_handle_multigraphs
+def _parse_graph_tool_graph(graph):
+    """Parse graphs given as graph_tool.Graph."""
+    nodes = graph.get_vertices().tolist()
+    edges = [tuple(edge) for edge in graph.get_edges()]
+    # In graph-tool, edge weights are in separate data structure called an edge property map.
+    edge_weights = None
     return nodes, edges, edge_weights
 
 
