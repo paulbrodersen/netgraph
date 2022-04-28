@@ -290,7 +290,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph or igraph.Graph object
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     node_order : list or None, default None
         The ordering of nodes (left-to-right).
@@ -539,7 +539,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph or igraph.Graph object
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     node_order : list or None, default None
         The ordering of nodes (left-to-right).

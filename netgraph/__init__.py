@@ -40,6 +40,7 @@ Examples
 >>> # graph_data = np.random.rand(10, 10) # full rank matrix
 >>> # graph_data = networkx.karate_club_graph() # networkx Graph/DiGraph objects
 >>> # graph_data = igraph.Graph.Famous('Zachary') # igraph Graph objects
+>>> # graph_data = graph_tool.collection.data['karate'] # graph_tool Graph objects
 >>>
 >>> # Create a non-interactive plot:
 >>> Graph(graph_data)
@@ -54,7 +55,7 @@ Examples
 >>> plt.show()
 """
 
-__version__ = "4.5.0"
+__version__ = "4.6.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 

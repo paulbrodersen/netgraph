@@ -47,3 +47,14 @@ def test_igraph_graph():
     g = Graph(igraph.Graph([(0, 1)]))
     assert g.nodes == [0, 1]
     assert g.edges == [(0, 1)]
+
+
+def test_graph_tool_graph():
+    import graph_tool
+    gt = graph_tool.Graph()
+    v1 = gt.add_vertex()
+    v2 = gt.add_vertex()
+    e  = gt.add_edge(v1, v2)
+    g = Graph(gt)
+    assert g.nodes == [0, 1]
+    assert g.edges == [(0, 1)]

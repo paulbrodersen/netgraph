@@ -1145,7 +1145,7 @@ class Graph(BaseGraph):
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
 
-        - networkx.Graph or igraph.Graph object
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     node_layout : str or dict, default 'spring'
         If `node_layout` is a string, the node positions are computed using the indicated method:
@@ -1824,7 +1824,7 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
 
-        - networkx.Graph or igraph.Graph object
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     mouseover_highlight_mapping : dict or None, default None
         Determines which nodes and/or edges are highlighted when hovering over any given node or edge.
@@ -2226,7 +2226,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph or igraph.Graph object
+        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     node_layout : str or dict, default 'spring'
         If `node_layout` is a string, the node positions are computed using the indicated method:
