@@ -13,6 +13,7 @@ from netgraph._main import Graph
 from toy_graphs import (
     cycle,
     unbalanced_tree,
+    balanced_tree,
     triangle,
     cube,
     star,
@@ -54,6 +55,13 @@ def test_spring_layout():
 def test_dot_layout():
     fig, ax = plt.subplots()
     Graph(unbalanced_tree, node_layout='dot', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_radial_layout():
+    fig, ax = plt.subplots()
+    Graph(balanced_tree, node_layout='radial', ax=ax)
     return fig
 
 
