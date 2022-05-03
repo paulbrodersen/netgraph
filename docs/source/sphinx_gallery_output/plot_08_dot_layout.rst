@@ -18,14 +18,16 @@
 .. _sphx_glr_sphinx_gallery_output_plot_08_dot_layout.py:
 
 
-Dot node layout
-===============
+Dot and radial node layouts
+===========================
 
-Plot a tree or other directed, acyclic graph with a 'dot' layout using the Sugiyama algorithm implemented in grandalf_.
+Plot a tree or other directed, acyclic graph with the :code:`'dot'` or :code:`'radial'` node layout.
+Netgraph uses an implementation of the Sugiyama algorithm provided by the grandalf_ library
+(and thus does not require Graphviz to be installed).
 
 .. _grandalf: https://github.com/bdcht/grandalf
 
-.. GENERATED FROM PYTHON SOURCE LINES 10-36
+.. GENERATED FROM PYTHON SOURCE LINES 12-42
 
 
 
@@ -42,6 +44,7 @@ Plot a tree or other directed, acyclic graph with a 'dot' layout using the Sugiy
 
 
     import matplotlib.pyplot as plt
+    import networkx as nx
 
     from netgraph import Graph
 
@@ -63,14 +66,17 @@ Plot a tree or other directed, acyclic graph with a 'dot' layout using the Sugiy
         (5, 15)
     ]
 
-    Graph(unbalanced_tree, node_layout='dot')
+    balanced_tree = nx.balanced_tree(3, 3)
 
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+    Graph(unbalanced_tree, node_layout='dot', ax=ax1)
+    Graph(balanced_tree, node_layout='radial', ax=ax2)
     plt.show()
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.115 seconds)
+   **Total running time of the script:** ( 0 minutes  0.366 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_08_dot_layout.py:

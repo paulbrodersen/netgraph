@@ -158,12 +158,12 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Plot a tree or other directed, acyclic graph with a &#x27;dot&#x27; layout using the Sugiyama algorithm i...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Plot a tree or other directed, acyclic graph with the &#x27;dot&#x27; or &#x27;radial&#x27; node layout. Netgraph u...">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_08_dot_layout_thumb.png
-     :alt: Dot node layout
+     :alt: Dot and radial node layouts
 
      :ref:`sphx_glr_sphinx_gallery_output_plot_08_dot_layout.py`
 
@@ -302,6 +302,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_14_bipartite_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Highlight paths">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_15_highlight_paths_thumb.png
+     :alt: Highlight paths
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_15_highlight_paths.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_15_highlight_paths
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
