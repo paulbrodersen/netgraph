@@ -676,6 +676,79 @@ class vertex_view(object):
 
 
 @_handle_multiple_components
+def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+    """Radial tree layout.
+
+    Uses the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
+    This function is a wrapper around the SugiyamaLayout class in grandalf.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    origin : tuple or None, default None
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        If None is given, the origin is placed at (0, 0).
+    scale : tuple or None, default None
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+        If None is given, the scale is set to (1, 1).
+    total_iterations : int, default 50
+        Number of iterations.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    References
+    ----------
+    .. [Sugiyama1981] Sugiyama, K; Tagawa, S; Toda, M (1981) 'Methods for visual understanding of hierarchical system structures',
+           IEEE Transactions on Systems, Man, and Cybernetics
+
+    """
+
+    sugiyama_positions = get_sugiyama_layout(
+        edges,
+        origin=(0,0),
+        scale=(1,1),
+        node_size=node_size,
+        total_iterations=total_iterations
+    )
+
+    # determine the size of the largest layer
+    nodes_per_layer = dict()
+    for node, (_, y) in sugiyama_positions.items():
+        if y in nodes_per_layer:
+            nodes_per_layer[y] += 1
+        else:
+            nodes_per_layer[y] = 1
+    max_nodes_per_layer = np.max(list(nodes_per_layer.values()))
+
+    # alternatively:
+    # y_coordinates = np.array(list(sugiyama_positions.values()))[:, 1]
+    # (_, max_nodes_per_layer), = Counter(y_coordinates).most_common(1)
+
+    max_angle = 2 * np.pi * max_nodes_per_layer / (max_nodes_per_layer + 1)
+    max_radius = 0.9 * np.min(scale) / 2 # 0.9 is a fudge factor
+    offset = np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])
+
+    node_positions = dict()
+    for node, (x, y) in sugiyama_positions.items():
+        angle = max_angle * x
+        radius = max_radius * (1 - y)
+        node_positions[node] = pol2cart(radius, angle) + offset
+
+    return node_positions
+
+
+def pol2cart(rho, phi):
+    # https://stackoverflow.com/a/26757297/2912349
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
+
+
+@_handle_multiple_components
 def get_circular_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_edge_crossings=True):
     """Circular node layout.
 
