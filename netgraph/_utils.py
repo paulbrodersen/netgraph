@@ -681,3 +681,10 @@ def _are_collinear(points, tol=None):
     points -= points.mean(axis=0)[np.newaxis, :]
     rank = matrix_rank(points, tol=tol)
     return rank == 1
+
+
+def _convert_polar_to_cartesian_coordinates(rho, phi):
+    # Adapted from https://stackoverflow.com/a/26757297/2912349
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)

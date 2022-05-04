@@ -26,6 +26,7 @@ from ._utils import (
     _get_subgraph,
     _invert_dict,
     _get_connected_components,
+    _convert_polar_to_cartesian_coordinates,
 )
 
 
@@ -729,23 +730,17 @@ def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_
     # (_, max_nodes_per_layer), = Counter(y_coordinates).most_common(1)
 
     max_angle = 2 * np.pi * max_nodes_per_layer / (max_nodes_per_layer + 1)
-    max_radius = 0.9 * np.min(scale) / 2 # 0.9 is a fudge factor
+    max_radius = np.min(scale) / 2
+    max_radius *= 0.9 # shrink to make room for node artists, labels, and annotations
     offset = np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])
 
     node_positions = dict()
     for node, (x, y) in sugiyama_positions.items():
         angle = max_angle * x
         radius = max_radius * (1 - y)
-        node_positions[node] = pol2cart(radius, angle) + offset
+        node_positions[node] = _convert_polar_to_cartesian_coordinates(radius, angle) + offset
 
     return node_positions
-
-
-def pol2cart(rho, phi):
-    # https://stackoverflow.com/a/26757297/2912349
-    x = rho * np.cos(phi)
-    y = rho * np.sin(phi)
-    return(x, y)
 
 
 @_handle_multiple_components
