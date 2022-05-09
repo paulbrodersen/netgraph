@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.7.1 Fixed issue #41, which occurred when computing the community layout for communities without within-community edges.
 - 4.7.0 Implemented a radial tree node layout
 - 4.6.0 Support drawing of graph_tool.Graph objects
 - 4.5.0 Support custom mappings for mouse-over highlight events (issue #39)

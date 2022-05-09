@@ -1285,12 +1285,16 @@ def _get_node_positions(edges, node_to_community):
     """Positions nodes within communities."""
     community_to_nodes = _invert_dict(node_to_community)
     node_positions = dict()
-    for nodes in community_to_nodes.values():
+    for community, nodes in community_to_nodes.items():
         if len(nodes) > 1:
             subgraph = _get_subgraph(edges, list(nodes))
-            subgraph_node_positions = get_fruchterman_reingold_layout(
-                subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
-            node_positions.update(subgraph_node_positions)
+            if subgraph:
+                subgraph_node_positions = get_fruchterman_reingold_layout(
+                    subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
+                node_positions.update(subgraph_node_positions)
+            else:
+                warnings.warn(f"There are no connections within community {community}. The placement of of nodes within this community is arbitrary.")
+                node_positions.update({node : np.random.rand(2) * 2 + np.array([-1, -1]) for node in nodes})
         elif len(nodes) == 1:
             node_positions.update({nodes.pop() : np.array([0., 0.])})
     return node_positions
