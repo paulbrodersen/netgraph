@@ -1194,6 +1194,7 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     2. Position the nodes within each community:
        For each community, create a new graph. Find a layout for the subgraph.
     3. Combine positions computed in in 1) and 3).
+    4. Rotate communities around their centroid to reduce the length of the edges between them.
 
     Parameters
     ----------
@@ -1226,14 +1227,9 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
 
     community_size = _get_community_sizes(node_to_community, scale)
     community_centroids = _get_community_positions(edges, node_to_community, community_size, origin, scale)
-    relative_node_positions = _get_node_positions(edges, node_to_community)
-
-    # combine positions
-    node_positions = dict()
-    for node, community in node_to_community.items():
-        xy = community_centroids[community]
-        delta = relative_node_positions[node] * community_size[community]
-        node_positions[node] = xy + delta
+    relative_node_positions = _get_within_community_positions(edges, node_to_community)
+    node_positions = _combine_positions(node_to_community, community_centroids, community_size, relative_node_positions)
+    node_positions = _rotate_communities(edges, node_to_community, community_centroids, node_positions)
 
     return node_positions
 
@@ -1281,7 +1277,7 @@ def _find_between_community_edges(edges, node_to_community):
     return between_community_edges
 
 
-def _get_node_positions(edges, node_to_community):
+def _get_within_community_positions(edges, node_to_community):
     """Positions nodes within communities."""
     community_to_nodes = _invert_dict(node_to_community)
     node_positions = dict()
@@ -1298,3 +1294,57 @@ def _get_node_positions(edges, node_to_community):
         elif len(nodes) == 1:
             node_positions.update({nodes.pop() : np.array([0., 0.])})
     return node_positions
+
+
+def _combine_positions(node_to_community, community_centroids, community_size, relative_node_positions):
+    node_positions = dict()
+    for node, community in node_to_community.items():
+        xy = community_centroids[community]
+        delta = relative_node_positions[node] * community_size[community]
+        node_positions[node] = xy + delta
+    return node_positions
+
+
+def _rotate_communities(edges, node_to_community, community_centroids, node_positions, step_size=-0.01, max_iterations=100):
+
+    between_community_edges = [(source, target) for (source, target) in edges \
+                               if node_to_community[source] != node_to_community[target]]
+
+    for _ in range(max_iterations):
+
+        # compute torques
+        community_torque = {community : 0 for community in set(list(node_to_community.values()))}
+        for (source, target) in between_community_edges:
+            # source
+            community = node_to_community[source]
+            r = community_centroids[community] - node_positions[source]
+            delta = node_positions[target] - node_positions[source]
+            F = delta * np.linalg.norm(delta) # direction * distance**2
+            community_torque[community] += np.cross(r, F)
+
+            # target
+            community = node_to_community[target]
+            r = community_centroids[community] - node_positions[target]
+            delta = node_positions[source] - node_positions[target]
+            F = delta * np.linalg.norm(delta)
+            community_torque[community] += np.cross(r, F)
+
+        # TODO: compare new torque values to previous; abort if change is small
+
+        # update node positions
+        step_size = -0.1
+        for node, community in node_to_community.items():
+            node_positions[node] = _rotate(step_size * community_torque[community],
+                                           node_positions[node],
+                                           community_centroids[community])
+
+    return node_positions
+
+
+def _rotate(angle, points, origin=(0, 0)):
+    # https://stackoverflow.com/a/58781388/2912349
+    R = np.array([[np.cos(angle), -np.sin(angle)],
+                  [np.sin(angle),  np.cos(angle)]])
+    origin = np.atleast_2d(origin)
+    points = np.atleast_2d(points)
+    return np.squeeze((R @ (points.T-origin.T) + origin.T).T)

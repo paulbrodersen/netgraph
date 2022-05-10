@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.8.0 Refined community node layout. Communities are rotated w.r.t. each other to reduce the length of edges between them.
 - 4.7.1 Fixed issue #41, which occurred when computing the community layout for communities without within-community edges.
 - 4.7.0 Implemented a radial tree node layout
 - 4.6.0 Support drawing of graph_tool.Graph objects
