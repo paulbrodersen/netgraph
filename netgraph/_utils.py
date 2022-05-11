@@ -238,7 +238,7 @@ def _get_unit_vector(vector):
 
 
 def _get_signed_angle_between(v1, v2, radians=False):
-    """Returns the interior angle between vectors v1 and v2.
+    """Returns the signed angle between vectors v1 and v2.
 
     Parameters
     ----------
