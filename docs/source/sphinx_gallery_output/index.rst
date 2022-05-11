@@ -11,7 +11,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph.">
 
 .. only:: html
 
@@ -32,7 +32,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph.">
 
 .. only:: html
 
@@ -53,7 +53,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph.">
 
 .. only:: html
 
@@ -323,6 +323,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_15_highlight_paths
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A minimal(-ish) working example using PyQt5. Courtesy of github user LBeghini_.">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_16_pyqt_thumb.png
+     :alt: PyQt example
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_16_pyqt.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_16_pyqt
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

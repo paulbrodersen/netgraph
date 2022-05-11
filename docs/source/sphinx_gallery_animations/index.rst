@@ -11,7 +11,7 @@ Animation Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Here, we demonstrate how to visualise changes in connectivity over time. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Here, we demonstrate how to visualise changes in connectivity over time.">
 
 .. only:: html
 

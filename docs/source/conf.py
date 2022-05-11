@@ -76,3 +76,8 @@ sphinx_gallery_conf = {
     'within_subsection_order': FileNameSortKey,
     'matplotlib_animations': True,
 }
+
+# -- Suppress warnings --------------------------------------------------------
+
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
