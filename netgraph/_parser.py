@@ -17,14 +17,20 @@ def _handle_multigraphs(parser):
     def wrapped_parser(graph, *args, **kwargs):
         nodes, edges, edge_weight = parser(graph, *args, **kwargs)
 
-        if len(set(edges)) < len(edges):
-            msg = "Multi-graphs are not properly supported. Removing duplicate edges before plotting."
+        new_edges = list(set([(edge[0], edge[1]) for edge in edges]))
+        if len(new_edges) < len(edges):
+            msg = "Multi-graphs are not properly supported. Duplicate edges are plotted as a single edge; edge weights (if any) are summed."
             warnings.warn(msg)
-            new_edges = []
-            for edge in edges:
-                if edge not in new_edges:
-                    new_edges.append(edge)
-            return nodes, new_edges, edge_weight
+            if edge_weight: # sum weights
+                new_edge_weight = dict()
+                for edge, weight in edge_weight.items():
+                    if (edge[0], edge[1]) in new_edge_weight:
+                        new_edge_weight[(edge[0], edge[1])] += weight
+                    else:
+                        new_edge_weight[(edge[0], edge[1])] = weight
+            else:
+                new_edge_weight = edge_weight
+            return nodes, new_edges, new_edge_weight
 
         return nodes, edges, edge_weight
 

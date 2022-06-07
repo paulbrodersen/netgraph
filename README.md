@@ -285,6 +285,8 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.8.2 Fixed issue #45, which prevented a warning to be raised when trying to plot networkx.MultiGraph instances.
+- 4.8.1 Fixed issue #44, that occurred if a single node was plotted with the Sugiyama layout (thanks @wilkeber).
 - 4.8.0 Refined community node layout. Communities are rotated w.r.t. each other to reduce the length of edges between them.
 - 4.7.1 Fixed issue #41, which occurred when computing the community layout for communities without within-community edges.
 - 4.7.0 Implemented a radial tree node layout
