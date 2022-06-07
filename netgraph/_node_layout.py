@@ -572,7 +572,8 @@ def _rescale_to_frame(node_positions, origin, scale):
     """Rescale node positions such that all nodes are within the bounding box."""
     node_positions = node_positions.copy() # force copy, as otherwise the `fixed_nodes` argument is effectively ignored
     node_positions -= np.min(node_positions, axis=0)
-    node_positions /= np.max(node_positions, axis=0)
+    # normalize only when nodes are not already aligned, otherwise we divide by zero
+    np.divide(node_positions, np.max(node_positions, axis=0), where=np.max(node_positions, axis=0) != 0, out=node_positions)
     node_positions *= scale[None, ...]
     node_positions += origin[None, ...]
     return node_positions
