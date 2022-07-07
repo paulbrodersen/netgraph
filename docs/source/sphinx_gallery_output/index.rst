@@ -11,7 +11,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph. ">
 
 .. only:: html
 
@@ -32,7 +32,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph. ">
 
 .. only:: html
 
@@ -53,7 +53,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph. ">
 
 .. only:: html
 
@@ -344,6 +344,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_16_pyqt
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Draw a multi-partite in successive layers or in concentric circles. ">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_17_multipartite_layout_thumb.png
+     :alt: Multi-partite & shell node layouts
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_17_multipartite_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_17_multipartite_layout
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
