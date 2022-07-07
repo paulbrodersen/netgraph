@@ -55,7 +55,7 @@ Examples
 >>> plt.show()
 """
 
-__version__ = "4.8.2"
+__version__ = "4.9.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
@@ -73,6 +73,8 @@ from ._node_layout import (
     get_circular_layout,
     get_linear_layout,
     get_bipartite_layout,
+    get_multipartite_layout,
+    get_shell_layout,
     get_community_layout,
 )
 

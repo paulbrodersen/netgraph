@@ -177,3 +177,35 @@ def test_bipartite_layout():
     Graph(chain,                                   node_layout='bipartite', node_labels=True, ax=axes[1])
     Graph([(0, 1), (2, 3)], nodes=[0, 1, 2, 3, 4], node_layout='bipartite', node_labels=True, ax=axes[2])
     return fig
+
+
+@pytest.fixture
+def multipartite_graph():
+    partitions = [
+        list(range(3)),
+        list(range(3, 9)),
+        list(range(9, 21))
+    ]
+
+    edges = list(zip(np.repeat(partitions[0], 2), partitions[1])) \
+          + list(zip(np.repeat(partitions[0], 2), partitions[1][1:])) \
+          + list(zip(np.repeat(partitions[1], 2), partitions[2])) \
+          + list(zip(np.repeat(partitions[1], 2), partitions[2][1:]))
+
+    return partitions, edges
+
+
+@pytest.mark.mpl_image_compare
+def test_multipartite_layout(multipartite_graph):
+    layers, edges = multipartite_graph
+    fig, ax = plt.subplots()
+    Graph(edges, node_layout='multipartite', node_layout_kwargs=dict(layers=layers, reduce_edge_crossings=False), node_labels=True, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_shell_layout(multipartite_graph):
+    shells, edges = multipartite_graph
+    fig, ax = plt.subplots()
+    Graph(edges, node_layout='shell', node_layout_kwargs=dict(shells=shells, reduce_edge_crossings=False), node_labels=True, ax=ax)
+    return fig

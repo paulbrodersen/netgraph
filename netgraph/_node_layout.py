@@ -1182,6 +1182,159 @@ def _reduce_crossings_bipartite(adjacency_list, left, right):
     return left, sorted(right_ranks, key=right_ranks.get)
 
 
+def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True, uniform_node_spacing=True):
+    """Layered node layout for a multipartite graph.
+
+    By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are reduced.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    layers : list
+        List of node subsets, one for each layer of the graph.
+    layer_positions : list, default None
+        A list of x-coordinates, one for each layer.
+        If None provided, layers are placed evenly between origin[0] and origin[0] + scale[0].
+    origin : tuple, default (0, 0)
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1, 1)
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    reduce_edge_crossings : bool, default True
+        If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
+    uniform_node_spacing : bool, default True
+        If True, the spacing between nodes is uniform across layers.
+        Otherwise, nodes in each layer are distributed evenly across the full height of the canvas.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    References
+    ----------
+    .. [Eades1994] Eades & Wormald (1994) Edge crossings in drawings of bipartite graphs.
+
+    """
+
+    # set the space between nodes
+    if uniform_node_spacing:
+        try:
+            node_spacings = scale[1] / (np.max([len(layer) for layer in layers]) - 1) * np.ones_like(layers, dtype=np.float)
+        except ZeroDivisionError:
+            # The graph has at most a single edge between each pair of layers.
+            node_spacings = np.ones_like(layers, dtype=np.float)
+    else:
+        node_spacings = np.ones_like(layers, dtype=np.float)
+        for ii, layer in enumerate(layers):
+            if len(layer) > 1:
+                node_spacings[ii] = 1./(len(layer) - 1)
+
+    # set the space between layers
+    if layer_positions is None:
+        layer_positions = np.linspace(origin[0], origin[0] + scale[0], len(layers))
+    else:
+        if (np.min(layer_positions) < origin[0]) or (np.max(layer_positions) > origin[0] + scale[0]):
+            import warnings
+            warnings.warn("Some layer positions are outside the bounding box defined by `origin` and `scale`.")
+
+    # fix positions of nodes in first layer
+    node_positions = dict()
+    node_positions.update(_get_node_positions_within_layer(layers[0], node_spacings[0], layer_positions[0], origin, scale))
+
+    # assign the position of nodes in subsequent layers
+    total_layers = len(layers)
+    for ii in range(1, total_layers):
+        left = layers[ii-1]
+        right = layers[ii]
+        union = set(left) | set(right)
+        edges_between_layers = [(source, target) for (source, target) in edges if (source in union) and (target in union)]
+        adjacency_list = _edge_list_to_adjacency_list(edges_between_layers, directed=False)
+
+        # add unconnected nodes
+        for node in left:
+            adjacency_list.setdefault(node, set())
+        for node in right:
+            adjacency_list.setdefault(node, set())
+
+        if reduce_edge_crossings:
+            if not _is_complete_bipartite(edges, left, right):
+                left, right = _reduce_crossings_bipartite(adjacency_list, left, right)
+
+        node_positions.update(_get_node_positions_within_layer(right, node_spacings[ii], layer_positions[ii], origin, scale))
+
+    return node_positions
+
+
+def _get_node_positions_within_layer(node_order, node_spacing, layer_position, origin, scale):
+    node_positions = dict()
+    xx = layer_position
+    y = node_spacing * np.arange(len(node_order))
+    y -= np.mean(y)
+    y += origin[1] + scale[1] / 2
+    for node, yy in zip(node_order, y):
+        node_positions[node] = np.array((xx, yy))
+    return node_positions
+
+
+def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True):
+    """Shell layout.
+
+    This is a wrapper around `get_multipartite_layout` that arranges nodes in shells around a center instead of in layers.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    shells : list
+        List of node subsets, one for each shell of the graph.
+    radii : list, default None
+        List of radii, one for each shell.
+        If None, radii are chosen such that the shells are evenly spaced within the bounding box defined by origin and scale.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    reduce_edge_crossings : bool, default True
+        If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    """
+    if radii is None:
+        if len(shells[0]) == 1:
+            # Innermost shell consists of a single node, and hence should have no size.
+            radii = np.linspace(0, 0.9 * np.min(scale) / 2, len(shells))
+        else:
+            # Innermost shell consists of multiple nodes and should hence have a non-zero radius.
+            radii = np.linspace(0, 0.9 * np.min(scale) / 2, len(shells) + 1)[1:]
+
+    relative_radii = np.array(radii) / np.max(radii)
+    multipartite_positions = get_multipartite_layout(
+        edges, shells, layer_positions=relative_radii,
+        reduce_edge_crossings=reduce_edge_crossings,
+        uniform_node_spacing=False
+    )
+
+    node_to_shell = {node : shell for shell in shells for node in shell}
+
+    max_radius = np.max(radii)
+    center = np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])
+
+    node_positions = dict()
+    for node, (x, y) in multipartite_positions.items():
+        shell = node_to_shell[node]
+        max_angle = 2 * np.pi * len(shell) / (len(shell) + 1)
+        angle = max_angle * y
+        radius = max_radius * x
+        node_positions[node] = _convert_polar_to_cartesian_coordinates(radius, angle) + center
+
+    return node_positions
+
+
 @_handle_multiple_components
 def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     """Community node layout for modular graphs.

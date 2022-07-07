@@ -32,6 +32,8 @@ from ._node_layout import (
     get_circular_layout,
     get_linear_layout,
     get_bipartite_layout,
+    get_multipartite_layout,
+    get_shell_layout,
     get_community_layout,
     _reduce_node_overlap,
 )
@@ -65,13 +67,15 @@ class BaseGraph(object):
     node_layout : str or dict, default 'spring'
         If `node_layout` is a string, the node positions are computed using the indicated method:
 
-        - 'random'    : place nodes in random positions;
-        - 'circular'  : place nodes regularly spaced on a circle;
-        - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
-        - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'radial'    : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'community' : place nodes such that nodes belonging to the same community are grouped together;
-        - 'bipartite' : place nodes regularly spaced on two parallel lines.
+        - 'random'       : place nodes in random positions;
+        - 'circular'     : place nodes regularly spaced on a circle;
+        - 'spring'       : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+        - 'dot'          : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'radial'       : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
+        - 'bipartite'    : place nodes regularly spaced on two parallel lines;
+        - 'multipartite' : place nodes regularly spaced on several parallel lines;
+        - 'shell'        : place nodes regularly spaced on concentric circles.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -85,6 +89,8 @@ class BaseGraph(object):
         - get_radial_tree_layout
         - get_community_layout
         - get_bipartite_layout
+        - get_multipartite_layout
+        - get_shell_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -462,6 +468,12 @@ class BaseGraph(object):
         elif node_layout == 'bipartite':
             return get_bipartite_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'multipartite':
+            return get_multipartite_layout(
+                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'shell':
+            return get_shell_layout(
+                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
         elif node_layout == 'dot':
             return get_sugiyama_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
@@ -472,7 +484,7 @@ class BaseGraph(object):
             return get_random_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'community', 'circular', 'linear', 'bipartite', 'dot', 'radial', 'random']
+            implemented = ['spring', 'community', 'circular', 'linear', 'bipartite', 'multipartite', 'shell', 'dot', 'radial', 'random']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"
             for method in implemented:
                 msg += f"\n\t{method}"
@@ -1156,13 +1168,15 @@ class Graph(BaseGraph):
     node_layout : str or dict, default 'spring'
         If `node_layout` is a string, the node positions are computed using the indicated method:
 
-        - 'random'    : place nodes in random positions;
-        - 'circular'  : place nodes regularly spaced on a circle;
-        - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
-        - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'radial'    : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'community' : place nodes such that nodes belonging to the same community are grouped together;
-        - 'bipartite' : place nodes regularly spaced on two parallel lines.
+        - 'random'       : place nodes in random positions;
+        - 'circular'     : place nodes regularly spaced on a circle;
+        - 'spring'       : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+        - 'dot'          : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'radial'       : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
+        - 'bipartite'    : place nodes regularly spaced on two parallel lines;
+        - 'multipartite' : place nodes regularly spaced on several parallel lines;
+        - 'shell'        : place nodes regularly spaced on concentric circles.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -1176,6 +1190,8 @@ class Graph(BaseGraph):
         - get_radial_tree_layout
         - get_community_layout
         - get_bipartite_layout
+        - get_multipartite_layout
+        - get_shell_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -2239,13 +2255,15 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
     node_layout : str or dict, default 'spring'
         If `node_layout` is a string, the node positions are computed using the indicated method:
 
-        - 'random'    : place nodes in random positions;
-        - 'circular'  : place nodes regularly spaced on a circle;
-        - 'spring'    : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
-        - 'dot'       : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'radial'    : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
-        - 'community' : place nodes such that nodes belonging to the same community are grouped together;
-        - 'bipartite' : place nodes regularly spaced on two parallel lines.
+        - 'random'       : place nodes in random positions;
+        - 'circular'     : place nodes regularly spaced on a circle;
+        - 'spring'       : place nodes using a force-directed layout (Fruchterman-Reingold algorithm);
+        - 'dot'          : place nodes using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'radial'       : place nodes radially using the Sugiyama algorithm; the graph should be directed and acyclic;
+        - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
+        - 'bipartite'    : place nodes regularly spaced on two parallel lines;
+        - 'multipartite' : place nodes regularly spaced on several parallel lines;
+        - 'shell'        : place nodes regularly spaced on concentric circles.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -2259,6 +2277,8 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
         - get_radial_tree_layout
         - get_community_layout
         - get_bipartite_layout
+        - get_multipartite_layout
+        - get_shell_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
