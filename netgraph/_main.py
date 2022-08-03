@@ -507,12 +507,13 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
-            area = np.product(scale)
-            k = np.sqrt(area / float(len(self.nodes))) # expected distance between nodes
-            # As there are multiple control points per edge,
-            # edge segments should be much shorter. k hence needs to be smaller.
-            k *= 0.1
-            edge_layout_kwargs.setdefault('k', k)
+            # area = np.product(scale)
+            # k = np.sqrt(area / float(len(self.nodes))) # expected distance between nodes
+            # # As there are multiple control points per edge,
+            # # edge segments should be much shorter. k hence needs to be smaller.
+            # k *= 0.1
+            # edge_layout_kwargs.setdefault('k', k)
+            edge_layout_kwargs.setdefault('k', 0.1)
         elif edge_layout == 'arc':
             edge_layout_kwargs.setdefault('rad', 1.)
             edge_layout_kwargs.setdefault('origin', origin)
