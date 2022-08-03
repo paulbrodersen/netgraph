@@ -22,7 +22,27 @@ from ._utils import (
     _edge_list_to_adjacency_list,
     _get_connected_components,
 )
-from ._node_layout import get_fruchterman_reingold_layout, _clip_to_frame
+
+
+# monkeypatch repulsive force
+def _get_fr_repulsion(distance, direction, k):
+    """Compute repulsive forces.
+
+    This is a variant of the implementation in the original FR
+    algorithm, in as much as repulsion only acts between fixed nodes
+    and mobile nodes, not between fixed nodes and other fixed nodes.
+    """
+    total_mobile = distance.shape[1]
+    distance = distance[total_mobile:]
+    direction = direction[total_mobile:]
+    magnitude = k**2 / distance
+    vectors = direction * magnitude[..., None]
+    return np.sum(vectors, axis=0)
+
+import netgraph._node_layout
+netgraph._node_layout._get_fr_repulsion = _get_fr_repulsion
+from netgraph._node_layout import get_fruchterman_reingold_layout, _clip_to_frame
+
 
 # for profiling with kernprof/line_profiler
 try:
