@@ -385,7 +385,7 @@ def _optimize_control_point_positions(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
 
-        expanded_node_positions = get_fruchterman_reingold_layout(
+        expanded_node_positions = get_fruchterman_reingold_layout.__wrapped__(
             expanded_edges,
             node_positions      = expanded_node_positions,
             scale               = scale,
