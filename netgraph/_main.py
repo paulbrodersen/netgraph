@@ -298,6 +298,8 @@ class BaseGraph(object):
         node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
         edge_width = self._rescale(edge_width, BASE_SCALE)
 
+        self.node_size = node_size
+
         # Initialise node and edge layouts.
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
@@ -640,7 +642,7 @@ class BaseGraph(object):
                                                 edge_layout_kwargs['selfloop_angle'])
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
-            edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
+            edge_paths = get_curved_edge_paths(edges, node_positions, node_size=self.node_size, **edge_layout_kwargs)
         elif edge_layout == 'arc':
             edge_paths = get_arced_edge_paths(edges, node_positions,
                                               rad=edge_layout_kwargs['rad'],
@@ -810,7 +812,7 @@ class BaseGraph(object):
                     fixed_positions[uuid4()] = m * delta + edge_origin
         fixed_positions.update(self.node_positions)
 
-        return get_curved_edge_paths(stale_edges, fixed_positions, **self.edge_layout_kwargs)
+        return get_curved_edge_paths(stale_edges, fixed_positions, node_size=self.node_size, **self.edge_layout_kwargs)
 
 
     def _update_bundled_edge_paths(self, edges):
