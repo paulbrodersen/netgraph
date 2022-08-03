@@ -41,7 +41,7 @@ def test_curved_edge_layout():
         1 : np.array([0.5, 0.5]),
         2 : np.array([0.9, 0.89]),
     }
-    Graph(edges, node_layout=node_positions, edge_layout='curved', edge_layout_kwargs=dict(k=0.025))
+    Graph(edges, node_layout=node_positions, edge_layout='curved')
     return fig
 
 
