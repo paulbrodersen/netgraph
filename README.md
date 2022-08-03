@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.9.1 Fixed issue #48, which occurred when computing a curved edge layout for graphs with multiple components. Also improved edge routing algorithm slightly.
 - 4.9.0 Implemented a layered and a shell layout for multi-partite graphs.
 - 4.8.2 Fixed issue #45, which prevented a warning to be raised when trying to plot networkx.MultiGraph instances.
 - 4.8.1 Fixed issue #44, that occurred if a single node was plotted with the Sugiyama layout (thanks @wilkeber).
