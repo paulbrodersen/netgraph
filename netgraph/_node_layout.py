@@ -130,7 +130,7 @@ def get_layout_for_multiple_components(edges, components, layout_function,
     return node_positions
 
 
-def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.05):
+def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.1):
     """Partition the canvas given by origin and scale into bounding boxes, one for each component.
 
     Use rectangle packing to tightly arrange bounding boxes.
