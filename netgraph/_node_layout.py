@@ -179,8 +179,8 @@ def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.
         from matplotlib.patches import Rectangle
         fig, ax = plt.subplots(1,1)
         for bbox in bboxes:
-            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
-        plt.show()
+            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3), zorder=-1))
+        # plt.show()
 
     return bboxes
 
