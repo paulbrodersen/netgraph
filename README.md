@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.9.3 Improved placement of nodes in instances where all nodes are aligned within any one dimension.
 - 4.9.2 Fixed an issue that occurred when using the dot node layout for a graphs with multiple components.
 - 4.9.1 Fixed issue #48, which occurred when computing a curved edge layout for graphs with multiple components. Also improved edge routing slightly.
 - 4.9.0 Implemented a layered and a shell layout for multi-partite graphs.
