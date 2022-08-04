@@ -642,8 +642,8 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
     positions = _rescale_to_frame(np.array(positions), np.array(origin), np.array(scale))
 
     # place roots on top, leaves on bottom
-    positions -= np.max(positions, axis=0)
-    positions *= -1
+    positions[:, 1] -= origin[1] + scale[1]
+    positions[:, 1] *= -1
 
     return dict(zip(nodes, positions))
 
