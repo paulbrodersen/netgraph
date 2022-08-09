@@ -255,7 +255,7 @@ def get_curved_edge_paths(edges, node_positions,
     # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
     # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
     if k is None:
-        total_nodes = len(nodes)
+        total_nodes = len(node_positions)
         area = np.product(scale)
         k = np.sqrt(area / float(total_nodes))
         k *= 0.1
