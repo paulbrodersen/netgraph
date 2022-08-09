@@ -241,7 +241,7 @@ def get_curved_edge_paths(edges, node_positions,
         Temperature is decreased on each iteration to eventually force the algorithm
         into a particular solution. The size of the initial temperature determines how
         quickly that happens. Values should be much smaller than the values of `scale`.
-    node_size : dict
+    node_size : float or dict
         Dictionary mapping each node to a float, the node size. Used for node avoidance.
 
     Returns
@@ -398,6 +398,9 @@ def _optimize_control_point_positions(
     expanded_edges = _expand_edges(edge_to_control_points)
     expanded_node_positions = control_point_positions.copy() # TODO: may need deepcopy here
     expanded_node_positions.update(node_positions)
+
+    if isinstance(node_size, float):
+        node_size = {node : node_size for node in node_positions}
 
     # increase size of nodes so that there is a bit more clearance between edges and nodes
     node_size = {node : 2 * size for node, size in node_size.items()}
