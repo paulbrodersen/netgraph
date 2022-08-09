@@ -302,7 +302,7 @@ from netgraph import Graph; help(Graph)
 - 4.3.0 Added the ArcDiagram class and interactive/editable variants.
 - 4.2.4 Plotting of graphs with a single node is now supported.
 - 4.2.3 Fixed a bug that occurred when using the community layout with at least one community containing a single node
-- 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised withut tabular annotations
+- 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised without tabular annotations
 - 4.2.1 Added online documentation
 
 ## Help, I don't know how to do ...!
