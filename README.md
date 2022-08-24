@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.9.5 Improved the routine that reduces node overlaps in the spring and community node layouts.
 - 4.9.4 Fixed a bug that occurred in get_curved_edges if the k parameter was not set explicitly.
 - 4.9.3 Improved placement of nodes in instances where all nodes are aligned within any one dimension.
 - 4.9.2 Fixed an issue that occurred when using the dot node layout for a graphs with multiple components.
