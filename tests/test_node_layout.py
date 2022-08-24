@@ -209,3 +209,12 @@ def test_shell_layout(multipartite_graph):
     fig, ax = plt.subplots()
     Graph(edges, node_layout='shell', node_layout_kwargs=dict(shells=shells, reduce_edge_crossings=False), node_labels=True, ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_remove_overlap():
+    edges = [(0, 1)]
+    node_size = {0 : 71, 1 : 71}
+    fig, ax = plt.subplots()
+    Graph(edges, node_size=node_size, ax=ax)
+    return fig

@@ -12,6 +12,7 @@ import numpy as np
 from functools import wraps
 from itertools import combinations, product
 from scipy.spatial import Voronoi
+from scipy.spatial.distance import cdist
 from rpack import pack
 
 from grandalf.graphs import Vertex, Edge, Graph
@@ -931,8 +932,12 @@ def _swap_values(arr, value_1, value_2):
 
 
 def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.1, total_iterations=10):
-    """Use a constrained version of Lloyds algorithm to move nodes apart from each other."""
-    # TODO use node radius to check for node overlaps; terminate once all overlaps are removed
+    """Use a constrained version of Lloyds algorithm to move nodes apart from each other.
+
+    See also
+    --------
+    https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
+    """
 
     unique_nodes = list(node_positions.keys())
     positions = np.array(list(node_positions.values()))
@@ -952,6 +957,61 @@ def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.
         positions[mask] = new[mask]
 
     return dict(zip(unique_nodes, positions))
+
+
+def _remove_node_overlap(node_positions, node_size, origin, scale, fixed_nodes=None, tolerance=1e-6, maximum_iterations=100):
+    """Uses a constrained variation of Lloyds algorithm to move nodes apart from each other until none overlap."
+
+    See also
+    --------
+    https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
+
+    """
+
+    unique_nodes = list(node_positions.keys())
+    positions = np.array(list(node_positions.values()))
+    radii = np.array([node_size[node] for node in node_positions])
+
+    if fixed_nodes:
+        is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
+    else:
+        is_mobile = np.ones((len(unique_nodes)), dtype=bool)
+
+    minimum_distances = radii[np.newaxis, :] + radii[:, np.newaxis]
+    minimum_distances[np.diag_indices_from(minimum_distances)] = 0 # ignore distances to self
+
+    # Initialize the first loop.
+    distances = cdist(positions, positions)
+    displacements = np.max(np.clip(minimum_distances - distances, 0, None), axis=-1)
+
+    ctr = 0
+    while np.any(displacements > tolerance) & (ctr < maximum_iterations):
+        centroids = _get_voronoi_centroids(positions)
+
+        # Compute the direction from each point towards its corresponding Voronoi centroid.
+        deltas = centroids - positions
+        magnitudes = np.linalg.norm(deltas, axis=-1)
+        directions = deltas / magnitudes[:, np.newaxis]
+
+        # Mask NaNs that arise if the magnitude is zero, i.e. the point is already center of the Voronoi cell.
+        directions[np.isnan(directions)] = 0
+
+        # Step into the direction of the centroid.
+        # Clipping prevents overshooting of the centroid when stepping into the direction of the centroid.
+        # We step by half the displacement as the other overlapping point will be moved in approximately the opposite direction.
+        new = positions + np.clip(0.5 * displacements, None, magnitudes)[:, np.newaxis] * directions
+
+        # Constrain Lloyd's algorithm by only updating positions where the new position is within the bbox.
+        valid = _is_within_bbox(new, origin, scale)
+        mask = np.logical_and(valid, is_mobile)
+        positions[mask] = new[mask]
+
+        # Initialize next loop.
+        distances = cdist(positions, positions)
+        displacements = np.max(np.clip(minimum_distances - distances, 0, None), axis=-1)
+        ctr += 1
+
+    return positions
 
 
 def _get_voronoi_centroids(positions):
@@ -1000,6 +1060,7 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_
         Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
+
 
     Returns
     -------

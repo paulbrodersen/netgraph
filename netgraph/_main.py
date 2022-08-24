@@ -36,6 +36,7 @@ from ._node_layout import (
     get_shell_layout,
     get_community_layout,
     _reduce_node_overlap,
+    _remove_node_overlap,
 )
 from ._edge_layout import (
     get_straight_edge_paths,
@@ -453,13 +454,13 @@ class BaseGraph(object):
             node_positions = get_fruchterman_reingold_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
-                node_positions = _reduce_node_overlap(node_positions, origin, scale)
+                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=origin, scale=scale)
             return node_positions
         if node_layout == 'community':
             node_positions = get_community_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
-                node_positions = _reduce_node_overlap(node_positions, origin, scale)
+                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=origin, scale=scale)
             return node_positions
         elif node_layout == 'circular':
             return get_circular_layout(
