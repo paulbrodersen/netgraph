@@ -24,7 +24,6 @@ from ._utils import (
     _get_subgraph,
     _get_unique_nodes,
     _get_n_points_on_a_circle,
-    _get_subgraph,
     _invert_dict,
     _get_connected_components,
     _convert_polar_to_cartesian_coordinates,
@@ -126,7 +125,7 @@ def get_layout_for_multiple_components(edges, components, layout_function,
             node_positions.update(component_node_positions)
         else:
             # component is a single node, which we can simply place at the centre of the bounding box
-            node_positions[component.pop()] = (bbox[0] + 0.5 * bbox[2], bbox[1] + 0.5 * bbox[3])
+            node_positions[component.pop()] = np.array([bbox[0] + 0.5 * bbox[2], bbox[1] + 0.5 * bbox[3]])
 
     return node_positions
 
@@ -1503,7 +1502,7 @@ def _get_within_community_positions(edges, node_to_community):
             subgraph = _get_subgraph(edges, list(nodes))
             if subgraph:
                 subgraph_node_positions = get_fruchterman_reingold_layout(
-                    subgraph, origin=np.array([-1, -1]), scale=np.array([2, 2]))
+                    subgraph, nodes=nodes, origin=np.array([-1, -1]), scale=np.array([2, 2]))
                 node_positions.update(subgraph_node_positions)
             else:
                 warnings.warn(f"There are no connections within community {community}. The placement of of nodes within this community is arbitrary.")
