@@ -1011,7 +1011,7 @@ def _remove_node_overlap(node_positions, node_size, origin, scale, fixed_nodes=N
         displacements = np.max(np.clip(minimum_distances - distances, 0, None), axis=-1)
         ctr += 1
 
-    return positions
+    return dict(zip(unique_nodes, positions))
 
 
 def _get_voronoi_centroids(positions):
