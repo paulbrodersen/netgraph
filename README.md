@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.9.7 Fixed a bug introduced in version 4.9.5 in the computation of repulsive forces in the spring layout (i.e. the default layout).
 - 4.9.6 Fixed issue #51, which occurred in the community node layout if a node had no connections to other nodes in its community.
 - 4.9.5 Improved the routine that reduces node overlaps in the spring and community node layouts.
 - 4.9.4 Fixed a bug that occurred in get_curved_edges if the k parameter was not set explicitly.

@@ -20,28 +20,17 @@ from ._utils import (
     _get_angle,
     _get_unit_vector,
     _edge_list_to_adjacency_list,
+    _edge_list_to_adjacency_matrix,
     _get_connected_components,
 )
 
-
-# monkeypatch repulsive force
-def _get_fr_repulsion(distance, direction, k):
-    """Compute repulsive forces.
-
-    This is a variant of the implementation in the original FR
-    algorithm, in as much as repulsion only acts between fixed nodes
-    and mobile nodes, not between fixed nodes and other fixed nodes.
-    """
-    total_mobile = distance.shape[1]
-    distance = distance[total_mobile:]
-    direction = direction[total_mobile:]
-    magnitude = k**2 / distance
-    vectors = direction * magnitude[..., None]
-    return np.sum(vectors, axis=0)
-
-import netgraph._node_layout
-netgraph._node_layout._get_fr_repulsion = _get_fr_repulsion
-from netgraph._node_layout import get_fruchterman_reingold_layout, _clip_to_frame
+from ._node_layout import (
+    _get_temperature_decay,
+    _is_within_bbox,
+    _rescale_to_frame,
+    _get_fr_attraction,
+    _clip_to_frame,
+)
 
 
 # for profiling with kernprof/line_profiler
@@ -408,7 +397,7 @@ def _optimize_control_point_positions(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
 
-        expanded_node_positions = get_fruchterman_reingold_layout.__wrapped__(
+        expanded_node_positions = _get_fruchterman_reingold_layout(
             expanded_edges,
             node_positions      = expanded_node_positions,
             scale               = scale,
@@ -421,6 +410,181 @@ def _optimize_control_point_positions(
         )
 
     return {node : xy for node, xy in expanded_node_positions.items() if node not in nodes}
+
+
+# This is a (slightly simplified) copy of the function defined in _node_layout.
+# This allows us to redefine the internally called function _get_fr_repulsion.
+# TODO: find a way to avoid code repetition.
+# NOTE: Monkey patching did not work as intended (commit 435f187f99b8ff43d1d573c5e9302ea92cfa7eb2).
+def _get_fruchterman_reingold_layout(edges,
+                                     edge_weights        = None,
+                                     k                   = None,
+                                     scale               = None,
+                                     origin              = None,
+                                     initial_temperature = 1.,
+                                     total_iterations    = 50,
+                                     node_size           = 0,
+                                     node_positions      = None,
+                                     fixed_nodes         = None,
+                                     *args, **kwargs):
+    """'Spring' or Fruchterman-Reingold node layout.
+
+    Uses the Fruchterman-Reingold algorithm [Fruchterman1991]_ to compute node positions.
+    This algorithm simulates the graph as a physical system, in which nodes repell each other.
+    For connected nodes, this repulsion is counteracted by an attractive force exerted by the edges, which are simulated as springs.
+    The resulting layout is hence often referred to as a 'spring' layout.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    edge_weights : dict
+        Mapping of edges to edge weights.
+    k : float or None, default None
+        Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
+    origin : tuple or None, default None
+        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        If None is given, the origin is placed at (0, 0).
+    scale : tuple or None, default None
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+        If None is given, the scale is set to (1, 1).
+    total_iterations : int, default 50
+        Number of iterations.
+    initial_temperature: float, default 1.
+        Temperature controls the maximum node displacement on each iteration.
+        Temperature is decreased on each iteration to eventually force the algorithm into a particular solution.
+        The size of the initial temperature determines how quickly that happens.
+        Values should be much smaller than the values of `scale`.
+    node_size : scalar or dict, default 0.
+        Size (radius) of nodes.
+        Providing the correct node size minimises the overlap of nodes in the graph,
+        which can otherwise occur if there are many nodes, or if the nodes differ considerably in size.
+    node_positions : dict or None, default None
+        Mapping of nodes to their (initial) x,y positions. If None are given,
+        nodes are initially placed randomly within the bounding box defined by `origin` and `scale`.
+        If the graph has multiple components, explicit initial positions may result in a ValueError,
+        if the initial positions fall outside of the area allocated to that specific component.
+    fixed_nodes : list or None, default None
+        Nodes to keep fixed at their initial positions.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    References
+    ----------
+    .. [Fruchterman1991] Fruchterman, TMJ and Reingold, EM (1991) ‘Graph drawing by force‐directed placement’,
+       Software: Practice and Experience
+
+    """
+
+    origin = np.array(origin)
+    scale = np.array(scale)
+
+    unique_nodes = node_positions.keys()
+    node_positions_as_array = np.array([node_positions[node] for node in unique_nodes])
+    node_size = np.array([node_size[node] if node in node_size else 0. for node in unique_nodes])
+
+    adjacency = _edge_list_to_adjacency_matrix(
+        edges, edge_weights=edge_weights, unique_nodes=unique_nodes)
+
+    # Forces in FR are symmetric.
+    # Hence we need to ensure that the adjacency matrix is also symmetric.
+    adjacency = adjacency + adjacency.transpose()
+
+    # reorder adjacency to separate mobile and fixed positions
+    is_mobile = np.array([False if node in fixed_nodes else True for node in unique_nodes], dtype=bool)
+    mobile_positions = node_positions_as_array[is_mobile]
+    fixed_positions = node_positions_as_array[~is_mobile]
+    mobile_node_sizes = node_size[is_mobile]
+    fixed_node_sizes = node_size[~is_mobile]
+    total_mobile = np.sum(is_mobile)
+    reordered = np.zeros((adjacency.shape[0], total_mobile))
+    reordered[:total_mobile, :total_mobile] = adjacency[is_mobile][:, is_mobile]
+    reordered[total_mobile:, :total_mobile] = adjacency[~is_mobile][:, is_mobile]
+    adjacency = reordered
+
+    temperatures = _get_temperature_decay(initial_temperature, total_iterations)
+
+    # --------------------------------------------------------------------------------
+    # main loop
+
+    for ii, temperature in enumerate(temperatures):
+        candidate_positions = _fruchterman_reingold(mobile_positions, fixed_positions,
+                                                    mobile_node_sizes, fixed_node_sizes,
+                                                    adjacency, temperature, k)
+        is_valid = _is_within_bbox(candidate_positions, origin=origin, scale=scale)
+        mobile_positions[is_valid] = candidate_positions[is_valid]
+
+    # --------------------------------------------------------------------------------
+    # format output
+
+    node_positions_as_array[is_mobile] = mobile_positions
+
+    if np.all(is_mobile):
+        node_positions_as_array = _rescale_to_frame(node_positions_as_array, origin, scale)
+
+    node_positions = dict(zip(unique_nodes, node_positions_as_array))
+
+    return node_positions
+
+
+def _fruchterman_reingold(mobile_positions, fixed_positions,
+                          mobile_node_radii, fixed_node_radii,
+                          adjacency, temperature, k):
+    """Inner loop of Fruchterman-Reingold layout algorithm."""
+
+    combined_positions = np.concatenate([mobile_positions, fixed_positions], axis=0)
+    combined_node_radii = np.concatenate([mobile_node_radii, fixed_node_radii])
+
+    delta = mobile_positions[np.newaxis, :, :] - combined_positions[:, np.newaxis, :]
+    distance = np.linalg.norm(delta, axis=-1)
+
+    # alternatively: (hack adapted from igraph)
+    if np.sum(distance==0) - np.trace(distance==0) > 0: # i.e. if off-diagonal entries in distance are zero
+        warnings.warn("Some nodes have the same position; repulsion between the nodes is undefined.")
+        rand_delta = np.random.rand(*delta.shape) * 1e-9
+        is_zero = distance <= 0
+        delta[is_zero] = rand_delta[is_zero]
+        distance = np.linalg.norm(delta, axis=-1)
+
+    # subtract node radii from distances to prevent nodes from overlapping
+    distance -= mobile_node_radii[np.newaxis, :] + combined_node_radii[:, np.newaxis]
+
+    # prevent distances from becoming less than zero due to overlap of nodes
+    distance[distance <= 0.] = 1e-6 # 1e-13 is numerical accuracy, and we will be taking the square shortly
+
+    with np.errstate(divide='ignore', invalid='ignore'):
+        direction = delta / distance[..., None] # i.e. the unit vector
+
+    # calculate forces
+    repulsion    = _get_fr_repulsion(distance, direction, k)
+    attraction   = _get_fr_attraction(distance, direction, adjacency, k)
+    displacement = attraction + repulsion
+
+    # limit maximum displacement using temperature
+    displacement_length = np.linalg.norm(displacement, axis=-1)
+    displacement = displacement / displacement_length[:, None] * np.clip(displacement_length, None, temperature)[:, None]
+
+    mobile_positions = mobile_positions + displacement
+
+    return mobile_positions
+
+
+def _get_fr_repulsion(distance, direction, k):
+    """Compute repulsive forces.
+
+    This is a variant of the implementation in the original FR
+    algorithm, in as much as repulsion only acts between fixed nodes
+    and mobile nodes, not between fixed nodes and other fixed nodes.
+    """
+    total_mobile = distance.shape[1]
+    distance = distance[total_mobile:]
+    direction = direction[total_mobile:]
+    magnitude = k**2 / distance
+    vectors = direction * magnitude[..., None]
+    return np.sum(vectors, axis=0)
 
 
 def _get_path_through_control_points(edge_to_control_points, node_positions, control_point_positions):
