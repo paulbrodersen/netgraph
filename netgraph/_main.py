@@ -302,6 +302,8 @@ class BaseGraph(object):
         self.node_size = node_size
 
         # Initialise node and edge layouts.
+        self.origin = origin
+        self.scale = scale
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
 
@@ -1834,6 +1836,74 @@ class EmphasizeOnHover(object):
                 self.fig.canvas.draw_idle()
 
 
+class DraggableGraphWithGridMode(DraggableGraph):
+    """
+    Implements a grid-mode, in which node positions are fixed to a grid.
+    To activate, press the letter 'g'.
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        super().__init__(*args, **kwargs)
+
+        self.grid = False
+        self.grid_dx = 0.05 * self.scale[0]
+        self.grid_dy = 0.05 * self.scale[1]
+        self._grid_lines = []
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_toggle)
+
+
+    def _on_key_toggle(self, event):
+        if event.key is 'g':
+            if self.grid is False:
+                self.grid = True
+                self._draw_grid()
+            else:
+                self.grid = False
+                self._remove_grid()
+        self.fig.canvas.draw_idle()
+
+
+    def _draw_grid(self):
+        eps = 1e-13
+        for x in np.arange(self.origin[0], self.origin[0] + self.scale[0] + eps, self.grid_dx):
+            line = self.ax.axvline(x, color='k', alpha=0.1, linestyle='--')
+            self._grid_lines.append(line)
+
+        for y in np.arange(self.origin[1], self.origin[1] + self.scale[1] + eps, self.grid_dy):
+            line = self.ax.axhline(y, color='k', alpha=0.1, linestyle='--')
+            self._grid_lines.append(line)
+
+
+    def _remove_grid(self):
+        for line in self._grid_lines:
+            line.remove()
+        self._grid_lines = []
+
+
+    def _on_release(self, event):
+        if self._currently_dragging and self.grid:
+            nodes = self._get_stale_nodes()
+            for node in nodes:
+                self.node_positions[node] = self._get_nearest_grid_coordinate(*self.node_positions[node])
+            self._update_node_artists(nodes)
+            if hasattr(self, 'node_label_artists'):
+                self._update_node_label_positions()
+
+            edges = self._get_stale_edges(nodes)
+            self._update_edges(edges)
+            if hasattr(self, 'edge_label_artists'):
+                self._update_edge_label_positions(edges)
+
+        super()._on_release(event)
+
+
+    def _get_nearest_grid_coordinate(self, x, y):
+        x = np.round((x - self.origin[0]) / self.grid_dx) * self.grid_dx + self.origin[0]
+        y = np.round((y - self.origin[1]) / self.grid_dy) * self.grid_dy + self.origin[1]
+        return x, y
+
+
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
     """Combines `EmphasizeOnHover` with the `Graph` class such that nodes are emphasized when hovering over them with the mouse.
 
@@ -2231,7 +2301,7 @@ class TableOnClickGraph(Graph, TableOnClick):
             TableOnClick.__init__(self, artist_to_table)
 
 
-class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
+class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
     """Extends the `Graph` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.
@@ -2491,7 +2561,7 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
 
     def __init__(self, *args, **kwargs):
 
-        DraggableGraph.__init__(self, *args, **kwargs)
+        DraggableGraphWithGridMode.__init__(self, *args, **kwargs)
 
         artists = list(self.node_artists.values()) + list(self.edge_artists.values())
         keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
@@ -2531,19 +2601,19 @@ class InteractiveGraph(DraggableGraph, EmphasizeOnHoverGraph, AnnotateOnClickGra
 
 
     def _on_motion(self, event):
-        DraggableGraph._on_motion(self, event)
+        DraggableGraphWithGridMode._on_motion(self, event)
         EmphasizeOnHoverGraph._on_motion(self, event)
 
 
     def _on_release(self, event):
         if self._currently_dragging is False:
-            DraggableGraph._on_release(self, event)
+            DraggableGraphWithGridMode._on_release(self, event)
             if self.artist_to_annotation:
                 AnnotateOnClickGraph._on_release(self, event)
             if hasattr(self, 'artist_to_table'):
                 TableOnClickGraph._on_release(self, event)
         else:
-            DraggableGraph._on_release(self, event)
+            DraggableGraphWithGridMode._on_release(self, event)
             if self.artist_to_annotation:
                 self._redraw_annotations(event)
 
