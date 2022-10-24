@@ -22,6 +22,7 @@ from ._utils import (
     _edge_list_to_adjacency_list,
     _edge_list_to_adjacency_matrix,
     _get_connected_components,
+    _get_orthogonal_unit_vector,
 )
 
 from ._node_layout import (
@@ -321,7 +322,6 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
 
 def _initialize_nonloops(edge_to_control_points, node_positions):
     """Merge control point : position dictionary for different non self-loops into a single dictionary."""
-    # TODO: shift bidirectional edges to a side, so that the paths do not fully overlap
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
         control_point_positions.update(_init_nonloop(source, target, control_points, node_positions))
@@ -332,10 +332,14 @@ def _init_nonloop(source, target, control_points, node_positions):
     """Initialise the positions of the control points to positions on a straight line between source and target node."""
     delta = node_positions[target] - node_positions[source]
     output = dict()
+    # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
+    # This prevents an intertwining of parallel edges.
+    # Strictly speaking, this offset is only required if bundle_parallel_edges is false.
+    offset = 1e-6 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
     for ii, control_point in enumerate(control_points):
         # y = mx + b
         m = (ii + 1) / (len(control_points) + 1)
-        output[control_point] = m * delta + node_positions[source]
+        output[control_point] = m * delta + node_positions[source] - offset
     return output
 
 
