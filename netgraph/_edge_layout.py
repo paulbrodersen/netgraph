@@ -25,6 +25,7 @@ from ._utils import (
 )
 
 from ._node_layout import (
+    get_fruchterman_reingold_layout,
     _get_temperature_decay,
     _is_within_bbox,
     _rescale_to_frame,
@@ -199,7 +200,8 @@ def get_curved_edge_paths(edges, node_positions,
                           k                             = None,
                           initial_temperature           = 0.01,
                           total_iterations              = 50,
-                          node_size                     = 0.):
+                          node_size                     = 0.,
+                          bundle_parallel_edges         = True):
     """Edge routing using curved paths that avoid nodes and other edges.
 
     Computes the edge paths, such that edges are represented by curved
@@ -232,6 +234,8 @@ def get_curved_edge_paths(edges, node_positions,
         quickly that happens. Values should be much smaller than the values of `scale`.
     node_size : float or dict
         Dictionary mapping each node to a float, the node size. Used for node avoidance.
+    bundle_parallel_edges: boolean, default True
+        If True, parallel edges (including bi-directional edges) have the same path.
 
     Returns
     -------
@@ -257,7 +261,7 @@ def get_curved_edge_paths(edges, node_positions,
     control_point_positions = _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
         origin, scale, k, initial_temperature, total_iterations, node_size,
-    )
+        bundle_parallel_edges)
 
     edge_to_path = _get_path_through_control_points(
         edge_to_control_points, node_positions, control_point_positions)
@@ -317,6 +321,7 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
 
 def _initialize_nonloops(edge_to_control_points, node_positions):
     """Merge control point : position dictionary for different non self-loops into a single dictionary."""
+    # TODO: shift bidirectional edges to a side, so that the paths do not fully overlap
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
         control_point_positions.update(_init_nonloop(source, target, control_points, node_positions))
@@ -381,7 +386,8 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
 
 def _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
-        origin, scale, k, initial_temperature, total_iterations, node_size):
+        origin, scale, k, initial_temperature, total_iterations, node_size,
+        bundle_parallel_edges):
     """Optimise the position of control points using the FR algorithm."""
     nodes = list(node_positions.keys())
     expanded_edges = _expand_edges(edge_to_control_points)
@@ -397,17 +403,33 @@ def _optimize_control_point_positions(
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
 
-        expanded_node_positions = _get_fruchterman_reingold_layout(
-            expanded_edges,
-            node_positions      = expanded_node_positions,
-            scale               = scale,
-            origin              = origin,
-            k                   = k,
-            initial_temperature = initial_temperature,
-            total_iterations    = total_iterations,
-            node_size           = node_size,
-            fixed_nodes         = nodes,
-        )
+        if bundle_parallel_edges:
+            # Edge control points are repulsed by nodes but not by other edge control points.
+            expanded_node_positions = _get_fruchterman_reingold_layout(
+                expanded_edges,
+                node_positions      = expanded_node_positions,
+                scale               = scale,
+                origin              = origin,
+                k                   = k,
+                initial_temperature = initial_temperature,
+                total_iterations    = total_iterations,
+                node_size           = node_size,
+                fixed_nodes         = nodes,
+            )
+        else:
+            # Edge control points are repulsed by other edge control points.
+            # This results in a separation of parallel edges.
+            expanded_node_positions = get_fruchterman_reingold_layout(
+                expanded_edges,
+                node_positions      = expanded_node_positions,
+                scale               = scale,
+                origin              = origin,
+                k                   = k,
+                initial_temperature = initial_temperature,
+                total_iterations    = total_iterations,
+                node_size           = node_size,
+                fixed_nodes         = nodes,
+            )
 
     return {node : xy for node, xy in expanded_node_positions.items() if node not in nodes}
 
