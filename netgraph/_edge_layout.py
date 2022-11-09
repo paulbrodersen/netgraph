@@ -423,7 +423,7 @@ def _optimize_control_point_positions(
         else:
             # Edge control points are repulsed by other edge control points.
             # This results in a separation of parallel edges.
-            expanded_node_positions = get_fruchterman_reingold_layout(
+            expanded_node_positions = get_fruchterman_reingold_layout.__wrapped__(
                 expanded_edges,
                 node_positions      = expanded_node_positions,
                 scale               = scale,
