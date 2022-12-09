@@ -393,7 +393,10 @@ class BaseGraph(object):
             missing = desired_set - given_set
             msg = f"{variable_name} is incomplete. The following elements are missing:"
             for item in missing:
-                msg += f"\n-{item}"
+                if isinstance(item, str):
+                    msg += f"\n\'{item}\'"
+                else:
+                    msg += f"\n{item}"
             raise ValueError(msg)
 
 

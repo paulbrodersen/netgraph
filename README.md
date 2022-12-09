@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.10.3 Improved the error message for incomplete iterable arguments (issue #55).
 - 4.10.2 Fixed issue #48 (again, sorry).
 - 4.10.1 Implement flag that controls bundling of parallel edges in the curved edge layout (`bundle_parallel_edges`).
 - 4.10.0 Implemented grid-mode for the InteractiveGraph class to facilitate alignment of nodes (toggle with 'g').
