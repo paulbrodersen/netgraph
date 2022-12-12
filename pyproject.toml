@@ -5,11 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "netgraph"
 dynamic = ["version"]
-readme = "README.md"
 authors = [
         {name = "Paul Brodersen", email = "paulbrodersen+netgraph@gmail.com"},
 ]
 description = "Python drawing utilities for publication quality plots of networks."
+readme = "README.md"
 keywords = [
          "matplotlib",
          "network",
@@ -24,6 +24,7 @@ classifiers = [
             "Programming Language :: Python :: 3",
             "Topic :: Scientific/Engineering :: Visualization",
 ]
+requires-python = ">3.6"
 dependencies = [
              "numpy",
              "scipy", 
