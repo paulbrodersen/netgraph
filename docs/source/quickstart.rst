@@ -51,7 +51,23 @@ Quickstart
     plot_instance = EditableGraph(graph_data)
     plt.show()
 
-    # read the documentation for a full list of available arguments
+    # Netgraph uses matplotlib for creating the visualisation.
+    # Node and edge artistis are derived from `matplotlib.patches.PathPatch`.
+    # Node and edge labels are `matplotlib.text.Text` instances.
+    # Standard matplotlib syntax applies.
+    fig, ax = plt.subplots(figsize=(5,4))
+    plot_instance = Graph([(0, 1)], node_labels=True, edge_labels=True, ax=ax)
+    plot_instance.node_artists[0].set_alpha(0.2)
+    plot_instance.edge_artists[(0, 1)].set_facecolor('red')
+    plot_instance.edge_label_artists[(0, 1)].set_style('italic')
+    plot_instance.node_label_artists[1].set_size(10)
+    ax.set_title("This is my fancy title.")
+    ax.set_facecolor('honeydew') # change background color
+    fig.canvas.draw() # force redraw to display changes
+    fig.savefig('test.pdf', dpi=300)
+    plt.show()
+
+    # Read the documentation for a full list of available arguments:
     help(Graph)
     help(InteractiveGraph)
     help(EditableGraph)
