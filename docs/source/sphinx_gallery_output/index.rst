@@ -11,7 +11,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph.">
 
 .. only:: html
 
@@ -32,7 +32,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph.">
 
 .. only:: html
 
@@ -53,7 +53,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph.">
 
 .. only:: html
 
@@ -347,7 +347,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Draw a multi-partite in successive layers or in concentric circles. ">
+    <div class="sphx-glr-thumbcontainer" tooltip="Draw a multi-partite in successive layers or in concentric circles.">
 
 .. only:: html
 
@@ -365,6 +365,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_17_multipartite_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Legends for node or edge properties can be created through the use of matplotlib proxy artists....">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_18_legends_thumb.png
+     :alt: Node and Edge Legends
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_18_legends.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_18_legends
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
