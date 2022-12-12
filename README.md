@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.11.0 Switched from setup.py based installation to pyproject.toml/wheels.
 - 4.10.4 Added support for custom graph classes that inherit from networkx/igraph/graph-tool base Graph classes (issue #53)
 - 4.10.3 Improved the error message for incomplete iterable arguments (issue #55).
 - 4.10.2 Fixed issue #48 (again, sorry).

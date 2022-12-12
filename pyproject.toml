@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "netgraph"
+dynamic = ["version"]
+readme = "README.md"
+authors = [
+        {name = "Paul Brodersen", email = "paulbrodersen+netgraph@gmail.com"},
+]
+description = "Python drawing utilities for publication quality plots of networks."
+keywords = [
+         "matplotlib",
+         "network",
+         "visualisation",
+]
+license = {text = "GNU General Public License v3 (GPLv3)"}
+classifiers = [
+            "Development Status :: 4 - Beta",
+            "Intended Audience :: Science/Research",
+            "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+            "Operating System :: OS Independent",
+            "Programming Language :: Python :: 3",
+            "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = [
+             "numpy",
+             "scipy", 
+             "matplotlib >= 1.5",
+             "rectangle-packer",
+             "grandalf",
+]
+
+[project.urls]
+Repository = "https://github.com/paulbrodersen/netgraph"
+Documentation =  "https://netgraph.readthedocs.io/en/latest/"
+
+[project.optional-dependencies]
+tests = [
+      "pytest",
+      "pytest-mpl",
+]
+doc = [
+    "sphinx",
+    "sphinx-rtd-theme",
+    "numpydoc",
+    "sphinx-gallery",
+    "Pillow",
+    "networkx",
+]
+
+[tool.setuptools.dynamic]
+version = {attr = "netgraph.__version__"}

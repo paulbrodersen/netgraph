@@ -55,7 +55,7 @@ Examples
 >>> plt.show()
 """
 
-__version__ = "4.10.4"
+__version__ = "4.11.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
