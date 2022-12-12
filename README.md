@@ -285,6 +285,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.11.2 Fixed a bug that prevented changing the axis background colour.
 - 4.11.1 Resolved warnings during build process.
 - 4.11.0 Switched from setup.py based installation to pyproject.toml/wheels.
 - 4.10.4 Added support for custom graph classes that inherit from networkx/igraph/graph-tool base Graph classes (issue #53)

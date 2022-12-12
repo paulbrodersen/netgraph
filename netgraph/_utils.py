@@ -547,7 +547,9 @@ def _make_pretty(ax):
     ax.set_yticks([])
     ax.set_aspect('equal')
     ax.get_figure().set_facecolor('w')
-    ax.set_frame_on(False)
+    # ax.set_frame_on(False) # also removes background
+    for spine in ax.spines.values():
+        spine.set_visible(False)
     ax.get_figure().canvas.draw()
 
 
