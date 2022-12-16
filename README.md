@@ -301,6 +301,9 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.11.5 Resolved a SyntaxWarning
+- 4.11.4 Fixed a bug that occurred when using edge annotations.
+- 4.11.3 Cleaned build directory and removed several outdated files.
 - 4.11.2 Fixed a bug that prevented changing the axis background colour.
 - 4.11.1 Resolved warnings during build process.
 - 4.11.0 Switched from setup.py based installation to pyproject.toml/wheels.
