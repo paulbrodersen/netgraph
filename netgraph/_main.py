@@ -2575,10 +2575,12 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         artist_to_annotation = dict()
         if 'annotations' in kwargs:
             for key, annotation in kwargs['annotations'].items():
-                if key in self.nodes:
-                    artist_to_annotation[self.node_artists[key]] = annotation
-                elif key in self.edges:
+                # Test membership of edges first, as edge keys may
+                # result in a ValueError when testing membership of nodes.
+                if key in self.edges:
                     artist_to_annotation[self.edge_artists[key]] = annotation
+                elif key in self.nodes:
+                    artist_to_annotation[self.node_artists[key]] = annotation
                 else:
                     raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
 
