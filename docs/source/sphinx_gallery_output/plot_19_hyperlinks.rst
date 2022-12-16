@@ -60,7 +60,7 @@ SVG backend or export the figure to SVG.
 
 .. GENERATED FROM PYTHON SOURCE LINES 29-44
 
-Opening the image.svg file in a browser of your choice, you can then click on
+Opening the image.svg file in a browser of your choice, you can click on
 the plot elements to open the corresponding web pages.
 
 Interactive figures
@@ -76,7 +76,7 @@ no effect.
 
 .. _matplotlib pick-events: https://matplotlib.org/stable/gallery/event_handling/pick_event_demo.html
 
-.. GENERATED FROM PYTHON SOURCE LINES 44-77
+.. GENERATED FROM PYTHON SOURCE LINES 44-76
 
 .. code-block:: default
 
@@ -85,7 +85,6 @@ no effect.
     import matplotlib.pyplot as plt
 
     from netgraph import Graph
-    from netgraph._artists import NodeArtist, EdgeArtist
 
     def on_pick(event):
         webbrowser.open(event.artist.get_url())
@@ -128,7 +127,7 @@ no effect.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.727 seconds)
+   **Total running time of the script:** ( 0 minutes  0.693 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_19_hyperlinks.py:

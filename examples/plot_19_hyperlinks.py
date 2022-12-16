@@ -26,7 +26,7 @@ g.edge_artists[(0, 1)].set_url("https://www.stackoverflow.com")
 fig.savefig('image.svg')
 
 ################################################################################
-# Opening the image.svg file in a browser of your choice, you can then click on
+# Opening the image.svg file in a browser of your choice, you can click on
 # the plot elements to open the corresponding web pages.
 #
 # Interactive figures
@@ -46,7 +46,6 @@ import webbrowser
 import matplotlib.pyplot as plt
 
 from netgraph import Graph
-from netgraph._artists import NodeArtist, EdgeArtist
 
 def on_pick(event):
     webbrowser.open(event.artist.get_url())
