@@ -1857,7 +1857,7 @@ class DraggableGraphWithGridMode(DraggableGraph):
 
 
     def _on_key_toggle(self, event):
-        if event.key is 'g':
+        if event.key == 'g':
             if self.grid is False:
                 self.grid = True
                 self._draw_grid()
