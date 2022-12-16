@@ -386,6 +386,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_18_legends
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Non-interactive figures -----------------------">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_19_hyperlinks_thumb.png
+     :alt: Hyperlinks
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_19_hyperlinks.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_19_hyperlinks
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

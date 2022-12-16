@@ -301,6 +301,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.11.6 Added documentation on hyperlinks (issue #56)
 - 4.11.5 Resolved a SyntaxWarning
 - 4.11.4 Fixed a bug that occurred when using edge annotations.
 - 4.11.3 Cleaned build directory and removed several outdated files.
