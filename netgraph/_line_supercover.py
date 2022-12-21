@@ -39,8 +39,8 @@ def line_supercover(y0, x0, y1, x1):
         y_inc = -1
 
     max_length = (max(dx,dy)+1)*3
-    rr = np.zeros((max_length), dtype=np.int)
-    cc = np.zeros((max_length), dtype=np.int)
+    rr = np.zeros((max_length), dtype=int)
+    cc = np.zeros((max_length), dtype=int)
 
     dx = 2 * dx
     dy = 2 * dy

@@ -370,11 +370,11 @@ class BaseGraph(object):
 
 
     def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
-        if isinstance(numeric_or_dict, (int, float, np.integer, np.float)):
+        if isinstance(numeric_or_dict, (int, float)):
             return {key : numeric_or_dict for key in dict_keys}
         elif isinstance(numeric_or_dict, dict):
             self._check_completeness(numeric_or_dict, dict_keys, variable_name)
-            self._check_types(numeric_or_dict.values(), (int, float, np.integer, np.float), variable_name)
+            self._check_types(numeric_or_dict.values(), (int, float), variable_name)
             return numeric_or_dict
         else:
             msg = f"The type of {variable_name} has to be either a int, float, or a dict."
@@ -1412,7 +1412,7 @@ def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     """
 
     keys = mydict.keys()
-    values = np.array(list(mydict.values()), dtype=np.float64)
+    values = np.array(list(mydict.values()), dtype=float)
 
     # apply vmin, vmax
     if vmin or vmax:
