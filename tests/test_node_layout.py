@@ -24,6 +24,16 @@ from toy_graphs import (
 
 np.random.seed(1)
 
+@pytest.mark.mpl_image_compare
+def test_degenerate_layout():
+    # Graph with single node.
+    import networkx as nx
+    fig, ax = plt.subplots()
+    g = nx.Graph()
+    g.add_node(1)
+    Graph(g, ax=ax)
+    return fig
+
 
 @pytest.mark.mpl_image_compare
 def test_circular_layout():

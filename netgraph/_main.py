@@ -455,6 +455,8 @@ class BaseGraph(object):
 
 
     def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
+        if len(self.nodes) == 1:
+            return {self.nodes[0]: np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])}
         if node_layout == 'spring':
             node_positions = get_fruchterman_reingold_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
