@@ -301,15 +301,16 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.11.8 Plotting of graphs with a single node is now actually supported. Thanks @Alexander-Wilms.
 - 4.11.7 Removed instances of (deprecated) np.float / np.int types (issue #58).
-- 4.11.6 Added documentation on hyperlinks (issue #56)
-- 4.11.5 Resolved a SyntaxWarning
+- 4.11.6 Added documentation on hyperlinks (issue #56).
+- 4.11.5 Resolved a SyntaxWarning.
 - 4.11.4 Fixed a bug that occurred when using edge annotations.
 - 4.11.3 Cleaned build directory and removed several outdated files.
 - 4.11.2 Fixed a bug that prevented changing the axis background colour.
 - 4.11.1 Resolved warnings during build process.
 - 4.11.0 Switched from setup.py based installation to pyproject.toml/wheels.
-- 4.10.4 Added support for custom graph classes that inherit from networkx/igraph/graph-tool base Graph classes (issue #53)
+- 4.10.4 Added support for custom graph classes that inherit from networkx/igraph/graph-tool base Graph classes (issue #53).
 - 4.10.3 Improved the error message for incomplete iterable arguments (issue #55).
 - 4.10.2 Fixed issue #48 (again, sorry).
 - 4.10.1 Implement flag that controls bundling of parallel edges in the curved edge layout (`bundle_parallel_edges`).
@@ -326,16 +327,16 @@ from netgraph import Graph; help(Graph)
 - 4.8.1 Fixed issue #44, that occurred if a single node was plotted with the Sugiyama layout (thanks @wilkeber).
 - 4.8.0 Refined community node layout. Communities are rotated w.r.t. each other to reduce the length of edges between them.
 - 4.7.1 Fixed issue #41, which occurred when computing the community layout for communities without within-community edges.
-- 4.7.0 Implemented a radial tree node layout
-- 4.6.0 Support drawing of graph_tool.Graph objects
-- 4.5.0 Support custom mappings for mouse-over highlight events (issue #39)
-- 4.4.1 Corrected imports for testing _arcdiagram.py
+- 4.7.0 Implemented a radial tree node layout.
+- 4.6.0 Support drawing of graph_tool.Graph objects.
+- 4.5.0 Support custom mappings for mouse-over highlight events (issue #39).
+- 4.4.1 Corrected imports for testing _arcdiagram.py.
 - 4.4.0 Added bipartite node layouts.
 - 4.3.0 Added the ArcDiagram class and interactive/editable variants.
 - 4.2.4 Plotting of graphs with a single node is now supported.
-- 4.2.3 Fixed a bug that occurred when using the community layout with at least one community containing a single node
-- 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised without tabular annotations
-- 4.2.1 Added online documentation
+- 4.2.3 Fixed a bug that occurred when using the community layout with at least one community containing a single node.
+- 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised without tabular annotations.
+- 4.2.1 Added online documentation.
 
 ## Help, I don't know how to do ...!
 
