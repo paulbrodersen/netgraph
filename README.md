@@ -301,6 +301,8 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.12.0 Implemented the geometric node layout, which infers node positions from given edge lengths.
+- 4.11.8 Plotting of graphs with a single node is now actually supported. Thanks @Alexander-Wilms.
 - 4.11.7 Removed instances of (deprecated) np.float / np.int types (issue #58).
 - 4.11.6 Added documentation on hyperlinks (issue #56)
 - 4.11.5 Resolved a SyntaxWarning
@@ -312,7 +314,7 @@ from netgraph import Graph; help(Graph)
 - 4.10.4 Added support for custom graph classes that inherit from networkx/igraph/graph-tool base Graph classes (issue #53)
 - 4.10.3 Improved the error message for incomplete iterable arguments (issue #55).
 - 4.10.2 Fixed issue #48 (again, sorry).
-- 4.10.1 Implement flag that controls bundling of parallel edges in the curved edge layout (`bundle_parallel_edges`).
+- 4.10.1 Implemented flag that controls bundling of parallel edges in the curved edge layout (`bundle_parallel_edges`).
 - 4.10.0 Implemented grid-mode for the InteractiveGraph class to facilitate alignment of nodes (toggle with 'g').
 - 4.9.7 Fixed a bug introduced in version 4.9.5 in the computation of repulsive forces in the spring layout (i.e. the default layout).
 - 4.9.6 Fixed issue #51, which occurred in the community node layout if a node had no connections to other nodes in its community.

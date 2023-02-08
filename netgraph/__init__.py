@@ -98,7 +98,7 @@ Examples
 >>> help(EditableGraph)
 """
 
-__version__ = "4.11.8"
+__version__ = "4.12.0"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
@@ -119,6 +119,7 @@ from ._node_layout import (
     get_multipartite_layout,
     get_shell_layout,
     get_community_layout,
+    get_geometric_layout,
 )
 
 from ._edge_layout import (
@@ -151,7 +152,9 @@ __all__ = [
     'get_circular_layout',
     'get_linear_layout',
     'get_bipartite_layout',
+    'get_multipartite_layout',
     'get_community_layout',
+    'get_geometric_layout',
     'get_straight_edge_paths',
     'get_curved_edge_paths',
     'get_bundled_edge_paths',
