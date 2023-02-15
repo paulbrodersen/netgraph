@@ -35,6 +35,7 @@ from ._node_layout import (
     get_multipartite_layout,
     get_shell_layout,
     get_community_layout,
+    get_geometric_layout,
     _reduce_node_overlap,
     _remove_node_overlap,
 )
@@ -76,7 +77,8 @@ class BaseGraph(object):
         - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
         - 'bipartite'    : place nodes regularly spaced on two parallel lines;
         - 'multipartite' : place nodes regularly spaced on several parallel lines;
-        - 'shell'        : place nodes regularly spaced on concentric circles.
+        - 'shell'        : place nodes regularly spaced on concentric circles;
+        - 'geometric'    : place nodes according to the length of the edges between them.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -92,6 +94,7 @@ class BaseGraph(object):
         - get_bipartite_layout
         - get_multipartite_layout
         - get_shell_layout
+        - get_geometric_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -493,8 +496,11 @@ class BaseGraph(object):
         elif node_layout == 'random':
             return get_random_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+        elif node_layout == 'geometric':
+            return get_geometric_layout(
+                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'community', 'circular', 'linear', 'bipartite', 'multipartite', 'shell', 'dot', 'radial', 'random']
+            implemented = ['spring', 'community', 'circular', 'linear', 'bipartite', 'multipartite', 'shell', 'dot', 'radial', 'random', 'geometric']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"
             for method in implemented:
                 msg += f"\n\t{method}"
@@ -1187,7 +1193,8 @@ class Graph(BaseGraph):
         - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
         - 'bipartite'    : place nodes regularly spaced on two parallel lines;
         - 'multipartite' : place nodes regularly spaced on several parallel lines;
-        - 'shell'        : place nodes regularly spaced on concentric circles.
+        - 'shell'        : place nodes regularly spaced on concentric circles;
+        - 'geometric'    : place nodes according to the length of the edges between them.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -1203,6 +1210,7 @@ class Graph(BaseGraph):
         - get_bipartite_layout
         - get_multipartite_layout
         - get_shell_layout
+        - get_geometric_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -2342,7 +2350,8 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         - 'community'    : place nodes such that nodes belonging to the same community are grouped together;
         - 'bipartite'    : place nodes regularly spaced on two parallel lines;
         - 'multipartite' : place nodes regularly spaced on several parallel lines;
-        - 'shell'        : place nodes regularly spaced on concentric circles.
+        - 'shell'        : place nodes regularly spaced on concentric circles;
+        - 'geometric'    : place nodes according to the length of the edges between them.
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
@@ -2358,6 +2367,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         - get_bipartite_layout
         - get_multipartite_layout
         - get_shell_layout
+        - get_geometric_layout
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -2371,8 +2381,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
 
         .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
 
-    node_edge_width : float or dict, default 0.5
-        Line width of node marker border.
+    node_edge_width : float or dict, default 0.5ayout        Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 

@@ -407,6 +407,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_19_hyperlinks
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Infer node positions given the length of the edges between them.">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_20_geometric_layout_thumb.png
+     :alt: Geometric node layout
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_20_geometric_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_20_geometric_layout
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

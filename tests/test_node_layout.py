@@ -228,3 +228,25 @@ def test_remove_overlap():
     fig, ax = plt.subplots()
     Graph(edges, node_size=node_size, ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_geometric_layout():
+    fig, (ax1, ax2) = plt.subplots(1, 2)
+
+    right_triangle = {
+        (0, 1) : 0.3,
+        (1, 2) : 0.4,
+        (2, 0) : 0.5,
+    }
+    Graph(list(right_triangle.keys()), node_layout='geometric', node_layout_kwargs=dict(edge_length=right_triangle), ax=ax1)
+
+    square = {
+        (0, 1) : 0.5,
+        (1, 2) : 0.5,
+        (2, 3) : 0.5,
+        (3, 0) : 0.5,
+    }
+    Graph(list(square.keys()), node_layout='geometric', node_layout_kwargs=dict(edge_length=square), ax=ax2)
+
+    return fig
