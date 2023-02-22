@@ -301,6 +301,7 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.12.1 Improved node positions rescaling for some layouts & standardised node position padding across all layouts.
 - 4.12.0 Implemented the geometric node layout, which infers node positions from given edge lengths.
 - 4.11.8 Plotting of graphs with a single node is now actually supported. Thanks @Alexander-Wilms.
 - 4.11.7 Removed instances of (deprecated) np.float / np.int types (issue #58).
