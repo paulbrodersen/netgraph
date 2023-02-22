@@ -1629,7 +1629,7 @@ def _combine_positions(node_to_community, community_centroids, community_size, r
     return node_positions
 
 
-def _rotate_communities(edges, node_to_community, community_centroids, node_positions, step_size=-0.01, max_iterations=100):
+def _rotate_communities(edges, node_to_community, community_centroids, node_positions, step_size=0.1, max_iterations=200):
 
     between_community_edges = [(source, target) for (source, target) in edges \
                                if node_to_community[source] != node_to_community[target]]
@@ -1653,12 +1653,9 @@ def _rotate_communities(edges, node_to_community, community_centroids, node_posi
             F = delta * np.linalg.norm(delta)
             community_torque[community] += np.cross(r, F)
 
-        # TODO: compare new torque values to previous; abort if change is small
-
         # update node positions
-        step_size = -0.1
         for node, community in node_to_community.items():
-            node_positions[node] = _rotate(step_size * community_torque[community],
+            node_positions[node] = _rotate(step_size * -community_torque[community],
                                            node_positions[node],
                                            community_centroids[community])
 
