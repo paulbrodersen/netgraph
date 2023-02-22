@@ -275,8 +275,8 @@ def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
 def get_fruchterman_reingold_layout(edges,
                                     edge_weights        = None,
                                     k                   = None,
-                                    scale               = None,
-                                    origin              = None,
+                                    origin              = (0, 0),
+                                    scale               = (1, 1),
                                     pad_by              = 0.05,
                                     initial_temperature = 1.,
                                     total_iterations    = 50,
@@ -299,12 +299,10 @@ def get_fruchterman_reingold_layout(edges,
         Mapping of edges to edge weights.
     k : float or None, default None
         Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
-    origin : tuple or None, default None
+    origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-        If None is given, the origin is placed at (0, 0).
-    scale : tuple or None, default None
+    scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-        If None is given, the scale is set to (1, 1).
     pad_by : float, default 0.05
         Padding around node positions to reduce clipping of the node artists with the frame,
         and to create space for routing curved edges including self-loops around nodes.
@@ -348,27 +346,8 @@ def get_fruchterman_reingold_layout(edges,
     # This wrapper handles the initialization of variables to their defaults (if not explicitely provided),
     # and checks inputs for self-consistency.
 
-    if origin is None:
-        if node_positions:
-            minima = np.min(list(node_positions.values()), axis=0)
-            origin = np.min(np.stack([minima, np.zeros_like(minima)], axis=0), axis=0)
-        else:
-            origin = np.zeros((2))
-    else:
-        # ensure that it is an array
-        origin = np.array(origin)
-
-    if scale is None:
-        if node_positions:
-            delta = np.array(list(node_positions.values())) - origin[np.newaxis, :]
-            maxima = np.max(delta, axis=0)
-            scale = np.max(np.stack([maxima, np.ones_like(maxima)], axis=0), axis=0)
-        else:
-            scale = np.ones((2))
-    else:
-        # ensure that it is an array
-        scale = np.array(scale)
-
+    origin = np.array(origin)
+    scale = np.array(scale)
     assert len(origin) == len(scale), \
         "Arguments `origin` (d={}) and `scale` (d={}) need to have the same number of dimensions!".format(len(origin), len(scale))
     dimensionality = len(origin)
