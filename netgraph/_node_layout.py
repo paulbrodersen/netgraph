@@ -1262,7 +1262,7 @@ def _reduce_crossings_bipartite(adjacency_list, left, right):
     return left, sorted(right_ranks, key=right_ranks.get)
 
 
-def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True, uniform_node_spacing=True):
+def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), scale=(1, 1), pad_by=0.05, reduce_edge_crossings=True, uniform_node_spacing=True):
     """Layered node layout for a multipartite graph.
 
     By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are reduced.
