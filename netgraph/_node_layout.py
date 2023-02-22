@@ -277,6 +277,7 @@ def get_fruchterman_reingold_layout(edges,
                                     k                   = None,
                                     scale               = None,
                                     origin              = None,
+                                    pad_by              = 0.05,
                                     initial_temperature = 1.,
                                     total_iterations    = 50,
                                     node_size           = 0,
@@ -304,6 +305,12 @@ def get_fruchterman_reingold_layout(edges,
     scale : tuple or None, default None
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
         If None is given, the scale is set to (1, 1).
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     total_iterations : int, default 50
         Number of iterations.
     initial_temperature: float, default 1.
@@ -477,7 +484,7 @@ def get_fruchterman_reingold_layout(edges,
     node_positions_as_array[is_mobile] = mobile_positions
 
     if np.all(is_mobile):
-        node_positions_as_array = _rescale_to_frame(node_positions_as_array, origin, scale)
+        node_positions_as_array = _fit_to_frame(node_positions_as_array, origin, scale, pad_by)
 
     node_positions = dict(zip(unique_nodes, node_positions_as_array))
 
@@ -590,7 +597,7 @@ def get_random_layout(edges, origin=(0,0), scale=(1,1)):
 
 
 @_handle_multiple_components
-def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_size=3, total_iterations=3):
     """'Dot' or Sugiyama node layout.
 
     Uses the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
@@ -600,12 +607,16 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-    origin : tuple or None, default None
+    origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-        If None is given, the origin is placed at (0, 0).
-    scale : tuple or None, default None
+    scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-        If None is given, the scale is set to (1, 1).
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     total_iterations : int, default 50
         Number of iterations.
 
@@ -643,7 +654,7 @@ def get_sugiyama_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_ite
     # rescale to canvas
     # TODO: by rescaling, we effectively ignore the node_size argument
     nodes, positions = zip(*node_positions.items())
-    positions = _rescale_to_frame(np.array(positions), np.array(origin), np.array(scale))
+    positions = _rescale_to_frame(np.array(positions), np.array(origin) + pad_by * np.array(scale), (1 - pad_by) * np.array(scale))
 
     # place roots on top, leaves on bottom
     positions[:, 1] -= origin[1] + scale[1]
@@ -682,7 +693,7 @@ class vertex_view(object):
 
 
 @_handle_multiple_components
-def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_iterations=3):
+def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_size=3, total_iterations=3):
     """Radial tree layout.
 
     Uses the Sugiyama algorithm [Sugiyama1981]_ to compute node positions.
@@ -692,12 +703,16 @@ def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-    origin : tuple or None, default None
+    origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-        If None is given, the origin is placed at (0, 0).
-    scale : tuple or None, default None
+    scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-        If None is given, the scale is set to (1, 1).
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     total_iterations : int, default 50
         Number of iterations.
 
@@ -713,12 +728,12 @@ def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_
 
     """
 
-    sugiyama_positions = get_sugiyama_layout(
-        edges,
-        origin=(0,0),
-        scale=(1,1),
-        node_size=node_size,
-        total_iterations=total_iterations
+    sugiyama_positions = get_sugiyama_layout(edges,
+                                             origin           = (0, 0),
+                                             scale            = (1, 1),
+                                             pad_by           = 0,
+                                             node_size        = node_size,
+                                             total_iterations = total_iterations
     )
 
     # determine the size of the largest layer
@@ -736,7 +751,7 @@ def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_
 
     max_angle = 2 * np.pi * max_nodes_per_layer / (max_nodes_per_layer + 1)
     max_radius = np.min(scale) / 2
-    max_radius *= 0.9 # shrink to make room for node artists, labels, and annotations
+    max_radius *= (1 - pad_by) # shrink to make room for node artists, labels, and annotations
     offset = np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])
 
     node_positions = dict()
@@ -749,7 +764,7 @@ def get_radial_tree_layout(edges, origin=(0,0), scale=(1,1), node_size=3, total_
 
 
 @_handle_multiple_components
-def get_circular_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_edge_crossings=True):
+def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Circular node layout.
 
     By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are minimised.
@@ -758,10 +773,16 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduc
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-    origin : tuple
+    origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple
+    scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     node_order : list or None, default None
         The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
         Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
@@ -781,7 +802,7 @@ def get_circular_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduc
     nodes = _get_unique_nodes(edges)
     center = np.array(origin) + 0.5 * np.array(scale)
     radius = np.min(scale) / 2
-    radius *= 0.9 # fudge factor to make space for self-loops, annotations, etc
+    radius *= (1 - pad_by) # fudge factor to make space for self-loops, annotations, etc
     positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
 
     if node_order:
@@ -1042,7 +1063,7 @@ def _get_centroid(polygon):
 
 
 @_handle_multiple_components
-def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_edge_crossings=True):
+def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Linear node layout.
 
     If :code:`reduce_edge_crossings` is set to :code:`True`, the algorithm
@@ -1056,6 +1077,12 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     node_order : list or None, default None
         The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
         Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
@@ -1076,7 +1103,7 @@ def get_linear_layout(edges, origin=(0,0), scale=(1,1), node_order=None, reduce_
 
     nodes = _get_unique_nodes(edges)
     total_nodes = len(nodes)
-    x = np.linspace(origin[0], origin[0] + scale[0], total_nodes+2)[1:-1]
+    x = np.linspace(origin[0] + pad_by * scale[0], origin[0] + (1 - pad_by) * scale[0], total_nodes)
     y = np.full(total_nodes, origin[1] + 0.5 * scale[1])
     positions = np.c_[x, y]
 
@@ -1112,7 +1139,7 @@ def _minimize_total_edge_length(nodes, edges):
     return output
 
 
-def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True):
+def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(1, 1), pad_by=0.05, reduce_edge_crossings=True):
     """Bipartite node layout.
 
     By default, this implementation uses a heuristic to arrange the nodes such that the edge crossings are reduced.
@@ -1128,6 +1155,12 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
 
@@ -1162,6 +1195,10 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
     if reduce_edge_crossings:
         if not _is_complete_bipartite(edges, left, right):
             left, right = _reduce_crossings_bipartite(adjacency_list, left, right)
+
+    # shrink frame to apply padding
+    origin = np.array(origin) + pad_by * np.array(scale)
+    scale = np.array(scale) * (1 - 2 * pad_by)
 
     if len(left) > len(right):
         spacing = scale[1] / (len(left) - 1)
@@ -1264,6 +1301,12 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
     uniform_node_spacing : bool, default True
@@ -1280,6 +1323,10 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
     .. [Eades1994] Eades & Wormald (1994) Edge crossings in drawings of bipartite graphs.
 
     """
+
+    # shrink frame to apply padding
+    origin = np.array(origin) + pad_by * np.array(scale)
+    scale = np.array(scale) * (1 - 2 * pad_by)
 
     # set the space between nodes
     if uniform_node_spacing:
@@ -1341,7 +1388,7 @@ def _get_node_positions_within_layer(node_order, node_spacing, layer_position, o
     return node_positions
 
 
-def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), reduce_edge_crossings=True):
+def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), pad_by=0.05, reduce_edge_crossings=True):
     """Shell layout.
 
     This is a wrapper around `get_multipartite_layout` that arranges nodes in shells around a center instead of in layers.
@@ -1359,6 +1406,12 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), red
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
 
@@ -1371,16 +1424,17 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), red
     if radii is None:
         if len(shells[0]) == 1:
             # Innermost shell consists of a single node, and hence should have no size.
-            radii = np.linspace(0, 0.9 * np.min(scale) / 2, len(shells))
+            radii = np.linspace(0, (1 - pad_by) * np.min(scale) / 2, len(shells))
         else:
             # Innermost shell consists of multiple nodes and should hence have a non-zero radius.
-            radii = np.linspace(0, 0.9 * np.min(scale) / 2, len(shells) + 1)[1:]
+            radii = np.linspace(0, (1 - pad_by) * np.min(scale) / 2, len(shells) + 1)[1:]
 
     relative_radii = np.array(radii) / np.max(radii)
     multipartite_positions = get_multipartite_layout(
         edges, shells, layer_positions=relative_radii,
         reduce_edge_crossings=reduce_edge_crossings,
-        uniform_node_spacing=False
+        uniform_node_spacing=False,
+        pad_by=0,
     )
 
     node_to_shell = {node : shell for shell in shells for node in shell}
@@ -1400,7 +1454,7 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), red
 
 
 @_handle_multiple_components
-def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
+def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), pad_by=0.05):
     """Community node layout for modular graphs.
 
     This implements the following steps:
@@ -1424,6 +1478,12 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
 
     Returns
     -------
@@ -1437,14 +1497,14 @@ def get_community_layout(edges, node_to_community, origin=(0,0), scale=(1,1)):
     communities = set([node_to_community[node] for node in nodes])
     if len(communities) < 2:
         warnings.warn("Graph contains a single community. Unable to compute a community layout. Computing spring layout instead.")
-        return get_fruchterman_reingold_layout(edges, origin=origin, scale=scale)
+        return get_fruchterman_reingold_layout(edges, origin=origin, scale=scale, pad_by=pad_by)
 
     # assert that node_to_community is non-redundant,
     # i.e. only contains nodes that are also present in edges
     node_to_community = {node : node_to_community[node] for node in nodes}
 
     community_size = _get_community_sizes(node_to_community, scale)
-    community_centroids = _get_community_positions(edges, node_to_community, community_size, origin, scale)
+    community_centroids = _get_community_positions(edges, node_to_community, community_size, origin, scale, pad_by)
     relative_node_positions = _get_within_community_positions(edges, node_to_community)
     node_positions = _combine_positions(node_to_community, community_centroids, community_size, relative_node_positions)
     node_positions = _rotate_communities(edges, node_to_community, community_centroids, node_positions)
@@ -1456,13 +1516,13 @@ def _get_community_sizes(node_to_community, scale):
     """Compute the area of the canvas reserved for each community."""
     total_nodes = len(node_to_community)
     max_radius = np.linalg.norm(scale) / 2
-    scalar = max_radius / total_nodes
+    scalar = max_radius / total_nodes # this is the worst case scenario, where all comunities are lined up like beads on a string; may warrant revisiting
     community_to_nodes = _invert_dict(node_to_community)
     community_size = {community : len(nodes) * scalar for community, nodes in community_to_nodes.items()}
     return community_size
 
 
-def _get_community_positions(edges, node_to_community, community_size, origin, scale):
+def _get_community_positions(edges, node_to_community, community_size, origin, scale, pad_by):
     """Compute a centroid position for each community."""
     # create a weighted graph, in which each node corresponds to a community,
     # and each edge weight to the number of edges between communities
@@ -1471,7 +1531,7 @@ def _get_community_positions(edges, node_to_community, community_size, origin, s
     # find layout for communities
     return get_fruchterman_reingold_layout(
         list(between_community_edges.keys()), edge_weight=between_community_edges,
-        node_size=community_size, origin=origin, scale=scale,
+        node_size=community_size, origin=origin, scale=scale, pad_by=pad_by,
     )
 
 
@@ -1569,7 +1629,7 @@ def _rotate(angle, points, origin=(0, 0)):
 
 
 @_handle_multiple_components
-def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 0), scale=(1, 1)):
+def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 0), scale=(1, 1), pad_by=0.05):
     """Node layout for defined edge lengths but unknown node positions.
 
     Node positions are determined through non-linear optimisation: the
@@ -1595,6 +1655,12 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
+        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
 
     Returns
     -------
@@ -1684,7 +1750,7 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
         print(f"scipy.optimize.minimize: {result.message}.")
 
     node_positions_as_array = result.x.reshape((-1, 2))
-    node_positions_as_array = _fit_to_frame(node_positions_as_array, np.array(origin), np.array(scale))
+    node_positions_as_array = _fit_to_frame(node_positions_as_array, np.array(origin), np.array(scale), pad_by)
     node_positions = dict(zip(unique_nodes, node_positions_as_array))
     return node_positions
 
@@ -1700,7 +1766,7 @@ def _initialise_geometric_node_layout(edges, edge_length):
     return np.array(list(node_positions.values()))
 
 
-def _fit_to_frame(positions, origin, scale, pad=0.05):
+def _fit_to_frame(positions, origin, scale, pad_by):
     """Rotate, rescale and shift a set of positions such that they fit
     inside a frame while preserving the relative distances between
     them."""
@@ -1729,12 +1795,12 @@ def _fit_to_frame(positions, origin, scale, pad=0.05):
     # rescale & center
     dx, dy = np.ptp(rotated_positions, axis=0)
     if dx/scale[0] < dy/scale[1]:
-        rescaled_positions = shifted_positions * (1 - 2 * pad) * scale[1] / dy
+        rescaled_positions = shifted_positions * (1 - 2 * pad_by) * scale[1] / dy
         rescaled_positions[:, 0] += (scale[0] - np.ptp(rescaled_positions[:, 0])) / 2
-        rescaled_positions[:, 1] += pad * scale[1]
+        rescaled_positions[:, 1] += pad_by * scale[1]
     else:
-        rescaled_positions = shifted_positions * (1 - 2 * pad) * scale[0] / dx
-        rescaled_positions[:, 0] += pad * scale[0]
+        rescaled_positions = shifted_positions * (1 - 2 * pad_by) * scale[0] / dx
+        rescaled_positions[:, 0] += pad_by * scale[0]
         rescaled_positions[:, 1] += (scale[1] - np.ptp(rescaled_positions[:, 1])) / 2
 
     # shift to origin
