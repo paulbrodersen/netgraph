@@ -28,6 +28,7 @@ from ._utils import (
     _invert_dict,
     _get_connected_components,
     _convert_polar_to_cartesian_coordinates,
+    _get_angle,
 )
 
 
@@ -1683,7 +1684,7 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
         print(f"scipy.optimize.minimize: {result.message}.")
 
     node_positions_as_array = result.x.reshape((-1, 2))
-    node_positions_as_array = _rescale_to_frame(node_positions_as_array, np.array(origin), np.array(scale))
+    node_positions_as_array = _fit_to_frame(node_positions_as_array, np.array(origin), np.array(scale))
     node_positions = dict(zip(unique_nodes, node_positions_as_array))
     return node_positions
 
@@ -1697,3 +1698,46 @@ def _initialise_geometric_node_layout(edges, edge_length):
         edge_weight[edge] = 1 / length
     node_positions = get_fruchterman_reingold_layout(edges, edge_weight=edge_weight)
     return np.array(list(node_positions.values()))
+
+
+def _fit_to_frame(positions, origin, scale, pad=0.05):
+    """Rotate, rescale and shift a set of positions such that they fit
+    inside a frame while preserving the relative distances between
+    them."""
+
+    # find major axis
+    delta = positions[np.newaxis, :] - positions[:, np.newaxis]
+    distances = np.sum(delta**2, axis=-1)
+    ii, jj = np.where(np.triu(distances)==np.max(distances))
+
+    # use the first if there are several solutions
+    ii = ii[0]
+    jj = jj[0]
+
+    # pivot around half-way point
+    pivot = positions[ii] + 0.5 * delta[ii, jj]
+    angle = _get_angle(*delta[ii, jj])
+
+    if scale[0] < scale[1]: # portrait
+        rotated_positions = _rotate((np.pi/2 - angle) % np.pi, positions, pivot)
+    else: # landscape
+        rotated_positions = _rotate(-angle % np.pi, positions, pivot)
+
+    # shift to (0, 0)
+    shifted_positions = rotated_positions - np.min(rotated_positions, axis=0)[np.newaxis, :]
+
+    # rescale & center
+    dx, dy = np.ptp(rotated_positions, axis=0)
+    if dx/scale[0] < dy/scale[1]:
+        rescaled_positions = shifted_positions * (1 - 2 * pad) * scale[1] / dy
+        rescaled_positions[:, 0] += (scale[0] - np.ptp(rescaled_positions[:, 0])) / 2
+        rescaled_positions[:, 1] += pad * scale[1]
+    else:
+        rescaled_positions = shifted_positions * (1 - 2 * pad) * scale[0] / dx
+        rescaled_positions[:, 0] += pad * scale[0]
+        rescaled_positions[:, 1] += (scale[1] - np.ptp(rescaled_positions[:, 1])) / 2
+
+    # shift to origin
+    reshifted_positions = rescaled_positions + np.array(origin)[np.newaxis, :]
+
+    return reshifted_positions
