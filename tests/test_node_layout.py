@@ -108,38 +108,22 @@ def test_community_layout():
 
 @pytest.mark.mpl_image_compare
 def test_community_layout_rotation():
-    partition_sizes = [3, 4, 5]
-    edges = []
-    offset = 0
-    for size in partition_sizes:
-        for ii in range(size):
-            edges.append((ii + offset, ((ii+1) % size)+offset))
-        offset += size
+    triangle = [(0, 1), (1, 2), (2, 0)]
+    square = [(3, 4), (4, 5), (5, 6), (6, 3)]
+    edges = triangle + square + [(0, 3)]
 
-    partition_to_nodes = dict()
-    ctr = 0
-    for ii, size in enumerate(partition_sizes):
-        partition_to_nodes[ii] = []
-        for _ in range(size):
-            partition_to_nodes[ii].append(ctr)
-            ctr += 1
-
-    edges.append((choice(partition_to_nodes[0]), choice(partition_to_nodes[1])))
-    edges.append((choice(partition_to_nodes[0]), choice(partition_to_nodes[2])))
-    edges.append((choice(partition_to_nodes[1]), choice(partition_to_nodes[2])))
-
-    node_to_community = dict()
-    node = 0
-    for pid, size in enumerate(partition_sizes):
-        for _ in range(size):
-            node_to_community[node] = pid
-            node += 1
-
+    node_to_community = {
+        0 : 0,
+        1 : 0,
+        2 : 0,
+        3 : 1,
+        4 : 1,
+        5 : 1,
+        6 : 1,
+    }
     community_to_color = {
         0 : 'tab:blue',
         1 : 'tab:orange',
-        2 : 'tab:green',
-        3 : 'tab:red',
     }
     node_color = {node: community_to_color[community] for node, community in node_to_community.items()}
 

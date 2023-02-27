@@ -301,6 +301,9 @@ from netgraph import Graph; help(Graph)
 
 ## Recent changes
 
+- 4.12.4 Turned off clipping of self-loop paths.
+- 4.12.3 Bugfix: stopped overwriting `step` parameter in `get_community_layout`.
+- 4.12.2 Improved node positions rescaling for some layouts & standardised node position padding across all layouts.
 - 4.12.1 Fixed a bug/deprecation issue that occurred with new versions of matplotlib if an axis was provided (thanks @speedsmith!).
 - 4.12.0 Implemented the geometric node layout, which infers node positions from given edge lengths.
 - 4.11.8 Plotting of graphs with a single node is now actually supported. Thanks @Alexander-Wilms.

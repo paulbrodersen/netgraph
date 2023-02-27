@@ -188,8 +188,8 @@ def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, a
         _get_angle(*unit_vector) + np.pi,
     )[1:]
 
-    # ensure that the loop stays within the bounding box
-    selfloop_path = _clip_to_frame(selfloop_path, origin, scale)
+    # # ensure that the loop stays within the bounding box
+    # selfloop_path = _clip_to_frame(selfloop_path, origin, scale)
 
     return selfloop_path
 
@@ -378,8 +378,8 @@ def _init_selfloop(source, control_points, node_positions, selfloop_radius, orig
         _get_angle(*unit_vector) + np.pi,
     )[1:]
 
-    # ensure that the loop stays within the bounding box
-    selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
+    # # ensure that the loop stays within the bounding box
+    # selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
 
     output = dict()
     for ii, control_point in enumerate(control_points):
