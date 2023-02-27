@@ -560,7 +560,11 @@ class BaseGraph(object):
     def _initialize_axis(self, ax):
         if ax is None:
             return plt.gca()
-        elif isinstance(ax, mpl.axes._subplots.Axes):
+        # elif isinstance(ax, mpl.axes._subplots.Axes):  <-- Original line.
+        # speedsmith 2023.02.26 Seems that _subplots was removed in a prior matplotlib release.
+        # Axes seems to have been moved. I am not sure if this change is correct or will cause other problems, 
+        # but it did allow the demo code to run.
+        elif isinstance(ax, mpl.axes.Axes):
             return ax
         else:
             raise TypeError(f"Variable 'ax' either None or a matplotlib axis instance. However, type(ax) is {type(ax)}.")
