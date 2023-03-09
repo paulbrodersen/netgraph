@@ -18,7 +18,7 @@ affilitations:
   - name: Department of Pharmacology, University of Oxford, United Kingdom
   - index: 1
 date: 9 March 2023
-bibliography: publication/paper.bib
+bibliography: paper.bib
 ---
 
 # Statement of need
@@ -33,7 +33,7 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 # Examples
 
-![Example visualisations](figures/gallery_portrait.png){width=90%}
+![Example visualisations](../figures/gallery_portrait.png){width=90%}
 
 # Acknowledgements
 
