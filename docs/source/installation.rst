@@ -21,6 +21,12 @@ If you do not have permission to install software systemwide, you can install in
 
     pip install --user netgraph
 
+If you are using (Ana-)conda (or mamba), you can also obtain netgraph from conda-forge:
+
+.. code-block::
+
+    conda install -c conda-forge netgraph
+
 Alternatively, you can manually download netgraph from GitHub_ or PyPI_.
 To install one of these versions, unpack it and run the following from the top-level source directory using the terminal:
 

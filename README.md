@@ -8,12 +8,17 @@ Netgraph is compatible with a variety of network data formats, including `networ
 
 ## Installation
 
-Install the current release of `netgraph` with:
+Install the current release of `netgraph` from PyPI:
 
 ``` shell
 pip install netgraph
 ```
 
+If you are using (Ana-)conda (or mamba), you can also obtain netgraph from conda-forge:
+
+``` shell
+conda install -c conda-forge netgraph
+```
 
 ## Documentation
 

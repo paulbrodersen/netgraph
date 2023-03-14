@@ -15,9 +15,17 @@ Netgraph is compatible with a variety of network data formats, including :code:`
 Installation
 ------------
 
+From PyPI:
+
 .. code-block:: shell
 
     pip install netgraph
+
+From conda-forge:
+
+.. code-block::
+
+    conda install -c conda-forge netgraph
 
 
 Contributing & Support
