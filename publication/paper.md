@@ -33,7 +33,7 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 # Examples
 
-![Example visualisations](../figures/gallery_portrait.png){width=90%}
+![Example visualisations](gallery_portrait.png){width=90%}
 
 # Acknowledgements
 
