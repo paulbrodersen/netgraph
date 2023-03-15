@@ -1,6 +1,6 @@
 # Netgraph
 
-Publication-quality network visualisations in python
+*Publication-quality network visualisations in python*
 
 [![Downloads](https://pepy.tech/badge/netgraph)](https://pepy.tech/project/netgraph)
 

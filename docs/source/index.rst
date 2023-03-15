@@ -6,7 +6,7 @@
 Netgraph
 ========
 
-Publication-quality network visualisations in python
+*Publication-quality network visualisations in python*
 
 .. image:: https://pepy.tech/badge/netgraph
 
