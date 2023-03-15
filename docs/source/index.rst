@@ -6,10 +6,16 @@
 Netgraph
 ========
 
+Publication-quality network visualisations in python
+
 .. image:: https://pepy.tech/badge/netgraph
 
-Netgraph is a python library for creating publication quality plots of networks.
-Netgraph is compatible with a variety of network data formats, including :code:`networkx`, :code:`igraph`, and :code:`graph_tool` :code:`Graph` objects.
+Netgraph is a python library that aims to complement existing network analysis libraries such as such as networkx_, igraph_, and graph-tool_ with publication-quality visualisations within the python ecosystem. To facilitate a seamless integration, netgraph supports a variety of input formats, including networkx, igraph, and graph-tool :code:`Graph` objects. Netgraph implements numerous node layout algorithms and several edge routing routines. Uniquely among python alternatives, it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using matplotlib_, and the resulting matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard matplotlib syntax. Finally, netgraph also supports interactive changes: with the :code:`InteractiveGraph` class, nodes and edges can be positioned using the mouse, and the :code:`EditableGraph` class additionally supports insertion and deletion of nodes and edges as well as their (re-)labelling through standard text-entry.
+
+.. _networkx: https://networkx.org/
+.. _igraph: https://igraph.org/
+.. _graph-tool: https://graph-tool.skewed.de/
+.. _matplotlib: https://matplotlib.org/
 
 
 Installation
@@ -45,7 +51,7 @@ cool feature, I will probably worship the ground you walk on for the
 rest of the week. Probably.
 
 .. _GitHub: https://github.com/paulbrodersen/netgraph
-.. _StackOverflow: https://stackoverflow.com/
+.. _StackOverflow: https://stackoverflow.com/questions/tagged/netgraph
 __ https://stackoverflow.com/help/minimal-reproducible-example
 
 
