@@ -22,7 +22,7 @@ conda install -c conda-forge netgraph
 
 ## Documentation
 
-The documentation of the full API, as well as numerous code examples can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
+Numerous tutorials, code examples, and a complete documentation of the API can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
 
 
 ## Quickstart
