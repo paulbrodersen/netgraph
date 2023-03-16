@@ -14,7 +14,7 @@ authors:
   - name: Paul J. N. Brodersen
     orcid: 0000-0001-5216-7863
     affiliation: 1
-affilitations:
+affiliations:
   - name: Department of Pharmacology, University of Oxford, United Kingdom
     index: 1
 date: 16 March 2023
