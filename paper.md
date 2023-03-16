@@ -1,5 +1,5 @@
 ---
-title:'Netgraph: Publication-quality Network Visualisations in Python'
+title: 'Netgraph: Publication-quality Network Visualisations in Python'
 tags:
   - Python
   - graph
@@ -12,11 +12,11 @@ tags:
   - graph-tool
 authors:
   - name: Paul J. N. Brodersen
-  - orcid: 0000-0001-5216-7863
-  - affiliation: 1
+    orcid: 0000-0001-5216-7863
+    affiliation: 1
 affilitations:
   - name: Department of Pharmacology, University of Oxford, United Kingdom
-  - index: 1
+    index: 1
 date: 14 March 2023
 bibliography: paper.bib
 ---
