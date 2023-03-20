@@ -224,3 +224,24 @@ def parse_graph(graph):
     else:
         allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graphtool.Graph']
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
+
+
+_check_to_is_empty = {
+    _is_listlike   : lambda x : not(x),
+    _is_nparray    : lambda x : False if x.any() else True, # not quite correct, as np.array([0, 0]) and np.array([0, 0, 0]) would indicate self-loops around node 0
+    _is_networkx   : lambda x : not(x),
+    _is_igraph     : lambda x : not(x),
+    _is_graph_tool : lambda x : not(x.get_vertices().tolist()),
+}
+
+
+def is_empty(graph):
+    for check, _is_empty in _check_to_is_empty.items():
+        try:
+            if check(graph):
+                return _is_empty(graph)
+        except ModuleNotFoundError:
+            pass
+    else:
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graphtool.Graph']
+        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))

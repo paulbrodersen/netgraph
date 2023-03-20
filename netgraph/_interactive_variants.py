@@ -17,9 +17,11 @@ try:
     from ._main import InteractiveGraph, BASE_SCALE, DraggableGraph
     from ._line_supercover import line_supercover
     from ._artists import NodeArtist, EdgeArtist
+    from ._parser import is_empty
 except ValueError:
     from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
+    from _parser import is_empty
 
 
 class NascentEdge(plt.Line2D):
@@ -55,15 +57,37 @@ class MutableGraph(InteractiveGraph):
 
     def __init__(self, *args, **kwargs):
 
-        super().__init__(*args, **kwargs)
+        if not is_empty(args[0]):
+            super().__init__(*args, **kwargs)
+            self._initialize_data_structures()
 
+        else:
+            # The graph is empty.
+            # We hence initialise with a single edge, which populates
+            # - last_selected_node_properties
+            # - last_selected_edge_properties
+            # with the chosen parameters.
+            # We then delete the edge and the two nodes and return the empty canvas.
+            super().__init__([(0, 1)], *args[1:], **kwargs)
+            self._initialize_data_structures()
+            self._delete_edge((0, 1))
+            self._delete_node(0)
+            self._delete_node(1)
+
+        # Ignore data limits and return full canvas.
+        xmin, ymin = self.origin
+        dx, dy = self.scale
+        self.ax.axis([xmin, xmin+dx, ymin, ymin+dy])
+
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
+
+
+    def _initialize_data_structures(self):
         self._reverse_node_artists = {artist : node for node, artist in self.node_artists.items()}
         self._reverse_edge_artists = {artist : edge for edge, artist in self.edge_artists.items()}
         self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
         self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
         self._nascent_edge = None
-
-        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
 
 
     def _on_key_press(self, event):
@@ -263,7 +287,8 @@ class MutableGraph(InteractiveGraph):
         self._clickable_artists.remove(artist)
         self._selectable_artists.remove(artist)
         self._draggable_artists.remove(artist)
-        self._selected_artists.remove(artist)
+        if artist in self._selected_artists:
+            self._selected_artists.remove(artist)
         del self._base_linewidth[artist]
         del self._base_edgecolor[artist]
         # 3c) EmphasizeOnHover

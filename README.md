@@ -105,6 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
+- 4.12.5 Added support for empty graphs in `EditableGraph` (issue #62).
 - 4.12.4 Turned off clipping of self-loop paths.
 - 4.12.3 Bugfix: stopped overwriting `step` parameter in `get_community_layout`.
 - 4.12.2 Improved node positions rescaling for some layouts & standardised node position padding across all layouts.
