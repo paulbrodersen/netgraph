@@ -17,11 +17,11 @@ try:
     from ._main import InteractiveGraph, BASE_SCALE, DraggableGraph
     from ._line_supercover import line_supercover
     from ._artists import NodeArtist, EdgeArtist
-    from ._parser import is_empty
+    from ._parser import is_order_zero, is_empty, parse_graph
 except ValueError:
     from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
-    from _parser import is_empty
+    from _parser import is_order_zero, is_empty, parse_graph
 
 
 class NascentEdge(plt.Line2D):
@@ -57,12 +57,8 @@ class MutableGraph(InteractiveGraph):
 
     def __init__(self, *args, **kwargs):
 
-        if not is_empty(args[0]):
-            super().__init__(*args, **kwargs)
-            self._initialize_data_structures()
-
-        else:
-            # The graph is empty.
+        if is_order_zero(args[0]):
+            # The graph is order-zero, i.e. it has no edges and no nodes.
             # We hence initialise with a single edge, which populates
             # - last_selected_node_properties
             # - last_selected_edge_properties
@@ -73,6 +69,26 @@ class MutableGraph(InteractiveGraph):
             self._delete_edge((0, 1))
             self._delete_node(0)
             self._delete_node(1)
+
+        elif is_empty(args[0]):
+            # The graph is empty, i.e. it has at least one node but no edges.
+            nodes, _, _ = parse_graph(args[0])
+            if len(nodes) > 1:
+                edge = (nodes[0], nodes[1])
+                super().__init__([edge], nodes=nodes, *args[1:], **kwargs)
+                self._initialize_data_structures()
+                self._delete_edge(edge)
+            else: # single node
+                node = nodes[0]
+                dummy = 0 if node != 0 else 1
+                edge = (node, dummy)
+                super().__init__([edge], *args[1:], **kwargs)
+                self._initialize_data_structures()
+                self._delete_edge(edge)
+                self._delete_node(dummy)
+        else:
+            super().__init__(*args, **kwargs)
+            self._initialize_data_structures()
 
         # Ignore data limits and return full canvas.
         xmin, ymin = self.origin
