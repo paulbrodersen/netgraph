@@ -105,7 +105,8 @@ help(EditableGraph)
 
 ## Recent changes
 
-- 4.12.5 Added support for graphs with nodes but no edges to `EditableGraph` (issue #62).
+- 4.12.7 Fixed a bug that occurred with recent matplotlib versions when using the rectangle selector in `InteractiveGraph`.
+- 4.12.6 Added support for graphs with nodes but no edges to `EditableGraph` (issue #62).
 - 4.12.5 Added support for empty graphs in `EditableGraph` (issue #62).
 - 4.12.4 Turned off clipping of self-loop paths.
 - 4.12.3 Bugfix: stopped overwriting `step` parameter in `get_community_layout`.

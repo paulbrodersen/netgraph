@@ -1656,9 +1656,9 @@ class SelectableArtists(ClickableArtists):
         self._rect.set_visible(True)
         xlim = np.sort([self._x0, self._x1])
         ylim = np.sort([self._y0, self._y1])
-        self._rect.set_xy((xlim[0],ylim[0] ) )
-        self._rect.set_width(np.diff(xlim))
-        self._rect.set_height(np.diff(ylim))
+        self._rect.set_xy((xlim[0], ylim[0]))
+        self._rect.set_width(xlim[1] - xlim[0])
+        self._rect.set_height(ylim[1] - ylim[0])
         self.fig.canvas.draw_idle()
 
 
