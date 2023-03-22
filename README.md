@@ -105,6 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
+- 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
 - 4.12.7 Fixed a bug that occurred with recent matplotlib versions when using the rectangle selector in `InteractiveGraph`.
 - 4.12.6 Added support for graphs with nodes but no edges to `EditableGraph` (issue #62).
 - 4.12.5 Added support for empty graphs in `EditableGraph` (issue #62).

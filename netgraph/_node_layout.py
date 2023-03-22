@@ -1359,15 +1359,19 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
     # set the space between nodes
     if uniform_node_spacing:
         try:
-            node_spacings = scale[1] / (np.max([len(layer) for layer in layers]) - 1) * np.ones_like(layers, dtype=float)
+            spacing = scale[1] / (np.max([len(layer) for layer in layers]) - 1)
+            node_spacings =  [spacing * np.ones_like(layer, dtype=float) for layer in layers]
         except ZeroDivisionError:
             # The graph has at most a single edge between each pair of layers.
-            node_spacings = np.ones_like(layers, dtype=float)
+            spacing = 1
+            node_spacings = [spacing * np.ones_like(layer, dtype=float) for layer in layers]
     else:
-        node_spacings = np.ones_like(layers, dtype=float)
+        node_spacings = []
         for ii, layer in enumerate(layers):
             if len(layer) > 1:
-                node_spacings[ii] = 1./(len(layer) - 1)
+                node_spacings.append(1./(len(layer) - 1) * np.ones_like(layer, float))
+            else:
+                node_spacings.append(np.ones_like(layer, float))
 
     # set the space between layers
     if layer_positions is None:
