@@ -380,22 +380,26 @@ def _shorten_line_by(path, distance):
 
     """
 
-    distance_to_end = np.linalg.norm(path - path[-1], axis=1)
-    is_valid = (distance_to_end - distance) >= 0
-    if np.any(is_valid):
-        idx = np.where(is_valid)[0][-1] # i.e. the last valid point
+    if distance > 0:
+        distance_to_end = np.linalg.norm(path - path[-1], axis=1)
+        is_valid = (distance_to_end - distance) >= 0
+        if np.any(is_valid):
+            idx = np.where(is_valid)[0][-1] # i.e. the last valid point
+        else:
+            idx = 0
+
+        # We could truncate the  path using `path[:idx+1]` and return here.
+        # However, if the path is not densely sampled, the error will be large.
+        # Therefor, we compute a point that is on the line from the last valid point to
+        # the end point, and append it to the truncated path.
+        vector = path[idx] - path[-1]
+        unit_vector = vector / np.linalg.norm(vector)
+        new_end_point = path[-1] + distance * unit_vector
+
+        return np.concatenate([path[:idx+1], new_end_point[None, :]], axis=0)
+
     else:
-        idx = 0
-
-    # We could truncate the  path using `path[:idx+1]` and return here.
-    # However, if the path is not densely sampled, the error will be large.
-    # Therefor, we compute a point that is on the line from the last valid point to
-    # the end point, and append it to the truncated path.
-    vector = path[idx] - path[-1]
-    unit_vector = vector / np.linalg.norm(vector)
-    new_end_point = path[-1] + distance * unit_vector
-
-    return np.concatenate([path[:idx+1], new_end_point[None, :]], axis=0)
+        return path
 
 
 def _get_point_along_spline(spline, fraction):

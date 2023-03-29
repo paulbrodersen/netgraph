@@ -722,8 +722,8 @@ class BaseGraph(object):
                 head_length = 2 * edge_width[edge]
                 head_width = 3 * edge_width[edge]
             else:
-                head_length = 1e-10 # 0 throws error
-                head_width = 1e-10 # 0 throws error
+                head_length = 0
+                head_width = 0
 
             edge_artist = EdgeArtist(
                 midline     = edge_path[edge],
