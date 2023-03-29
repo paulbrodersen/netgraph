@@ -105,6 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
+- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. For a full list of API changes, see below.
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
@@ -152,6 +153,17 @@ help(EditableGraph)
 - 4.2.3 Fixed a bug that occurred when using the community layout with at least one community containing a single node.
 - 4.2.2 Fixed a bug that occurred every time an InteractiveGraph was initialised without tabular annotations.
 - 4.2.1 Added online documentation.
+
+
+## Version 4 to version 5 API changes
+
+- The `node_shape` argument can now also be an instance of a `matplotlib.path.Path` or a dictionary containing `matplotlib.path.Path` instances.
+- Split `NodeArtist` class into `NodeArtist`, `RegularPolygonNodeArtist`, and `CircularNodeArtist` classes.
+- Renamed `NodeArtist.radius` to `NodeArtist.size` as node artists can now have arbitrary shapes that do not have a radius as they are not regular polygons or circles.
+- The `node_size` argument to `BaseGraph.draw_edges` was replaced by a `node_artists` argument.
+- Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.
+- Added the `NodeArtist.get_head_offset` and `get_tail_offset` methods.
+
 
 ## Help, I don't know how to do ...!
 

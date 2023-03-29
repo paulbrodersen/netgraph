@@ -8,8 +8,11 @@ import matplotlib.pyplot as plt
 import pytest
 
 from netgraph._artists import (
+    Path,
     PathPatchDataUnits,
     NodeArtist,
+    CircularNodeArtist,
+    RegularPolygonNodeArtist,
     EdgeArtist,
 )
 from netgraph._utils import _bspline
@@ -49,7 +52,29 @@ def test_PathPatchDataUnits():
 
 
 @pytest.mark.mpl_image_compare
-def test_RegularPolygonDataUnits():
+def test_NodeArtist():
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    path = Path(vertices, codes)
+    node = NodeArtist(path, xy=(0, 0), size=0.25, facecolor='red', edgecolor='red', linewidth=0.1)
+
+    fig, ax = plt.subplots()
+    ax.add_patch(node)
+    ax.set_aspect('equal')
+    ax.axis([-1, 1, -1, 1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_RegularPolygonNodeArtist():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
 
@@ -68,7 +93,7 @@ def test_RegularPolygonDataUnits():
     ax1.set_title('Desired')
 
     # create new patch with the adusted size, as the line is centered on the path
-    rp = NodeArtist(shape='s', xy=(1., 1.), radius=np.sqrt(2), facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
+    rp = RegularPolygonNodeArtist(4, np.pi * 0.25, xy=(1., 1.), size=np.sqrt(2), facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
     ax2.add_patch(rp)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')
@@ -77,7 +102,7 @@ def test_RegularPolygonDataUnits():
 
 
 @pytest.mark.mpl_image_compare
-def test_CircleDataUnits():
+def test_CircularNodeArtist():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
 
@@ -95,7 +120,7 @@ def test_CircleDataUnits():
     ax1.set_title('Desired')
 
     # create new patch with the adusted size, as the line is centered on the path
-    c = NodeArtist(shape='o', xy=origin, radius=radius, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
+    c = CircularNodeArtist(xy=origin, size=radius, facecolor='lightblue', edgecolor='darkblue', linewidth=lw)
     ax2.add_patch(c)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')

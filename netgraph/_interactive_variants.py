@@ -175,7 +175,7 @@ class MutableGraph(InteractiveGraph):
     def _extract_node_properties(self, node_artist):
         return dict(
             shape     = node_artist.shape,
-            radius    = node_artist.radius,
+            size      = node_artist.size,
             facecolor = node_artist.get_facecolor(),
             edgecolor = self._base_edgecolor[node_artist],
             linewidth = self._base_linewidth[node_artist],

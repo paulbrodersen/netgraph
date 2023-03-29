@@ -48,7 +48,14 @@ from ._edge_layout import (
     get_selfloop_paths,
     _get_selfloop_path,
 )
-from ._artists import NodeArtist, EdgeArtist
+
+from ._artists import (
+    Path,
+    NodeArtist,
+    CircularNodeArtist,
+    RegularPolygonNodeArtist,
+    EdgeArtist,
+)
 from ._parser import parse_graph, _parse_edge_list, _is_directed
 
 
@@ -285,7 +292,7 @@ class BaseGraph(object):
         self.nodes = self._initialize_nodes(nodes)
 
         # Convert all node and edge parameters to dictionaries.
-        node_shape      = self._normalize_string_argument(node_shape, self.nodes, 'node_shape')
+        node_shape      = self._normalize_shape_argument(node_shape, self.nodes, 'node_shape')
         node_size       = self._normalize_numeric_argument(node_size, self.nodes, 'node_size')
         node_edge_width = self._normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
         node_color      = self._normalize_color_argument(node_color, self.nodes, 'node_color')
@@ -316,14 +323,14 @@ class BaseGraph(object):
         # Draw plot elements
         self.ax = self._initialize_axis(ax)
 
-        self.edge_artists = dict()
-        self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
-                        edge_zorder, arrows, node_size)
-
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
                         node_shape, node_size, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
+
+        self.edge_artists = dict()
+        self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
+                        edge_zorder, arrows, self.node_artists)
 
         # This function needs to be called before any font sizes are adjusted,
         # as the axis dimensions affect the effective font size.
@@ -422,6 +429,21 @@ class BaseGraph(object):
         else:
             msg = f"The type of {variable_name} has to be either a str or a dict."
             msg += f"The current type is {type(str_or_dict)}."
+            raise TypeError(msg)
+
+
+    def _normalize_shape_argument(self, str_path_or_dict, dict_keys, variable_name):
+        if isinstance(str_path_or_dict, str):
+            return {key : str_path_or_dict for key in dict_keys}
+        elif isinstance(str_path_or_dict, Path):
+            return {key : str_path_or_dict for key in dict_keys}
+        elif isinstance(str_path_or_dict, dict):
+            self._check_completeness(set(str_path_or_dict), dict_keys, variable_name)
+            self._check_types(str_path_or_dict.values(), (str, Path), variable_name)
+            return str_path_or_dict
+        else:
+            msg = f"The type of {variable_name} has to be either a str, matplotlib.path.Path or a dict."
+            msg += f"The current type is {type(str_path_or_dict)}."
             raise TypeError(msg)
 
 
@@ -599,15 +621,45 @@ class BaseGraph(object):
             Updates mapping of nodes to corresponding node artists.
 
         """
+
         for node in nodes:
-            node_artist = NodeArtist(shape=node_shape[node],
-                                     xy=node_positions[node],
-                                     radius=node_size[node],
-                                     facecolor=node_color[node],
-                                     edgecolor=node_edge_color[node],
-                                     linewidth=node_edge_width[node],
-                                     alpha=node_alpha[node],
-                                     zorder=node_zorder[node])
+
+            kwargs = dict(
+                xy        = node_positions[node],
+                size      = node_size[node],
+                facecolor = node_color[node],
+                edgecolor = node_edge_color[node],
+                linewidth = node_edge_width[node],
+                alpha     = node_alpha[node],
+                zorder    = node_zorder[node],
+            )
+
+            shape = node_shape[node]
+
+            if isinstance(shape, Path):
+                node_artist = NodeArtist(shape, **kwargs)
+
+            elif isinstance(shape, str):
+                if shape == 'o':
+                    node_artist = CircularNodeArtist(**kwargs)
+                elif shape in 's^>v<dph8':
+                    symbol_to_parameters = {
+                        '^' : (3, 0),
+                        '<' : (3, np.pi * 0.5),
+                        'v' : (3, np.pi),
+                        '>' : (3, np.pi * 1.5),
+                        's' : (4, np.pi * 0.25),
+                        'd' : (4, np.pi * 0.5),
+                        'p' : (5, 0),
+                        'h' : (6, 0),
+                        '8' : (8, 0),
+                    }
+                    node_artist = RegularPolygonNodeArtist(*symbol_to_parameters[shape], **kwargs)
+                else:
+                    raise ValueError("Node shape should be one of: 'so^>v<dph8'. Current shape:{}".format(shape))
+            else:
+                raise ValueError("Node shape should be a matplotlob.Path instance or one of: 'so^>v<dph8'. Current shape:{}".format(shape))
+
             self.ax.add_patch(node_artist)
 
             if node in self.node_artists:
@@ -678,7 +730,7 @@ class BaseGraph(object):
 
 
     def draw_edges(self, edge_path, edge_width, edge_color, edge_alpha,
-                   edge_zorder, arrows, node_size):
+                   edge_zorder, arrows, node_artists):
         """Draw or update edge artists.
 
         Parameters
@@ -695,8 +747,8 @@ class BaseGraph(object):
             Mapping of edges to ints, the edge z-order values.
         arrows : bool
             If True, draw edges with arrow heads.
-        node_size : dict
-            Mapping of nodes to node sizes. Required to offset edges from nodes.
+        node_artists : dict
+            Mapping of nodes to node artists. Required to offset edges from nodes.
 
         Returns
         -------
@@ -734,7 +786,8 @@ class BaseGraph(object):
                 head_width  = head_width,
                 edgecolor   = 'none',
                 linewidth   = 0.,
-                offset      = node_size[target],
+                head_offset = node_artists[target].get_head_offset(edge_path[edge]),
+                tail_offset = node_artists[source].get_tail_offset(edge_path[edge]),
                 shape       = shape,
                 curved      = curved,
                 zorder      = edge_zorder[edge],
@@ -899,7 +952,7 @@ class BaseGraph(object):
         rescale_factor = np.inf
         for node, label in node_labels.items():
             artist = self.node_artists[node]
-            diameter = 2 * (artist.radius - artist._lw_data/artist.linewidth_correction)
+            diameter = 2 * (artist.size - artist._lw_data/artist.linewidth_correction)
             width, height = _get_text_object_dimensions(self.ax, label, **node_label_fontdict)
             rescale_factor = min(rescale_factor, diameter/np.sqrt(width**2 + height**2))
 
@@ -1150,7 +1203,7 @@ class BaseGraph(object):
         # when matplotlib sets axis limits automatically.
         # Hence we need to set them manually.
 
-        # max_radius = np.max([artist.radius for artist in self.node_artists.values()])
+        # max_radius = np.max([artist.size for artist in self.node_artists.values()])
         # maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
         # minx, miny = np.min(list(self.node_positions.values()), axis=0)
         # w = maxx-minx
@@ -2122,7 +2175,7 @@ class AnnotateOnClick(object):
 
     def _get_annotation_placement(self, artist):
         vector = self._get_vector_pointing_outwards(artist.xy)
-        x, y = artist.xy + 2 * artist.radius * vector
+        x, y = artist.xy + 2 * artist.size * vector
         horizontalalignment, verticalalignment = self._get_text_alignment(vector)
         return x, y, horizontalalignment, verticalalignment
 

@@ -52,79 +52,120 @@ class PathPatchDataUnits(PathPatch):
 
 
 class NodeArtist(PathPatchDataUnits):
-    """Implements the node artists class.
+    """NodeArtist base class.
 
     Parameters
     ----------
-    shape : str
-        The shape of the node. Specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+    shape : str or matplotlib.Path instance
+        The shape of the node.
+        If a string, the specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
+        If a path, the path has to be closed and the vertices have to be centered on (0,0).
     xy : tuple
         The (float x, float y) coordinates of the centroid.
-    radius : float
+    size : float
         The distance from the center to each of the vertices.
     **kwargs
         `Patch` properties:
         %(Patch_kwdoc)s
 
+    See also
+    --------
+    CircularNodeArtist, RegularPolygonArtist
+
     """
 
-    def __init__(self, shape, xy, radius, **kwargs):
-        self.shape = shape
+    def __init__(self, path, xy, size, orientation=0, linewidth_correction=2, **kwargs):
+        self._path = path
         self.xy = xy
-        self.radius = radius
-
-        if shape == 'o': # circle
-            self.numVertices = None
-            self.orientation = 0
-        elif shape == '^': # triangle up
-            self.numVertices = 3
-            self.orientation = 0
-        elif shape == '<': # triangle left
-            self.numVertices = 3
-            self.orientation = np.pi*0.5
-        elif shape == 'v': # triangle down
-            self.numVertices = 3
-            self.orientation = np.pi
-        elif shape == '>': # triangle right
-            self.numVertices = 3
-            self.orientation = np.pi*1.5
-        elif shape == 's': # square
-            self.numVertices = 4
-            self.orientation = np.pi*0.25
-        elif shape == 'd': # diamond
-            self.numVertices = 4
-            self.orientation = np.pi*0.5
-        elif shape == 'p': # pentagon
-            self.numVertices = 5
-            self.orientation = 0
-        elif shape == 'h': # hexagon
-            self.numVertices = 6
-            self.orientation = 0
-        elif shape == '8': # octagon
-            self.numVertices = 8
-            self.orientation = 0
-        else:
-            raise ValueError("Node shape should be one of: 'so^>v<dph8'. Current shape:{}".format(shape))
-
-        if self.shape == 'o': # circle
-            self.linewidth_correction = 2
-            self._path = Path.circle()
-        else: # regular polygon
-            self.linewidth_correction = 2 * np.sin(np.pi/self.numVertices) # derives from the ratio between a side and the radius in a regular polygon.
-            self._path = Path.unit_regular_polygon(self.numVertices)
-
+        self.size = size
+        self.orientation = orientation
+        self.linewidth_correction = linewidth_correction
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
 
-    def get_path(self):
-        return self._path
-
     def get_patch_transform(self):
-        # The factor 2 * sin(pi/n) d
         return self._patch_transform.clear() \
-            .scale(self.radius-self._lw_data/self.linewidth_correction) \
+            .scale(self.size-self._lw_data/self.linewidth_correction) \
             .rotate(self.orientation) \
             .translate(*self.xy)
+
+    def get_head_offset(self, edge_path):
+        # Determine edge path points that are within node shape path.
+        is_overlapping = self._path.contains_points(edge_path, transform=self.get_patch_transform())
+
+        # Resample segment consisting of last point that is not enclosed and first point that is.
+        idx = np.where(is_overlapping)[0][0]
+        segment = edge_path[[idx-1, idx]]
+        x, y = segment.T
+        resampled = np.c_[np.linspace(x[0], x[1], 100), np.linspace(y[0], y[1], 100)]
+
+        # Determine last resampled point that is not enclosed and compute distance to center.
+        is_overlapping = self._path.contains_points(resampled, transform=self.get_patch_transform())
+        idx = np.where(is_overlapping)[0][0] - 1
+        offset = np.linalg.norm(edge_path[-1] - resampled[idx])
+        return offset
+
+    def get_tail_offset(self, edge_path):
+        return self.get_head_offset(edge_path[::-1])
+
+
+class RegularPolygonNodeArtist(NodeArtist):
+    """Instantiates a regular polygon node artist.
+
+    Parameters
+    ----------
+    total_vertices : int
+        Number of corners.
+    orientation : float
+        Orientation of the polygon in radians.
+    xy : tuple
+        The (float x, float y) coordinates of the centroid.
+    size : float
+        The distance from the center to each of the vertices.
+    **kwargs
+        `Patch` properties:
+        %(Patch_kwdoc)s
+
+    See also
+    --------
+    NodeArtist, CircularNodeArtist
+
+    """
+
+    def __init__(self, total_vertices, orientation, xy, size, **kwargs):
+        path = Path.unit_regular_polygon(total_vertices)
+        linewidth_correction = 2 * np.sin(np.pi/total_vertices) # derives from the ratio between a side and the radius in a regular polygon.
+        super().__init__(path, xy, size, orientation=orientation, linewidth_correction=linewidth_correction, **kwargs)
+
+
+class CircularNodeArtist(NodeArtist):
+    """Instantiates a circular node artist.
+
+    Parameters
+    ----------
+    xy : tuple
+        The (float x, float y) coordinates of the centroid.
+    size : float
+        The distance from the center to each of the vertices.
+    **kwargs
+        `Patch` properties:
+        %(Patch_kwdoc)s
+
+    See also
+    --------
+    NodeArtist, RegularPolygonArtist
+
+    """
+
+    def __init__(self, xy, size, **kwargs):
+        path = Path.circle()
+        super().__init__(path, xy, size, **kwargs)
+
+    def get_head_offset(self, edge_path):
+        return self.size
+
+    def get_tail_offset(self, edge_path):
+        return self.size
 
 
 class EdgeArtist(PathPatchDataUnits):
@@ -142,7 +183,7 @@ class EdgeArtist(PathPatchDataUnits):
     head_length : float, default 0.15
         Length of the arrow head.
         Set to a value close to zero (but not zero) to suppress drawing of arrowheads.
-    offset : float, default 0.
+    head_offset : float, default 0.
         For non-zero offset values, the end of the edge is offset from the target node.
         The distance is calculated along the midline.
     shape : {'full', 'left', 'right'}, default 'full'
@@ -156,7 +197,8 @@ class EdgeArtist(PathPatchDataUnits):
                  width       = 0.05,
                  head_width  = 0.10,
                  head_length = 0.15,
-                 offset      = 0.,
+                 head_offset = 0.,
+                 tail_offset = 0.,
                  shape       = 'full',
                  curved      = False,
                  *args, **kwargs):
@@ -166,8 +208,9 @@ class EdgeArtist(PathPatchDataUnits):
         self.width       = width
         self.head_width  = head_width
         self.head_length = head_length
+        self.head_offset = head_offset
+        self.tail_offset = tail_offset
         self.shape       = shape
-        self.offset      = offset
         self.curved      = curved
 
         self._update_path() # sets self._path
@@ -175,9 +218,12 @@ class EdgeArtist(PathPatchDataUnits):
 
 
     def _update_path(self):
-        # Determine the actual endpoint (and hence midline) of the arrow given the offset;
+        # Determine the actual start (and hence midline) of the arrow given the tail offsets;
         # assume an ordered midline from source to target, i.e. from arrow base to arrow head.
-        arrow_midline      = _shorten_line_by(self.midline, self.offset)
+        arrow_midline      = _shorten_line_by(self.midline[::-1], self.tail_offset)[::-1]
+
+        # Determine the actual endpoint (and hence midline) of the arrow given the offsets.
+        arrow_midline      = _shorten_line_by(arrow_midline, self.head_offset)
         arrow_tail_midline = _shorten_line_by(arrow_midline, self.head_length)
 
         head_vertex_tip  = arrow_midline[-1]

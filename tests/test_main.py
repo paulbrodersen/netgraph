@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from netgraph._main import Graph
+from netgraph._artists import Path
 from toy_graphs import cube, cycle
 
 np.random.seed(42)
@@ -79,4 +80,66 @@ def test_update_view():
 def test_get_node_label_offset():
     fig, ax = plt.subplots()
     Graph(cycle, node_layout='circular', node_labels=True, node_label_offset=0.1)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_regular_node_shapes():
+    node_shape_options = 'so^>v<dph8'
+    fig, ax = plt.subplots()
+    Graph(cycle, node_layout='circular', node_shape=dict(list(enumerate(node_shape_options))), ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_path_node_shapes():
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    node_shape = Path(vertices, codes)
+    fig, ax = plt.subplots()
+    Graph(cycle, node_layout='circular', node_shape=node_shape, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_mixed_node_shapes():
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    regular_node_shape_options = 'so^>v<dph8'
+    node_shape = dict(list(enumerate(regular_node_shape_options)))
+    node_shape[0] = Path(vertices, codes)
+    fig, ax = plt.subplots()
+    Graph(cycle, node_layout='circular', node_shape=node_shape, node_alpha=0.5, arrows=True, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_offset_curved_edge():
+    fig, ax = plt.subplots()
+    edges = [(0, 1)]
+    node_layout = {
+        0 : np.array([0.1, 0.5]),
+        1 : np.array([0.9, 0.5])
+    }
+    node_size = 10
+    # Graph(edges, node_layout=node_layout, edge_layout='curved', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=False, ax=ax)
+    Graph(edges, node_layout=node_layout, edge_layout='curved', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=True, ax=ax)
+    ax.add_artist(plt.Circle(node_layout[1], node_size/100, zorder=-1, color='lightgray'))
+    ax.axis([0, 1, 0, 1])
     return fig
