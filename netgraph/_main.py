@@ -884,7 +884,8 @@ class BaseGraph(object):
             # Labels are centered on node artists.
             # Set fontsize such that labels fit the diameter of the node artists.
             size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
-            node_label_fontdict.setdefault('size', size)
+            if ('size' not in node_label_fontdict) and ('fontsize' not in node_label_fontdict):
+                node_label_fontdict.setdefault('size', size)
 
         return node_label_fontdict
 
@@ -904,6 +905,8 @@ class BaseGraph(object):
 
         if 'size' in node_label_fontdict:
             size = rescale_factor * node_label_fontdict['size']
+        elif 'fontsize' in node_label_fontdict:
+            size = rescale_factor * node_label_fontdict['fontsize']
         else:
             size = rescale_factor * plt.rcParams['font.size']
         return size
