@@ -6,6 +6,7 @@ Classes for artists used to display
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch, transforms
@@ -14,6 +15,8 @@ from ._utils import (
     _get_parallel_line,
     _get_orthogonal_unit_vector,
     _shorten_line_by,
+    _get_text_object_bbox,
+    _get_text_object_dimensions,
 )
 
 
@@ -82,6 +85,7 @@ class NodeArtist(PathPatchDataUnits):
         self.linewidth_correction = linewidth_correction
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
+        self.transformed_path = self._path.transformed(self.get_patch_transform())
 
     def get_patch_transform(self):
         return self._patch_transform.clear() \
@@ -107,6 +111,37 @@ class NodeArtist(PathPatchDataUnits):
 
     def get_tail_offset(self, edge_path):
         return self.get_head_offset(edge_path[::-1])
+
+    def get_maximum_fontsize(self, label, ax, minimum=0, maximum=100, **font_dict):
+        # NB: code assumes that
+        # - fig.canvas.draw() has been called at least once
+        # - fontdict contains parameters verticalalignment/va and horizontalalignment/ha and both are set to 'center'
+
+        x, y = self.xy
+
+        if 'size' in font_dict:
+            size = font_dict['size']
+            font_dict = dict(font_dict) # shallow copy
+            del font_dict['size']
+        elif 'fontsize' in font_dict:
+            size = font_dict['fontsize']
+            font_dict = dict(font_dict) # shallow copy
+            del font_dict['fontsize']
+        else:
+            size = minimum + (maximum - minimum) / 2
+
+        # binary search
+        for _ in range(10):
+            # bbox = _get_text_object_bbox(ax, x, y, label, ha='center', va='center', fontsize=size)
+            bbox = _get_text_object_bbox(ax, x, y, label, fontsize=size, **font_dict)
+            if self.transformed_path.intersects_bbox(bbox, filled=True) \
+               and not self.transformed_path.intersects_bbox(bbox, filled=False): # i.e. label fully enclosed
+                minimum = size
+            else:
+                maximum = size
+            size = minimum + (maximum - minimum) / 2
+
+        return size
 
 
 class RegularPolygonNodeArtist(NodeArtist):
@@ -166,6 +201,20 @@ class CircularNodeArtist(NodeArtist):
 
     def get_tail_offset(self, edge_path):
         return self.size
+
+    def get_maximum_fontsize(self, label, ax, **font_dict):
+        diameter = 2 * (self.size - self._lw_data/self.linewidth_correction)
+        width, height = _get_text_object_dimensions(ax, label, **font_dict)
+        rescale_factor = diameter / np.sqrt(width**2 + height**2)
+
+        if 'size' in font_dict:
+            size = rescale_factor * font_dict['size']
+        elif 'fontsize' in font_dict:
+            size = rescale_factor * font_dict['fontsize']
+        else:
+            size = rescale_factor * plt.rcParams['font.size']
+
+        return size
 
 
 class EdgeArtist(PathPatchDataUnits):

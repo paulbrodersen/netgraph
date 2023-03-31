@@ -18,7 +18,6 @@ from ._utils import (
     _get_orthogonal_unit_vector,
     _get_point_along_spline,
     _get_tangent_at_point,
-    _get_text_object_dimensions,
     _make_pretty,
     _rank,
     _get_n_points_on_a_circle,
@@ -928,41 +927,35 @@ class BaseGraph(object):
         if node_label_fontdict is None:
             node_label_fontdict = dict()
 
-        node_label_fontdict.setdefault('horizontalalignment', 'center')
-        node_label_fontdict.setdefault('verticalalignment', 'center')
         node_label_fontdict.setdefault('clip_on', False)
         node_label_fontdict.setdefault('zorder', np.inf)
 
-        if np.all(np.isclose(node_label_offset, (0, 0))):
-            # Labels are centered on node artists.
-            # Set fontsize such that labels fit the diameter of the node artists.
-            size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
-            if ('size' not in node_label_fontdict) and ('fontsize' not in node_label_fontdict):
-                node_label_fontdict.setdefault('size', size)
+        if 'ha' not in node_label_fontdict:
+            node_label_fontdict.setdefault('horizontalalignment', 'center')
+
+        if 'va' not in node_label_fontdict:
+            node_label_fontdict.setdefault('verticalalignment', 'center')
+
+        if ('size' not in node_label_fontdict) and ('fontsize' not in node_label_fontdict):
+            if (node_label_fontdict.get('verticalalignment', 'center') == 'center') and \
+               (node_label_fontdict.get('va', 'center') == 'center') and \
+               (node_label_fontdict.get('horizonaltalignment', 'center') == 'center') and \
+               (node_label_fontdict.get('ha', 'center') == 'center') and \
+               np.all(np.isclose(node_label_offset, (0, 0))): # Labels are centered on node artists.
+                node_label_fontdict['size'] = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
 
         return node_label_fontdict
 
 
     def _get_font_size(self, node_labels, node_label_fontdict):
         """Determine the maximum font size such that all labels fit inside their node artist."""
-        # TODO:
-        # -----
-        # - potentially rescale font sizes individually on a per node basis
 
-        rescale_factor = np.inf
+        minimum = np.inf
         for node, label in node_labels.items():
-            artist = self.node_artists[node]
-            diameter = 2 * (artist.size - artist._lw_data/artist.linewidth_correction)
-            width, height = _get_text_object_dimensions(self.ax, label, **node_label_fontdict)
-            rescale_factor = min(rescale_factor, diameter/np.sqrt(width**2 + height**2))
+            size = self.node_artists[node].get_maximum_fontsize(label, self.ax, **node_label_fontdict)
+            minimum = min(minimum, size)
 
-        if 'size' in node_label_fontdict:
-            size = rescale_factor * node_label_fontdict['size']
-        elif 'fontsize' in node_label_fontdict:
-            size = rescale_factor * node_label_fontdict['fontsize']
-        else:
-            size = rescale_factor * plt.rcParams['font.size']
-        return size
+        return minimum
 
 
     def draw_node_labels(self, node_labels, node_label_fontdict):

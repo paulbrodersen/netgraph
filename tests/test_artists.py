@@ -15,7 +15,7 @@ from netgraph._artists import (
     RegularPolygonNodeArtist,
     EdgeArtist,
 )
-from netgraph._utils import _bspline
+from netgraph._utils import _bspline, _get_text_object_dimensions
 
 
 # set random seed for reproducibility
@@ -124,6 +124,82 @@ def test_CircularNodeArtist():
     ax2.add_patch(c)
     ax2.set_aspect('equal')
     ax2.set_title('Actual')
+
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_CircularNodeArtist_with_label():
+
+    fig, ax = plt.subplots()
+    ax.axis([0, 1, 0, 1])
+    ax.set_aspect('equal')
+    fig.canvas.draw()
+
+    x, y = 0.5, 0.5
+    artist = CircularNodeArtist((x, y), 0.33, linewidth=0.01, facecolor='white', edgecolor='black')
+    ax.add_artist(artist)
+
+    label = 'Lorem ipsum'
+    size = artist.get_maximum_fontsize(label, ax)
+    ax.text(x, y, label, ha='center', va='center', fontsize=size)
+
+    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
+    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
+
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_RegularPolygonNodeArtist_with_label():
+    fig, ax = plt.subplots()
+    ax.axis([0, 1, 0, 1])
+    ax.set_aspect('equal')
+    fig.canvas.draw()
+
+    x, y = 0.5, 0.5
+    artist = RegularPolygonNodeArtist(3, 0, (x, y), 0.33, linewidth=0.01, facecolor='white', edgecolor='black')
+    ax.add_artist(artist)
+
+    label = 'Lorem ipsum'
+    size = artist.get_maximum_fontsize(label, ax, va='center', ha='center')
+    ax.text(x, y, label, ha='center', va='center', fontsize=size)
+
+    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
+    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
+
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_NodeArtist_with_label():
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    path = Path(vertices, codes)
+    x, y = 0, 0
+    node = NodeArtist(path, xy=(x, y), size=0.25, facecolor='white', edgecolor='black', linewidth=0.01)
+
+    fig, ax = plt.subplots()
+    ax.set_aspect('equal')
+    ax.axis([-1, 1, -1, 1])
+    fig.canvas.draw()
+
+    ax.add_patch(node)
+
+    label = 'Lorem ipsum'
+    size = node.get_maximum_fontsize(label, ax, va='center', ha='center')
+    ax.text(x, y, label, ha='center', va='center', fontsize=size)
+
+    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
+    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
 
     return fig
 

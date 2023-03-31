@@ -519,6 +519,33 @@ def _get_text_object_dimensions(ax, string, *args, **kwargs):
     return w, h
 
 
+def _get_text_object_bbox(ax, x, y, string, *args, **kwargs):
+    """Return the bounding box of a text object on a given axis in data coordinates.
+
+    Parameters
+    ----------
+    ax : matplotlib.axis object
+        The matplotlib axis.
+    string : str
+        The string.
+    *args, **kwargs
+        Passed to ax.text().
+
+    Returns
+    -------
+    bounding_box : matplotlib.transforms.Bbox
+        The bounding box of the text object with dimensions in data coordinates.
+
+    """
+
+    text_object = ax.text(x, y, string, *args, **kwargs)
+    renderer = _find_renderer(text_object.get_figure())
+    bbox_in_display_coordinates = text_object.get_window_extent(renderer)
+    bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(ax.transData.inverted())
+    text_object.remove()
+    return bbox_in_data_coordinates
+
+
 def _find_renderer(fig):
     """
     Return the renderer for a given matplotlib figure.
