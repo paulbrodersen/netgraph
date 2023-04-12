@@ -333,6 +333,8 @@ class BaseGraph(object):
 
         # This function needs to be called before any font sizes are adjusted,
         # as the axis dimensions affect the effective font size.
+        if prettify:
+            _make_pretty(self.ax)
         self._update_view()
 
         if node_labels:
@@ -356,9 +358,6 @@ class BaseGraph(object):
             self.edge_label_artists = dict()
             self.draw_edge_labels(edge_labels, self.edge_label_position,
                                   self.edge_label_rotate, self.edge_label_fontdict)
-
-        if prettify:
-            _make_pretty(self.ax)
 
 
     def _initialize_nodes(self, nodes):
