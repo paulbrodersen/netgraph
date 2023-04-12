@@ -157,8 +157,11 @@ help(EditableGraph)
 
 ## Version 4 to version 5 API changes
 
+The APIs for all user-exposed objects have remained fully backwards compatible between version 4 and version 5. This includes instantiating `Graph`, `InteractiveGraph`, `EditableGraph`, `ArcDiagram`, `InteractiveArcDiagram` and `EditableArcDiagram` objects as well as all calls to node layout and edge routing functions.
+If you have dug into the source code of netgraph, and are using any feature that is not exposed by default, then the following changes are worth noting:
+
 - The `node_shape` argument can now also be an instance of a `matplotlib.path.Path` or a dictionary containing `matplotlib.path.Path` instances.
-- Split `NodeArtist` class into `NodeArtist`, `RegularPolygonNodeArtist`, and `CircularNodeArtist` classes.
+- Split `NodeArtist` class into `NodeArtist`, `RegularPolygonNodeArtist`, and `CircularNodeArtist` classes; `NodeArtist` is the base for the other two classes, so checks like `isinstance(artist, NodeArtist)` remain valid.
 - Renamed `NodeArtist.radius` to `NodeArtist.size` as node artists can now have arbitrary shapes that do not have a radius as they are not regular polygons or circles.
 - The `node_size` argument to `BaseGraph.draw_edges` was replaced by a `node_artists` argument.
 - Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.

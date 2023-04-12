@@ -97,17 +97,30 @@ class NodeArtist(PathPatchDataUnits):
         # Determine edge path points that are within node shape path.
         is_overlapping = self._path.contains_points(edge_path, transform=self.get_patch_transform())
 
-        # Resample segment consisting of last point that is not enclosed and first point that is.
-        idx = np.where(is_overlapping)[0][0]
-        segment = edge_path[[idx-1, idx]]
-        x, y = segment.T
-        resampled = np.c_[np.linspace(x[0], x[1], 100), np.linspace(y[0], y[1], 100)]
+        if np.all(is_overlapping):
+            import warnings
+            warnings.warn("Node artist completely overlaps edge path!")
+            return np.inf
+        elif np.any(is_overlapping):
+            # Resample segment consisting of last point that is not enclosed and first point that is.
+            # idx = np.where(is_overlapping)[0][0] # This approach fails for self-loops.
+            # segment = edge_path[[idx-1, idx]]
+            idx = len(edge_path) - 1
+            while is_overlapping[idx]:
+                idx -= 1
+            segment = edge_path[[idx, idx+1]]
+            x, y = segment.T
+            resampled = np.c_[np.linspace(x[0], x[1], 100), np.linspace(y[0], y[1], 100)]
 
-        # Determine last resampled point that is not enclosed and compute distance to center.
-        is_overlapping = self._path.contains_points(resampled, transform=self.get_patch_transform())
-        idx = np.where(is_overlapping)[0][0] - 1
-        offset = np.linalg.norm(edge_path[-1] - resampled[idx])
-        return offset
+            # Determine last resampled point that is not enclosed and compute distance to center.
+            is_overlapping = self._path.contains_points(resampled, transform=self.get_patch_transform())
+            idx = np.where(is_overlapping)[0][0] - 1
+            offset = np.linalg.norm(edge_path[-1] - resampled[idx])
+            return offset
+        else:
+            import warnings
+            warnings.warn("Node artist and edge path non-overlapping before offset correction!")
+            return 0.
 
     def get_tail_offset(self, edge_path):
         return self.get_head_offset(edge_path[::-1])

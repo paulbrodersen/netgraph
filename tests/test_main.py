@@ -130,6 +130,21 @@ def test_mixed_node_shapes():
 
 
 @pytest.mark.mpl_image_compare
+def test_offset_straight_edge():
+    fig, ax = plt.subplots()
+    edges = [(0, 1)]
+    node_layout = {
+        0 : np.array([0.1, 0.5]),
+        1 : np.array([0.9, 0.5])
+    }
+    node_size = 10
+    Graph(edges, node_layout=node_layout, edge_layout='straight', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=True, ax=ax)
+    ax.add_artist(plt.Circle(node_layout[1], node_size/100, zorder=-1, color='lightgray'))
+    ax.axis([0, 1, 0, 1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_offset_curved_edge():
     fig, ax = plt.subplots()
     edges = [(0, 1)]
@@ -138,8 +153,20 @@ def test_offset_curved_edge():
         1 : np.array([0.9, 0.5])
     }
     node_size = 10
-    # Graph(edges, node_layout=node_layout, edge_layout='curved', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=False, ax=ax)
     Graph(edges, node_layout=node_layout, edge_layout='curved', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=True, ax=ax)
     ax.add_artist(plt.Circle(node_layout[1], node_size/100, zorder=-1, color='lightgray'))
+    ax.axis([0, 1, 0, 1])
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_offset_selfloop():
+    fig, ax = plt.subplots()
+    edges = [(0, 0)]
+    node_layout = {
+        0 : np.array([0.5, 0.5]),
+    }
+    node_size = 10
+    Graph(edges, node_layout=node_layout, edge_layout='straight', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=True, ax=ax)
     ax.axis([0, 1, 0, 1])
     return fig
