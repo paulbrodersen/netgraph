@@ -333,9 +333,9 @@ class BaseGraph(object):
 
         # This function needs to be called before any font sizes are adjusted,
         # as the axis dimensions affect the effective font size.
+        self.ax.autoscale_view()
         if prettify:
             _make_pretty(self.ax)
-        self._update_view()
 
         if node_labels:
             if isinstance(node_labels, bool):
@@ -1188,24 +1188,6 @@ class BaseGraph(object):
                 # transform data coordinate angle to screen coordinate angle
                 trans_angle = self.ax.transData.transform_angles(np.array((angle,)), np.atleast_2d((x, y)))[0]
                 self.edge_label_artists[(n1, n2)].set_rotation(trans_angle)
-
-
-    def _update_view(self):
-        # Pad x and y limits as patches are not registered properly
-        # when matplotlib sets axis limits automatically.
-        # Hence we need to set them manually.
-
-        # max_radius = np.max([artist.size for artist in self.node_artists.values()])
-        # maxx, maxy = np.max(list(self.node_positions.values()), axis=0)
-        # minx, miny = np.min(list(self.node_positions.values()), axis=0)
-        # w = maxx-minx
-        # h = maxy-miny
-        # padx, pady = 0.05*w + max_radius, 0.05*h + max_radius
-        # corners = (minx-padx, miny-pady), (maxx+padx, maxy+pady)
-        # self.ax.update_datalim(corners)
-
-        self.ax.autoscale_view()
-        self.ax.get_figure().canvas.draw()
 
 
 class Graph(BaseGraph):
