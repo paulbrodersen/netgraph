@@ -22,6 +22,11 @@ from ._utils import (
     _rank,
     _get_n_points_on_a_circle,
     _edge_list_to_adjacency_list,
+    _normalize_numeric_argument,
+    _normalize_color_argument,
+    _normalize_shape_argument,
+    _rescale_dict_values,
+    _check_completeness,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -291,22 +296,22 @@ class BaseGraph(object):
         self.nodes = self._initialize_nodes(nodes)
 
         # Convert all node and edge parameters to dictionaries.
-        node_shape      = self._normalize_shape_argument(node_shape, self.nodes, 'node_shape')
-        node_size       = self._normalize_numeric_argument(node_size, self.nodes, 'node_size')
-        node_edge_width = self._normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
-        node_color      = self._normalize_color_argument(node_color, self.nodes, 'node_color')
-        node_edge_color = self._normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
-        node_alpha      = self._normalize_numeric_argument(node_alpha, self.nodes, 'node_alpha')
-        node_zorder     = self._normalize_numeric_argument(node_zorder, self.nodes, 'node_zorder')
-        edge_width      = self._normalize_numeric_argument(edge_width, self.edges, 'edge_width')
-        edge_color      = self._normalize_color_argument(edge_color, self.edges, 'edge_color')
-        edge_alpha      = self._normalize_numeric_argument(edge_alpha, self.edges, 'edge_alpha')
-        edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edges, 'edge_zorder')
+        node_shape      = _normalize_shape_argument(node_shape, self.nodes, 'node_shape')
+        node_size       = _normalize_numeric_argument(node_size, self.nodes, 'node_size')
+        node_edge_width = _normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
+        node_color      = _normalize_color_argument(node_color, self.nodes, 'node_color')
+        node_edge_color = _normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
+        node_alpha      = _normalize_numeric_argument(node_alpha, self.nodes, 'node_alpha')
+        node_zorder     = _normalize_numeric_argument(node_zorder, self.nodes, 'node_zorder')
+        edge_width      = _normalize_numeric_argument(edge_width, self.edges, 'edge_width')
+        edge_color      = _normalize_color_argument(edge_color, self.edges, 'edge_color')
+        edge_alpha      = _normalize_numeric_argument(edge_alpha, self.edges, 'edge_alpha')
+        edge_zorder     = _normalize_numeric_argument(edge_zorder, self.edges, 'edge_zorder')
 
         # Rescale.
-        node_size = self._rescale(node_size, BASE_SCALE)
-        node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
-        edge_width = self._rescale(edge_width, BASE_SCALE)
+        node_size       = _rescale_dict_values(node_size, BASE_SCALE)
+        node_edge_width = _rescale_dict_values(node_edge_width, BASE_SCALE)
+        edge_width      = _rescale_dict_values(edge_width, BASE_SCALE)
 
         self.node_size = node_size
 
@@ -377,92 +382,6 @@ class BaseGraph(object):
                 raise ValueError(msg)
 
 
-    def _normalize_numeric_argument(self, numeric_or_dict, dict_keys, variable_name):
-        if isinstance(numeric_or_dict, (int, float)):
-            return {key : numeric_or_dict for key in dict_keys}
-        elif isinstance(numeric_or_dict, dict):
-            self._check_completeness(numeric_or_dict, dict_keys, variable_name)
-            self._check_types(numeric_or_dict.values(), (int, float), variable_name)
-            return numeric_or_dict
-        else:
-            msg = f"The type of {variable_name} has to be either a int, float, or a dict."
-            msg += f"\nThe current type is {type(numeric_or_dict)}."
-            raise TypeError(msg)
-
-
-    def _check_completeness(self, given_set, desired_set, variable_name):
-        # ensure that iterables are sets
-        # TODO: check that iterables can safely be converted to sets (unlike dict keys)
-        given_set = set(given_set)
-        desired_set = set(desired_set)
-
-        complete = given_set.issuperset(desired_set)
-        if not complete:
-            missing = desired_set - given_set
-            msg = f"{variable_name} is incomplete. The following elements are missing:"
-            for item in missing:
-                if isinstance(item, str):
-                    msg += f"\n\'{item}\'"
-                else:
-                    msg += f"\n{item}"
-            raise ValueError(msg)
-
-
-    def _check_types(self, items, types, variable_name):
-        for item in items:
-            if not isinstance(item, types):
-                msg = f"Item {item} in {variable_name} is of the wrong type."
-                msg += f"\nExpected type: {types}"
-                msg += f"\nActual type: {type(item)}"
-                raise TypeError(msg)
-
-
-    def _normalize_string_argument(self, str_or_dict, dict_keys, variable_name):
-        if isinstance(str_or_dict, str):
-            return {key : str_or_dict for key in dict_keys}
-        elif isinstance(str_or_dict, dict):
-            self._check_completeness(set(str_or_dict), dict_keys, variable_name)
-            self._check_types(str_or_dict.values(), str, variable_name)
-            return str_or_dict
-        else:
-            msg = f"The type of {variable_name} has to be either a str or a dict."
-            msg += f"The current type is {type(str_or_dict)}."
-            raise TypeError(msg)
-
-
-    def _normalize_shape_argument(self, str_path_or_dict, dict_keys, variable_name):
-        if isinstance(str_path_or_dict, str):
-            return {key : str_path_or_dict for key in dict_keys}
-        elif isinstance(str_path_or_dict, Path):
-            return {key : str_path_or_dict for key in dict_keys}
-        elif isinstance(str_path_or_dict, dict):
-            self._check_completeness(set(str_path_or_dict), dict_keys, variable_name)
-            self._check_types(str_path_or_dict.values(), (str, Path), variable_name)
-            return str_path_or_dict
-        else:
-            msg = f"The type of {variable_name} has to be either a str, matplotlib.path.Path or a dict."
-            msg += f"The current type is {type(str_path_or_dict)}."
-            raise TypeError(msg)
-
-
-    def _normalize_color_argument(self, color_or_dict, dict_keys, variable_name):
-        if mpl.colors.is_color_like(color_or_dict):
-            return {key : color_or_dict for key in dict_keys}
-        elif color_or_dict is None:
-            return {key : color_or_dict for key in dict_keys}
-        elif isinstance(color_or_dict, dict):
-            self._check_completeness(set(color_or_dict), dict_keys, variable_name)
-            # TODO: assert that each element is a valid color
-            return color_or_dict
-        else:
-            msg = f"The type of {variable_name} has to be either a valid matplotlib color specification or a dict."
-            raise TypeError(msg)
-
-
-    def _rescale(self, mydict, scalar):
-        return {key: value * scalar for (key, value) in mydict.items()}
-
-
     def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale, node_size):
         if node_layout_kwargs is None:
             node_layout_kwargs = dict()
@@ -473,7 +392,7 @@ class BaseGraph(object):
             return self._get_node_positions(node_layout, node_layout_kwargs, origin, scale)
 
         elif isinstance(node_layout, dict):
-            self._check_completeness(set(node_layout), set(self.nodes), 'node_layout')
+            _check_completeness(set(node_layout), set(self.nodes), 'node_layout')
             return node_layout
 
 
@@ -562,7 +481,7 @@ class BaseGraph(object):
             edge_paths = self._get_edge_paths(self.edges, self.node_positions,
                                               edge_layout, edge_layout_kwargs)
         elif isinstance(edge_layout, dict):
-            self._check_completeness(edge_layout, self.edges, 'edge_layout')
+            _check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
 
             # determine a sensible edge_layout in case node positions change

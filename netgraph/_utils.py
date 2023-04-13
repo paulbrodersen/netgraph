@@ -5,9 +5,11 @@ Netgraph utility functions.
 """
 
 import numpy as np
+import matplotlib as mpl
 
 from numpy.linalg import matrix_rank
 from scipy.interpolate import BSpline
+from matplotlib.path import Path
 
 
 def _save_cast_float_to_int(num):
@@ -721,3 +723,89 @@ def _convert_polar_to_cartesian_coordinates(rho, phi):
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
     return(x, y)
+
+
+def _normalize_numeric_argument(numeric_or_dict, dict_keys, variable_name):
+    if isinstance(numeric_or_dict, (int, float)):
+        return {key : numeric_or_dict for key in dict_keys}
+    elif isinstance(numeric_or_dict, dict):
+        _check_completeness(numeric_or_dict, dict_keys, variable_name)
+        _check_types(numeric_or_dict.values(), (int, float), variable_name)
+        return numeric_or_dict
+    else:
+        msg = f"The type of {variable_name} has to be either a int, float, or a dict."
+        msg += f"\nThe current type is {type(numeric_or_dict)}."
+        raise TypeError(msg)
+
+
+def _check_completeness(given_set, desired_set, variable_name):
+    # ensure that iterables are sets
+    # TODO: check that iterables can safely be converted to sets (unlike dict keys)
+    given_set = set(given_set)
+    desired_set = set(desired_set)
+
+    complete = given_set.issuperset(desired_set)
+    if not complete:
+        missing = desired_set - given_set
+        msg = f"{variable_name} is incomplete. The following elements are missing:"
+        for item in missing:
+            if isinstance(item, str):
+                msg += f"\n\'{item}\'"
+            else:
+                msg += f"\n{item}"
+        raise ValueError(msg)
+
+
+def _check_types(items, types, variable_name):
+    for item in items:
+        if not isinstance(item, types):
+            msg = f"Item {item} in {variable_name} is of the wrong type."
+            msg += f"\nExpected type: {types}"
+            msg += f"\nActual type: {type(item)}"
+            raise TypeError(msg)
+
+
+def _normalize_string_argument(str_or_dict, dict_keys, variable_name):
+    if isinstance(str_or_dict, str):
+        return {key : str_or_dict for key in dict_keys}
+    elif isinstance(str_or_dict, dict):
+        _check_completeness(set(str_or_dict), dict_keys, variable_name)
+        _check_types(str_or_dict.values(), str, variable_name)
+        return str_or_dict
+    else:
+        msg = f"The type of {variable_name} has to be either a str or a dict."
+        msg += f"The current type is {type(str_or_dict)}."
+        raise TypeError(msg)
+
+
+def _normalize_shape_argument(str_path_or_dict, dict_keys, variable_name):
+    if isinstance(str_path_or_dict, str):
+        return {key : str_path_or_dict for key in dict_keys}
+    elif isinstance(str_path_or_dict, Path):
+        return {key : str_path_or_dict for key in dict_keys}
+    elif isinstance(str_path_or_dict, dict):
+        _check_completeness(set(str_path_or_dict), dict_keys, variable_name)
+        _check_types(str_path_or_dict.values(), (str, Path), variable_name)
+        return str_path_or_dict
+    else:
+        msg = f"The type of {variable_name} has to be either a str, matplotlib.path.Path or a dict."
+        msg += f"The current type is {type(str_path_or_dict)}."
+        raise TypeError(msg)
+
+
+def _normalize_color_argument(color_or_dict, dict_keys, variable_name):
+    if mpl.colors.is_color_like(color_or_dict):
+        return {key : color_or_dict for key in dict_keys}
+    elif color_or_dict is None:
+        return {key : color_or_dict for key in dict_keys}
+    elif isinstance(color_or_dict, dict):
+        _check_completeness(set(color_or_dict), dict_keys, variable_name)
+        # TODO: assert that each element is a valid color
+        return color_or_dict
+    else:
+        msg = f"The type of {variable_name} has to be either a valid matplotlib color specification or a dict."
+        raise TypeError(msg)
+
+
+def _rescale_dict_values(mydict, scalar):
+    return {key: value * scalar for (key, value) in mydict.items()}

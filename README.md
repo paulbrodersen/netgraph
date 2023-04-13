@@ -166,6 +166,7 @@ If you have dug into the source code of netgraph, and are using any feature that
 - The `node_size` argument to `BaseGraph.draw_edges` was replaced by a `node_artists` argument.
 - Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.
 - Added the `NodeArtist.get_head_offset` and `get_tail_offset` methods.
+- Moved normalisation methods `_normalize_numeric_arguments`, `_normalize_color_arguments`, `_normalize_string_arguments`, `_normalize_shape_arguments`, `_check_completeness`, `_check_types`, `_rescale` to _utils.py.
 
 
 ## Help, I don't know how to do ...!
