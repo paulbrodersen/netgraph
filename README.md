@@ -167,6 +167,7 @@ If you have dug into the source code of netgraph, and are using any feature that
 - Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.
 - Added the `NodeArtist.get_head_offset` and `get_tail_offset` methods.
 - Moved normalisation methods `_normalize_numeric_arguments`, `_normalize_color_arguments`, `_normalize_string_arguments`, `_normalize_shape_arguments`, `_check_completeness`, `_check_types`, `_rescale` to _utils.py.
+- The selfloop_radius argument can now also be a dictionary that maps self-loop edges to radii. Previously, only a single float argument was accepted that was applied to all self-loops.
 
 
 ## Help, I don't know how to do ...!

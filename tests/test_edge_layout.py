@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from netgraph._main import Graph
 from netgraph._utils import _get_point_on_a_circle
-from toy_graphs import star
+from toy_graphs import star, cycle
 
 np.random.seed(42)
 

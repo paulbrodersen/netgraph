@@ -23,6 +23,7 @@ from ._utils import (
     _edge_list_to_adjacency_matrix,
     _get_connected_components,
     _get_orthogonal_unit_vector,
+    _normalize_numeric_argument,
 )
 
 from ._node_layout import (
@@ -133,8 +134,8 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, an
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
-    selfloop_radius : float
-        The radius of the self-loops.
+    selfloop_radius : dict or float, default 0.1
+        Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
     origin : numpy.array
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
@@ -148,17 +149,13 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, an
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
 
     edge_paths = dict()
-    for (source, target) in edges:
-        if source != target:
-            # msg = "Edges must be self-loops."
-            # msg += f"Ignoring edge ({source}, {target})."
-            # warnings.warn(msg)
-            continue
-
+    for source, target in selfloops:
         edge_paths[(source, target)] = _get_selfloop_path(
-            source, node_positions, selfloop_radius, origin, scale, angle)
+            source, node_positions, selfloop_radius[(source, target)], origin, scale, angle)
 
     return edge_paths
 
@@ -216,8 +213,8 @@ def get_curved_edge_paths(edges, node_positions,
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
-    selfloop_radius : float
-        The radius of the self-loops.
+    selfloop_radius : dict or float, default 0.1
+        Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
     origin : numpy.array
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
@@ -300,8 +297,7 @@ def _expand_edges(edge_to_control_points):
     return expanded_edges
 
 
-def _initialize_control_point_positions(edge_to_control_points, node_positions,
-                                        selfloop_radius = 0.1,
+def _initialize_control_point_positions(edge_to_control_points, node_positions, selfloop_radius,
                                         origin          = np.array([0, 0]),
                                         scale           = np.array([1, 1])):
     """Initialise the positions of the control points to positions on a straight
@@ -348,13 +344,17 @@ def _initialize_selfloops(edge_to_control_points, node_positions,
                           origin          = np.array([0, 0]),
                           scale           = np.array([1, 1])):
     """Merge control point : position dictionary for different self-loops into a single dictionary."""
+
+    selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
         # Source and target have the same position, such that
         # using the strategy employed above the control points
         # also end up at the same position. Instead we make a loop.
         control_point_positions.update(
-            _init_selfloop(source, control_points, node_positions, selfloop_radius, origin, scale)
+            _init_selfloop(source, control_points, node_positions, selfloop_radius[(source, target)], origin, scale)
         )
     return control_point_positions
 

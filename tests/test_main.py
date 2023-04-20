@@ -170,3 +170,23 @@ def test_offset_selfloop():
     Graph(edges, node_layout=node_layout, edge_layout='straight', node_shape='^', node_alpha=0.5, node_size=node_size, arrows=True, ax=ax)
     ax.axis([0, 1, 0, 1])
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_variable_selfloop_radii():
+    fig, ax = plt.subplots()
+    edges = [
+        (0, 1),
+        (1, 2),
+        (2, 0),
+        (0, 0),
+        (1, 1),
+        (2, 2),
+    ]
+    selfloop_radius = {
+        (0, 0) : 0.1,
+        (1, 1) : 0.2,
+        (2, 2) : 0.3,
+    }
+    Graph(edges, edge_layout_kwargs=dict(selfloop_radius=selfloop_radius), ax=ax)
+    return fig

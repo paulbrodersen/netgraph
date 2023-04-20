@@ -450,16 +450,23 @@ class BaseGraph(object):
         if edge_layout_kwargs is None:
             edge_layout_kwargs = dict()
 
+        if 'selfloop_radius' in edge_layout_kwargs:
+            selfloop_radius = edge_layout_kwargs['selfloop_radius']
+        else:
+            selfloop_radius = 0.05 * np.linalg.norm(scale)
+        selfloops = [(source, target) for (source, target) in self.edges if source==target]
+        selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('edge_width', edge_width)
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
+            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', None)
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
+            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             # area = np.product(scale)
             # k = np.sqrt(area / float(len(self.nodes))) # expected distance between nodes
             # # As there are multiple control points per edge,
@@ -471,7 +478,7 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('rad', 1.)
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('selfloop_radius', 0.05 * np.linalg.norm(scale))
+            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', np.pi/2)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)
