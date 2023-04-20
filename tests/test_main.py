@@ -190,3 +190,39 @@ def test_variable_selfloop_radii():
     }
     Graph(edges, edge_layout_kwargs=dict(selfloop_radius=selfloop_radius), ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_selfloop_scaling():
+    fig, ax = plt.subplots()
+    edges = [
+        (0, 1),
+        (1, 2),
+        (2, 0),
+        (0, 0),
+        (1, 1),
+        (2, 2),
+    ]
+    node_size = {
+        0 : 3,
+        1 : 10,
+        2 : 20,
+    }
+
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    node_shape = {
+        0 : 'o',
+        1 : '^',
+        2: Path(vertices, codes)
+    }
+    Graph(edges, node_size=node_size, node_shape=node_shape, ax=ax)
+    return fig

@@ -105,7 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
-- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. For a full list of API changes, see below.
+- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. Self-loops can now have variable radii, which - if left unspecified - are scaled according to the node size. For a full list of API changes, see below.
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
@@ -167,7 +167,7 @@ If you have dug into the source code of netgraph, and are using any feature that
 - Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.
 - Added the `NodeArtist.get_head_offset` and `get_tail_offset` methods.
 - Moved normalisation methods `_normalize_numeric_arguments`, `_normalize_color_arguments`, `_normalize_string_arguments`, `_normalize_shape_arguments`, `_check_completeness`, `_check_types`, `_rescale` to _utils.py.
-- The selfloop_radius argument can now also be a dictionary that maps self-loop edges to radii. Previously, only a single float argument was accepted that was applied to all self-loops.
+- The `selfloop_radius` argument can now also be a dictionary that maps self-loop edges to radii. Previously, only a single float argument was accepted that was applied to all self-loops.
 
 
 ## Help, I don't know how to do ...!

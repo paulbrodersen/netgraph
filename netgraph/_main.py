@@ -315,23 +315,20 @@ class BaseGraph(object):
 
         self.node_size = node_size
 
-        # Initialise node and edge layouts.
+        # Initialise node and edge layouts and draw elements.
         self.origin = origin
         self.scale = scale
-        self.node_positions = self._initialize_node_layout(
-            node_layout, node_layout_kwargs, origin, scale, node_size)
-
-        self.edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
-            edge_layout, edge_layout_kwargs, origin, scale, edge_width)
-
-        # Draw plot elements
         self.ax = self._initialize_axis(ax)
 
+        self.node_positions = self._initialize_node_layout(
+            node_layout, node_layout_kwargs, origin, scale, node_size)
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
                         node_shape, node_size, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
+        self.edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
+            edge_layout, edge_layout_kwargs, origin, scale, edge_width, self.node_artists)
         self.edge_artists = dict()
         self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
                         edge_zorder, arrows, self.node_artists)
@@ -446,16 +443,18 @@ class BaseGraph(object):
             raise NotImplementedError(msg)
 
 
-    def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width):
+    def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width, node_artists):
         if edge_layout_kwargs is None:
             edge_layout_kwargs = dict()
 
+        selfloops = [(source, target) for (source, target) in self.edges if source==target]
         if 'selfloop_radius' in edge_layout_kwargs:
             selfloop_radius = edge_layout_kwargs['selfloop_radius']
+            selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
         else:
-            selfloop_radius = 0.05 * np.linalg.norm(scale)
-        selfloops = [(source, target) for (source, target) in self.edges if source==target]
-        selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+            selfloop_radius = dict()
+            for (node, _) in selfloops:
+                selfloop_radius[(node, node)] = 1.5 * node_artists[node].radius
 
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('edge_width', edge_width)

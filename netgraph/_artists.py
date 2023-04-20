@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch, transforms
+from scipy.optimize import minimize_scalar
 
 from ._utils import (
     _get_parallel_line,
@@ -86,6 +87,7 @@ class NodeArtist(PathPatchDataUnits):
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
         self.transformed_path = self._path.transformed(self.get_patch_transform())
+        self.radius = self.get_radius()
 
     def get_patch_transform(self):
         return self._patch_transform.clear() \
@@ -156,6 +158,25 @@ class NodeArtist(PathPatchDataUnits):
 
         return size
 
+    def get_radius(self):
+        """Adapted from https://stackoverflow.com/a/76064783/2912349"""
+        if hasattr(self, "radius"): # i.e. RegularPolygonNodeArtist or CircularNodeArtist
+            return self.radius
+        else:
+            deltas = self.transformed_path.vertices - self.xy[np.newaxis, :]
+            distances = np.linalg.norm(deltas, axis=-1)
+            upper_bound = np.max(distances)
+
+            def func(r):
+                circle_path = Path.circle(self.xy, radius=r)
+                if circle_path.contains_path(self.transformed_path):
+                    return r
+                else:
+                    return upper_bound
+
+            result = minimize_scalar(func, bounds=(0, upper_bound))
+            return result.x
+
 
 class RegularPolygonNodeArtist(NodeArtist):
     """Instantiates a regular polygon node artist.
@@ -182,6 +203,7 @@ class RegularPolygonNodeArtist(NodeArtist):
 
     def __init__(self, total_vertices, orientation, xy, size, **kwargs):
         path = Path.unit_regular_polygon(total_vertices)
+        self.radius = size
         linewidth_correction = 2 * np.sin(np.pi/total_vertices) # derives from the ratio between a side and the radius in a regular polygon.
         super().__init__(path, xy, size, orientation=orientation, linewidth_correction=linewidth_correction, **kwargs)
 
@@ -207,6 +229,7 @@ class CircularNodeArtist(NodeArtist):
 
     def __init__(self, xy, size, **kwargs):
         path = Path.circle()
+        self.radius = size
         super().__init__(path, xy, size, **kwargs)
 
     def get_head_offset(self, edge_path):
