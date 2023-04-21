@@ -80,7 +80,7 @@ class NodeArtist(PathPatchDataUnits):
 
     def __init__(self, path, xy, size, orientation=0, linewidth_correction=2, **kwargs):
         self._path = path
-        self.xy = xy
+        self.xy = np.array(xy)
         self.size = size
         self.orientation = orientation
         self.linewidth_correction = linewidth_correction
@@ -127,36 +127,28 @@ class NodeArtist(PathPatchDataUnits):
     def get_tail_offset(self, edge_path):
         return self.get_head_offset(edge_path[::-1])
 
-    def get_maximum_fontsize(self, label, ax, minimum=0, maximum=100, **font_dict):
+    def get_maximum_fontsize(self, label, ax, minimum=1, maximum=100, **font_dict):
         # NB: code assumes that
         # - fig.canvas.draw() has been called at least once
         # - fontdict contains parameters verticalalignment/va and horizontalalignment/ha and both are set to 'center'
 
-        x, y = self.xy
-
         if 'size' in font_dict:
-            size = font_dict['size']
             font_dict = dict(font_dict) # shallow copy
             del font_dict['size']
         elif 'fontsize' in font_dict:
-            size = font_dict['fontsize']
             font_dict = dict(font_dict) # shallow copy
             del font_dict['fontsize']
-        else:
-            size = minimum + (maximum - minimum) / 2
 
-        # binary search
-        for _ in range(10):
-            # bbox = _get_text_object_bbox(ax, x, y, label, ha='center', va='center', fontsize=size)
-            bbox = _get_text_object_bbox(ax, x, y, label, fontsize=size, **font_dict)
+        def func(size_inverse):
+            bbox = _get_text_object_bbox(ax, *self.xy, label, fontsize=1/size_inverse, **font_dict)
             if self.transformed_path.intersects_bbox(bbox, filled=True) \
                and not self.transformed_path.intersects_bbox(bbox, filled=False): # i.e. label fully enclosed
-                minimum = size
+                return size_inverse
             else:
-                maximum = size
-            size = minimum + (maximum - minimum) / 2
+                return 1/minimum
 
-        return size
+        result = minimize_scalar(func, bounds=(1/maximum, 1/minimum))
+        return 1 / result.x
 
     def get_radius(self):
         """Adapted from https://stackoverflow.com/a/76064783/2912349"""
