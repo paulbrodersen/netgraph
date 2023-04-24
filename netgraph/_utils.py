@@ -493,61 +493,6 @@ def _get_orthogonal_projection_onto_segment(point, segment):
     return p1 + t * (p2 - p1)
 
 
-def _get_text_object_dimensions(ax, string, *args, **kwargs):
-    """Precompute the dimensions of a text object on a given axis in data coordinates.
-
-    Parameters
-    ----------
-    ax : matplotlib.axis object
-        The matplotlib axis.
-    string : str
-        The string.
-    *args, **kwargs
-        Passed to ax.text().
-
-    Returns
-    -------
-    width, height : float
-        The dimensions of the text box in data units.
-
-    """
-
-    text_object = ax.text(0., 0., string, *args, **kwargs)
-    renderer = _find_renderer(text_object.get_figure())
-    bbox_in_display_coordinates = text_object.get_window_extent(renderer)
-    bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(ax.transData.inverted())
-    w, h = bbox_in_data_coordinates.width, bbox_in_data_coordinates.height
-    text_object.remove()
-    return w, h
-
-
-def _get_text_object_bbox(ax, x, y, string, *args, **kwargs):
-    """Return the bounding box of a text object on a given axis in data coordinates.
-
-    Parameters
-    ----------
-    ax : matplotlib.axis object
-        The matplotlib axis.
-    string : str
-        The string.
-    *args, **kwargs
-        Passed to ax.text().
-
-    Returns
-    -------
-    bounding_box : matplotlib.transforms.Bbox
-        The bounding box of the text object with dimensions in data coordinates.
-
-    """
-
-    text_object = ax.text(x, y, string, *args, **kwargs)
-    renderer = _find_renderer(text_object.get_figure())
-    bbox_in_display_coordinates = text_object.get_window_extent(renderer)
-    bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(ax.transData.inverted())
-    text_object.remove()
-    return bbox_in_data_coordinates
-
-
 def _find_renderer(fig):
     """
     Return the renderer for a given matplotlib figure.
