@@ -16,8 +16,7 @@ from ._utils import (
     _get_parallel_line,
     _get_orthogonal_unit_vector,
     _shorten_line_by,
-    _get_text_object_bbox,
-    _get_text_object_dimensions,
+    _find_renderer,
 )
 
 
@@ -127,27 +126,27 @@ class NodeArtist(PathPatchDataUnits):
     def get_tail_offset(self, edge_path):
         return self.get_head_offset(edge_path[::-1])
 
-    def get_maximum_fontsize(self, label, ax, minimum=1, maximum=100, **font_dict):
+    def get_maximum_fontsize(self, text_object, minimum=1, maximum=100):
         # NB: code assumes that
         # - fig.canvas.draw() has been called at least once
         # - fontdict contains parameters verticalalignment/va and horizontalalignment/ha and both are set to 'center'
 
-        if 'size' in font_dict:
-            font_dict = dict(font_dict) # shallow copy
-            del font_dict['size']
-        elif 'fontsize' in font_dict:
-            font_dict = dict(font_dict) # shallow copy
-            del font_dict['fontsize']
+        renderer = _find_renderer(text_object.get_figure())
+        transform = self.axes.transData.inverted()
 
         def func(size_inverse):
-            bbox = _get_text_object_bbox(ax, *self.xy, label, fontsize=1/size_inverse, **font_dict)
-            if self.transformed_path.intersects_bbox(bbox, filled=True) \
-               and not self.transformed_path.intersects_bbox(bbox, filled=False): # i.e. label fully enclosed
+            text_object.set_size(1/size_inverse)
+            bbox_in_display_coordinates = text_object.get_window_extent(renderer)
+            bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(transform)
+            if self.transformed_path.intersects_bbox(bbox_in_data_coordinates, filled=True) \
+               and not self.transformed_path.intersects_bbox(bbox_in_data_coordinates, filled=False): # i.e. label fully enclosed
                 return size_inverse
             else:
                 return 1/minimum
 
+        current_size = text_object.get_size()
         result = minimize_scalar(func, bounds=(1/maximum, 1/minimum))
+        text_object.set_size(current_size)
         return 1 / result.x
 
     def get_radius(self):
@@ -230,19 +229,14 @@ class CircularNodeArtist(NodeArtist):
     def get_tail_offset(self, edge_path):
         return self.size
 
-    def get_maximum_fontsize(self, label, ax, **font_dict):
+    def get_maximum_fontsize(self, text_object, minimum=1, maximum=100):
+        renderer = _find_renderer(text_object.get_figure())
+        bbox_in_display_coordinates = text_object.get_window_extent(renderer)
+        bbox_in_data_coordinates = bbox_in_display_coordinates.transformed(self.axes.transData.inverted())
         diameter = 2 * (self.size - self._lw_data/self.linewidth_correction)
-        width, height = _get_text_object_dimensions(ax, label, **font_dict)
-        rescale_factor = diameter / np.sqrt(width**2 + height**2)
-
-        if 'size' in font_dict:
-            size = rescale_factor * font_dict['size']
-        elif 'fontsize' in font_dict:
-            size = rescale_factor * font_dict['fontsize']
-        else:
-            size = rescale_factor * plt.rcParams['font.size']
-
-        return size
+        rescale_factor = diameter / np.sqrt(bbox_in_data_coordinates.width**2 + bbox_in_data_coordinates.height**2)
+        current_size = text_object.get_size()
+        return current_size * rescale_factor
 
 
 class EdgeArtist(PathPatchDataUnits):

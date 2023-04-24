@@ -342,14 +342,16 @@ class BaseGraph(object):
         if node_labels:
             if isinstance(node_labels, bool):
                 node_labels = dict(zip(self.nodes, self.nodes))
-            self.node_label_fontdict = self._initialize_node_label_fontdict(
-                node_label_fontdict, node_labels, node_label_offset)
+            self.node_label_fontdict = self._initialize_node_label_fontdict(node_label_fontdict)
+            self.autoscale_node_labels = self._set_autoscale_node_labels_flag(self.node_label_fontdict, node_label_offset)
             self.node_label_offset, self._recompute_node_label_offsets =\
                 self._initialize_node_label_offset(node_labels, node_label_offset)
             if self._recompute_node_label_offsets:
                 self._update_node_label_offsets()
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, self.node_label_fontdict)
+            if self.autoscale_node_labels:
+                self.rescale_node_labels()
 
         if edge_labels:
             if isinstance(edge_labels, bool):
@@ -847,7 +849,7 @@ class BaseGraph(object):
         return unit_vector
 
 
-    def _initialize_node_label_fontdict(self, node_label_fontdict, node_labels, node_label_offset):
+    def _initialize_node_label_fontdict(self, node_label_fontdict):
         if node_label_fontdict is None:
             node_label_fontdict = dict()
 
@@ -860,17 +862,19 @@ class BaseGraph(object):
         if 'va' not in node_label_fontdict:
             node_label_fontdict.setdefault('verticalalignment', 'center')
 
+        return node_label_fontdict
+
+
+    def _set_autoscale_node_labels_flag(self, node_label_fontdict, node_label_offset):
+        flag = False
         if ('size' not in node_label_fontdict) and ('fontsize' not in node_label_fontdict):
             if (node_label_fontdict.get('verticalalignment', 'center') == 'center') and \
                (node_label_fontdict.get('va', 'center') == 'center') and \
                (node_label_fontdict.get('horizonaltalignment', 'center') == 'center') and \
-               (node_label_fontdict.get('ha', 'center') == 'center') and \
-               np.all(np.isclose(node_label_offset, (0, 0))): # Labels are centered on node artists.
-                max_font_sizes = [self.node_artists[node].get_maximum_fontsize(label, self.ax, **node_label_fontdict) \
-                                  for node, label in node_labels.items()]
-                node_label_fontdict['size'] = np.min(max_font_sizes) * 0.75 # conservative fudge factor
-
-        return node_label_fontdict
+               (node_label_fontdict.get('ha', 'center') == 'center'):
+                if np.all(np.isclose(node_label_offset, (0, 0))): # Labels are centered on node artists.
+                    flag = True
+        return flag
 
 
     def draw_node_labels(self, node_labels, node_label_fontdict):
@@ -908,6 +912,18 @@ class BaseGraph(object):
                 self.node_label_artists[node].remove()
             self.node_label_artists[node] = artist
 
+
+    def rescale_node_labels(self, fudge_factor=0.75):
+        maximum_font_sizes = [self.node_artists[node].get_maximum_fontsize(text_object) \
+                              for node, text_object in self.node_label_artists.items()]
+        font_size = np.min(maximum_font_sizes)
+        for text_object in self.node_label_artists.values():
+            text_object.set_size(fudge_factor * font_size)
+
+    def maximise_node_labels(self, fudge_factor=0.75):
+        for node, text_object in self.node_label_artists.items():
+            font_size = self.node_artists[node].get_maximum_fontsize(text_object)
+            text_object.set_size(fudge_factor * font_size)
 
     def _update_node_label_positions(self):
         if self._recompute_node_label_offsets:

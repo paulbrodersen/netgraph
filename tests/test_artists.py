@@ -15,7 +15,7 @@ from netgraph._artists import (
     RegularPolygonNodeArtist,
     EdgeArtist,
 )
-from netgraph._utils import _bspline, _get_text_object_dimensions
+from netgraph._utils import _bspline
 
 
 # set random seed for reproducibility
@@ -140,12 +140,9 @@ def test_CircularNodeArtist_with_label():
     artist = CircularNodeArtist((x, y), 0.33, linewidth=0.01, facecolor='white', edgecolor='black')
     ax.add_artist(artist)
 
-    label = 'Lorem ipsum'
-    size = artist.get_maximum_fontsize(label, ax)
-    ax.text(x, y, label, ha='center', va='center', fontsize=size)
-
-    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
-    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
+    text_object = ax.text(x, y, "Lorem ipsum", ha='center', va='center', bbox=dict(fill=False, edgecolor='limegreen'))
+    size = artist.get_maximum_fontsize(text_object)
+    text_object.set_size(size)
 
     return fig
 
@@ -161,12 +158,9 @@ def test_RegularPolygonNodeArtist_with_label():
     artist = RegularPolygonNodeArtist(3, 0, (x, y), 0.33, linewidth=0.01, facecolor='white', edgecolor='black')
     ax.add_artist(artist)
 
-    label = 'Lorem ipsum'
-    size = artist.get_maximum_fontsize(label, ax, va='center', ha='center')
-    ax.text(x, y, label, ha='center', va='center', fontsize=size)
-
-    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
-    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
+    text_object = ax.text(x, y, "Lorem ipsum", ha='center', va='center', bbox=dict(fill=False, edgecolor='limegreen'))
+    size = artist.get_maximum_fontsize(text_object)
+    text_object.set_size(size)
 
     return fig
 
@@ -185,22 +179,18 @@ def test_NodeArtist_with_label():
     codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
     path = Path(vertices, codes)
     x, y = 0, 0
-    node = NodeArtist(path, xy=(x, y), size=0.25, facecolor='white', edgecolor='black', linewidth=0.01)
+    artist = NodeArtist(path, xy=(x, y), size=0.25, facecolor='white', edgecolor='black', linewidth=0.01)
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')
     ax.axis([-1, 1, -1, 1])
     fig.canvas.draw()
 
-    ax.add_patch(node)
+    ax.add_patch(artist)
 
-    label = 'Lorem ipsum'
-    size = node.get_maximum_fontsize(label, ax, va='center', ha='center')
-    ax.text(x, y, label, ha='center', va='center', fontsize=size)
-
-    w, h = _get_text_object_dimensions(ax, label, fontsize=size)
-    ax.add_artist(plt.Rectangle((x-w/2, y-h/2), w, h, facecolor='white', edgecolor='limegreen'))
-
+    text_object = ax.text(x, y, "Lorem ipsum", ha='center', va='center', bbox=dict(fill=False, edgecolor='limegreen'))
+    size = artist.get_maximum_fontsize(text_object)
+    text_object.set_size(size)
     return fig
 
 
