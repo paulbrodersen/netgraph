@@ -920,10 +920,12 @@ class BaseGraph(object):
         for text_object in self.node_label_artists.values():
             text_object.set_size(fudge_factor * font_size)
 
+
     def _maximize_node_labels(self, fudge_factor=0.75):
         for node, text_object in self.node_label_artists.items():
             font_size = self.node_artists[node].get_maximum_fontsize(text_object)
             text_object.set_size(fudge_factor * font_size)
+
 
     def _update_node_label_positions(self):
         if self._recompute_node_label_offsets:
