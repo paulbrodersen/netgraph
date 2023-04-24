@@ -866,20 +866,11 @@ class BaseGraph(object):
                (node_label_fontdict.get('horizonaltalignment', 'center') == 'center') and \
                (node_label_fontdict.get('ha', 'center') == 'center') and \
                np.all(np.isclose(node_label_offset, (0, 0))): # Labels are centered on node artists.
-                node_label_fontdict['size'] = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
+                max_font_sizes = [self.node_artists[node].get_maximum_fontsize(label, self.ax, **node_label_fontdict) \
+                                  for node, label in node_labels.items()]
+                node_label_fontdict['size'] = np.min(max_font_sizes) * 0.75 # conservative fudge factor
 
         return node_label_fontdict
-
-
-    def _get_font_size(self, node_labels, node_label_fontdict):
-        """Determine the maximum font size such that all labels fit inside their node artist."""
-
-        minimum = np.inf
-        for node, label in node_labels.items():
-            size = self.node_artists[node].get_maximum_fontsize(label, self.ax, **node_label_fontdict)
-            minimum = min(minimum, size)
-
-        return minimum
 
 
     def draw_node_labels(self, node_labels, node_label_fontdict):
