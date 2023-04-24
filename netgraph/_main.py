@@ -319,6 +319,7 @@ class BaseGraph(object):
         self.origin = origin
         self.scale = scale
         self.ax = self._initialize_axis(ax)
+        self.fig = self.ax.get_figure()
 
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
@@ -352,6 +353,7 @@ class BaseGraph(object):
             self.draw_node_labels(node_labels, self.node_label_fontdict)
             if self.autoscale_node_labels:
                 self._rescale_node_labels()
+                self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
         if edge_labels:
             if isinstance(edge_labels, bool):
@@ -925,6 +927,10 @@ class BaseGraph(object):
         for node, text_object in self.node_label_artists.items():
             font_size = self.node_artists[node].get_maximum_fontsize(text_object)
             text_object.set_size(fudge_factor * font_size)
+
+
+    def _on_resize(self, event):
+        self._rescale_node_labels()
 
 
     def _update_node_label_positions(self):
