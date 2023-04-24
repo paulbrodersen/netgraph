@@ -351,7 +351,7 @@ class BaseGraph(object):
             self.node_label_artists = dict()
             self.draw_node_labels(node_labels, self.node_label_fontdict)
             if self.autoscale_node_labels:
-                self.rescale_node_labels()
+                self._rescale_node_labels()
 
         if edge_labels:
             if isinstance(edge_labels, bool):
@@ -913,14 +913,14 @@ class BaseGraph(object):
             self.node_label_artists[node] = artist
 
 
-    def rescale_node_labels(self, fudge_factor=0.75):
+    def _rescale_node_labels(self, fudge_factor=0.75):
         maximum_font_sizes = [self.node_artists[node].get_maximum_fontsize(text_object) \
                               for node, text_object in self.node_label_artists.items()]
         font_size = np.min(maximum_font_sizes)
         for text_object in self.node_label_artists.values():
             text_object.set_size(fudge_factor * font_size)
 
-    def maximise_node_labels(self, fudge_factor=0.75):
+    def _maximize_node_labels(self, fudge_factor=0.75):
         for node, text_object in self.node_label_artists.items():
             font_size = self.node_artists[node].get_maximum_fontsize(text_object)
             text_object.set_size(fudge_factor * font_size)
