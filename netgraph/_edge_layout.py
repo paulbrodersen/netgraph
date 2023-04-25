@@ -125,7 +125,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, angle=None):
+def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle, origin, scale):
     """Edge routing for self-loops.
 
     Parameters
@@ -136,12 +136,12 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, an
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
     selfloop_radius : dict or float, default 0.1
         Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
+    selfloop_angle : dict or float
+        The starting angle of the self-loop in radians.
     origin : numpy.array
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
         A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
-    angle : float or None, default None
-        The starting angle of the self-loop in radians. If None, the self-loop is drawn opposite of the centroid of the graph.
 
     Returns
     -------
@@ -151,16 +151,17 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, origin, scale, an
     """
     selfloops = [(source, target) for (source, target) in edges if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
 
     edge_paths = dict()
     for source, target in selfloops:
         edge_paths[(source, target)] = _get_selfloop_path(
-            source, node_positions, selfloop_radius[(source, target)], origin, scale, angle)
+            source, node_positions, selfloop_radius[(source, target)], selfloop_angle[(source, target)], origin, scale)
 
     return edge_paths
 
 
-def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, angle=None):
+def _get_selfloop_path(source, node_positions, radius, angle, origin, scale):
     """Compute the edge path for a single self-loop."""
 
     x, y = node_positions[source]
@@ -178,21 +179,22 @@ def _get_selfloop_path(source, node_positions, selfloop_radius, origin, scale, a
         else: # single node in graph; self-loop points upwards
             unit_vector = np.array([0, 1])
 
-    selfloop_center = node_positions[source] + selfloop_radius * unit_vector
+    center = node_positions[source] + radius * unit_vector
 
-    selfloop_path = _get_n_points_on_a_circle(
-        selfloop_center, selfloop_radius, 100+1,
+    path = _get_n_points_on_a_circle(
+        center, radius, 100+1,
         _get_angle(*unit_vector) + np.pi,
     )[1:]
 
     # # ensure that the loop stays within the bounding box
-    # selfloop_path = _clip_to_frame(selfloop_path, origin, scale)
+    # path = _clip_to_frame(path, origin, scale)
 
-    return selfloop_path
+    return path
 
 
 def get_curved_edge_paths(edges, node_positions,
                           selfloop_radius               = 0.1,
+                          selfloop_angle                = None,
                           origin                        = np.array([0, 0]),
                           scale                         = np.array([1, 1]),
                           k                             = None,
@@ -215,6 +217,8 @@ def get_curved_edge_paths(edges, node_positions,
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
     selfloop_radius : dict or float, default 0.1
         Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
+    selfloop_angle : dict, float, or None
+        The starting angle of the self-loop in radians.
     origin : numpy.array
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
@@ -254,7 +258,7 @@ def get_curved_edge_paths(edges, node_positions,
     edge_to_control_points = _initialize_control_points(edges, node_positions, k, scale)
 
     control_point_positions = _initialize_control_point_positions(
-        edge_to_control_points, node_positions, selfloop_radius, origin, scale)
+        edge_to_control_points, node_positions, selfloop_radius, selfloop_angle, origin, scale)
 
     control_point_positions = _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
@@ -297,9 +301,10 @@ def _expand_edges(edge_to_control_points):
     return expanded_edges
 
 
-def _initialize_control_point_positions(edge_to_control_points, node_positions, selfloop_radius,
-                                        origin          = np.array([0, 0]),
-                                        scale           = np.array([1, 1])):
+def _initialize_control_point_positions(edge_to_control_points, node_positions,
+                                        selfloop_radius, selfloop_angle,
+                                        origin = np.array([0, 0]),
+                                        scale = np.array([1, 1])):
     """Initialise the positions of the control points to positions on a straight
     line between source and target node. For self-loops, initialise the positions
     on a circle next to the node.
@@ -311,7 +316,7 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions, 
 
     control_point_positions = dict()
     control_point_positions.update(_initialize_nonloops(nonloops_to_control_points, node_positions))
-    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, origin, scale))
+    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, selfloop_angle, origin, scale))
 
     return control_point_positions
 
@@ -341,12 +346,14 @@ def _init_nonloop(source, target, control_points, node_positions):
 
 def _initialize_selfloops(edge_to_control_points, node_positions,
                           selfloop_radius = 0.1,
+                          selfloop_angle  = None,
                           origin          = np.array([0, 0]),
                           scale           = np.array([1, 1])):
     """Merge control point : position dictionary for different self-loops into a single dictionary."""
 
     selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
 
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
@@ -354,27 +361,35 @@ def _initialize_selfloops(edge_to_control_points, node_positions,
         # using the strategy employed above the control points
         # also end up at the same position. Instead we make a loop.
         control_point_positions.update(
-            _init_selfloop(source, control_points, node_positions, selfloop_radius[(source, target)], origin, scale)
+            _init_selfloop(
+                source, control_points, node_positions,
+                selfloop_radius[(source, target)], selfloop_angle[(source, target)],
+                origin, scale)
         )
     return control_point_positions
 
 
-def _init_selfloop(source, control_points, node_positions, selfloop_radius, origin, scale):
+def _init_selfloop(source, control_points, node_positions, radius, angle, origin, scale):
     """Initialise the positions of control points to positions on a circle next to the node."""
     # To minimise overlap with other edges, we want the loop to be
     # on the side of the node away from the centroid of the graph.
-    if len(node_positions) > 1:
-        centroid = np.mean(list(node_positions.values()), axis=0)
-        delta = node_positions[source] - centroid
-        distance = np.linalg.norm(delta)
-        unit_vector = delta / distance
-    else: # single node in graph; self-loop points upwards
-        unit_vector = np.array([0, 1])
+    if angle is not None:
+        unit_vector = _get_unit_vector(np.array([np.cos(angle), np.sin(angle)]))
+    else:
+        # To minimise overlap with other edges, we want the loop to be
+        # on the side of the node away from the centroid of the graph.
+        if len(node_positions) > 1:
+            centroid = np.mean(list(node_positions.values()), axis=0)
+            delta = node_positions[source] - centroid
+            distance = np.linalg.norm(delta)
+            unit_vector = delta / distance
+        else: # single node in graph; self-loop points upwards
+            unit_vector = np.array([0, 1])
 
-    selfloop_center = node_positions[source] + selfloop_radius * unit_vector
+    center = node_positions[source] + radius * unit_vector
 
     selfloop_control_point_positions = _get_n_points_on_a_circle(
-        selfloop_center, selfloop_radius, len(control_points)+1,
+        center, radius, len(control_points)+1,
         _get_angle(*unit_vector) + np.pi,
     )[1:]
 

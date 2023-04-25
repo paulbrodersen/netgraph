@@ -671,12 +671,16 @@ def _convert_polar_to_cartesian_coordinates(rho, phi):
     return(x, y)
 
 
-def _normalize_numeric_argument(numeric_or_dict, dict_keys, variable_name):
-    if isinstance(numeric_or_dict, (int, float)):
+def _normalize_numeric_argument(numeric_or_dict, dict_keys, variable_name, allow_none=False):
+    if allow_none:
+        allowed_types = (int, float, type(None))
+    else:
+        allowed_types = (int, float)
+    if isinstance(numeric_or_dict, allowed_types):
         return {key : numeric_or_dict for key in dict_keys}
     elif isinstance(numeric_or_dict, dict):
         _check_completeness(numeric_or_dict, dict_keys, variable_name)
-        _check_types(numeric_or_dict.values(), (int, float), variable_name)
+        _check_types(numeric_or_dict.values(), allowed_types, variable_name)
         return numeric_or_dict
     else:
         msg = f"The type of {variable_name} has to be either a int, float, or a dict."

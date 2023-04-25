@@ -154,3 +154,27 @@ def test_draw_star_graph_with_bundled_edges():
     node_positions = {k : np.array(v) for k, v in node_positions.items()}
     Graph(star, node_layout=node_positions, edge_layout='bundled', ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_variable_angle_selfloops():
+    edges = [(0, 1), (1, 2), (2, 0), (0, 0), (1, 1), (2, 2)]
+    node_positions = {
+        0 : np.array([0.2, 0.2]),
+        1 : np.array([0.5, 0.8]),
+        2 : np.array([0.8, 0.2]),
+    }
+    selfloop_angle = {
+        (0, 0) : np.pi,
+        (1, 1) : None,
+        (2, 2) : 0,
+    }
+    fig, ax = plt.subplots()
+    Graph(edges,
+          node_layout=node_positions,
+          node_labels=True,
+          # edge_layout='straight',
+          edge_layout='curved',
+          edge_layout_kwargs=dict(selfloop_angle=selfloop_angle)
+    )
+    return fig

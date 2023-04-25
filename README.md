@@ -105,7 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
-- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. Self-loops can now have variable radii, which - if left unspecified - are scaled according to the node size. For a full list of API changes, see below.
+- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. Self-loops can now have variable radii, which - if left unspecified - are scaled according to the node size. Self-loops can now also have variable starting angles. For a full list of API changes, see below.
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
