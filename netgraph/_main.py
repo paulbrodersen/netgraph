@@ -9,7 +9,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from uuid import uuid4
-from scipy.spatial import cKDTree
 
 from ._utils import (
     _get_unique_nodes,
@@ -27,6 +26,7 @@ from ._utils import (
     _normalize_shape_argument,
     _rescale_dict_values,
     _check_completeness,
+    _get_optimal_offsets,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -947,66 +947,19 @@ class BaseGraph(object):
         for xy in self.node_positions.values():
             fixed.append(xy)
         for path in self.edge_paths.values():
-            fixed.extend([_get_point_along_spline(path, fraction) for fraction in np.arange(0, 1, 1./total_samples_per_edge)])
+            if len(path) < total_samples_per_edge:
+                fixed.extend([_get_point_along_spline(path, fraction) for fraction in np.arange(0, 1, 1./total_samples_per_edge)])
+            else:
+                fixed.extend(path)
         fixed = np.array(fixed)
 
         offsets = np.array(list(self.node_label_offset.values()))
         anchors = np.array([self.node_positions[node] for node in self.node_label_offset.keys()])
 
-        offsets = self._optimise_offsets(anchors, offsets, fixed)
+        offsets = _get_optimal_offsets(anchors, offsets, fixed)
 
         for ii, node in enumerate(self.node_label_offset):
             self.node_label_offset[node] = offsets[ii]
-
-
-    # # Variant no 1: use force directed layout to determine a suitable node label placements
-    # # pros : labels repel each other
-    # # cons : does not work very well; the optimum placement can still result in a collision
-    # def _optimise_offsets(self, anchors, offsets, fixed, total_iterations=5):
-    #     # Compute the net repulsion exerted on each label by nodes, edges and other labels.
-    #     # Place the label in the direction of net repulsion at the desired distance from the corresponding node (anchor).
-    #     # TODO Test if gradually stepping in the direction of net repulsion improves results.
-    #     for ii in range(total_iterations):
-    #         repulsion = self._get_repulsion(anchors + offsets, fixed)
-    #         directions = repulsion / np.linalg.norm(repulsion, axis=-1)[:, np.newaxis]
-    #         offsets = np.linalg.norm(offsets, axis=-1)[:, np.newaxis] * directions
-    #     return offsets
-
-
-    # def _get_repulsion(self, mobile, fixed, minimum_distance=0.01):
-    #     combined = np.concatenate([mobile, fixed], axis=0)
-
-    #     delta = mobile[np.newaxis, :, :] - combined[:, np.newaxis, :]
-    #     distance = np.linalg.norm(delta, axis=-1)
-    #     direction = delta / distance[..., None] # i.e. the unit vector
-
-    #     # 1. We clip the distance as we want to reduce overlaps with
-    #     # all nearby plot elements, not just the one that overlaps the
-    #     # most.
-    #     # 2. We only care about interactions with nearby objects, so
-    #     # we heavily penalise repulsion from far away items by using a
-    #     # exponent.
-    #     magnitude = 1. / np.clip(distance, minimum_distance, np.inf)**6
-    #     repulsion = direction * magnitude[..., None]
-
-    #     for ii in range(repulsion.shape[-1]):
-    #         np.fill_diagonal(repulsion[:, :, ii], 0)
-
-    #     return np.sum(repulsion, axis=0)
-
-    # Variant no 2:
-    # pros : straightforward optimisation; works very well
-    # cons : labels can still collide with each other
-    def _optimise_offsets(self, anchors, offsets, fixed, total_queries_per_point=360):
-        tree = cKDTree(fixed)
-        output = np.zeros_like(offsets)
-        for ii, (anchor, offset) in enumerate(zip(anchors, offsets)):
-            x = _get_n_points_on_a_circle(anchor, np.linalg.norm(offset), total_queries_per_point)
-            # distances, _ = tree.query(x, 1) # can result in many ties; first element is arbitrarily chosen
-            # output[ii] = x[np.argmax(distances)]
-            distances, _ = tree.query(x, 2)
-            output[ii] = x[np.argmax(np.sum(distances, axis=1))]
-        return output - anchors
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):
