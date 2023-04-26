@@ -463,8 +463,6 @@ class BaseGraph(object):
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', None)
-            edge_layout_kwargs.setdefault('origin', origin)
-            edge_layout_kwargs.setdefault('scale', scale)
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', None)
@@ -636,8 +634,6 @@ class BaseGraph(object):
                 edges, node_positions,
                 edge_layout_kwargs['selfloop_radius'],
                 edge_layout_kwargs['selfloop_angle'],
-                edge_layout_kwargs['origin'],
-                edge_layout_kwargs['scale'],
             )
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
@@ -653,8 +649,6 @@ class BaseGraph(object):
                 edges, node_positions,
                 edge_layout_kwargs['selfloop_radius'],
                 edge_layout_kwargs['selfloop_angle'],
-                edge_layout_kwargs['origin'],
-                edge_layout_kwargs['scale'],
             )
             edge_paths.update(selfloop_paths)
         elif edge_layout == 'bundled':
