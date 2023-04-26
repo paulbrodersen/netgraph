@@ -628,7 +628,6 @@ class BaseGraph(object):
         if edge_layout == 'straight':
             edge_paths = get_straight_edge_paths(
                 edges, node_positions,
-                edge_layout_kwargs['edge_width']
             )
             selfloop_paths = get_selfloop_paths(
                 edges, node_positions,
