@@ -69,12 +69,11 @@ def _get_layout_for_multiple_components(edges, node_positions, components, layou
     return edge_paths
 
 
-def get_straight_edge_paths(edges, node_positions, edge_width):
+def get_straight_edge_paths(edges, node_positions):
     """Edge routing using straight lines.
 
     Computes the edge paths, such that edges are represented by
     straight lines connecting the source and target node.
-    Bi-directional edges are offset from one another by one edge width.
 
     Parameters
     ----------
@@ -82,8 +81,6 @@ def get_straight_edge_paths(edges, node_positions, edge_width):
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
-    edge_width: dict
-        Dictionary mapping each edge to a float, the edge width.
 
     Returns
     -------
@@ -93,20 +90,12 @@ def get_straight_edge_paths(edges, node_positions, edge_width):
     """
     edge_paths = dict()
     for (source, target) in edges:
-        if source == target:
-            # msg = "Plotting of self-loops not supported for straight edges."
-            # msg += "Ignoring edge ({}, {}).".format(source, target)
-            # warnings.warn(msg)
-            continue
-
-        x1, y1 = node_positions[source]
-        x2, y2 = node_positions[target]
-
-        # if (target, source) in edges: # i.e. bidirectional
-        #     # shift edge to the right (looking along the arrow)
-        #     x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=-0.5*edge_width[(source, target)])
-
-        edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
+        if source != target:
+            x1, y1 = node_positions[source]
+            x2, y2 = node_positions[target]
+            edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
+        else: # selfloop
+            pass
 
     return edge_paths
 
