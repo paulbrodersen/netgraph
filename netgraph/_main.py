@@ -478,8 +478,6 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('k', 0.1)
         elif edge_layout == 'arc':
             edge_layout_kwargs.setdefault('rad', 1.)
-            edge_layout_kwargs.setdefault('origin', origin)
-            edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', np.pi/2)
         elif edge_layout == 'bundled':
@@ -641,8 +639,6 @@ class BaseGraph(object):
             edge_paths = get_arced_edge_paths(
                 edges, node_positions,
                 edge_layout_kwargs['rad'],
-                edge_layout_kwargs['origin'],
-                edge_layout_kwargs['scale'],
             )
             selfloop_paths = get_selfloop_paths(
                 edges, node_positions,

@@ -619,10 +619,7 @@ def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
 
 
 @_handle_multiple_components
-def get_arced_edge_paths(edges, node_positions, rad=1.,
-                         origin = np.array([0, 0]),
-                         scale  = np.array([1, 1]),
-):
+def get_arced_edge_paths(edges, node_positions, rad=1.):
 
     """Determine the edge layout, where edges are represented by arcs
     connecting the source and target node.
@@ -637,18 +634,10 @@ def get_arced_edge_paths(edges, node_positions, rad=1.,
     ----------
     edges : list of (source node ID, target node ID) 2-tuples
         The edges.
-
     node_positions : dict node ID : (x, y) positions
         The node positions.
-
     rad : float (default 1.0)
         The curvature of the arc.
-
-    origin : (float x, float y) tuple or None (default (0, 0))
-        The lower left hand corner of the bounding box specifying the extent of the layout.
-
-    scale : (float delta x, float delta y) or None (default (1, 1))
-        The width and height of the bounding box specifying the extent of the layout.
 
     Returns:
     --------
@@ -656,7 +645,6 @@ def get_arced_edge_paths(edges, node_positions, rad=1.,
         Dictionary mapping each edge to a list of edge segments.
 
     """
-    # TODO: ensure that arcs are within bbox given by origin and scale
     edge_paths = dict()
     for source, target in edges:
         if source == target:
