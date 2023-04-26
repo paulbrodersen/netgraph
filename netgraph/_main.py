@@ -782,8 +782,6 @@ class BaseGraph(object):
                 node_positions = self.node_positions,
                 radius         = self.edge_layout_kwargs['selfloop_radius'],
                 angle          = self.edge_layout_kwargs['selfloop_angle'],
-                origin         = self.edge_layout_kwargs['origin'],
-                scale          = self.edge_layout_kwargs['scale'],
             )
         return edge_paths
 
