@@ -114,7 +114,7 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle, origin, scale):
+def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle):
     """Edge routing for self-loops.
 
     Parameters
@@ -127,10 +127,6 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle, o
         Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
     selfloop_angle : dict or float
         The starting angle of the self-loop in radians.
-    origin : numpy.array
-        A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : numpy.array
-        A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
 
     Returns
     -------
@@ -145,12 +141,12 @@ def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle, o
     edge_paths = dict()
     for source, target in selfloops:
         edge_paths[(source, target)] = _get_selfloop_path(
-            source, node_positions, selfloop_radius[(source, target)], selfloop_angle[(source, target)], origin, scale)
+            source, node_positions, selfloop_radius[(source, target)], selfloop_angle[(source, target)])
 
     return edge_paths
 
 
-def _get_selfloop_path(source, node_positions, radius, angle, origin, scale):
+def _get_selfloop_path(source, node_positions, radius, angle):
     """Compute the edge path for a single self-loop."""
 
     x, y = node_positions[source]
@@ -174,9 +170,6 @@ def _get_selfloop_path(source, node_positions, radius, angle, origin, scale):
         center, radius, 100+1,
         _get_angle(*unit_vector) + np.pi,
     )[1:]
-
-    # # ensure that the loop stays within the bounding box
-    # path = _clip_to_frame(path, origin, scale)
 
     return path
 
@@ -247,7 +240,7 @@ def get_curved_edge_paths(edges, node_positions,
     edge_to_control_points = _initialize_control_points(edges, node_positions, k, scale)
 
     control_point_positions = _initialize_control_point_positions(
-        edge_to_control_points, node_positions, selfloop_radius, selfloop_angle, origin, scale)
+        edge_to_control_points, node_positions, selfloop_radius, selfloop_angle)
 
     control_point_positions = _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
@@ -291,9 +284,7 @@ def _expand_edges(edge_to_control_points):
 
 
 def _initialize_control_point_positions(edge_to_control_points, node_positions,
-                                        selfloop_radius, selfloop_angle,
-                                        origin = np.array([0, 0]),
-                                        scale = np.array([1, 1])):
+                                        selfloop_radius, selfloop_angle):
     """Initialise the positions of the control points to positions on a straight
     line between source and target node. For self-loops, initialise the positions
     on a circle next to the node.
@@ -305,7 +296,7 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
 
     control_point_positions = dict()
     control_point_positions.update(_initialize_nonloops(nonloops_to_control_points, node_positions))
-    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, selfloop_angle, origin, scale))
+    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, selfloop_angle))
 
     return control_point_positions
 
@@ -334,10 +325,7 @@ def _init_nonloop(source, target, control_points, node_positions):
 
 
 def _initialize_selfloops(edge_to_control_points, node_positions,
-                          selfloop_radius = 0.1,
-                          selfloop_angle  = None,
-                          origin          = np.array([0, 0]),
-                          scale           = np.array([1, 1])):
+                          selfloop_radius = 0.1, selfloop_angle  = None):
     """Merge control point : position dictionary for different self-loops into a single dictionary."""
 
     selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
@@ -353,12 +341,12 @@ def _initialize_selfloops(edge_to_control_points, node_positions,
             _init_selfloop(
                 source, control_points, node_positions,
                 selfloop_radius[(source, target)], selfloop_angle[(source, target)],
-                origin, scale)
+            )
         )
     return control_point_positions
 
 
-def _init_selfloop(source, control_points, node_positions, radius, angle, origin, scale):
+def _init_selfloop(source, control_points, node_positions, radius, angle):
     """Initialise the positions of control points to positions on a circle next to the node."""
     # To minimise overlap with other edges, we want the loop to be
     # on the side of the node away from the centroid of the graph.
@@ -381,9 +369,6 @@ def _init_selfloop(source, control_points, node_positions, radius, angle, origin
         center, radius, len(control_points)+1,
         _get_angle(*unit_vector) + np.pi,
     )[1:]
-
-    # # ensure that the loop stays within the bounding box
-    # selfloop_control_point_positions = _clip_to_frame(selfloop_control_point_positions, origin, scale)
 
     output = dict()
     for ii, control_point in enumerate(control_points):
