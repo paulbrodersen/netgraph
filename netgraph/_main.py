@@ -461,7 +461,6 @@ class BaseGraph(object):
                 selfloop_radius[(node, node)] = 1.5 * node_artists[node].radius
 
         if edge_layout == "straight":
-            edge_layout_kwargs.setdefault('edge_width', edge_width)
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
             edge_layout_kwargs.setdefault('selfloop_angle', None)
             edge_layout_kwargs.setdefault('origin', origin)
