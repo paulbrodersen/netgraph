@@ -413,6 +413,10 @@ class MutableGraph(InteractiveGraph):
         del self._base_edgecolor[artist]
         # 3c) EmphasizeOnHover
         self.emphasizeable_artists.remove(artist)
+        try:
+            self.deemphasized_artists.remove(artist)
+        except ValueError:
+            pass
         del self._base_alpha[artist]
         # 3d) AnnotateOnClick
         if artist in self.artist_to_annotation:

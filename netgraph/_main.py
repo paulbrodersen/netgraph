@@ -2071,7 +2071,11 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
             # not on any artist
             if (selected_artist is None) and self.deemphasized_artists:
                 for artist in self.deemphasized_artists:
-                    artist.set_alpha(self._base_alpha[artist])
+                    try:
+                        artist.set_alpha(self._base_alpha[artist])
+                    except KeyError:
+                        # This mitigates issue #66.
+                        pass
                 self.deemphasized_artists = []
                 self.fig.canvas.draw_idle()
 

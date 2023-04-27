@@ -98,7 +98,7 @@ Examples
 >>> help(EditableGraph)
 """
 
-__version__ = "4.12.10"
+__version__ = "4.12.11"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
