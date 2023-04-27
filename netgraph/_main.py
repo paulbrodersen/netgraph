@@ -469,12 +469,6 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            # area = np.product(scale)
-            # k = np.sqrt(area / float(len(self.nodes))) # expected distance between nodes
-            # # As there are multiple control points per edge,
-            # # edge segments should be much shorter. k hence needs to be smaller.
-            # k *= 0.1
-            # edge_layout_kwargs.setdefault('k', k)
             edge_layout_kwargs.setdefault('k', 0.1)
         elif edge_layout == 'arc':
             edge_layout_kwargs.setdefault('rad', 1.)
@@ -626,26 +620,18 @@ class BaseGraph(object):
         if edge_layout == 'straight':
             edge_paths = get_straight_edge_paths(
                 edges, node_positions,
-            )
-            selfloop_paths = get_selfloop_paths(
-                edges, node_positions,
                 edge_layout_kwargs['selfloop_radius'],
                 edge_layout_kwargs['selfloop_angle'],
             )
-            edge_paths.update(selfloop_paths)
         elif edge_layout == 'curved':
             edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
         elif edge_layout == 'arc':
             edge_paths = get_arced_edge_paths(
                 edges, node_positions,
                 edge_layout_kwargs['rad'],
-            )
-            selfloop_paths = get_selfloop_paths(
-                edges, node_positions,
                 edge_layout_kwargs['selfloop_radius'],
                 edge_layout_kwargs['selfloop_angle'],
             )
-            edge_paths.update(selfloop_paths)
         elif edge_layout == 'bundled':
             edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
         else:

@@ -50,10 +50,14 @@ def test_arced_edge_layout():
     fig, ax = plt.subplots()
     edges = [
         (0, 1),
+        (1, 2),
+        (0, 2),
+        (0, 0)
     ]
     node_positions = {
         0 : np.array([0.1, 0.5]),
-        1 : np.array([0.9, 0.5])
+        1 : np.array([0.5, 0.5]),
+        2 : np.array([0.9, 0.5]),
     }
     Graph(edges, node_layout=node_positions, edge_layout='arc', edge_layout_kwargs=dict(rad=1.))
     return fig

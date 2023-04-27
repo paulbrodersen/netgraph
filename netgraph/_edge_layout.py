@@ -69,7 +69,7 @@ def _get_layout_for_multiple_components(edges, node_positions, components, layou
     return edge_paths
 
 
-def get_straight_edge_paths(edges, node_positions):
+def get_straight_edge_paths(edges, node_positions, selfloop_radius=0.1, selfloop_angle=None):
     """Edge routing using straight lines.
 
     Computes the edge paths, such that edges are represented by
@@ -81,6 +81,11 @@ def get_straight_edge_paths(edges, node_positions):
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+    selfloop_radius : dict or float, default 0.1
+        Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
+    selfloop_angle : dict, float, or None
+        The starting angle of the self-loop in radians.
+        If None, the angle is adjusted to minimize collisions with other nodes and edges.
 
     Returns
     -------
@@ -88,14 +93,19 @@ def get_straight_edge_paths(edges, node_positions):
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
+    nonloops = [(source, target) for (source, target) in edges if source != target]
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
+
     edge_paths = dict()
-    for (source, target) in edges:
-        if source != target:
-            x1, y1 = node_positions[source]
-            x2, y2 = node_positions[target]
-            edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
-        else: # selfloop
-            pass
+    for (source, target) in nonloops:
+        x1, y1 = node_positions[source]
+        x2, y2 = node_positions[target]
+        edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
+
+    for edge in selfloops:
+        edge_paths[edge] = _get_selfloop_path(edge[0], node_positions, selfloop_radius[edge], selfloop_angle[edge])
 
     return edge_paths
 
@@ -619,8 +629,7 @@ def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
 
 
 @_handle_multiple_components
-def get_arced_edge_paths(edges, node_positions, rad=1.):
-
+def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, selfloop_angle=np.pi/2):
     """Determine the edge layout, where edges are represented by arcs
     connecting the source and target node.
 
@@ -638,6 +647,10 @@ def get_arced_edge_paths(edges, node_positions, rad=1.):
         The node positions.
     rad : float (default 1.0)
         The curvature of the arc.
+    selfloop_radius : dict or float, default 0.1
+        Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
+    selfloop_angle : dict or float, default np.pi/2
+        The starting angle of the self-loop in radians.
 
     Returns:
     --------
@@ -645,13 +658,13 @@ def get_arced_edge_paths(edges, node_positions, rad=1.):
         Dictionary mapping each edge to a list of edge segments.
 
     """
+    nonloops = [(source, target) for (source, target) in edges if source != target]
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=False)
+
     edge_paths = dict()
-    for source, target in edges:
-        if source == target:
-            # msg = "Plotting of self-loops not supported for straight edges."
-            # msg += "Ignoring edge ({}, {}).".format(source, target)
-            # warnings.warn(msg)
-            continue
+    for source, target in nonloops:
         arc_factory = ConnectionStyle.Arc3(rad=rad)
         path = arc_factory(
             node_positions[source],
@@ -659,6 +672,9 @@ def get_arced_edge_paths(edges, node_positions, rad=1.):
             shrinkA=0., shrinkB=0.
             )
         edge_paths[(source, target)] = _bspline(path.vertices, 100)
+
+    for edge in selfloops:
+        edge_paths[edge] = _get_selfloop_path(edge[0], node_positions, selfloop_radius[edge], selfloop_angle[edge])
 
     return edge_paths
 
