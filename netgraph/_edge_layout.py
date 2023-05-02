@@ -24,6 +24,8 @@ from ._utils import (
     _get_connected_components,
     _get_orthogonal_unit_vector,
     _normalize_numeric_argument,
+    _resample_spline,
+    _get_optimal_offsets,
 )
 
 from ._node_layout import (
@@ -93,21 +95,33 @@ def get_straight_edge_paths(edges, node_positions, selfloop_radius=0.1, selfloop
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
-    nonloops = [(source, target) for (source, target) in edges if source != target]
-    selfloops = [(source, target) for (source, target) in edges if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-
     edge_paths = dict()
+
+    nonloops = [(source, target) for (source, target) in edges if source != target]
     for (source, target) in nonloops:
         x1, y1 = node_positions[source]
         x2, y2 = node_positions[target]
         edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
 
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    if selfloop_angle:
+        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle')
+    else:
+        selfloop_angle = _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edge_paths)
     for edge in selfloops:
         edge_paths[edge] = _get_selfloop_path(edge[0], node_positions, selfloop_radius[edge], selfloop_angle[edge])
 
     return edge_paths
+
+
+def _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edge_paths, total_samples_per_edge=100):
+    anchors = np.array([node_positions[source] for source, _ in selfloops])
+    offsets = np.array([selfloop_radius[edge] for edge in selfloops])
+    avoid = np.concatenate([_resample_spline(path, total_samples_per_edge) for path in edge_paths.values()], axis=0)
+    selfloop_centers = _get_optimal_offsets(anchors, offsets, avoid)
+    selfloop_angles = [_get_angle(*center) for center in selfloop_centers]
+    return dict(zip(selfloops, selfloop_angles))
 
 
 def _shift_edge(x1, y1, x2, y2, delta):
