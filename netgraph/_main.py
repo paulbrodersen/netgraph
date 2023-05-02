@@ -27,6 +27,7 @@ from ._utils import (
     _rescale_dict_values,
     _check_completeness,
     _get_optimal_offsets,
+    _resample_spline,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -925,23 +926,13 @@ class BaseGraph(object):
 
 
     def _update_node_label_offsets(self, total_samples_per_edge=100):
-        fixed = []
-        for xy in self.node_positions.values():
-            fixed.append(xy)
-        for path in self.edge_paths.values():
-            if len(path) < total_samples_per_edge:
-                fixed.extend([_get_point_along_spline(path, fraction) for fraction in np.arange(0, 1, 1./total_samples_per_edge)])
-            else:
-                fixed.extend(path)
-        fixed = np.array(fixed)
-
-        offsets = np.array(list(self.node_label_offset.values()))
         anchors = np.array([self.node_positions[node] for node in self.node_label_offset.keys()])
-
-        offsets = _get_optimal_offsets(anchors, offsets, fixed)
+        offsets = np.array(list(self.node_label_offset.values()))
+        avoid = np.concatenate([_resample_spline(path, total_samples_per_edge) for path in self.edge_paths.values()], axis=0)
+        optimal_offsets = _get_optimal_offsets(anchors, offsets, avoid)
 
         for ii, node in enumerate(self.node_label_offset):
-            self.node_label_offset[node] = offsets[ii]
+            self.node_label_offset[node] = optimal_offsets[ii]
 
 
     def _initialize_edge_label_fontdict(self, edge_label_fontdict):

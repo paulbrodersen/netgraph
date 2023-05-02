@@ -11,6 +11,7 @@ from numpy.linalg import matrix_rank
 from scipy.interpolate import BSpline
 from matplotlib.path import Path
 from scipy.spatial import cKDTree
+from scipy.interpolate import interp1d
 
 
 def _save_cast_float_to_int(num):
@@ -431,6 +432,31 @@ def _get_point_along_spline(spline, fraction):
     overhang = cumulative_sum[idx] - desired_length
     x, y = spline[idx+1] - overhang/successive_distances[idx] * deltas[idx]
     return x, y
+
+
+def _resample_spline(spline, total_samples=100):
+    """Resample a spline using the given number of points.
+
+    Parameters
+    ----------
+    spline : numpy.array
+        (N points, 2) array of (x, y) spline coordinates.
+    total_samples : int
+        The number of evenly spaces points after re-sampling.
+
+    Returns
+    -------
+    resampled : numpy.array
+        (M samples, 2) array of (x, y) resampled spline coordinates.
+
+    Notes
+    -----
+    Adapted from: https://stackoverflow.com/a/52020098/2912349
+    """
+    distance = np.cumsum(np.sqrt(np.sum(np.diff(spline, axis=0)**2, axis=1)))
+    distance = np.insert(distance, 0, 0)/distance[-1]
+    interpolator = interp1d(distance, spline, kind='slinear', axis=0)
+    return interpolator(np.linspace(0, 1, total_samples))
 
 
 def _get_tangent_at_point(spline, fraction):
