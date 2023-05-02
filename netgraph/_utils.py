@@ -790,12 +790,12 @@ def _rescale_dict_values(mydict, scalar):
 # # Variant no 1: use force directed layout to determine a suitable node label placements
 # # pros : labels repel each other
 # # cons : does not work very well; the optimum placement can still result in a collision
-# def _get_optimal_offsets(self, anchors, offsets, fixed, total_iterations=5):
+# def _get_optimal_offsets(self, anchors, offsets, avoid, total_iterations=5):
 #     # Compute the net repulsion exerted on each label by nodes, edges and other labels.
 #     # Place the label in the direction of net repulsion at the desired distance from the corresponding node (anchor).
 #     # TODO Test if gradually stepping in the direction of net repulsion improves results.
 #     for ii in range(total_iterations):
-#         repulsion = self._get_repulsion(anchors + offsets, fixed)
+#         repulsion = self._get_repulsion(anchors + offsets, avoid)
 #         directions = repulsion / np.linalg.norm(repulsion, axis=-1)[:, np.newaxis]
 #         offsets = np.linalg.norm(offsets, axis=-1)[:, np.newaxis] * directions
 #     return offsets
@@ -826,9 +826,14 @@ def _rescale_dict_values(mydict, scalar):
 # Variant no 2:
 # pros : straightforward optimisation; works very well
 # cons : labels can still collide with each other
-def _get_optimal_offsets(anchors, offsets, fixed, total_queries_per_point=360):
-    tree = cKDTree(fixed)
-    output = np.zeros_like(offsets)
+def _get_optimal_offsets(anchors, offsets, avoid, total_queries_per_point=360):
+    """Find the location at a specified distance (`offset`) away from a
+    given other location (`anchor`) that is furthest awaye from all
+    locations in `avoid`.
+
+    """
+    tree = cKDTree(avoid)
+    output = np.zeros((len(offsets), 2))
     for ii, (anchor, offset) in enumerate(zip(anchors, offsets)):
         x = _get_n_points_on_a_circle(anchor, np.linalg.norm(offset), total_queries_per_point)
         # distances, _ = tree.query(x, 1) # can result in many ties; first element is arbitrarily chosen
