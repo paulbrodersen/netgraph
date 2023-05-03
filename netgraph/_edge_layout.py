@@ -266,8 +266,7 @@ def _initialize_control_points(edges, node_positions, k, scale):
         if start != stop:
             distance = np.linalg.norm(node_positions[stop] - node_positions[start], axis=-1) / np.linalg.norm(scale)
             # total_control_points = distance * np.pi / k # approximating the arc length with a half-circle
-            total_control_points = distance * 10
-            total_control_points = min(max(int(total_control_points), 1), 5) # ensure that there are at least one point but no more than 5
+            total_control_points = min(max(int(distance * 10), 1), 5) # ensure that there are at least one point but no more than 5
             edge_to_control_points[(start, stop)] = [uuid4() for _ in range(total_control_points)]
         else: # self-loop
             edge_to_control_points[(start, stop)] = [uuid4() for _ in range(5)]
@@ -306,79 +305,59 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
 
 
 def _initialize_nonloops(edge_to_control_points, node_positions):
-    """Merge control point : position dictionary for different non self-loops into a single dictionary."""
+    """Initialise control points on a straight line between source and target nodes."""
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
-        control_point_positions.update(_init_nonloop(source, target, control_points, node_positions))
+        delta = node_positions[target] - node_positions[source]
+        # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
+        # This prevents an intertwining of parallel edges.
+        # Strictly speaking, this offset is only required if bundle_parallel_edges is false.
+        offset = 1e-6 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
+        for ii, control_point in enumerate(control_points):
+            # y = mx + b
+            m = (ii + 1) / (len(control_points) + 1)
+            control_point_positions[control_point] = m * delta + node_positions[source] - offset
     return control_point_positions
 
 
-def _init_nonloop(source, target, control_points, node_positions):
-    """Initialise the positions of the control points to positions on a straight line between source and target node."""
-    delta = node_positions[target] - node_positions[source]
-    output = dict()
-    # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
-    # This prevents an intertwining of parallel edges.
-    # Strictly speaking, this offset is only required if bundle_parallel_edges is false.
-    offset = 1e-6 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
-    for ii, control_point in enumerate(control_points):
-        # y = mx + b
-        m = (ii + 1) / (len(control_points) + 1)
-        output[control_point] = m * delta + node_positions[source] - offset
-    return output
-
-
 def _initialize_selfloops(edge_to_control_points, node_positions,
-                          selfloop_radius = 0.1, selfloop_angle  = None):
-    """Merge control point : position dictionary for different self-loops into a single dictionary."""
-
+                          selfloop_radius=0.1, selfloop_angle=None):
+    """Initialise control points on a circle next to the node."""
     selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
     selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
 
     control_point_positions = dict()
     for (source, target), control_points in edge_to_control_points.items():
-        # Source and target have the same position, such that
-        # using the strategy employed above the control points
-        # also end up at the same position. Instead we make a loop.
-        control_point_positions.update(
-            _init_selfloop(
-                source, control_points, node_positions,
-                selfloop_radius[(source, target)], selfloop_angle[(source, target)],
+
+        if selfloop_angle[(source, target)] is not None:
+            unit_vector = _get_unit_vector(
+                np.array([np.cos(selfloop_angle[(source, target)]),
+                          np.sin(selfloop_angle[(source, target)])])
             )
-        )
+        else:
+            # To minimise overlap with other edges, we want the loop to be
+            # on the side of the node away from the centroid of the graph.
+            if len(node_positions) > 1:
+                centroid = np.mean(list(node_positions.values()), axis=0)
+                delta = node_positions[source] - centroid
+                distance = np.linalg.norm(delta)
+                unit_vector = delta / distance
+            else: # single node in graph; self-loop points upwards
+                unit_vector = np.array([0, 1])
+
+        center = node_positions[source] + selfloop_radius[(source, target)] * unit_vector
+
+        # Note: we add pi to the start angle as the start angle lies opposite
+        # to the direction in which the self-loop extends.
+        positions = _get_n_points_on_a_circle(
+            center, selfloop_radius[(source, target)], len(control_points)+1,
+            _get_angle(*unit_vector) + np.pi,
+        )[1:]
+
+        control_point_positions.update(zip(control_points, positions))
+
     return control_point_positions
-
-
-def _init_selfloop(source, control_points, node_positions, radius, angle):
-    """Initialise the positions of control points to positions on a circle next to the node."""
-    # To minimise overlap with other edges, we want the loop to be
-    # on the side of the node away from the centroid of the graph.
-    if angle is not None:
-        unit_vector = _get_unit_vector(np.array([np.cos(angle), np.sin(angle)]))
-    else:
-        # To minimise overlap with other edges, we want the loop to be
-        # on the side of the node away from the centroid of the graph.
-        if len(node_positions) > 1:
-            centroid = np.mean(list(node_positions.values()), axis=0)
-            delta = node_positions[source] - centroid
-            distance = np.linalg.norm(delta)
-            unit_vector = delta / distance
-        else: # single node in graph; self-loop points upwards
-            unit_vector = np.array([0, 1])
-
-    center = node_positions[source] + radius * unit_vector
-
-    selfloop_control_point_positions = _get_n_points_on_a_circle(
-        center, radius, len(control_points)+1,
-        _get_angle(*unit_vector) + np.pi,
-    )[1:]
-
-    output = dict()
-    for ii, control_point in enumerate(control_points):
-        output[control_point] = selfloop_control_point_positions[ii]
-
-    return output
 
 
 def _optimize_control_point_positions(
