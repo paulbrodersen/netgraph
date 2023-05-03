@@ -150,20 +150,6 @@ def _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edg
     return dict(zip(selfloops, selfloop_angles))
 
 
-def _shift_edge(x1, y1, x2, y2, delta):
-    """Determine the parallel to a segment defined by points p1: (x1, y1) and p2 : (x2, y2) at a distance delta."""
-    # convert segment into a vector
-    v = np.r_[x2-x1, y2-y1]
-    # compute orthogonal vector
-    v = np.r_[-v[1], v[0]]
-    # convert to orthogonal unit vector
-    v = v / np.linalg.norm(v)
-    # compute offsets
-    dx, dy = delta * v
-    # return new coordinates of point p1' and p2'
-    return x1+dx, y1+dy, x2+dx, y2+dy
-
-
 def _get_selfloop_path(source, node_positions, radius, angle):
     """Compute the edge path for a single self-loop."""
 
@@ -1041,3 +1027,18 @@ def _straighten_path(path, straighten_by):
     n = len(path)
     return (1 - straighten_by) * path \
         + straighten_by * (p0 + np.linspace(0, 1, n)[:, np.newaxis] * (p1 - p0))
+
+
+# NOTE: probably superfluous
+def _shift_edge(x1, y1, x2, y2, delta):
+    """Determine the parallel to a segment defined by points p1: (x1, y1) and p2 : (x2, y2) at a distance delta."""
+    # convert segment into a vector
+    v = np.r_[x2-x1, y2-y1]
+    # compute orthogonal vector
+    v = np.r_[-v[1], v[0]]
+    # convert to orthogonal unit vector
+    v = v / np.linalg.norm(v)
+    # compute offsets
+    dx, dy = delta * v
+    # return new coordinates of point p1' and p2'
+    return x1+dx, y1+dy, x2+dx, y2+dy
