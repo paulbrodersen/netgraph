@@ -138,38 +138,6 @@ def _shift_edge(x1, y1, x2, y2, delta):
     return x1+dx, y1+dy, x2+dx, y2+dy
 
 
-def get_selfloop_paths(edges, node_positions, selfloop_radius, selfloop_angle):
-    """Edge routing for self-loops.
-
-    Parameters
-    ----------
-    edges : list
-        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-    node_positions : dict
-        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
-    selfloop_radius : dict or float, default 0.1
-        Dictionary mapping each self-loop edge to a radius. If float, all self-loops have the same radius.
-    selfloop_angle : dict or float
-        The starting angle of the self-loop in radians.
-
-    Returns
-    -------
-    edge_paths : dict
-        Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
-
-    """
-    selfloops = [(source, target) for (source, target) in edges if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-
-    edge_paths = dict()
-    for source, target in selfloops:
-        edge_paths[(source, target)] = _get_selfloop_path(
-            source, node_positions, selfloop_radius[(source, target)], selfloop_angle[(source, target)])
-
-    return edge_paths
-
-
 def _get_selfloop_path(source, node_positions, radius, angle):
     """Compute the edge path for a single self-loop."""
 

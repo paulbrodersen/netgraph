@@ -50,7 +50,6 @@ from ._edge_layout import (
     get_curved_edge_paths,
     get_arced_edge_paths,
     get_bundled_edge_paths,
-    get_selfloop_paths,
     _get_selfloop_path,
 )
 

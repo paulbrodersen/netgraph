@@ -30,7 +30,6 @@ from ._node_layout import (
 )
 from ._edge_layout import (
     get_arced_edge_paths,
-    get_selfloop_paths,
 )
 from ._utils import (
     _get_gradient_and_intercept,
@@ -189,7 +188,7 @@ class BaseArcDiagram(BaseGraph):
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths` and :code:`get_selfloop_paths`.
+        Keyword arguments passed to :code:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -409,7 +408,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths` and :code:`get_selfloop_paths`.
+        Keyword arguments passed to :code:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -658,7 +657,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths` and :code:`get_selfloop_paths`.
+        Keyword arguments passed to :code:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.

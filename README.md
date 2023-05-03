@@ -169,6 +169,7 @@ If you have dug into the source code of netgraph, and are using any feature that
 - Moved normalisation methods `_normalize_numeric_arguments`, `_normalize_color_arguments`, `_normalize_string_arguments`, `_normalize_shape_arguments`, `_check_completeness`, `_check_types`, `_rescale` to _utils.py.
 - The `selfloop_radius` argument can now also be a dictionary that maps self-loop edges to radii. Previously, only a single float argument was accepted that was applied to all self-loops.
 - `get_straight_edge_paths` and `get_arced_edge_paths` now also compute the paths for self-loops, and hence accept additional arguments. This change facilitated improvements to the placements of self-loops, reducing collisions with other nodes and edges. Previously, self-loops were computed independently.
+- Removed `get_selfloop_paths`, which is now superfluous.
 
 
 ## Help, I don't know how to do ...!
