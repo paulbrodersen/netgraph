@@ -105,7 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
-- 5.0.0 Added support for arbitrary node shapes specified by matplotlib.path.Path instances. Self-loops can now have variable radii, which - if left unspecified - are scaled according to the node size. Self-loops can now also have variable starting angles. For a full list of API changes, see below.
+- 5.0.0 Added support for arbitrary node shapes. Improved layout of self-loops. For a full list of API changes, see below.
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
@@ -157,8 +157,9 @@ help(EditableGraph)
 
 ## Version 4 to version 5 API changes
 
-The APIs for all user-exposed objects have remained fully backwards compatible between version 4 and version 5. This includes instantiating `Graph`, `InteractiveGraph`, `EditableGraph`, `ArcDiagram`, `InteractiveArcDiagram` and `EditableArcDiagram` objects as well as all calls to node layout and edge routing functions.
-If you have dug into the source code of netgraph, and are using any feature that is not exposed by default, then the following changes are worth noting:
+The APIs for all `Graph` classes have remained fully backwards compatible between version 4 and version 5, as have all node layout functions.
+Several edge routing functions now accept additional arguments for specifying routing of self-loops but have remained mostly backwards compatible, apart from `get_selfloop_paths`, which has been removed.
+The following changes are worth noting:
 
 - The `node_shape` argument can now also be an instance of a `matplotlib.path.Path` or a dictionary containing `matplotlib.path.Path` instances.
 - Split `NodeArtist` class into `NodeArtist`, `RegularPolygonNodeArtist`, and `CircularNodeArtist` classes; `NodeArtist` is the base for the other two classes, so checks like `isinstance(artist, NodeArtist)` remain valid.
@@ -167,7 +168,7 @@ If you have dug into the source code of netgraph, and are using any feature that
 - Renamed the `offset` argument / attribute of EdgeArtist to `head_offset` and added the `tail_offset` argument/attribute.
 - Added the `NodeArtist.get_head_offset` and `get_tail_offset` methods.
 - Moved normalisation methods `_normalize_numeric_arguments`, `_normalize_color_arguments`, `_normalize_string_arguments`, `_normalize_shape_arguments`, `_check_completeness`, `_check_types`, `_rescale` to _utils.py.
-- The `selfloop_radius` argument can now also be a dictionary that maps self-loop edges to radii. Previously, only a single float argument was accepted that was applied to all self-loops.
+- The `selfloop_radius` and `selfloop_angle` arguments can now also be dictionaries that maps self-loop edges to radii/angles. Previously, only a single float argument was accepted that was applied to all self-loops.
 - `get_straight_edge_paths` and `get_arced_edge_paths` now also compute the paths for self-loops, and hence accept additional arguments. This change facilitated improvements to the placements of self-loops, reducing collisions with other nodes and edges. Previously, self-loops were computed independently.
 - Removed `get_selfloop_paths`, which is now superfluous.
 
