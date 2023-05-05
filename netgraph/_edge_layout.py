@@ -183,7 +183,7 @@ def get_curved_edge_paths(edges, node_positions,
                           selfloop_angle                = None,
                           origin                        = np.array([0, 0]),
                           scale                         = np.array([1, 1]),
-                          k                             = None,
+                          k                             = 0.1,
                           initial_temperature           = 0.01,
                           total_iterations              = 50,
                           node_size                     = 0.,
@@ -209,10 +209,9 @@ def get_curved_edge_paths(edges, node_positions,
         A (float x, float y) tuple corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : numpy.array
         A (float x, float y) tuple representing the width and height of the bounding box specifying the extent of the canvas.
-    k : float or None, default None
+    k : float, default 0.1
         Spring constant, which controls the tautness of edges.
         Small values will result in straight connections, large values in bulging arcs.
-        If None, initialized to: 0.1 * sqrt(area / total nodes).
     total_iterations : int, default 50
         Number of iterations in the Fruchterman-Reingold algorithm.
     initial_temperature: float, default 1.
@@ -343,15 +342,6 @@ def _optimize_control_point_positions(
 
     # increase size of nodes so that there is a bit more clearance between edges and nodes
     node_size = {node : 2 * size for node, size in node_size.items()}
-
-    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
-    # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
-    # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
-    if k is None:
-        total_nodes = len(node_positions)
-        area = np.product(scale)
-        k = np.sqrt(area / float(total_nodes))
-        k *= 0.1
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)

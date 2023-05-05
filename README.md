@@ -172,6 +172,7 @@ The following changes are worth noting:
 - `get_straight_edge_paths` and `get_arced_edge_paths` now also compute the paths for self-loops, and hence accept additional arguments. This change facilitated improvements to the placements of self-loops, reducing collisions with other nodes and edges. Previously, self-loops were computed independently.
 - Removed `get_selfloop_paths`, which is now superfluous.
 - In `get_bundled_edge_paths` the default values for `k` and `total_cycles` were changed to 500 (from 1000) and 6 (from 5), respectively, as these values typically seem to give better results.
+- in `get_curved_edge_paths`, `k` can no longer be `None`, and its default is set to 0.1 (from None).
 
 
 ## Help, I don't know how to do ...!

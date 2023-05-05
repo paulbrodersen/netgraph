@@ -467,7 +467,6 @@ class BaseGraph(object):
             edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
-            edge_layout_kwargs.setdefault('k', 0.1)
         elif edge_layout == 'arc':
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
         elif edge_layout == 'bundled':
