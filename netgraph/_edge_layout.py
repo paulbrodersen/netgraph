@@ -290,8 +290,11 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
     # process self-loop edges
     selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-
+    if selfloop_angle is not None: # can be zero!
+        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
+    else:
+        edge_paths = {(source, target) : np.c_[node_positions[source], node_positions[target]].T for source, target in nonloops}
+        selfloop_angle = _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edge_paths)
 
     for (source, target) in selfloops:
         control_points = edge_to_control_points[(source, target)]
