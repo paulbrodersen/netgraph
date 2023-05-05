@@ -613,21 +613,16 @@ class BaseGraph(object):
 
         if edge_layout == 'straight':
             edge_paths = get_straight_edge_paths(
-                edges, node_positions,
-                edge_layout_kwargs['selfloop_radius'],
-                edge_layout_kwargs['selfloop_angle'],
-            )
+                edges, node_positions, **edge_layout_kwargs)
         elif edge_layout == 'curved':
-            edge_paths = get_curved_edge_paths(edges, node_positions, **edge_layout_kwargs)
+            edge_paths = get_curved_edge_paths(
+                edges, node_positions, **edge_layout_kwargs)
         elif edge_layout == 'arc':
             edge_paths = get_arced_edge_paths(
-                edges, node_positions,
-                edge_layout_kwargs['rad'],
-                edge_layout_kwargs['selfloop_radius'],
-                edge_layout_kwargs['selfloop_angle'],
-            )
+                edges, node_positions, **edge_layout_kwargs)
         elif edge_layout == 'bundled':
-            edge_paths = get_bundled_edge_paths(edges, node_positions, **edge_layout_kwargs)
+            edge_paths = get_bundled_edge_paths(
+                edges, node_positions, **edge_layout_kwargs)
         else:
             raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'arc' or 'bundled', not {edge_layout}")
 
