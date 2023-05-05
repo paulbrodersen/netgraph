@@ -253,13 +253,13 @@ def get_curved_edge_paths(edges, node_positions,
 def _initialize_control_points(edges, node_positions, scale):
     """Represent each edge with string of control points."""
     edge_to_control_points = dict()
-    for start, stop in edges:
-        if start != stop:
-            distance = np.linalg.norm(node_positions[stop] - node_positions[start], axis=-1) / np.linalg.norm(scale)
+    for source, target in edges:
+        if source != target:
+            distance = np.linalg.norm(node_positions[target] - node_positions[source], axis=-1) / np.linalg.norm(scale)
             total_control_points = min(max(int(distance * 10), 1), 5) # ensure that there are at least one point but no more than 5
-            edge_to_control_points[(start, stop)] = [uuid4() for _ in range(total_control_points)]
+            edge_to_control_points[(source, target)] = [uuid4() for _ in range(total_control_points)]
         else: # self-loop
-            edge_to_control_points[(start, stop)] = [uuid4() for _ in range(5)]
+            edge_to_control_points[(source, target)] = [uuid4() for _ in range(5)]
     return edge_to_control_points
 
 
