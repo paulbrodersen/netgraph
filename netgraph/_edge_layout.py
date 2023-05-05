@@ -645,9 +645,9 @@ def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, sel
 @profile
 @_handle_multiple_components
 def get_bundled_edge_paths(edges, node_positions,
-                           k                       = 1000.,
+                           k                       = 500.,
                            compatibility_threshold = 0.05,
-                           total_cycles            = 5,
+                           total_cycles            = 6,
                            total_iterations        = 50,
                            step_size               = 0.04,
                            straighten_by           = 0.,
@@ -668,13 +668,13 @@ def get_bundled_edge_paths(edges, node_positions,
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
-    k : float, default 1000.
+    k : float, default 500.
         The stiffness of the springs that connect control points.
     compatibility_threshold : float, default 0.05
         Edge pairs with a lower compatibility score are not bundled together.
         Set to zero to bundle all edges with each other regardless of compatibility.
         Set to one to prevent bundling of any (non-identical) edges.
-    total_cycles : int, default 5
+    total_cycles : int, default 6
         The number of cycles. The number of control points (P) is doubled each cycle.
     total_iterations : int, default 50
         Number of iterations (I) in the first cycle. Iterations are reduced by 1/3 with each cycle.

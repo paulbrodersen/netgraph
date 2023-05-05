@@ -471,8 +471,7 @@ class BaseGraph(object):
         elif edge_layout == 'arc':
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
         elif edge_layout == 'bundled':
-            edge_layout_kwargs.setdefault('k', 500)
-            edge_layout_kwargs.setdefault('total_cycles', 6)
+            pass
 
         if isinstance(edge_layout, str):
             edge_paths = self._get_edge_paths(self.edges, self.node_positions,
