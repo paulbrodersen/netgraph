@@ -406,7 +406,7 @@ class BaseGraph(object):
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
                 node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=origin, scale=scale)
             return node_positions
-        if node_layout == 'community':
+        elif node_layout == 'community':
             node_positions = get_community_layout(
                 self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
