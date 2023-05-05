@@ -263,19 +263,6 @@ def _initialize_control_points(edges, node_positions, scale):
     return edge_to_control_points
 
 
-def _expand_edges(edge_to_control_points):
-    """Create a new, expanded edge list, in which each edge is split into multiple segments.
-    There are total_control_points + 1 segments / edges for each original edge.
-
-    """
-    expanded_edges = []
-    for (source, target), control_points in edge_to_control_points.items():
-        sources = [source] + control_points
-        targets = control_points + [target]
-        expanded_edges.extend(zip(sources, targets))
-    return expanded_edges
-
-
 def _initialize_control_point_positions(edge_to_control_points, node_positions,
                                         selfloop_radius, selfloop_angle):
     """Initialise the positions of the control points to positions on a straight
@@ -407,6 +394,19 @@ def _optimize_control_point_positions(
             )
 
     return {node : xy for node, xy in expanded_node_positions.items() if node not in nodes}
+
+
+def _expand_edges(edge_to_control_points):
+    """Create a new, expanded edge list, in which each edge is split into multiple segments.
+    There are total_control_points + 1 segments / edges for each original edge.
+
+    """
+    expanded_edges = []
+    for (source, target), control_points in edge_to_control_points.items():
+        sources = [source] + control_points
+        targets = control_points + [target]
+        expanded_edges.extend(zip(sources, targets))
+    return expanded_edges
 
 
 # This is a (slightly simplified) copy of the function defined in _node_layout.
