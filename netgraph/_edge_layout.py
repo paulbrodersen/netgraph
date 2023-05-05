@@ -270,43 +270,31 @@ def _initialize_control_point_positions(edge_to_control_points, node_positions,
     on a circle next to the node.
 
     """
-
-    nonloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source != target}
-    selfloops_to_control_points = {(source, target) : pts for (source, target), pts in edge_to_control_points.items() if source == target}
-
+    # initialize output
     control_point_positions = dict()
-    control_point_positions.update(_initialize_nonloops(nonloops_to_control_points, node_positions))
-    control_point_positions.update(_initialize_selfloops(selfloops_to_control_points, node_positions, selfloop_radius, selfloop_angle))
 
-    return control_point_positions
+    # process edges that are not self-loops
+    nonloops = [(source, target) for (source, target) in edge_to_control_points if source != target]
 
-
-def _initialize_nonloops(edge_to_control_points, node_positions):
-    """Initialise control points on a straight line between source and target nodes."""
-    control_point_positions = dict()
-    for (source, target), control_points in edge_to_control_points.items():
+    for (source, target) in nonloops:
+        control_points = edge_to_control_points[(source, target)]
         delta = node_positions[target] - node_positions[source]
         # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
         # This prevents an intertwining of parallel edges.
         # Strictly speaking, this offset is only required if bundle_parallel_edges is false.
-        offset = 1e-6 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
-        for ii, control_point in enumerate(control_points):
-            # y = mx + b
-            m = (ii + 1) / (len(control_points) + 1)
-            control_point_positions[control_point] = m * delta + node_positions[source] - offset
-    return control_point_positions
+        offset = 1e-3 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
+        fraction = np.linspace(0, 1, len(control_points)+2)[1:-1]
+        positions = fraction[:, np.newaxis] * delta[np.newaxis, :] + node_positions[source] - offset
+        control_point_positions.update(zip(control_points, positions))
 
-
-def _initialize_selfloops(edge_to_control_points, node_positions,
-                          selfloop_radius=0.1, selfloop_angle=None):
-    """Initialise control points on a circle next to the node."""
+    # process self-loop edges
     selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
     selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
 
-    control_point_positions = dict()
-    for (source, target), control_points in edge_to_control_points.items():
 
+    for (source, target) in selfloops:
+        control_points = edge_to_control_points[(source, target)]
         if selfloop_angle[(source, target)] is not None:
             unit_vector = _get_unit_vector(
                 np.array([np.cos(selfloop_angle[(source, target)]),
