@@ -462,18 +462,14 @@ class BaseGraph(object):
 
         if edge_layout == "straight":
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-            edge_layout_kwargs.setdefault('selfloop_angle', None)
         elif edge_layout == 'curved':
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-            edge_layout_kwargs.setdefault('selfloop_angle', None)
             edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
             edge_layout_kwargs.setdefault('origin', origin)
             edge_layout_kwargs.setdefault('scale', scale)
             edge_layout_kwargs.setdefault('k', 0.1)
         elif edge_layout == 'arc':
-            edge_layout_kwargs.setdefault('rad', 1.)
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-            edge_layout_kwargs.setdefault('selfloop_angle', np.pi/2)
         elif edge_layout == 'bundled':
             edge_layout_kwargs.setdefault('k', 500)
             edge_layout_kwargs.setdefault('total_cycles', 6)
