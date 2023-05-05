@@ -232,16 +232,7 @@ def get_curved_edge_paths(edges, node_positions,
 
     """
 
-    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
-    # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
-    # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
-    if k is None:
-        total_nodes = len(node_positions)
-        area = np.product(scale)
-        k = np.sqrt(area / float(total_nodes))
-        k *= 0.1
-
-    edge_to_control_points = _initialize_control_points(edges, node_positions, k, scale)
+    edge_to_control_points = _initialize_control_points(edges, node_positions, scale)
 
     control_point_positions = _initialize_control_point_positions(
         edge_to_control_points, node_positions, selfloop_radius, selfloop_angle)
@@ -259,13 +250,12 @@ def get_curved_edge_paths(edges, node_positions,
     return edge_to_path
 
 
-def _initialize_control_points(edges, node_positions, k, scale):
+def _initialize_control_points(edges, node_positions, scale):
     """Represent each edge with string of control points."""
     edge_to_control_points = dict()
     for start, stop in edges:
         if start != stop:
             distance = np.linalg.norm(node_positions[stop] - node_positions[start], axis=-1) / np.linalg.norm(scale)
-            # total_control_points = distance * np.pi / k # approximating the arc length with a half-circle
             total_control_points = min(max(int(distance * 10), 1), 5) # ensure that there are at least one point but no more than 5
             edge_to_control_points[(start, stop)] = [uuid4() for _ in range(total_control_points)]
         else: # self-loop
@@ -375,6 +365,15 @@ def _optimize_control_point_positions(
 
     # increase size of nodes so that there is a bit more clearance between edges and nodes
     node_size = {node : 2 * size for node, size in node_size.items()}
+
+    # If the spacing of nodes is approximately k, the spacing of control points should be k / (total control points per edge + 1).
+    # This would maximise the use of the available space. However, we do not want space to be filled with edges like a Peano-curve.
+    # Therefor, we apply an additional fudge factor that pulls the edges a bit more taut.
+    if k is None:
+        total_nodes = len(node_positions)
+        area = np.product(scale)
+        k = np.sqrt(area / float(total_nodes))
+        k *= 0.1
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=UserWarning)
