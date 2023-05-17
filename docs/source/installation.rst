@@ -3,19 +3,19 @@
 Installation & Testing
 ======================
 
-Install the current release of `netgraph` with:
+Install the current release of Netgraph with:
 
 .. code-block:: shell
 
     pip install netgraph
 
-To upgrade to a newer version, use the `--upgrade` flag:
+To upgrade to a newer version, use the :code:`--upgrade` flag:
 
 .. code-block::
 
     pip install --upgrade netgraph
 
-If you do not have permission to install software systemwide, you can install into your user directory using the --user flag:
+If you do not have permission to install software systemwide, you can install into your user directory using the :code:`--user` flag:
 
 .. code-block::
 
