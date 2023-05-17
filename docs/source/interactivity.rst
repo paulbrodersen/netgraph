@@ -147,6 +147,7 @@ To confirm that the matplotlib backend is interactive and handles events properl
    cid = fig.canvas.mpl_connect('button_press_event', onclick)
    plt.show()
 
-If clicking on the figure canvas results in print statements (confirming that matplotlib is correctly configured), but any problems with the interactive graph classes implemented in Netgraph persist, please raise an issue on GitHub_.
+If clicking on the figure canvas results in print statements, then matplotlib is correctly configured.
+If you still encounter issues with the :code:`InteractiveGraph` or the :code:`EditableGraph` class despite following this troubleshooting guide, please raise an issue on GitHub_.
 
 .. _GitHub: https://github.com/paulbrodersen/netgraph/issues
