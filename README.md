@@ -158,8 +158,7 @@ help(EditableGraph)
 ## Version 4 to version 5 API changes
 
 The APIs for all `Graph` classes have remained fully backwards compatible between version 4 and version 5, as have all node layout functions.
-Several edge routing functions now accept additional arguments for specifying routing of self-loops but have remained mostly backwards compatible, apart from `get_selfloop_paths`, which has been removed.
-The following changes are worth noting:
+Most changes occurred in the `NodeArtist` and `EdgeArtist` classes as well as the edge routing functions.
 
 - The `node_shape` argument can now also be an instance of a `matplotlib.path.Path` or a dictionary containing `matplotlib.path.Path` instances.
 - Split `NodeArtist` class into `NodeArtist`, `RegularPolygonNodeArtist`, and `CircularNodeArtist` classes; `NodeArtist` is the base for the other two classes, so checks like `isinstance(artist, NodeArtist)` remain valid.
