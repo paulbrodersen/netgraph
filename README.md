@@ -105,6 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
+- 4.12.12 Expanded the documentation to cover installation of optional dependencies, automated testing, and troubleshooting issues with matplotlib event handling (issue #69).
 - 4.12.11 Mitigated a bug in `EditableGraph` that occurred when deleting a node while hovering over an edge incident to that node (issue #66).
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
