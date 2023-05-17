@@ -42,3 +42,9 @@ Or without pip:
 .. code-block::
 
     python setup.py install
+
+Some of the examples in the documentation use additional libraries. These can be installed with:
+
+.. code-block::
+
+    pip install netgraph[docs]
