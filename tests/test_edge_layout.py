@@ -67,7 +67,7 @@ def test_arced_edge_layout():
 # bundled edge layout
 
 @pytest.mark.mpl_image_compare
-def test_draw_bundled_edges():
+def test_bundled_edge_layout():
     fig, ax = plt.subplots()
     edges = [(0, 1), (2, 3)]
     node_positions = {
