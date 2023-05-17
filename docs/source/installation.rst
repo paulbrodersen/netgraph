@@ -1,7 +1,7 @@
 .. _installation:
 
-Installation
-============
+Installation & Testing
+======================
 
 Install the current release of `netgraph` with:
 
@@ -48,3 +48,15 @@ Some of the examples in the documentation use additional libraries. These can be
 .. code-block::
 
     pip install netgraph[docs]
+
+For automated testing, install the additional dependencies required for testing using:
+
+.. code-block::
+
+    pip install netgraph[tests]
+
+The full test suite can then be executed by running the following from the top-level source directory using the terminal:
+
+.. code-block::
+
+    pytest
