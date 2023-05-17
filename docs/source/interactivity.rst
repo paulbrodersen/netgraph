@@ -95,3 +95,58 @@ Finally, elements of the graph can be labeled and annotated. Labels remain alway
         arrows=True, ax=ax)
 
     plt.show()
+
+
+Troubleshooting
+---------------
+
+Interactive graphs require a working interactive matplotlib backend with proper event handling, and by default, matplotlib should be configured appropriately.
+However, several circumstances can silently interfere with proper event handling without raising obvious errors:
+
+1. The matplotlib python object corresponding to the figure is garbage collected.
+
+   This can occur while the figure is still being displayed. To prevent garbage collection, a reference to the figure object has to be retained.
+   In the examples above, :code:`InteractiveGraph` and :code:`EditableGraph` instances are assigned to a variable :code:`plot_instance` (the variable name is arbitrary).
+
+   When using IDE's such as PyCharm, python objects are often garbage collected despite such references. To circumvent this behaviour, the code has to be executed in a console or shell. In PyCharm, this can be achieved by pressing Alt+Shift+E or selecting the appropriate drop-down menu item.
+
+2. Running matplotlib on a server without X forwarding.
+
+   This includes Jupyter and Google colab notebooks, both of which don't support interactive events natively.
+
+3. Running matplotlib while not using an interactive backend.
+
+   You can determine your current matplotlib backend with the following commands:
+
+   .. code::
+
+      import matplotlib
+      matplotlib.get_backend()
+
+   The matplotlib documentation provides an exhaustive list of all available backends as well as instructions for configuring interactive backends here_.
+
+   .. _here: https://matplotlib.org/stable/users/explain/backends.html
+
+To confirm that the matplotlib backend is interactive and handles events properly, you can run the following example from the matplotlib documentation_:
+
+.. _documentation: https://matplotlib.org/stable/users/explain/event_handling.html
+
+.. code::
+
+   import numpy as np
+   import matplotlib.pyplot as plt
+
+   fig, ax = plt.subplots()
+   ax.plot(np.random.rand(10))
+
+   def onclick(event):
+       print('%s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+             ('double' if event.dblclick else 'single', event.button,
+              event.x, event.y, event.xdata, event.ydata))
+
+   cid = fig.canvas.mpl_connect('button_press_event', onclick)
+   plt.show()
+
+If clicking on the figure canvas results in print statements (confirming that matplotlib is correctly configured), but any problems with the interactive graph classes implemented in Netgraph persist, please raise an issue on GitHub_.
+
+.. _GitHub: https://github.com/paulbrodersen/netgraph/issues
