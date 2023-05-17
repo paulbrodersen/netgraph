@@ -33,6 +33,6 @@ setup(
     install_requires=['numpy', 'matplotlib', 'scipy', 'rectangle-packer', 'grandalf'],
     extras_require={
         'tests' : ['pytest', 'pytest-mpl'],
-        'doc' : ['sphinx', 'sphinx-rtd-theme', 'numpydoc', 'sphinx-gallery', 'Pillow', 'networkx'],
+        'docs' : ['sphinx', 'sphinx-rtd-theme', 'numpydoc', 'sphinx-gallery', 'Pillow', 'networkx'],
     },
 )
