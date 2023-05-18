@@ -360,11 +360,13 @@ def _get_orthogonal_unit_vector(v):
     Adapted from https://stackoverflow.com/a/16890776/2912349
 
     """
-
-    v = v / np.linalg.norm(v, axis=-1)[:, None] # unit vector
-    w = np.c_[-v[:,1], v[:,0]]                  # orthogonal vector
-    w = w / np.linalg.norm(w, axis=-1)[:, None] # orthogonal unit vector
-    return w
+    if not np.all(np.isclose(v, 0)):
+        v = v / np.linalg.norm(v, axis=-1)[:, None] # unit vector
+        w = np.c_[-v[:,1], v[:,0]]                  # orthogonal vector
+        w = w / np.linalg.norm(w, axis=-1)[:, None] # orthogonal unit vector
+        return w
+    else:
+        return v
 
 
 def _shorten_line_by(path, distance):
