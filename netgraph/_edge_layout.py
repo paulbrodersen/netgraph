@@ -95,49 +95,33 @@ def get_straight_edge_paths(edges, node_positions, selfloop_radius=0.1, selfloop
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
-    edge_paths = dict()
-
-    # paths for edges that are not self-loops
     nonloops = [(source, target) for (source, target) in edges if source != target]
-    for (source, target) in nonloops:
-        x1, y1 = node_positions[source]
-        x2, y2 = node_positions[target]
-        edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
-
-    # self-loop paths
     selfloops = [(source, target) for (source, target) in edges if source == target]
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+
+    nonloop_edge_paths = _get_straight_nonloop_edge_paths(nonloops, node_positions)
+
     if selfloop_angle is not None: # can be zero!
         selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
     else:
-        selfloop_angle = _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edge_paths)
+        selfloop_angle = _get_optimal_selfloop_angles(
+            selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
 
-    for edge in selfloops:
+    selfloop_edge_paths = _get_straight_selfloop_edge_paths(
+        selfloops, node_positions, selfloop_radius, selfloop_angle)
 
-        if selfloop_angle[edge] is not None:
-            unit_vector = _get_unit_vector(
-                np.array([np.cos(selfloop_angle[edge]),
-                          np.sin(selfloop_angle[edge])]))
-        else:
-            # To minimise overlap with other edges, we want the loop to be
-            # on the side of the node away from the centroid of the graph.
-            if len(node_positions) > 1:
-                centroid = np.mean(list(node_positions.values()), axis=0)
-                delta = node_positions[edge[0]] - centroid
-                distance = np.linalg.norm(delta)
-                unit_vector = delta / distance
-            else: # single node in graph; self-loop points upwards
-                unit_vector = np.array([0, 1])
+    edge_paths = dict()
+    edge_paths.update(nonloop_edge_paths)
+    edge_paths.update(selfloop_edge_paths)
+    return edge_paths
 
-        center = node_positions[edge[0]] + selfloop_radius[edge] * unit_vector
 
-        # Note: we add pi to the start angle as the start angle lies opposite
-        # to the direction in which the self-loop extends.
-        edge_paths[edge] = _get_n_points_on_a_circle(
-            center, selfloop_radius[edge], 100+1,
-            _get_angle(*unit_vector) + np.pi,
-        )[1:]
-
+def _get_straight_nonloop_edge_paths(edges, node_positions):
+    edge_paths = dict()
+    for (source, target) in edges:
+        x1, y1 = node_positions[source]
+        x2, y2 = node_positions[target]
+        edge_paths[(source, target)] = np.c_[[x1, x2], [y1, y2]]
     return edge_paths
 
 
@@ -176,6 +160,20 @@ def _get_selfloop_path(source, node_positions, radius, angle):
     )[1:]
 
     return path
+def _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle):
+    edge_paths = dict()
+    for edge in edges:
+        unit_vector = _get_unit_vector(
+            np.array([np.cos(selfloop_angle[edge]),
+                      np.sin(selfloop_angle[edge])]))
+        center = node_positions[edge[0]] + selfloop_radius[edge] * unit_vector
+        # Note: we add pi to the start angle as the start angle lies opposite
+        # to the direction in which the self-loop extends.
+        edge_paths[edge] = _get_n_points_on_a_circle(
+            center, selfloop_radius[edge], 100+1,
+            _get_angle(*unit_vector) + np.pi,
+        )[1:]
+    return edge_paths
 
 
 def get_curved_edge_paths(edges, node_positions,
