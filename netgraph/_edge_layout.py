@@ -134,20 +134,23 @@ def _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edg
     return dict(zip(selfloops, selfloop_angles))
 
 
-def _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle):
+def _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle, total_points=100):
     edge_paths = dict()
     for edge in edges:
-        unit_vector = _get_unit_vector(
-            np.array([np.cos(selfloop_angle[edge]),
-                      np.sin(selfloop_angle[edge])]))
-        center = node_positions[edge[0]] + selfloop_radius[edge] * unit_vector
-        # Note: we add pi to the start angle as the start angle lies opposite
-        # to the direction in which the self-loop extends.
-        edge_paths[edge] = _get_n_points_on_a_circle(
-            center, selfloop_radius[edge], 100+1,
-            _get_angle(*unit_vector) + np.pi,
-        )[1:]
+        edge_paths[edge] = _get_selfloop_path(
+            node_positions[edge[0]], selfloop_radius[edge], selfloop_angle[edge], total_points)
     return edge_paths
+
+
+def _get_selfloop_path(source_position, radius, angle, total_points):
+    unit_vector = _get_unit_vector(np.array([np.cos(angle), np.sin(angle)]))
+    center = source_position + radius * unit_vector
+    # Note: we add pi to the start angle as the start angle lies opposite
+    # to the direction in which the self-loop extends.
+    return _get_n_points_on_a_circle(
+        center, radius, total_points+1,
+        _get_angle(*unit_vector) + np.pi,
+    )[1:]
 
 
 def get_curved_edge_paths(edges, node_positions,
@@ -203,10 +206,39 @@ def get_curved_edge_paths(edges, node_positions,
 
     """
 
-    edge_to_control_points = _initialize_control_points(edges, node_positions, scale)
+    nonloops = [(source, target) for (source, target) in edges if source != target]
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
 
-    control_point_positions = _initialize_control_point_positions(
-        edge_to_control_points, node_positions, selfloop_radius, selfloop_angle)
+    nonloop_edge_paths = _get_curved_nonloop_edge_paths(
+        nonloops, node_positions, origin, scale, k, initial_temperature,
+        total_iterations, node_size, bundle_parallel_edges)
+
+    if selfloop_angle is not None: # can be zero!
+        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
+    else:
+        selfloop_angle = _get_optimal_selfloop_angles(
+            selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
+
+    selfloop_edge_paths = _get_curved_selfloop_edge_paths(
+        selfloops, node_positions, selfloop_radius, selfloop_angle,
+        origin, scale, k, initial_temperature,
+        total_iterations, node_size, nonloop_edge_paths)
+
+    edge_paths = dict()
+    edge_paths.update(nonloop_edge_paths)
+    edge_paths.update(selfloop_edge_paths)
+    return edge_paths
+
+
+def _get_curved_nonloop_edge_paths(edges, node_positions, origin, scale,
+                                   k, initial_temperature, total_iterations,
+                                   node_size, bundle_parallel_edges):
+
+    edge_to_control_points = _initialize_nonloop_control_points(edges, node_positions, scale)
+
+    control_point_positions = _initialize_nonloop_control_point_positions(
+        edge_to_control_points, node_positions, bundle_parallel_edges)
 
     control_point_positions = _optimize_control_point_positions(
         edge_to_control_points, node_positions, control_point_positions,
@@ -216,84 +248,79 @@ def get_curved_edge_paths(edges, node_positions,
     edge_to_path = _get_path_through_control_points(
         edge_to_control_points, node_positions, control_point_positions)
 
-    edge_to_path = _fit_splines_through_edge_paths(edge_to_path)
+    edge_to_path = _smooth_edge_paths(edge_to_path)
 
     return edge_to_path
 
 
-def _initialize_control_points(edges, node_positions, scale):
+def _initialize_nonloop_control_points(edges, node_positions, scale):
     """Represent each edge with string of control points."""
     edge_to_control_points = dict()
     for source, target in edges:
-        if source != target:
-            distance = np.linalg.norm(node_positions[target] - node_positions[source], axis=-1) / np.linalg.norm(scale)
-            total_control_points = min(max(int(distance * 10), 1), 5) # ensure that there are at least one point but no more than 5
-            edge_to_control_points[(source, target)] = [uuid4() for _ in range(total_control_points)]
-        else: # self-loop
-            edge_to_control_points[(source, target)] = [uuid4() for _ in range(5)]
+        edge_length = np.linalg.norm(node_positions[target] - node_positions[source], axis=-1) / np.linalg.norm(scale)
+        total_control_points = min(max(int(edge_length * 10), 1), 5) # ensure that there are at least one point but no more than 5
+        edge_to_control_points[(source, target)] = [uuid4() for _ in range(total_control_points)]
     return edge_to_control_points
 
 
-def _initialize_control_point_positions(edge_to_control_points, node_positions,
-                                        selfloop_radius, selfloop_angle):
-    """Initialise the positions of the control points to positions on a straight
-    line between source and target node. For self-loops, initialise the positions
-    on a circle next to the node.
+def _initialize_nonloop_control_point_positions(edge_to_control_points, node_positions, bundle_parallel_edges):
+    """Initialise the positions of the control points to positions on a straight line between source and target node."""
 
-    """
-    # initialize output
     control_point_positions = dict()
-
-    # process edges that are not self-loops
-    nonloops = [(source, target) for (source, target) in edge_to_control_points if source != target]
-
-    for (source, target) in nonloops:
-        control_points = edge_to_control_points[(source, target)]
+    for (source, target), control_points in edge_to_control_points.items():
         delta = node_positions[target] - node_positions[source]
-        # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
-        # This prevents an intertwining of parallel edges.
-        # Strictly speaking, this offset is only required if bundle_parallel_edges is false.
-        offset = 1e-3 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
         fraction = np.linspace(0, 1, len(control_points)+2)[1:-1]
-        positions = fraction[:, np.newaxis] * delta[np.newaxis, :] + node_positions[source] - offset
+        positions = fraction[:, np.newaxis] * delta[np.newaxis, :] + node_positions[source]
+        if bundle_parallel_edges:
+            # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
+            # This prevents an intertwining of parallel edges.
+            offset = 1e-3 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))
+            positions -= offset
         control_point_positions.update(zip(control_points, positions))
+    return control_point_positions
 
-    # process self-loop edges
-    selfloops = [(source, target) for (source, target) in edge_to_control_points if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-    if selfloop_angle is not None: # can be zero!
-        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-    else:
-        edge_paths = {(source, target) : np.c_[node_positions[source], node_positions[target]].T for source, target in nonloops}
-        selfloop_angle = _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edge_paths)
 
-    for (source, target) in selfloops:
-        control_points = edge_to_control_points[(source, target)]
-        if selfloop_angle[(source, target)] is not None:
-            unit_vector = _get_unit_vector(
-                np.array([np.cos(selfloop_angle[(source, target)]),
-                          np.sin(selfloop_angle[(source, target)])])
-            )
-        else:
-            # To minimise overlap with other edges, we want the loop to be
-            # on the side of the node away from the centroid of the graph.
-            if len(node_positions) > 1:
-                centroid = np.mean(list(node_positions.values()), axis=0)
-                delta = node_positions[source] - centroid
-                distance = np.linalg.norm(delta)
-                unit_vector = delta / distance
-            else: # single node in graph; self-loop points upwards
-                unit_vector = np.array([0, 1])
+def _get_curved_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle,
+                                    origin, scale, k, initial_temperature, total_iterations, node_size,
+                                    nonloop_edge_paths):
 
-        center = node_positions[source] + selfloop_radius[(source, target)] * unit_vector
+    edge_to_control_points = _initialize_selfloop_control_points(edges)
 
-        # Note: we add pi to the start angle as the start angle lies opposite
-        # to the direction in which the self-loop extends.
-        positions = _get_n_points_on_a_circle(
-            center, selfloop_radius[(source, target)], len(control_points)+1,
-            _get_angle(*unit_vector) + np.pi,
-        )[1:]
+    control_point_positions = _initialize_selfloop_control_point_positions(
+        edge_to_control_points, node_positions, selfloop_radius, selfloop_angle)
 
+    expanded_node_positions = node_positions.copy()
+    for positions in nonloop_edge_paths.values():
+        expanded_node_positions.update(zip([uuid4() for _ in range(len(positions)-2)], positions[1:-1]))
+
+    control_point_positions = _optimize_control_point_positions(
+        edge_to_control_points, expanded_node_positions, control_point_positions,
+        origin, scale, k, initial_temperature, total_iterations, node_size,
+        bundle_parallel_edges=False)
+
+    edge_to_path = _get_path_through_control_points(
+        edge_to_control_points, node_positions, control_point_positions)
+
+    edge_to_path = _smooth_edge_paths(edge_to_path)
+
+    return edge_to_path
+
+
+def _initialize_selfloop_control_points(edges):
+    """Represent each edge with string of control points."""
+    edge_to_control_points = dict()
+    for edge in edges:
+        edge_to_control_points[edge] = [uuid4() for _ in range(5)]
+    return edge_to_control_points
+
+
+def _initialize_selfloop_control_point_positions(edge_to_control_points, node_positions, selfloop_radius, selfloop_angle):
+    """Initialise the positions on a circle next to the node."""
+
+    control_point_positions = dict()
+    for edge, control_points in edge_to_control_points.items():
+        positions = _get_selfloop_path(
+            node_positions[edge[0]], selfloop_radius[edge], selfloop_angle[edge], len(control_points))
         control_point_positions.update(zip(control_points, positions))
 
     return control_point_positions
@@ -548,7 +575,7 @@ def _get_path_through_control_points(edge_to_control_points, node_positions, con
     return edge_to_path
 
 
-def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
+def _smooth_edge_paths(edge_to_path, *args, **kwargs):
     """Fit splines through edge paths for smoother edge routing."""
     return {edge : _bspline(path, *args, **kwargs) for edge, path in edge_to_path.items()}
 
