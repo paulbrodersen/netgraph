@@ -134,32 +134,6 @@ def _get_optimal_selfloop_angles(selfloops, selfloop_radius, node_positions, edg
     return dict(zip(selfloops, selfloop_angles))
 
 
-def _get_selfloop_path(source, node_positions, radius, angle):
-    """Compute the edge path for a single self-loop."""
-
-    x, y = node_positions[source]
-
-    if angle is not None:
-        unit_vector = _get_unit_vector(np.array([np.cos(angle), np.sin(angle)]))
-    else:
-        # To minimise overlap with other edges, we want the loop to be
-        # on the side of the node away from the centroid of the graph.
-        if len(node_positions) > 1:
-            centroid = np.mean(list(node_positions.values()), axis=0)
-            delta = node_positions[source] - centroid
-            distance = np.linalg.norm(delta)
-            unit_vector = delta / distance
-        else: # single node in graph; self-loop points upwards
-            unit_vector = np.array([0, 1])
-
-    center = node_positions[source] + radius * unit_vector
-
-    path = _get_n_points_on_a_circle(
-        center, radius, 100+1,
-        _get_angle(*unit_vector) + np.pi,
-    )[1:]
-
-    return path
 def _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle):
     edge_paths = dict()
     for edge in edges:
