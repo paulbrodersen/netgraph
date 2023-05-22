@@ -579,7 +579,6 @@ def _fit_splines_through_edge_paths(edge_to_path, *args, **kwargs):
     return {edge : _bspline(path, *args, **kwargs) for edge, path in edge_to_path.items()}
 
 
-@_handle_multiple_components
 def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, selfloop_angle=np.pi/2):
     """Determine the edge layout, where edges are represented by arcs
     connecting the source and target node.
