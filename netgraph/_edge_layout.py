@@ -614,8 +614,20 @@ def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, sel
     selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
     selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=False)
 
+    nonloop_edge_paths = _get_arced_nonloop_edge_paths(nonloops, rad)
+
+    selfloop_edge_paths = _get_arced_selfloop_edge_paths(
+        selfloops, node_positions, selfloop_radius, selfloop_angle)
+
     edge_paths = dict()
-    for source, target in nonloops:
+    edge_paths.update(nonloop_edge_paths)
+    edge_paths.update(selfloop_edge_paths)
+    return edge_paths
+
+
+def _get_arced_nonloop_edge_paths(edges, rad):
+    edge_paths = dict()
+    for source, target in edges:
         arc_factory = ConnectionStyle.Arc3(rad=rad)
         path = arc_factory(
             node_positions[source],
@@ -623,11 +635,11 @@ def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, sel
             shrinkA=0., shrinkB=0.
             )
         edge_paths[(source, target)] = _bspline(path.vertices, 100)
-
-    for edge in selfloops:
-        edge_paths[edge] = _get_selfloop_path(edge[0], node_positions, selfloop_radius[edge], selfloop_angle[edge])
-
     return edge_paths
+
+
+def _get_arced_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle):
+    return _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle)
 
 
 @profile
