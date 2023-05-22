@@ -971,7 +971,6 @@ def _straighten_path(path, straighten_by):
         + straighten_by * (p0 + np.linspace(0, 1, n)[:, np.newaxis] * (p1 - p0))
 
 
-# NOTE: probably superfluous
 def _shift_edge(x1, y1, x2, y2, delta):
     """Determine the parallel to a segment defined by points p1: (x1, y1) and p2 : (x2, y2) at a distance delta."""
     # convert segment into a vector
