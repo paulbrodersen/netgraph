@@ -95,24 +95,25 @@ def get_straight_edge_paths(edges, node_positions, selfloop_radius=0.1, selfloop
         Dictionary mapping each edge to an array of (x, y) coordinates representing its path.
 
     """
-    nonloops = [(source, target) for (source, target) in edges if source != target]
-    selfloops = [(source, target) for (source, target) in edges if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-
-    nonloop_edge_paths = _get_straight_nonloop_edge_paths(nonloops, node_positions)
-
-    if selfloop_angle is not None: # can be zero!
-        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-    else:
-        selfloop_angle = _get_optimal_selfloop_angles(
-            selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
-
-    selfloop_edge_paths = _get_straight_selfloop_edge_paths(
-        selfloops, node_positions, selfloop_radius, selfloop_angle)
 
     edge_paths = dict()
+
+    nonloops = [(source, target) for (source, target) in edges if source != target]
+    nonloop_edge_paths = _get_straight_nonloop_edge_paths(nonloops, node_positions)
     edge_paths.update(nonloop_edge_paths)
-    edge_paths.update(selfloop_edge_paths)
+
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    if selfloops:
+        selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+        if selfloop_angle is not None: # can be zero!
+            selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
+        else:
+            selfloop_angle = _get_optimal_selfloop_angles(
+                selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
+        selfloop_edge_paths = _get_straight_selfloop_edge_paths(
+            selfloops, node_positions, selfloop_radius, selfloop_angle)
+        edge_paths.update(selfloop_edge_paths)
+
     return edge_paths
 
 
@@ -206,28 +207,28 @@ def get_curved_edge_paths(edges, node_positions,
 
     """
 
-    nonloops = [(source, target) for (source, target) in edges if source != target]
-    selfloops = [(source, target) for (source, target) in edges if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+    edge_paths = dict()
 
+    nonloops = [(source, target) for (source, target) in edges if source != target]
     nonloop_edge_paths = _get_curved_nonloop_edge_paths(
         nonloops, node_positions, origin, scale, k, initial_temperature,
         total_iterations, node_size, bundle_parallel_edges)
-
-    if selfloop_angle is not None: # can be zero!
-        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
-    else:
-        selfloop_angle = _get_optimal_selfloop_angles(
-            selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
-
-    selfloop_edge_paths = _get_curved_selfloop_edge_paths(
-        selfloops, node_positions, selfloop_radius, selfloop_angle,
-        origin, scale, k, initial_temperature,
-        total_iterations, node_size, nonloop_edge_paths)
-
-    edge_paths = dict()
     edge_paths.update(nonloop_edge_paths)
-    edge_paths.update(selfloop_edge_paths)
+
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    if selfloops:
+        selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+        if selfloop_angle is not None: # can be zero!
+            selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=True)
+        else:
+            selfloop_angle = _get_optimal_selfloop_angles(
+                selfloops, selfloop_radius, node_positions, nonloop_edge_paths)
+        selfloop_edge_paths = _get_curved_selfloop_edge_paths(
+            selfloops, node_positions, selfloop_radius, selfloop_angle,
+            origin, scale, k, initial_temperature,
+            total_iterations, node_size, nonloop_edge_paths)
+        edge_paths.update(selfloop_edge_paths)
+
     return edge_paths
 
 
@@ -609,19 +610,20 @@ def get_arced_edge_paths(edges, node_positions, rad=1., selfloop_radius=0.1, sel
         Dictionary mapping each edge to a list of edge segments.
 
     """
-    nonloops = [(source, target) for (source, target) in edges if source != target]
-    selfloops = [(source, target) for (source, target) in edges if source == target]
-    selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-    selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=False)
-
-    nonloop_edge_paths = _get_arced_nonloop_edge_paths(nonloops, node_positions, rad)
-
-    selfloop_edge_paths = _get_arced_selfloop_edge_paths(
-        selfloops, node_positions, selfloop_radius, selfloop_angle)
-
     edge_paths = dict()
+
+    nonloops = [(source, target) for (source, target) in edges if source != target]
+    nonloop_edge_paths = _get_arced_nonloop_edge_paths(nonloops, node_positions, rad)
     edge_paths.update(nonloop_edge_paths)
-    edge_paths.update(selfloop_edge_paths)
+
+    selfloops = [(source, target) for (source, target) in edges if source == target]
+    if selfloops:
+        selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+        selfloop_angle = _normalize_numeric_argument(selfloop_angle, selfloops, 'angle', allow_none=False)
+        selfloop_edge_paths = _get_arced_selfloop_edge_paths(
+            selfloops, node_positions, selfloop_radius, selfloop_angle)
+        edge_paths.update(selfloop_edge_paths)
+
     return edge_paths
 
 
