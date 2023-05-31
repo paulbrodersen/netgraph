@@ -271,6 +271,31 @@ def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
     return bboxes
 
 
+def _get_fr_repulsion(distance, direction, k):
+    """Compute repulsive forces."""
+    with np.errstate(divide='ignore', invalid='ignore'):
+        magnitude = k**2 / distance
+    vectors = direction * magnitude[..., None]
+    # Note that we cannot apply the usual strategy of summing the array
+    # along either axis and subtracting the trace,
+    # as the diagonal of `direction` is np.nan, and any sum or difference of
+    # NaNs is just another NaN.
+    # Also we do not want to ignore NaNs by using np.nansum, as then we would
+    # potentially mask the existence of off-diagonal zero distances.
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
+    return np.sum(vectors, axis=0)
+
+
+def _get_fr_attraction(distance, direction, adjacency, k):
+    """Compute attractive forces."""
+    magnitude = 1./k * distance**2 * adjacency
+    vectors = -direction * magnitude[..., None] # NB: the minus!
+    for ii in range(vectors.shape[-1]):
+        np.fill_diagonal(vectors[:, :, ii], 0)
+    return np.sum(vectors, axis=0)
+
+
 @_handle_multiple_components
 def get_fruchterman_reingold_layout(edges,
                                     edge_weights        = None,
@@ -283,6 +308,8 @@ def get_fruchterman_reingold_layout(edges,
                                     node_size           = 0,
                                     node_positions      = None,
                                     fixed_nodes         = None,
+                                    get_repulsion       = _get_fr_repulsion,
+                                    get_attraction      = _get_fr_attraction,
                                     *args, **kwargs):
     """'Spring' or Fruchterman-Reingold node layout.
 
@@ -460,7 +487,8 @@ def get_fruchterman_reingold_layout(edges,
     for ii, temperature in enumerate(temperatures):
         candidate_positions = _fruchterman_reingold(mobile_positions, fixed_positions,
                                                     mobile_node_sizes, fixed_node_sizes,
-                                                    adjacency, temperature, k)
+                                                    adjacency, temperature, k,
+                                                    get_repulsion, get_attraction)
         is_valid = _is_within_bbox(candidate_positions, origin=origin, scale=scale)
         mobile_positions[is_valid] = candidate_positions[is_valid]
 
@@ -498,7 +526,8 @@ def _get_temperature_decay(initial_temperature, total_iterations, mode='quadrati
 
 def _fruchterman_reingold(mobile_positions, fixed_positions,
                           mobile_node_radii, fixed_node_radii,
-                          adjacency, temperature, k):
+                          adjacency, temperature, k,
+                          get_repulsion, get_attraction):
     """Inner loop of Fruchterman-Reingold layout algorithm."""
 
     combined_positions = np.concatenate([mobile_positions, fixed_positions], axis=0)
@@ -525,8 +554,8 @@ def _fruchterman_reingold(mobile_positions, fixed_positions,
         direction = delta / distance[..., None] # i.e. the unit vector
 
     # calculate forces
-    repulsion    = _get_fr_repulsion(distance, direction, k)
-    attraction   = _get_fr_attraction(distance, direction, adjacency, k)
+    repulsion    = get_repulsion(distance, direction, k)
+    attraction   = get_attraction(distance, direction, adjacency, k)
     displacement = attraction + repulsion
 
     # limit maximum displacement using temperature
@@ -536,31 +565,6 @@ def _fruchterman_reingold(mobile_positions, fixed_positions,
     mobile_positions = mobile_positions + displacement
 
     return mobile_positions
-
-
-def _get_fr_repulsion(distance, direction, k):
-    """Compute repulsive forces."""
-    with np.errstate(divide='ignore', invalid='ignore'):
-        magnitude = k**2 / distance
-    vectors = direction * magnitude[..., None]
-    # Note that we cannot apply the usual strategy of summing the array
-    # along either axis and subtracting the trace,
-    # as the diagonal of `direction` is np.nan, and any sum or difference of
-    # NaNs is just another NaN.
-    # Also we do not want to ignore NaNs by using np.nansum, as then we would
-    # potentially mask the existence of off-diagonal zero distances.
-    for ii in range(vectors.shape[-1]):
-        np.fill_diagonal(vectors[:, :, ii], 0)
-    return np.sum(vectors, axis=0)
-
-
-def _get_fr_attraction(distance, direction, adjacency, k):
-    """Compute attractive forces."""
-    magnitude = 1./k * distance**2 * adjacency
-    vectors = -direction * magnitude[..., None] # NB: the minus!
-    for ii in range(vectors.shape[-1]):
-        np.fill_diagonal(vectors[:, :, ii], 0)
-    return np.sum(vectors, axis=0)
 
 
 def _rescale_to_frame(node_positions, origin, scale):
