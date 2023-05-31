@@ -210,9 +210,26 @@ def get_curved_edge_paths(edges, node_positions,
     edge_paths = dict()
 
     nonloops = [(source, target) for (source, target) in edges if source != target]
-    nonloop_edge_paths = _get_curved_nonloop_edge_paths(
-        nonloops, node_positions, origin, scale, k, initial_temperature,
-        total_iterations, node_size, bundle_parallel_edges)
+    if bundle_parallel_edges:
+        parallel_edges = []
+        other_edges = []
+        for (source, target) in nonloops:
+            if (target, source) in nonloops:
+                if (target, source) in parallel_edges:
+                    pass
+                else:
+                    parallel_edges.append((source, target))
+            else:
+                other_edges.append((source, target))
+        nonloop_edge_paths = _get_curved_nonloop_edge_paths(
+            parallel_edges + other_edges, node_positions, origin, scale, k, initial_temperature,
+            total_iterations, node_size, bundle_parallel_edges)
+        for (source, target) in parallel_edges:
+            nonloop_edge_paths[(target, source)] = nonloop_edge_paths[(source, target)][::-1]
+    else:
+        nonloop_edge_paths = _get_curved_nonloop_edge_paths(
+            nonloops, node_positions, origin, scale, k, initial_temperature,
+            total_iterations, node_size, bundle_parallel_edges)
     edge_paths.update(nonloop_edge_paths)
 
     selfloops = [(source, target) for (source, target) in edges if source == target]
@@ -272,7 +289,7 @@ def _initialize_nonloop_control_point_positions(edge_to_control_points, node_pos
         delta = node_positions[target] - node_positions[source]
         fraction = np.linspace(0, 1, len(control_points)+2)[1:-1]
         positions = fraction[:, np.newaxis] * delta[np.newaxis, :] + node_positions[source]
-        if bundle_parallel_edges:
+        if (not bundle_parallel_edges) and ((target, source) in edge_to_control_points):
             # Offset the path ever so slightly to a side, such that bi-directional edges do not overlap completely.
             # This prevents an intertwining of parallel edges.
             offset = 1e-3 * np.linalg.norm(delta) * np.squeeze(_get_orthogonal_unit_vector(np.atleast_2d(delta)))

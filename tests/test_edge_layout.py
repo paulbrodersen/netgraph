@@ -46,6 +46,27 @@ def test_curved_edge_layout():
 
 
 @pytest.mark.mpl_image_compare
+def test_bundle_parallel_edges():
+    fig, axes = plt.subplots(1, 2, sharex=True, sharey=True)
+    edges = [
+        (0, 1),
+        (1, 0),
+    ]
+    node_positions = {
+        0 : np.array([0.1, 0.5]),
+        1 : np.array([0.9, 0.5]),
+        2 : np.array([0.5, 0.5])
+    }
+    Graph(edges, nodes=[0, 1, 2], node_layout=node_positions, edge_layout='curved',
+          edge_layout_kwargs=dict(bundle_parallel_edges=True), ax=axes[0])
+    axes[0].set_title("bundle_parallel_edges = True")
+    Graph(edges, nodes=[0, 1, 2], node_layout=node_positions, edge_layout='curved',
+          edge_layout_kwargs=dict(bundle_parallel_edges=False), ax=axes[1])
+    axes[1].set_title("bundle_parallel_edges = False")
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_arced_edge_layout():
     fig, ax = plt.subplots()
     edges = [
