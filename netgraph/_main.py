@@ -46,10 +46,7 @@ from ._node_layout import (
 )
 from ._edge_layout import (
     _shift_edge,
-    get_straight_edge_paths,
-    get_curved_edge_paths,
-    get_arced_edge_paths,
-    get_bundled_edge_paths,
+    StraightEdgeLayout,
 )
 
 from ._artists import (
@@ -327,7 +324,7 @@ class BaseGraph(object):
                         node_shape, node_size, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
-        self.edge_paths, self.edge_layout, self.edge_layout_kwargs = self._initialize_edge_layout(
+        self.edge_paths, self.edge_layout = self._initialize_edge_layout(
             edge_layout, edge_layout_kwargs, origin, scale, edge_width, self.node_artists)
         self.edge_artists = dict()
         self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
@@ -472,22 +469,17 @@ class BaseGraph(object):
             pass
 
         if isinstance(edge_layout, str):
-            edge_paths = self._get_edge_paths(self.edges, self.node_positions,
-                                              edge_layout, edge_layout_kwargs)
+            edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            edge_paths = edge_layout.compute()
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
-
-            # determine a sensible edge_layout in case node positions change
-            path_lengths = np.array([len(path) for path in edge_paths.values()])
-            if np.any(path_lengths) > 2:
-                edge_layout = 'curved'
-            else:
-                edge_layout = 'straight'
+            edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            edge_layout.edge_paths.update(edge_paths)
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
-        return edge_paths, edge_layout, edge_layout_kwargs
+        return edge_paths, edge_layout
 
 
     def _initialize_axis(self, ax):
@@ -583,51 +575,6 @@ class BaseGraph(object):
             self.node_artists[node].xy = self.node_positions[node]
 
 
-    def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
-        """Compute the edge routing.
-
-        Parameters
-        ----------
-        edges : list
-            The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-        node_positions : dict
-            Mapping of nodes to (x, y) positions
-        edge_layout : 'straight', 'curved' or 'bundled' (default 'straight')
-            If 'straight', draw edges as straight lines.
-            If 'curved', draw edges as curved splines. The spline control points are optimised to avoid other nodes and edges.
-            If 'bundled', draw edges as edge bundles.
-        edge_layout_kwargs : dict
-            Keyword arguments passed to edge layout functions.
-            See the documentation of the following functions for a full list of available options:
-            - get_straight_edge_paths
-            - get_curved_edge_paths
-            - get_bundled_edge_paths
-
-        Returns
-        -------
-        edge_paths : dict
-            Mapping of edges to arrays of (x, y) tuples, the edge path coordinates.
-
-        """
-
-        if edge_layout == 'straight':
-            edge_paths = get_straight_edge_paths(
-                edges, node_positions, **edge_layout_kwargs)
-        elif edge_layout == 'curved':
-            edge_paths = get_curved_edge_paths(
-                edges, node_positions, **edge_layout_kwargs)
-        elif edge_layout == 'arc':
-            edge_paths = get_arced_edge_paths(
-                edges, node_positions, **edge_layout_kwargs)
-        elif edge_layout == 'bundled':
-            edge_paths = get_bundled_edge_paths(
-                edges, node_positions, **edge_layout_kwargs)
-        else:
-            raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'arc' or 'bundled', not {edge_layout}")
-
-        return edge_paths
-
-
     def draw_edges(self, edge_path, edge_width, edge_color, edge_alpha,
                    edge_zorder, arrows, node_artists):
         """Draw or update edge artists.
@@ -705,36 +652,6 @@ class BaseGraph(object):
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
             self.ax.draw_artist(self.edge_artists[edge])
-
-
-    def _update_edges(self, edges):
-        edge_paths = dict()
-        if self.edge_layout == 'straight':
-            edge_paths.update(self._update_straight_edge_paths(edges))
-        elif self.edge_layout == 'curved':
-            edge_paths.update(self._update_curved_edge_paths(edges))
-        elif self.edge_layout == 'bundled':
-            edge_paths.update(self._update_bundled_edge_paths(edges))
-        elif self.edge_layout == 'arc':
-            edge_paths.update(self._update_arced_edge_paths(edges))
-        self.edge_paths.update(edge_paths)
-        self._update_edge_artists(edge_paths)
-
-
-    def _update_straight_edge_paths(self, stale_edges):
-        return get_straight_edge_paths(self.edges, self.node_positions, selfloop_radius=self.edge_layout_kwargs["selfloop_radius"])
-
-
-    def _update_curved_edge_paths(self, stale_edges):
-        return get_curved_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
-
-
-    def _update_bundled_edge_paths(self, stale_edges):
-        return get_bundled_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
-
-
-    def _update_arced_edge_paths(self, stale_edges):
-        return get_arced_edge_paths(self.edges, self.node_positions, **self.edge_layout_kwargs)
 
 
     def _initialize_node_label_offset(self, node_labels, node_label_offset):
@@ -1584,17 +1501,10 @@ class DraggableGraph(Graph, DraggableArtists):
         if hasattr(self, 'node_label_artists'):
             self._update_node_label_positions()
 
-        edges = self._get_stale_edges(nodes)
-        # In the interest of speed, we only compute the straight edge paths here.
-        # We will re-compute other edge layouts only on mouse button release,
-        # i.e. when the dragging motion has stopped.
-        edge_paths = dict()
-        edge_paths.update(self._update_straight_edge_paths(edges))
-        self.edge_paths.update(edge_paths)
+        edge_paths = self.edge_layout.update(nodes)
         self._update_edge_artists(edge_paths)
-
         if hasattr(self, 'edge_label_artists'):
-            self._update_edge_label_positions(edges)
+            self._update_edge_label_positions(edge_paths)
 
         self.fig.canvas.draw_idle()
 
@@ -1608,20 +1518,12 @@ class DraggableGraph(Graph, DraggableArtists):
             self.node_positions[node] = cursor_position + self._offset[self.node_artists[node]]
 
 
-    def _get_stale_edges(self, nodes=None):
-        if nodes is None:
-            nodes = self._get_stale_nodes()
-        return [(source, target) for (source, target) in self.edges if (source in nodes) or (target in nodes)]
-
-
     def _on_release(self, event):
-        if self._currently_dragging and not (self.edge_layout == 'straight'):
-            nodes = self._get_stale_nodes()
-            edges = self._get_stale_edges(nodes)
-            self._update_edges(edges)
-
+        if self._currently_dragging:
+            edge_paths = self.edge_layout.compute()
+            self._update_edge_artists(edge_paths)
             if hasattr(self, 'edge_label_artists'): # move edge labels
-                self._update_edge_label_positions(edges)
+                self._update_edge_label_positions(edge_paths)
 
         super()._on_release(event)
 
@@ -1733,9 +1635,9 @@ class DraggableGraphWithGridMode(DraggableGraph):
             if hasattr(self, 'node_label_artists'):
                 self._update_node_label_positions()
 
-            edges = self._get_stale_edges(nodes)
-            self._update_edges(edges)
-            if hasattr(self, 'edge_label_artists'):
+            edge_paths = self.edge_layout.compute()
+            self._update_edge_artists(edge_paths)
+            if hasattr(self, 'edge_label_artists'): # move edge labels
                 self._update_edge_label_positions(edges)
 
         super()._on_release(event)
