@@ -26,6 +26,9 @@ from ._utils import (
     _normalize_numeric_argument,
     _resample_spline,
     _get_optimal_offsets,
+    _get_gradient_and_intercept,
+    _is_above_line,
+    _reflect_across_line,
 )
 
 from ._node_layout import (
@@ -964,3 +967,58 @@ class StraightEdgeLayout(object):
         self.edge_paths.update(new_edge_paths)
 
         return new_edge_paths
+
+
+class ArcEdgeLayout(StraightEdgeLayout):
+
+    def __init__(self, edges, node_positions, selfloop_radius=0.1, selfloop_angle=np.pi/2, rad=1.):
+        super().__init__(edges, node_positions, selfloop_radius, selfloop_angle)
+        self.rad = rad
+
+
+    def get_nonloop_edge_paths(self, edges):
+        return _get_arced_nonloop_edge_paths(edges, self.node_positions, self.rad)
+
+
+    def get_selfloop_edge_paths(self, edges, selfloop_angle):
+        return  _get_arced_selfloop_edge_paths(
+            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
+
+
+class ArcDiagramEdgeLayout(ArcEdgeLayout):
+
+    def __init__(self, edges, node_positions, selfloop_radius=0.1, selfloop_angle=np.pi/2, rad=1., above=True):
+        super().__init__(edges, node_positions, selfloop_radius=selfloop_radius, selfloop_angle=selfloop_angle, rad=rad)
+        self.above = above
+
+
+    def get_nonloop_edge_paths(self, edges):
+        edge_paths = super().get_nonloop_edge_paths(edges)
+        edge_paths = _lateralize_arced_edge_paths(edge_paths, self.node_positions, self.above)
+        return edge_paths
+
+
+    def get_selfloop_edge_paths(self, edges, selfloop_angle):
+        edge_paths = super().get_selfloop_edge_paths(edges, selfloop_angle)
+        edge_paths = _lateralize_arced_edge_paths(edge_paths, self.node_positions, self.above)
+        return edge_paths
+
+
+def _lateralize_arced_edge_paths(edge_paths, node_positions, above):
+    """Ensure that edge paths are all either above or below the line passing through nodes."""
+    for (source, target), path in edge_paths.items():
+        edge_paths[(source, target)] = \
+            _lateralize(path, node_positions[source], node_positions[target], above)
+    return edge_paths
+
+
+def _lateralize(path, p1, p2, above):
+    if not np.all(np.isclose(p1, p2)):
+        gradient, intercept = _get_gradient_and_intercept(p1, p2)
+    else:
+        gradient, intercept = 0., p1[1]
+    mask = _is_above_line(path, gradient, intercept)
+    if above:
+        mask = np.invert(mask)
+    path[mask] = _reflect_across_line(path[mask], gradient, intercept)
+    return path

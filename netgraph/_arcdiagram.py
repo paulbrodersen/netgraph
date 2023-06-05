@@ -28,38 +28,11 @@ from ._interactive_variants import (
 from ._node_layout import (
     get_linear_layout,
 )
-from ._edge_layout import (
-    get_arced_edge_paths,
-)
 from ._utils import (
-    _get_gradient_and_intercept,
-    _is_above_line,
-    _reflect_across_line,
     _bspline,
     _are_collinear,
     _get_orthogonal_projection_onto_segment,
 )
-
-
-def _lateralize_arced_edge_paths(edge_paths, node_positions, above):
-    """Ensure that edge paths are all either above or below the line passing through nodes."""
-    for (source, target), path in edge_paths.items():
-        edge_paths[(source, target)] = \
-            _lateralize(path, node_positions[source], node_positions[target], above)
-    return edge_paths
-
-
-def _lateralize(path, p1, p2, above):
-    if not np.all(np.isclose(p1, p2)):
-        gradient, intercept = _get_gradient_and_intercept(p1, p2)
-    else:
-        gradient, intercept = 0., p1[1]
-    mask = _is_above_line(path, gradient, intercept)
-    if above:
-        mask = np.invert(mask)
-    path[mask] = _reflect_across_line(path[mask], gradient, intercept)
-    return path
-
 
 class BaseArcDiagram(BaseGraph):
     """The arc diagram base class.
@@ -263,11 +236,6 @@ class BaseArcDiagram(BaseGraph):
         else:
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', True)
         super().__init__(edges, nodes=nodes, node_layout=node_layout, edge_layout='arc', *args, **kwargs)
-
-    def _get_edge_paths(self, edges, node_positions, edge_layout, edge_layout_kwargs):
-        edge_paths = super()._get_edge_paths(edges, node_positions, edge_layout, edge_layout_kwargs)
-        edge_paths = _lateralize_arced_edge_paths(edge_paths, node_positions, self.above)
-        return edge_paths
 
 
 class ArcDiagram(BaseArcDiagram, Graph):

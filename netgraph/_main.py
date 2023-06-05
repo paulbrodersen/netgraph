@@ -47,6 +47,7 @@ from ._node_layout import (
 from ._edge_layout import (
     _shift_edge,
     StraightEdgeLayout,
+    ArcDiagramEdgeLayout,
 )
 
 from ._artists import (
@@ -469,7 +470,12 @@ class BaseGraph(object):
             pass
 
         if isinstance(edge_layout, str):
-            edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            if edge_layout == "straight":
+                edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            elif edge_layout == "arc":
+                edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            else:
+                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'arc' or 'bundled', not {edge_layout}")
             edge_paths = edge_layout.compute()
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
