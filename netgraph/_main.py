@@ -47,6 +47,7 @@ from ._node_layout import (
 from ._edge_layout import (
     _shift_edge,
     StraightEdgeLayout,
+    CurvedEdgeLayout,
     ArcDiagramEdgeLayout,
 )
 
@@ -472,6 +473,8 @@ class BaseGraph(object):
         if isinstance(edge_layout, str):
             if edge_layout == "straight":
                 edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            elif edge_layout == "curved":
+                edge_layout = CurvedEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "arc":
                 edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             else:

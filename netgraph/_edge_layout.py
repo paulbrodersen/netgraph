@@ -1022,3 +1022,59 @@ def _lateralize(path, p1, p2, above):
         mask = np.invert(mask)
     path[mask] = _reflect_across_line(path[mask], gradient, intercept)
     return path
+
+
+class CurvedEdgeLayout(StraightEdgeLayout):
+
+    def __init__(self, edges, node_positions,
+                 selfloop_radius       = 0.1,
+                 selfloop_angle        = None,
+                 origin                = np.array([0, 0]),
+                 scale                 = np.array([1, 1]),
+                 k                     = 0.1,
+                 initial_temperature   = 0.01,
+                 total_iterations      = 50,
+                 node_size             = 0.,
+                 bundle_parallel_edges = True):
+
+        super().__init__(edges, node_positions, selfloop_radius, selfloop_angle)
+
+        self.origin                = origin
+        self.scale                 = scale
+        self.k                     = k
+        self.initial_temperature   = initial_temperature
+        self.total_iterations      = total_iterations
+        self.node_size             = node_size
+        self.bundle_parallel_edges = bundle_parallel_edges
+
+        if self.bundle_parallel_edges:
+            self.parallel_edges = []
+            other_edges = []
+            for (source, target) in self.nonloops:
+                if (target, source) in self.nonloops:
+                    if (target, source) in self.parallel_edges:
+                        pass
+                    else:
+                        self.parallel_edges.append((source, target))
+                else:
+                    other_edges.append((source, target))
+
+        self.nonloops = self.parallel_edges + other_edges
+
+
+    def get_nonloop_edge_paths(self, edges):
+        edge_paths =  _get_curved_nonloop_edge_paths(edges, self.node_positions,
+                self.origin, self.scale, self.k, self.initial_temperature,
+                self.total_iterations, self.node_size, self.bundle_parallel_edges)
+
+        if self.bundle_parallel_edges:
+            for (source, target) in self.parallel_edges:
+                edge_paths[(target, source)] = edge_paths[(source, target)][::-1]
+        return edge_paths
+
+
+    def get_selfloop_edge_paths(self, edges, selfloop_angle):
+        return  _get_curved_selfloop_edge_paths(
+            edges, self.node_positions, self.selfloop_radius, selfloop_angle,
+            self.origin, self.scale, self.k, self.initial_temperature,
+            self.total_iterations, self.node_size, self.nonloop_edge_paths)
