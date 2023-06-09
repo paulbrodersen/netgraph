@@ -1112,3 +1112,57 @@ class CurvedEdgeLayout(StraightEdgeLayout):
         self.selfloop_edge_paths.update(new_selfloop_edge_paths)
         self.edge_paths.update(new_selfloop_edge_paths)
         return new_selfloop_edge_paths
+
+
+class BundledEdgeLayout(StraightEdgeLayout):
+
+    def __init__(self, edges, node_positions,
+                 selfloop_radius         = 0.1,
+                 selfloop_angle          = None,
+                 k                       = 500.,
+                 compatibility_threshold = 0.05,
+                 total_cycles            = 6,
+                 total_iterations        = 50,
+                 step_size               = 0.04,
+                 straighten_by           = 0.
+                 ):
+
+        super().__init__(edges, node_positions, selfloop_radius, selfloop_angle)
+
+        self.k                       = k
+        self.compatibility_threshold = compatibility_threshold
+        self.total_cycles            = total_cycles
+        self.total_iterations        = total_iterations
+        self.step_size               = step_size
+        self.straighten_by           = straighten_by
+
+
+    def get_nonloop_edge_paths(self, edges):
+        return get_bundled_edge_paths(edges, self.node_positions,
+                                      self.k,
+                                      self.compatibility_threshold,
+                                      self.total_cycles,
+                                      self.total_iterations,
+                                      self.step_size,
+                                      self.straighten_by)
+
+
+    # update using straight edge paths as these can be computed much more quickly
+    def update_nonloop_edge_paths(self, stale_nonloops):
+        new_nonloop_edge_paths = _get_straight_nonloop_edge_paths(stale_nonloops, self.node_positions)
+        self.nonloop_edge_paths.update(new_nonloop_edge_paths)
+        self.edge_paths.update(new_nonloop_edge_paths)
+        return new_nonloop_edge_paths
+
+
+    def update_selfloop_edge_paths(self, stale_selfloops):
+        if hasattr(self, "selfloop_angle"):
+            selfloop_angle = self.selfloop_angle
+        else:
+            selfloop_angle = _get_decent_selfloop_angles(
+                stale_selfloops, self.node_positions)
+        new_selfloop_edge_paths = _get_straight_selfloop_edge_paths(
+            stale_selfloops, self.node_positions, self.selfloop_radius, selfloop_angle)
+        self.selfloop_edge_paths.update(new_selfloop_edge_paths)
+        self.edge_paths.update(new_selfloop_edge_paths)
+        return new_selfloop_edge_paths

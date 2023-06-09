@@ -48,6 +48,7 @@ from ._edge_layout import (
     _shift_edge,
     StraightEdgeLayout,
     CurvedEdgeLayout,
+    BundledEdgeLayout,
     ArcDiagramEdgeLayout,
 )
 
@@ -450,41 +451,38 @@ class BaseGraph(object):
             edge_layout_kwargs = dict()
 
         selfloops = [(source, target) for (source, target) in self.edges if source==target]
-        if 'selfloop_radius' in edge_layout_kwargs:
-            selfloop_radius = edge_layout_kwargs['selfloop_radius']
-            selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
-        else:
-            selfloop_radius = dict()
-            for (node, _) in selfloops:
-                selfloop_radius[(node, node)] = 1.5 * node_artists[node].radius
-
-        if edge_layout == "straight":
+        if selfloops:
+            if 'selfloop_radius' in edge_layout_kwargs:
+                selfloop_radius = edge_layout_kwargs['selfloop_radius']
+                selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+            else:
+                selfloop_radius = dict()
+                for (node, _) in selfloops:
+                    selfloop_radius[(node, node)] = 1.5 * node_artists[node].radius
             edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-        elif edge_layout == 'curved':
-            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-            edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
-            edge_layout_kwargs.setdefault('origin', origin)
-            edge_layout_kwargs.setdefault('scale', scale)
-        elif edge_layout == 'arc':
-            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
-        elif edge_layout == 'bundled':
-            pass
 
         if isinstance(edge_layout, str):
             if edge_layout == "straight":
                 edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "curved":
+                edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
+                edge_layout_kwargs.setdefault('origin', origin)
+                edge_layout_kwargs.setdefault('scale', scale)
                 edge_layout = CurvedEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
+            elif edge_layout == "bundled":
+                edge_layout = BundledEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "arc":
                 edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             else:
-                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'arc' or 'bundled', not {edge_layout}")
+                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
             edge_paths = edge_layout.compute()
+
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
             edge_paths = edge_layout
             edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             edge_layout.edge_paths.update(edge_paths)
+
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
