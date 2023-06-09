@@ -31,14 +31,7 @@ from ._utils import (
     _reflect_across_line,
 )
 
-from ._node_layout import (
-    get_fruchterman_reingold_layout,
-    _get_temperature_decay,
-    _is_within_bbox,
-    _rescale_to_frame,
-    _get_fr_attraction,
-    _clip_to_frame,
-)
+from ._node_layout import get_fruchterman_reingold_layout
 
 
 # for profiling with kernprof/line_profiler
