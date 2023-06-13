@@ -28,6 +28,7 @@ from ._utils import (
     _check_completeness,
     _get_optimal_offsets,
     _resample_spline,
+    _get_total_pixels,
 )
 from ._node_layout import (
     get_fruchterman_reingold_layout,
@@ -290,9 +291,13 @@ class BaseGraph(object):
                  ax=None,
                  *args, **kwargs
     ):
-        self.edges = _parse_edge_list(edges)
+        self.ax = self._initialize_axis(ax)
+        self.fig = self.ax.get_figure()
 
+        self.edges = _parse_edge_list(edges)
         self.nodes = self._initialize_nodes(nodes)
+
+        self._raise_warning_if_graph_too_large()
 
         # Convert all node and edge parameters to dictionaries.
         node_shape      = _normalize_shape_argument(node_shape, self.nodes, 'node_shape')
@@ -317,9 +322,6 @@ class BaseGraph(object):
         # Initialise node and edge layouts and draw elements.
         self.origin = origin
         self.scale = scale
-        self.ax = self._initialize_axis(ax)
-        self.fig = self.ax.get_figure()
-
         self.node_positions = self._initialize_node_layout(
             node_layout, node_layout_kwargs, origin, scale, node_size)
         self.node_artists = dict()
@@ -380,6 +382,17 @@ class BaseGraph(object):
                 for node in missing:
                     msg += f"\n\t{node}"
                 raise ValueError(msg)
+
+
+    def _raise_warning_if_graph_too_large(self):
+        total_pixels_per_edge = _get_total_pixels(self.fig) / len(self.edges)
+        if total_pixels_per_edge < 400:
+            msg = "The graph may be too large to visualize meaningfully."
+            msg += f" There are only available {int(total_pixels_per_edge)} pixels per edge."
+            msg += " This number is unlikely to be sufficient to render the edges without many overlaps, resulting in a 'hairball'."
+            msg += " For comparison, each letter in this sentence is likely rendered using 200-400 pixels."
+            import warnings
+            warnings.warn(msg)
 
 
     def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale, node_size):
