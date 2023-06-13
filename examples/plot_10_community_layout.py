@@ -10,7 +10,7 @@ import networkx as nx
 from netgraph import Graph
 
 # create a modular graph
-partition_sizes = [10, 20, 30, 40]
+partition_sizes = [10, 20, 30]
 g = nx.random_partition_graph(partition_sizes, 0.5, 0.1)
 
 # create a dictionary that maps nodes to the community they belong to
