@@ -29,6 +29,7 @@ from ._utils import (
     _get_gradient_and_intercept,
     _is_above_line,
     _reflect_across_line,
+    _print_progress_bar,
 )
 
 from ._node_layout import get_fruchterman_reingold_layout
@@ -526,6 +527,7 @@ def get_bundled_edge_paths(edges, node_positions,
                            total_iterations        = 50,
                            step_size               = 0.04,
                            straighten_by           = 0.,
+                           verbose                 = True,
 ):
     """Edge routing with bundled edge paths.
 
@@ -592,14 +594,15 @@ def get_bundled_edge_paths(edges, node_positions,
 
     edge_to_k = _get_k(edges, node_positions, k)
 
-    edge_compatibility = _get_edge_compatibility(edges, node_positions, compatibility_threshold)
+    edge_compatibility = _get_edge_compatibility(edges, node_positions, compatibility_threshold, verbose=verbose)
 
     edge_to_control_points = _initialize_bundled_control_points(edges, node_positions)
 
-    for _ in range(total_cycles):
+    for ii in range(total_cycles):
         edge_to_control_points = _expand_control_points(edge_to_control_points)
 
-        for _ in range(total_iterations):
+        for jj in range(total_iterations):
+            if verbose: _print_progress_bar(ii * total_iterations + jj + 1, total_cycles * total_iterations, prefix="Bundling edges:")
             F = _get_Fs(edge_to_control_points, edge_to_k)
             F = _get_Fe(edge_to_control_points, edge_compatibility, F)
             edge_to_control_points = _update_control_point_positions(
@@ -626,13 +629,14 @@ def _get_k(edges, node_positions, k):
 
 
 @profile
-def _get_edge_compatibility(edges, node_positions, threshold):
+def _get_edge_compatibility(edges, node_positions, threshold, verbose):
     """Compute the compatibility between all edge pairs."""
     # precompute edge segments, segment lengths and corresponding vectors
     edge_to_segment = {edge : Segment(node_positions[edge[0]], node_positions[edge[1]]) for edge in edges}
 
     edge_compatibility = list()
-    for e1, e2 in itertools.combinations(edges, 2):
+    for ii, (e1, e2) in enumerate(itertools.combinations(edges, 2)):
+        if verbose: _print_progress_bar(ii + 1, len(edges) * (len(edges)-1) / 2, prefix="Initializing edge bundling:")
         P = edge_to_segment[e1]
         Q = edge_to_segment[e2]
 

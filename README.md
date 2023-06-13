@@ -105,7 +105,7 @@ help(EditableGraph)
 
 ## Recent changes
 
-- 5.0.0 Added support for arbitrary node shapes. Improved layout of self-loops. For a full list of API changes, see below.
+- 5.0.0 Added support for arbitrary node shapes. Improved layout of self-loops. Reworked most edge layouts. For a full list of API changes, see below.
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
@@ -171,7 +171,8 @@ Most changes occurred in the `NodeArtist` and `EdgeArtist` classes as well as th
 - `get_straight_edge_paths` and `get_arced_edge_paths` now also compute the paths for self-loops, and hence accept additional arguments. This change facilitated improvements to the placements of self-loops, reducing collisions with other nodes and edges. Previously, self-loops were computed independently.
 - Removed `get_selfloop_paths`, which is now superfluous.
 - In `get_bundled_edge_paths` the default values for `k` and `total_cycles` were changed to 500 (from 1000) and 6 (from 5), respectively, as these values typically seem to give better results.
-- in `get_curved_edge_paths`, `k` can no longer be `None`, and its default is set to 0.1 (from None).
+- In `get_curved_edge_paths`, `k` can no longer be `None`, and its default is set to 0.1 (from None).
+- Added a `verbose` flag to `get_bundled_edge_paths` (default True) that when True, prints a progress bars for both slow steps in the edge bundling algorithm.
 
 
 ## Help, I don't know how to do ...!

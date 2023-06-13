@@ -843,3 +843,31 @@ def _get_optimal_offsets(anchors, offsets, avoid, total_queries_per_point=360):
         distances, _ = tree.query(x, 2)
         output[ii] = x[np.argmax(np.sum(distances, axis=1))]
     return output - anchors
+
+
+def _print_progress_bar(iteration, total_iterations, prefix='', suffix='', length=100):
+    """Call in a loop to create terminal progress bar.
+
+    Parameters
+    ----------
+    iteration: int
+        The current iteration.
+    total_iterations: int
+        The total number of iterations.
+    prefix: str (default '')
+        The prefix.
+    suffix: str (default '')
+        The suffix.
+    length: int (default 100)
+        The character length of bar.
+
+    Notes
+    -----
+    Adapted from: https://stackoverflow.com/a/34325723/2912349
+
+    """
+    fraction_complete = iteration / total_iterations
+    bar = '█' * int(length * fraction_complete) + '-' * int(length * (1 - fraction_complete))
+    print(f'\r{prefix} |{bar}| {100 * fraction_complete:.1f}% {suffix}', end="\r")
+    if iteration == total_iterations:
+        print()
