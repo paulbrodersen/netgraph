@@ -29,7 +29,7 @@ setup(
     ],
     platforms=['Platform Independent'],
     packages=find_packages(),
-    python_requires='>=3',
+    python_requires='>=3.6',
     install_requires=['numpy', 'matplotlib', 'scipy', 'rectangle-packer', 'grandalf'],
     extras_require={
         'tests' : ['pytest', 'pytest-mpl'],
