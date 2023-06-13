@@ -596,7 +596,7 @@ def _get_connected_components(adjacency_list):
     not_visited = set(list(adjacency_list.keys()))
     while not_visited: # i.e. while stack is non-empty (empty set is interpreted as `False`)
         start = not_visited.pop()
-        component = _dfs(adjacency_list, start)
+        component = _bfs(adjacency_list, start)
         components.append(component)
 
         #  remove nodes that are in the component that we just found
@@ -645,6 +645,41 @@ def _dfs(adjacency_list, start, visited=None):
             _dfs(adjacency_list, node, visited)
         else: # otherwise no outgoing edge
             visited.add(node)
+    return visited
+
+
+def _bfs(adjacency_list, start):
+    """A fast BFS node generator.
+
+    Parameters
+    ----------
+    adjacency_list : dict node ID : set of node IDs
+        Adjacency list, i.e. a mapping from each node to its neighbours.
+    start : node ID
+        The starting node.
+
+    Returns
+    -------
+    visited : set of node IDs or None, default None
+        All reachable nodes from source.
+
+    Notes
+    -----
+    Adapted from networkx.algorithms.components._plain_bfs
+    """
+
+    visited = {start}
+    next_level = [start]
+    while next_level:
+        this_level = next_level
+        next_level = []
+        for node in this_level:
+            for neighbour in adjacency_list[node]:
+                if neighbour not in visited:
+                    visited.add(neighbour)
+                    next_level.append(neighbour)
+            if len(visited) == len(adjacency_list):
+                return visited
     return visited
 
 
@@ -871,3 +906,10 @@ def _print_progress_bar(iteration, total_iterations, prefix='', suffix='', lengt
     print(f'\r{prefix} |{bar}| {100 * fraction_complete:.1f}% {suffix}', end="\r")
     if iteration == total_iterations:
         print()
+
+
+def _get_total_pixels(fig):
+    w, h = fig.get_size_inches()
+    dpi = fig.get_dpi()
+    total_pixels = w * h * dpi**2
+    return total_pixels
