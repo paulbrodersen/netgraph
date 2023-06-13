@@ -517,8 +517,8 @@ def _get_arced_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfl
     return _get_straight_selfloop_edge_paths(edges, node_positions, selfloop_radius, selfloop_angle)
 
 
-@profile
 @_handle_multiple_components
+@profile
 def get_bundled_edge_paths(edges, node_positions,
                            k                       = 500.,
                            compatibility_threshold = 0.05,
