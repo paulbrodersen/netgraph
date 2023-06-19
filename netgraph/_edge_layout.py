@@ -1121,7 +1121,8 @@ class BundledEdgeLayout(StraightEdgeLayout):
                  total_cycles            = 6,
                  total_iterations        = 50,
                  step_size               = 0.04,
-                 straighten_by           = 0.
+                 straighten_by           = 0.,
+                 verbose                 = True,
                  ):
 
         super().__init__(edges, node_positions, selfloop_radius, selfloop_angle)
@@ -1132,6 +1133,7 @@ class BundledEdgeLayout(StraightEdgeLayout):
         self.total_iterations        = total_iterations
         self.step_size               = step_size
         self.straighten_by           = straighten_by
+        self.verbose                 = verbose
 
 
     def get_nonloop_edge_paths(self, edges):
@@ -1141,7 +1143,8 @@ class BundledEdgeLayout(StraightEdgeLayout):
                                       self.total_cycles,
                                       self.total_iterations,
                                       self.step_size,
-                                      self.straighten_by)
+                                      self.straighten_by,
+                                      self.verbose)
 
 
     # update using straight edge paths as these can be computed much more quickly

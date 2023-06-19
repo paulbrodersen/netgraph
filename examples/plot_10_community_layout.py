@@ -32,7 +32,7 @@ node_color = {node: community_to_color[community_id] for node, community_id in n
 Graph(g,
       node_color=node_color, node_edge_width=0, edge_alpha=0.1,
       node_layout='community', node_layout_kwargs=dict(node_to_community=node_to_community),
-      edge_layout='bundled', edge_layout_kwargs=dict(k=2000),
+      edge_layout='bundled', edge_layout_kwargs=dict(k=2000, verbose=False),
 )
 
 plt.show()
