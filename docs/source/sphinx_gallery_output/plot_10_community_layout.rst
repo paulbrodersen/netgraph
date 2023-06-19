@@ -32,7 +32,7 @@ Community Node Layout / Bundled Edges
     from netgraph import Graph
 
     # create a modular graph
-    partition_sizes = [10, 20, 30, 40]
+    partition_sizes = [10, 20, 30]
     g = nx.random_partition_graph(partition_sizes, 0.5, 0.1)
 
     # create a dictionary that maps nodes to the community they belong to
@@ -54,7 +54,7 @@ Community Node Layout / Bundled Edges
     Graph(g,
           node_color=node_color, node_edge_width=0, edge_alpha=0.1,
           node_layout='community', node_layout_kwargs=dict(node_to_community=node_to_community),
-          edge_layout='bundled', edge_layout_kwargs=dict(k=2000),
+          edge_layout='bundled', edge_layout_kwargs=dict(k=2000, verbose=False),
     )
 
     plt.show()
@@ -67,15 +67,6 @@ Community Node Layout / Bundled Edges
    :srcset: /sphinx_gallery_output/images/sphx_glr_plot_10_community_layout_001.png
    :class: sphx-glr-single-img
 
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    /home/paul/src/netgraph/netgraph/_edge_layout.py:692: RuntimeWarning: invalid value encountered in true_divide
-      displacement = compatibility * delta / distance_squared[..., None]
 
 
 
@@ -102,7 +93,7 @@ using the Louvain algorithm (:code:`pip install python-louvain`):
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  59.103 seconds)
+   **Total running time of the script:** ( 3 minutes  29.683 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_10_community_layout.py:

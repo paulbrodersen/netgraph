@@ -428,6 +428,48 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_20_geometric_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Example adapted from https://xkcd.com/1195/.">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_21_flowchart_thumb.png
+     :alt: Flowchart
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_21_flowchart.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_21_flowchart
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Or: how to deal with hairballs ------------------------------">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_22_large_graphs_thumb.png
+     :alt: Visualising Large Graphs
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_22_large_graphs.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_22_large_graphs
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
