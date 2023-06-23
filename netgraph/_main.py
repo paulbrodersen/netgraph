@@ -1554,53 +1554,6 @@ class DraggableGraph(Graph, DraggableArtists):
     #         # print("As node label font size was not explicitly set, automatically adjusted node label font size to {:.2f}.".format(self.node_label_font_size))
 
 
-class EmphasizeOnHover(object):
-    """Emphasize matplotlib artists when hovering over them by desaturating all other artists."""
-
-    def __init__(self, artists):
-
-        self.emphasizeable_artists = artists
-        self._base_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
-        self.deemphasized_artists = []
-
-        try:
-            self.fig, = set(list(artist.figure for artist in artists))
-        except ValueError:
-            raise Exception("All artists have to be on the same figure!")
-
-        try:
-            self.ax, = set(list(artist.axes for artist in artists))
-        except ValueError:
-            raise Exception("All artists have to be on the same axis!")
-
-        self.fig.canvas.mpl_connect("motion_notify_event", self._on_motion)
-
-
-    def _on_motion(self, event):
-
-        if event.inaxes == self.ax:
-            # on artist
-            selected_artist = None
-            for artist in self.emphasizeable_artists:
-                if artist.contains(event)[0]: # returns two arguments for some reason
-                    selected_artist = artist
-                    break
-
-            if selected_artist:
-                for artist in self.emphasizeable_artists:
-                    if artist is not selected_artist:
-                        artist.set_alpha(self._base_alpha[artist]/5)
-                        self.deemphasized_artists.append(artist)
-                self.fig.canvas.draw_idle()
-
-            # not on any artist
-            if (selected_artist is None) and self.deemphasized_artists:
-                for artist in self.deemphasized_artists:
-                    artist.set_alpha(self._base_alpha[artist])
-                self.deemphasized_artists = []
-                self.fig.canvas.draw_idle()
-
-
 class DraggableGraphWithGridMode(DraggableGraph):
     """
     Implements a grid-mode, in which node positions are fixed to a grid.
@@ -1667,6 +1620,53 @@ class DraggableGraphWithGridMode(DraggableGraph):
         x = np.round((x - self.origin[0]) / self.grid_dx) * self.grid_dx + self.origin[0]
         y = np.round((y - self.origin[1]) / self.grid_dy) * self.grid_dy + self.origin[1]
         return x, y
+
+
+class EmphasizeOnHover(object):
+    """Emphasize matplotlib artists when hovering over them by desaturating all other artists."""
+
+    def __init__(self, artists):
+
+        self.emphasizeable_artists = artists
+        self._base_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
+        self.deemphasized_artists = []
+
+        try:
+            self.fig, = set(list(artist.figure for artist in artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same figure!")
+
+        try:
+            self.ax, = set(list(artist.axes for artist in artists))
+        except ValueError:
+            raise Exception("All artists have to be on the same axis!")
+
+        self.fig.canvas.mpl_connect("motion_notify_event", self._on_motion)
+
+
+    def _on_motion(self, event):
+
+        if event.inaxes == self.ax:
+            # on artist
+            selected_artist = None
+            for artist in self.emphasizeable_artists:
+                if artist.contains(event)[0]: # returns two arguments for some reason
+                    selected_artist = artist
+                    break
+
+            if selected_artist:
+                for artist in self.emphasizeable_artists:
+                    if artist is not selected_artist:
+                        artist.set_alpha(self._base_alpha[artist]/5)
+                        self.deemphasized_artists.append(artist)
+                self.fig.canvas.draw_idle()
+
+            # not on any artist
+            if (selected_artist is None) and self.deemphasized_artists:
+                for artist in self.deemphasized_artists:
+                    artist.set_alpha(self._base_alpha[artist])
+                self.deemphasized_artists = []
+                self.fig.canvas.draw_idle()
 
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
