@@ -56,6 +56,8 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 The following script shows a minimum, working example. The graph structure is defined by an edge list, and the visualisation is created using (mostly) default parameters.
 
+![Basic example output](basic_example.png){width=50%}
+
 ```python
 import matplotlib.pyplot as plt
 
@@ -75,13 +77,13 @@ Graph(
 plt.show()
 ```
 
-![Basic example output](basic_example.png){width=50%}
-
 # Interoperability & Customizability
 
 Netgraph can be easily integrated into existing network analysis workflows as it accepts a variety of graph structures. The example below uses a NetworkX `Graph` object, but igraph and graph-tool objects are also valid inputs, as are plain edge lists and full-rank adjacency matrices. The output visualizations are created using Matplotlib and can hence form subplots in larger Matplotlib figures.
 
 Each visualization can be customized in various ways. Most parameters can be set using a scalar or string. In this case, the value is applied to all relevant artists. To style each artist differently, supply a dictionary instead. Furthermore, node and edge artists are derived from `matplotlib.patches.PathPatch`; node and edge labels are `matplotlib.text.Text` instances. Hence all node artists, edge artists, and labels can be manipulated using standard matplotlib syntax after the initial draw.
+
+![Advanced example output](advanced_example.png){width=50%}
 
 ``` python
 import numpy as np
@@ -128,8 +130,6 @@ for node in balanced_tree:
 # Redraw figure to display changes
 fig.canvas.draw()
 ```
-
-![Advanced example output](advanced_example.png){width=50%}
 
 # Acknowledgements
 
