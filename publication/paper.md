@@ -50,7 +50,7 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 ![Showcase of Netgraph's key distinguishing features](gallery_portrait.png){width=90%}
 
-<div style="page-break-after: always;"></div>
+\pagebreak
 
 # A Basic Example
 
