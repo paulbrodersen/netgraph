@@ -102,11 +102,13 @@ g = Graph(
     node_layout='radial',
     edge_layout='straight',
     node_color='crimson',
-    node_size={node : 4 if node == 0 else 2 for node in balanced_tree}, # nearly all parameters can also be dictionaries
+    node_size={node : 4 if node == 0 else 2 for node in balanced_tree},
     node_edge_width=0,
     edge_color='black',
     edge_width=0.5,
-    node_labels=dict(zip(balanced_tree, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')),
+    node_labels=dict(
+        zip(balanced_tree, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')
+    ),
     node_label_offset=0.05,
     node_label_fontdict=dict(fontsize=10),
     ax=ax,
