@@ -116,18 +116,18 @@ g = Graph(
     ax=ax,
 )
 
-# center the label of the root node on the corresponding node artist and make it white.
+# center the label of the root node on the corresponding node artist and make it white
 root = 0 # NetworkX graph generator convention
 center = g.node_positions[root]
 g.node_label_artists[root].set_position(center)
 g.node_label_artists[root].set_color('white')
 
-# decrease the node artist alpha parameter from the root to the leaves or the graph:
+# decrease the node artist alpha parameter from the root to the leaves or the graph
 for node in balanced_tree:
     distance = np.linalg.norm(center - g.node_positions[node])
     g.node_artists[node].set_alpha(1 - distance)
 
-# Redraw figure to display changes
+# redraw figure to display changes
 fig.canvas.draw()
 ```
 
