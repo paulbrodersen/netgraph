@@ -50,6 +50,87 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 ![Netgraph's key distinguishing features](gallery_portrait.png){width=90%}
 
+# Basic Example Usage
+
+The following script shows a minimum, working example. The graph structure is defined by an edge list, and the visualisation is created using (mostly) default parameters.
+
+```python
+import matplotlib.pyplot as plt
+
+from netgraph import Graph
+
+triangle = [
+    (0, 1),
+    (1, 2),
+    (2, 0),
+    (1, 1), # self-loop
+]
+Graph(
+    triangle,
+    node_labels=True,
+    arrows=True,
+)
+plt.show()
+```
+
+![Basic example output](basic_example.png){width=66%}
+
+# Advanced Example Usage
+
+The next example demonstrates more advanced features of the library.
+
+Netgraph can be easily integrated into existing network analysis workflows as it accepts a variety of graph structures. The example below uses a NetworkX `Graph` object, but igraph and graph-tool objects are also valid inputs, as are plain edge lists and full-rank adjacency matrices.
+
+The output visualizations are created using Matplotlib and can hence form subplots in larger Matplotlib figures.
+
+Each visualization can be customized in various ways. Most parameters can be set using a scalar or string. In this case, the value is applied to all relevant artists. To style each artist differently, supply a dictionary instead. Furthermore, node and edge artists are derived from `matplotlib.patches.PathPatch`; node and edge labels are `matplotlib.text.Text` instances. Hence all node artists, edge artists, and labels can be manipulated using standard matplotlib syntax after the initial draw.
+
+``` python
+import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
+
+from netgraph import Graph
+
+# initialize the figure
+fig, ax = plt.subplots(figsize=(6,6))
+
+# initialize the graph structure
+balanced_tree = nx.balanced_tree(3, 3)
+
+# initialize the visualization
+g = Graph(
+    balanced_tree,
+    node_layout='radial',
+    edge_layout='straight',
+    node_color='crimson',
+    node_size={node : 4 if node == 0 else 2 for node in balanced_tree}, # nearly all parameters can also be dictionaries
+    node_edge_width=0,
+    edge_color='black',
+    edge_width=0.5,
+    node_labels=dict(zip(balanced_tree, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')),
+    node_label_offset=0.05,
+    node_label_fontdict=dict(fontsize=10),
+    ax=ax,
+)
+
+# center the label of the root node on the corresponding node artist and make it white.
+root = 0 # NetworkX graph generator convention
+center = g.node_positions[root]
+g.node_label_artists[root].set_position(center)
+g.node_label_artists[root].set_color('white')
+
+# decrease the node artist alpha parameter from the root to the leaves or the graph:
+for node in balanced_tree:
+    distance = np.linalg.norm(center - g.node_positions[node])
+    g.node_artists[node].set_alpha(1 - distance)
+
+# Redraw figure to display changes
+fig.canvas.draw()
+```
+
+![Advanced example output](advanced_example.png){width=66%}
+
 # Acknowledgements
 
 We thank GitHub users adleris, Allan L. R. Hansen, chenghuzi, Hamed Mohammadpour, and Pablo for contributing various bug fixes.
