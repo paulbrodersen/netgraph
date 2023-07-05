@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from utils import (
+from netgraph._utils import (
     _resample_spline,
 )
 
@@ -22,5 +22,5 @@ def test_resample_spline():
     resampled = _resample_spline(spline, total_points)
     x = np.linspace(*spline[:, 0], total_points)
     y = np.linspace(*spline[:, 1], total_points)
-    theoretical = np.c[x, y]
+    theoretical = np.c_[x, y]
     assert np.all(np.isclose(resampled, theoretical))
