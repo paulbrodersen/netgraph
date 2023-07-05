@@ -865,9 +865,8 @@ def _rescale_dict_values(mydict, scalar):
 # cons : labels can still collide with each other
 def _get_optimal_offsets(anchors, offsets, avoid, total_queries_per_point=360):
     """Find the location at a specified distance (`offset`) away from a
-    given other location (`anchor`) that is furthest awaye from all
+    given other location (`anchor`) that is furthest away from all
     locations in `avoid`.
-
     """
     tree = cKDTree(avoid)
     output = np.zeros((len(offsets), 2))
