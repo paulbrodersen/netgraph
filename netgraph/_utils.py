@@ -369,7 +369,7 @@ def _get_orthogonal_unit_vector(v):
         return v
 
 
-def _shorten_line_by(path, distance):
+def _shorten_spline_by(path, distance):
     """Cut path off at the end by `distance`.
 
     Parameters

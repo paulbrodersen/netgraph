@@ -15,7 +15,7 @@ from scipy.optimize import minimize_scalar
 from ._utils import (
     _get_parallel_line,
     _get_orthogonal_unit_vector,
-    _shorten_line_by,
+    _shorten_spline_by,
     _find_renderer,
 )
 
@@ -291,11 +291,11 @@ class EdgeArtist(PathPatchDataUnits):
     def _update_path(self):
         # Determine the actual start (and hence midline) of the arrow given the tail offsets;
         # assume an ordered midline from source to target, i.e. from arrow base to arrow head.
-        arrow_midline      = _shorten_line_by(self.midline[::-1], self.tail_offset)[::-1]
+        arrow_midline      = _shorten_spline_by(self.midline[::-1], self.tail_offset)[::-1]
 
         # Determine the actual endpoint (and hence midline) of the arrow given the offsets.
-        arrow_midline      = _shorten_line_by(arrow_midline, self.head_offset)
-        arrow_tail_midline = _shorten_line_by(arrow_midline, self.head_length)
+        arrow_midline      = _shorten_spline_by(arrow_midline, self.head_offset)
+        arrow_tail_midline = _shorten_spline_by(arrow_midline, self.head_length)
 
         head_vertex_tip  = arrow_midline[-1]
         head_vertex_base = arrow_tail_midline[-1]
