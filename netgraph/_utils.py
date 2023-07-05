@@ -912,3 +912,15 @@ def _get_total_pixels(fig):
     dpi = fig.get_dpi()
     total_pixels = w * h * dpi**2
     return total_pixels
+
+
+def _simplify_multigraph(edges):
+    # return sorted(_map_multigraph_source_target_pairs_to_edge_ids(edges))
+    return sorted({(source, target) for source, target, _ in edges})
+
+
+def _map_multigraph_edges_to_ids(edges):
+    output = dict()
+    for source, target, eid in edges:
+        output[(source, target)] = output.get((source, target), list()) + [eid]
+    return output

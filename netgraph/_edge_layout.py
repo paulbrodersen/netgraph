@@ -30,6 +30,10 @@ from ._utils import (
     _is_above_line,
     _reflect_across_line,
     _print_progress_bar,
+    _simplify_multigraph,
+    _map_multigraph_edges_to_ids,
+    _get_parallel_line,
+    _shorten_spline_by,
 )
 
 from ._node_layout import get_fruchterman_reingold_layout
@@ -1168,3 +1172,102 @@ class BundledEdgeLayout(StraightEdgeLayout):
         self.selfloop_edge_paths.update(new_selfloop_edge_paths)
         self.edge_paths.update(new_selfloop_edge_paths)
         return new_selfloop_edge_paths
+
+
+def _expand_nonloop_edge_paths(edge_paths, edge_to_ids, edge_width):
+    expanded_edge_paths = dict()
+    for (source, target), base_path in edge_paths.items():
+        edge_ids = edge_to_ids[(source, target)]
+
+        # pre-compute offsets
+        offsets = np.cumsum([0] + [3 * edge_width[(source, target, eid)] for eid in edge_ids[:-1]], dtype=float)
+        if (target, source) in edge_to_ids:
+            # offset edges further as there are edges running in the reverse direction
+            offsets += 1.5 * edge_width[(source, target, edge_ids[0])]
+        else: # center edges w.r.t. node as there are no reverse edges
+            offsets -= np.mean(offsets)
+
+        base_path = edge_paths[(source, target)]
+        tail_position = base_path[0]
+        head_position = base_path[-1]
+
+        length = np.linalg.norm(head_position - tail_position)
+        delta = 0.05 * length
+        for ii, eid in enumerate(edge_ids):
+            # offset
+            path = _get_parallel_line(base_path, offsets[ii])
+            # shorten
+            path = _shorten_spline_by(path, delta)
+            path = _shorten_spline_by(path[::-1], delta)[::-1]
+            # converge on source and target nodes
+            path = np.vstack([tail_position, path, head_position])
+            # assign
+            expanded_edge_paths[(source, target, eid)] = path
+
+    return expanded_edge_paths
+
+
+def _expand_selfloop_edge_paths(edge_paths, edge_to_ids, edge_width, selfloop_radius):
+    expanded_edge_paths = dict()
+    for (source, target), base_path in edge_paths.items():
+        edge_ids = edge_to_ids[(source, target)]
+        # pre-compute offsets
+        offsets = np.cumsum([0] + [3 * edge_width[(source, target, eid)] for eid in edge_ids[:-1]], dtype=float)
+        if (target, source) in edge_to_ids:
+            # offset edges further as there are edges running in the reverse direction
+            offsets += 1.5 * edge_width[(source, target, edge_ids[0])]
+        else: # center edges w.r.t. node as there are no reverse edges
+            offsets -= np.mean(offsets)
+
+        base_path = edge_paths[(source, target)]
+        tail_position = base_path[0]
+        head_position = base_path[-1]
+
+        length = 2 * np.pi * selfloop_radius[(source, target)]
+        delta = 0.1 * length
+        for ii, eid in enumerate(edge_ids):
+            # offset
+            path = _get_parallel_line(base_path, -offsets[ii])
+            # shorten
+            path = _shorten_spline_by(path, delta)
+            path = _shorten_spline_by(path[::-1], delta)[::-1]
+            # converge on source and target nodes
+            path = np.vstack([tail_position, path, head_position])
+            # smooth
+            path = _smooth_path(path)
+            # assign
+            expanded_edge_paths[(source, target, eid)] = path
+
+    return expanded_edge_paths
+
+
+class _MultiGraphEdgeLayout(object):
+
+    def __init__(self, edges, node_positions, edge_width, *args, **kwargs):
+        self.edge_width = edge_width
+        self.edge_to_ids = _map_multigraph_edges_to_ids(edges)
+        super().__init__(sorted(self.edge_to_ids.keys()), node_positions, *args, **kwargs)
+
+    def get_nonloop_edge_paths(self, *args, **kwargs):
+        edge_paths = super().get_nonloop_edge_paths(*args, **kwargs)
+        return _expand_nonloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width)
+
+    def get_selfloop_edge_paths(self, *args, **kwargs):
+        edge_paths = super().get_selfloop_edge_paths(*args, **kwargs)
+        return _expand_selfloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width, self.selfloop_radius)
+
+
+class MultiGraphStraightEdgeLayout(_MultiGraphEdgeLayout, StraightEdgeLayout):
+    pass
+
+
+class MultiGraphCurvedEdgeLayout(_MultiGraphEdgeLayout, CurvedEdgeLayout):
+    pass
+
+
+class MultiGraphArcDiagramEdgeLayout(_MultiGraphEdgeLayout, ArcDiagramEdgeLayout):
+    pass
+
+
+class MultiGraphBundledEdgeLayout(_MultiGraphEdgeLayout, BundledEdgeLayout):
+    pass

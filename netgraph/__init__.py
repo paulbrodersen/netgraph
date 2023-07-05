@@ -143,6 +143,9 @@ from ._arcdiagram import (
 
 from ._parser import parse_graph
 
+from ._multigraph import (
+    BaseMultiGraph,
+)
 
 __all__ = [
     'get_random_layout',
