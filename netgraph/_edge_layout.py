@@ -383,14 +383,15 @@ def _optimize_control_point_positions(
             # Edge control points are repulsed by nodes but not by other edge control points.
             expanded_node_positions = get_fruchterman_reingold_layout.__wrapped__(
                 expanded_edges,
-                node_positions      = expanded_node_positions,
-                scale               = scale,
                 origin              = origin,
+                scale               = scale,
                 k                   = k,
                 initial_temperature = initial_temperature,
                 total_iterations    = total_iterations,
                 node_size           = node_size,
+                node_positions      = expanded_node_positions,
                 fixed_nodes         = nodes,
+                validate_positions  = False,
                 get_repulsion       = _get_fr_repulsion_variant,
             )
         else:
@@ -398,14 +399,15 @@ def _optimize_control_point_positions(
             # This results in a separation of parallel edges.
             expanded_node_positions = get_fruchterman_reingold_layout.__wrapped__(
                 expanded_edges,
-                node_positions      = expanded_node_positions,
-                scale               = scale,
                 origin              = origin,
+                scale               = scale,
                 k                   = k,
                 initial_temperature = initial_temperature,
                 total_iterations    = total_iterations,
                 node_size           = node_size,
+                node_positions      = expanded_node_positions,
                 fixed_nodes         = nodes,
+                validate_positions  = False,
             )
 
     return {node : xy for node, xy in expanded_node_positions.items() if node not in nodes}

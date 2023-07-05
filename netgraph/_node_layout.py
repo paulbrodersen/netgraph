@@ -308,6 +308,7 @@ def get_fruchterman_reingold_layout(edges,
                                     node_size           = 0,
                                     node_positions      = None,
                                     fixed_nodes         = None,
+                                    validate_positions  = True,
                                     get_repulsion       = _get_fr_repulsion,
                                     get_attraction      = _get_fr_attraction,
                                     *args, **kwargs):
@@ -396,22 +397,24 @@ def get_fruchterman_reingold_layout(edges,
         unique_nodes = connected_nodes
 
     else:
-        # 1) check input dimensionality
-        dimensionality_node_positions = np.array(list(node_positions.values())).shape[1]
-        assert dimensionality_node_positions == dimensionality, \
-            "The dimensionality of values of `node_positions` (d={}) must match the dimensionality of `origin`/ `scale` (d={})!".format(dimensionality_node_positions, dimensionality)
 
-        is_valid = _is_within_bbox(list(node_positions.values()), origin=origin, scale=scale)
-        if not np.all(is_valid):
-            error_message = "Some given node positions are not within the data range specified by `origin` and `scale`!"
-            error_message += "\n\tOrigin : {}, {}".format(*origin)
-            error_message += "\n\tScale  : {}, {}".format(*scale)
-            error_message += "\nThe following nodes do not fall within this range:"
-            for ii, (node, position) in enumerate(node_positions.items()):
-                if not is_valid[ii]:
-                    error_message += "\n\t{} : {}".format(node, position)
-            error_message += "\nThis error can occur if the graph contains multiple components but some or all node positions are initialised explicitly (i.e. node_positions != None)."
-            raise ValueError(error_message)
+        if validate_positions:
+            # 1) check input dimensionality
+            dimensionality_node_positions = np.array(list(node_positions.values())).shape[1]
+            assert dimensionality_node_positions == dimensionality, \
+                "The dimensionality of values of `node_positions` (d={}) must match the dimensionality of `origin`/ `scale` (d={})!".format(dimensionality_node_positions, dimensionality)
+
+            is_valid = _is_within_bbox(list(node_positions.values()), origin=origin, scale=scale)
+            if not np.all(is_valid):
+                error_message = "Some given node positions are not within the data range specified by `origin` and `scale`!"
+                error_message += "\n\tOrigin : {}, {}".format(*origin)
+                error_message += "\n\tScale  : {}, {}".format(*scale)
+                error_message += "\nThe following nodes do not fall within this range:"
+                for ii, (node, position) in enumerate(node_positions.items()):
+                    if not is_valid[ii]:
+                        error_message += "\n\t{} : {}".format(node, position)
+                error_message += "\nThis error can occur if the graph contains multiple components but some or all node positions are initialised explicitly (i.e. node_positions != None)."
+                raise ValueError(error_message)
 
         # 2) handle discrepancies in nodes listed in node_positions and nodes extracted from edges
         if set(node_positions.keys()) == set(connected_nodes):
