@@ -39,7 +39,7 @@ def _get_unique_nodes(edges):
     and breaks for nodes that have a more complicated type such as a tuple.
 
     """
-    return list(set(_flatten(edges)))
+    return list(set(_flatten([(edge[0], edge[1]) for edge in edges])))
 
 
 def _flatten(nested_list):

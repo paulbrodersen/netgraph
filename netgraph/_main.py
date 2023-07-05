@@ -294,7 +294,7 @@ class BaseGraph(object):
         self.ax = self._initialize_axis(ax)
         self.fig = self.ax.get_figure()
 
-        self.edges = _parse_edge_list(edges)
+        self.edges = self._initialize_edges(edges)
         self.nodes = self._initialize_nodes(nodes)
 
         self._raise_warning_if_graph_too_large()
@@ -317,22 +317,23 @@ class BaseGraph(object):
         node_edge_width = _rescale_dict_values(node_edge_width, BASE_SCALE)
         edge_width      = _rescale_dict_values(edge_width, BASE_SCALE)
 
-        self.node_size = node_size
-
-        # Initialise node and edge layouts and draw elements.
+        self.node_size = node_size # TODO: replace with node_artist.radius
+        self.edge_width = edge_width
         self.origin = origin
         self.scale = scale
+
+        # Initialise node and edge layouts and draw elements.
         self.node_positions = self._initialize_node_layout(
-            node_layout, node_layout_kwargs, origin, scale, node_size)
+            node_layout, node_layout_kwargs)
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
-                        node_shape, node_size, node_edge_width,
+                        node_shape, self.node_size, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
         self.edge_paths, self.edge_layout = self._initialize_edge_layout(
-            edge_layout, edge_layout_kwargs, origin, scale, edge_width, self.node_artists)
+            edge_layout, edge_layout_kwargs)
         self.edge_artists = dict()
-        self.draw_edges(self.edge_paths, edge_width, edge_color, edge_alpha,
+        self.draw_edges(self.edges, self.edge_paths, edge_width, edge_color, edge_alpha,
                         edge_zorder, arrows, self.node_artists)
 
         # This function needs to be called before any font sizes are adjusted,
@@ -367,6 +368,10 @@ class BaseGraph(object):
                                   self.edge_label_rotate, self.edge_label_fontdict)
 
 
+    def _initialize_edges(self, edges):
+        return _parse_edge_list(edges)
+
+
     def _initialize_nodes(self, nodes):
         nodes_in_edges = _get_unique_nodes(self.edges)
         if nodes is None:
@@ -395,103 +400,109 @@ class BaseGraph(object):
             warnings.warn(msg)
 
 
-    def _initialize_node_layout(self, node_layout, node_layout_kwargs, origin, scale, node_size):
+    def _initialize_node_layout(self, node_layout, node_layout_kwargs):
         if node_layout_kwargs is None:
             node_layout_kwargs = dict()
 
         if isinstance(node_layout, str):
             if (node_layout == 'spring') or (node_layout == 'dot') or (node_layout == 'radial'):
-                node_layout_kwargs.setdefault('node_size', node_size)
-            return self._get_node_positions(node_layout, node_layout_kwargs, origin, scale)
+                node_layout_kwargs.setdefault('node_size', self.node_size)
+            return self._get_node_positions(
+                node_layout, node_layout_kwargs, self.edges,
+            )
 
         elif isinstance(node_layout, dict):
             _check_completeness(set(node_layout), set(self.nodes), 'node_layout')
+            # TODO check that nodes are within bounding box set by origin and scale
             return node_layout
 
 
-    def _get_node_positions(self, node_layout, node_layout_kwargs, origin, scale):
+    def _get_node_positions(self, node_layout, node_layout_kwargs, edges):
         if len(self.nodes) == 1:
-            return {self.nodes[0]: np.array([origin[0] + 0.5 * scale[0], origin[1] + 0.5 * scale[1]])}
+            return {self.nodes[0]: np.array([self.origin[0] + 0.5 * self.scale[0], self.origin[1] + 0.5 * self.scale[1]])}
         if node_layout == 'spring':
             node_positions = get_fruchterman_reingold_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
-                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=origin, scale=scale)
+                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=self.origin, scale=self.scale)
             return node_positions
         elif node_layout == 'community':
             node_positions = get_community_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
             if len(node_positions) > 3: # Qhull fails for 2 or less nodes
-                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=origin, scale=scale)
+                node_positions = _remove_node_overlap(node_positions, node_size=self.node_size, origin=self.origin, scale=self.scale)
             return node_positions
         elif node_layout == 'circular':
             return get_circular_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'linear':
             return get_linear_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'bipartite':
             return get_bipartite_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'multipartite':
             return get_multipartite_layout(
-                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'shell':
             return get_shell_layout(
-                self.edges, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'dot':
             return get_sugiyama_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'radial':
             return get_radial_tree_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'random':
             return get_random_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         elif node_layout == 'geometric':
             return get_geometric_layout(
-                self.edges, nodes=self.nodes, origin=origin, scale=scale, **node_layout_kwargs)
+                edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
         else:
-            implemented = ['spring', 'community', 'circular', 'linear', 'bipartite', 'multipartite', 'shell', 'dot', 'radial', 'random', 'geometric']
+            implemented = ['spring', 'community', 'circular',
+                           'linear', 'bipartite', 'multipartite',
+                           'shell', 'dot', 'radial', 'random',
+                           'geometric']
             msg = f"Node layout {node_layout} not implemented. Available layouts are:"
             for method in implemented:
                 msg += f"\n\t{method}"
             raise NotImplementedError(msg)
 
 
-    def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs, origin, scale, edge_width, node_artists):
+    def _initialize_edge_layout(self, edge_layout, edge_layout_kwargs):
+
         if edge_layout_kwargs is None:
             edge_layout_kwargs = dict()
 
         selfloops = [(source, target) for (source, target) in self.edges if source==target]
         if selfloops:
             if 'selfloop_radius' in edge_layout_kwargs:
-                selfloop_radius = edge_layout_kwargs['selfloop_radius']
-                selfloop_radius = _normalize_numeric_argument(selfloop_radius, selfloops, 'selfloop_radius')
+                edge_layout_kwargs['selfloop_radius'] = \
+                    _normalize_numeric_argument(edge_layout_kwargs['selfloop_radius'], selfloops, 'selfloop_radius')
             else:
-                selfloop_radius = dict()
-                for (node, _) in selfloops:
-                    selfloop_radius[(node, node)] = 1.5 * node_artists[node].radius
-            edge_layout_kwargs.setdefault('selfloop_radius', selfloop_radius)
+                edge_layout_kwargs['selfloop_radius'] = \
+                    {(node, node) : 1.5 * self.node_artists[node].radius for node, _ in selfloops}
 
         if isinstance(edge_layout, str):
             if edge_layout == "straight":
                 edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "curved":
-                edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in node_artists.items()})
-                edge_layout_kwargs.setdefault('origin', origin)
-                edge_layout_kwargs.setdefault('scale', scale)
+                edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in self.node_artists.items()})
+                edge_layout_kwargs.setdefault('origin', self.origin)
+                edge_layout_kwargs.setdefault('scale', self.scale)
                 edge_layout = CurvedEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "bundled":
                 edge_layout = BundledEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             elif edge_layout == "arc":
                 edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             else:
-                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
+                raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
             edge_paths = edge_layout.compute()
 
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
+            # TODO check that edge paths are within bounding box given by origin and scale
             edge_paths = edge_layout
             edge_layout = StraightEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             edge_layout.edge_paths.update(edge_paths)
@@ -595,12 +606,14 @@ class BaseGraph(object):
             self.node_artists[node].xy = self.node_positions[node]
 
 
-    def draw_edges(self, edge_path, edge_width, edge_color, edge_alpha,
+    def draw_edges(self, edges, edge_path, edge_width, edge_color, edge_alpha,
                    edge_zorder, arrows, node_artists):
         """Draw or update edge artists.
 
         Parameters
         ----------
+        edges : list
+            The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
         edge_path : dict
             Mapping of edges to arrays of (x, y) tuples, the edge path coordinates.
         edge_width : dict
