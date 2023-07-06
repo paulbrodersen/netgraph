@@ -37,10 +37,6 @@ def _handle_multigraphs(parser):
     return wrapped_parser
 
 
-def _is_listlike(graph):
-    return isinstance(graph, (list, tuple, set))
-
-
 @_handle_multigraphs
 def _parse_sparse_matrix_format(adjacency):
     """Parse graphs given in a sparse format, i.e. edge lists or sparse matrix representations."""
@@ -86,10 +82,6 @@ def _parse_edge_list(edges):
     return [(source, target) for (source, target) in edges]
 
 
-def _is_nparray(graph):
-    return isinstance(graph, np.ndarray)
-
-
 def _parse_nparray(graph):
     rows, columns = graph.shape
     if columns in (2, 3):
@@ -118,11 +110,6 @@ def _parse_adjacency_matrix(adjacency):
         return nodes, edges, edge_weights
 
 
-def _is_networkx(graph):
-    import networkx
-    return isinstance(graph, networkx.Graph)
-
-
 @_handle_multigraphs
 def _parse_networkx_graph(graph, attribute_name='weight'):
     """Parse graphs represented as networkx.Graph or related objects."""
@@ -133,11 +120,6 @@ def _parse_networkx_graph(graph, attribute_name='weight'):
     except KeyError: # no weights
         edge_weights = None
     return nodes, edges, edge_weights
-
-
-def _is_igraph(graph):
-    import igraph
-    return isinstance(graph, igraph.Graph)
 
 
 @_handle_multigraphs
@@ -152,11 +134,6 @@ def _parse_igraph_graph(graph):
     return nodes, edges, edge_weights
 
 
-def _is_graph_tool(graph):
-    import graph_tool
-    return isinstance(graph, graph_tool.Graph)
-
-
 @_handle_multigraphs
 def _parse_graph_tool_graph(graph):
     """Parse graphs given as graph_tool.Graph."""
@@ -167,6 +144,23 @@ def _parse_graph_tool_graph(graph):
     return nodes, edges, edge_weights
 
 
+def _is_listlike(graph):
+    return isinstance(graph, (list, tuple, set))
+
+def _is_nparray(graph):
+    return isinstance(graph, np.ndarray)
+
+def _is_networkx(graph):
+    import networkx
+    return isinstance(graph, networkx.Graph)
+
+def _is_igraph(graph):
+    import igraph
+    return isinstance(graph, igraph.Graph)
+
+def _is_graph_tool(graph):
+    import graph_tool
+    return isinstance(graph, graph_tool.Graph)
 
 
 _check_to_parser = {
