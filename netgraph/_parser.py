@@ -101,7 +101,8 @@ def _parse_nparray(graph):
         msg += "\nIf a graph is specified as a numpy array, it has to have one of the following shapes:"
         msg += "\n\t-(E, 2) or (E, 3), where E is the number of edges"
         msg += "\n\t-(V, V), where V is the number of nodes (i.e. full rank)"
-        msg += f"However, the given graph had shape {graph.shape}."
+        msg += f"\nHowever, the given graph had shape {graph.shape}."
+        raise ValueError(msg)
 
 
 def _parse_adjacency_matrix(adjacency):
