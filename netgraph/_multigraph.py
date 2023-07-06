@@ -237,13 +237,13 @@ class BaseMultiGraph(BaseGraph):
                     _normalize_numeric_argument(edge_layout_kwargs['selfloop_radius'], selfloops, 'selfloop_radius')
             else:
                 edge_layout_kwargs['selfloop_radius'] = \
-                    {(node, node) : 1.5 * self.node_artists[node].radius for node, _ in selfloops}
+                    {(node, node) : 1.5 * self.node_size[node] for node, _ in selfloops}
 
         if isinstance(edge_layout, str):
             if edge_layout == "straight":
                 edge_layout = MultiGraphStraightEdgeLayout(self.edges, self.node_positions, self.edge_width, **edge_layout_kwargs)
             elif edge_layout == "curved":
-                edge_layout_kwargs.setdefault('node_size', {node : artist.radius for node, artist in self.node_artists.items()})
+                edge_layout_kwargs.setdefault('node_size', self.node_size)
                 edge_layout_kwargs.setdefault('origin', self.origin)
                 edge_layout_kwargs.setdefault('scale', self.scale)
                 edge_layout = MultiGraphCurvedEdgeLayout(self.edges, self.node_positions, self.edge_width, **edge_layout_kwargs)

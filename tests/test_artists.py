@@ -64,7 +64,7 @@ def test_NodeArtist():
                          [ 0.44833333, -2.75444444]])
     codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
     path = Path(vertices, codes)
-    node = NodeArtist(path, xy=(0, 0), size=0.25, facecolor='red', edgecolor='red', linewidth=0.1)
+    node = NodeArtist(path, xy=(0, 0), size=1, facecolor='red', edgecolor='red', linewidth=0.1)
 
     fig, ax = plt.subplots()
     ax.add_patch(node)
@@ -179,7 +179,7 @@ def test_NodeArtist_with_label():
     codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
     path = Path(vertices, codes)
     x, y = 0, 0
-    artist = NodeArtist(path, xy=(x, y), size=0.25, facecolor='white', edgecolor='black', linewidth=0.01)
+    artist = NodeArtist(path, xy=(x, y), size=1, facecolor='white', edgecolor='black', linewidth=0.01)
 
     fig, ax = plt.subplots()
     ax.set_aspect('equal')

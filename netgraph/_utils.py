@@ -12,6 +12,7 @@ from scipy.interpolate import BSpline
 from matplotlib.path import Path
 from scipy.spatial import cKDTree
 from scipy.interpolate import interp1d
+from scipy.optimize import minimize_scalar
 
 
 def _save_cast_float_to_int(num):
@@ -924,3 +925,20 @@ def _map_multigraph_edges_to_ids(edges):
     for source, target, eid in edges:
         output[(source, target)] = output.get((source, target), list()) + [eid]
     return output
+
+
+def _get_radius(path, center=np.zeros((2))):
+    """Adapted from https://stackoverflow.com/a/76064783/2912349"""
+    deltas = path.vertices - center[np.newaxis, :]
+    distances = np.linalg.norm(deltas, axis=-1)
+    upper_bound = np.max(distances)
+
+    def func(r):
+        circle_path = Path.circle(center, radius=r)
+        if circle_path.contains_path(path):
+            return r
+        else:
+            return upper_bound
+
+    result = minimize_scalar(func, bounds=(0, upper_bound))
+    return result.x

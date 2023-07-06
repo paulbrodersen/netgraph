@@ -17,6 +17,7 @@ from ._utils import (
     _get_orthogonal_unit_vector,
     _shorten_spline_by,
     _find_renderer,
+    _get_radius,
 )
 
 
@@ -59,14 +60,13 @@ class NodeArtist(PathPatchDataUnits):
 
     Parameters
     ----------
-    shape : str or matplotlib.Path instance
+    path :  matplotlib.Path instance
         The shape of the node.
-        If a string, the specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
-        If a path, the path has to be closed and the vertices have to be centered on (0,0).
+        The path has to be closed and the vertices have to be centered on (0,0).
     xy : tuple
         The (float x, float y) coordinates of the centroid.
     size : float
-        The distance from the center to each of the vertices.
+        The maximum distance from the center to any of the vertices.
     **kwargs
         `Patch` properties:
         %(Patch_kwdoc)s
@@ -83,14 +83,15 @@ class NodeArtist(PathPatchDataUnits):
         self.size = size
         self.orientation = orientation
         self.linewidth_correction = linewidth_correction
+        if not hasattr(self, "scale_by"):
+            self.scale_by = self.size / _get_radius(self._path)
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
         self.transformed_path = self._path.transformed(self.get_patch_transform())
-        self.radius = self.get_radius()
 
     def get_patch_transform(self):
         return self._patch_transform.clear() \
-            .scale(self.size-self._lw_data/self.linewidth_correction) \
+            .scale(self.scale_by * self.size - self._lw_data / self.linewidth_correction) \
             .rotate(self.orientation) \
             .translate(*self.xy)
 
@@ -149,25 +150,6 @@ class NodeArtist(PathPatchDataUnits):
         text_object.set_size(current_size)
         return 1 / result.x
 
-    def get_radius(self):
-        """Adapted from https://stackoverflow.com/a/76064783/2912349"""
-        if hasattr(self, "radius"): # i.e. RegularPolygonNodeArtist or CircularNodeArtist
-            return self.radius
-        else:
-            deltas = self.transformed_path.vertices - self.xy[np.newaxis, :]
-            distances = np.linalg.norm(deltas, axis=-1)
-            upper_bound = np.max(distances)
-
-            def func(r):
-                circle_path = Path.circle(self.xy, radius=r)
-                if circle_path.contains_path(self.transformed_path):
-                    return r
-                else:
-                    return upper_bound
-
-            result = minimize_scalar(func, bounds=(0, upper_bound))
-            return result.x
-
 
 class RegularPolygonNodeArtist(NodeArtist):
     """Instantiates a regular polygon node artist.
@@ -194,7 +176,7 @@ class RegularPolygonNodeArtist(NodeArtist):
 
     def __init__(self, total_vertices, orientation, xy, size, **kwargs):
         path = Path.unit_regular_polygon(total_vertices)
-        self.radius = size
+        self.scale_by = 1
         linewidth_correction = 2 * np.sin(np.pi/total_vertices) # derives from the ratio between a side and the radius in a regular polygon.
         super().__init__(path, xy, size, orientation=orientation, linewidth_correction=linewidth_correction, **kwargs)
 
@@ -207,7 +189,7 @@ class CircularNodeArtist(NodeArtist):
     xy : tuple
         The (float x, float y) coordinates of the centroid.
     size : float
-        The distance from the center to each of the vertices.
+        The radius.
     **kwargs
         `Patch` properties:
         %(Patch_kwdoc)s
@@ -220,7 +202,7 @@ class CircularNodeArtist(NodeArtist):
 
     def __init__(self, xy, size, **kwargs):
         path = Path.circle()
-        self.radius = size
+        self.scale_by = 1
         super().__init__(path, xy, size, **kwargs)
 
     def get_head_offset(self, edge_path):
