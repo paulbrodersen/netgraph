@@ -60,7 +60,7 @@ from ._artists import (
     RegularPolygonNodeArtist,
     EdgeArtist,
 )
-from ._parser import parse_graph, _parse_edge_list, _is_directed
+from ._parser import parse_graph, _parse_edge_list
 
 
 BASE_SCALE = 1e-2

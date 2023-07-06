@@ -167,12 +167,6 @@ def _parse_graph_tool_graph(graph):
     return nodes, edges, edge_weights
 
 
-def _is_directed(edges):
-    """Check if the edge list contains bi-directional edges, i.e. at least one edge (a, b) for which (b, a) also exists."""
-    for (source, target) in edges:
-        if ((target, source) in edges) and (source != target):
-            return True
-    return False
 
 
 _check_to_parser = {
