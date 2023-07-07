@@ -117,24 +117,24 @@ def _parse_adjacency_matrix(adjacency):
 
 
 @_handle_multigraphs
-def _parse_networkx_graph(graph, attribute_name='weight'):
+def _parse_networkx_graph(graph, weight_attribute="weight"):
     """Parse graphs represented as networkx.Graph or related objects."""
     edges = list(graph.edges)
     nodes = list(graph.nodes)
     try:
-        edge_weights = {edge : graph.get_edge_data(*edge)[attribute_name] for edge in edges}
+        edge_weights = {edge : graph.get_edge_data(*edge)[weight_attribute] for edge in edges}
     except KeyError: # no weights
         edge_weights = None
     return nodes, edges, edge_weights
 
 
 @_handle_multigraphs
-def _parse_igraph_graph(graph):
+def _parse_igraph_graph(graph, weight_attribute="weight"):
     """Parse graphs given as igraph.Graph or related objects."""
     edges = [(edge.source, edge.target) for edge in graph.es()]
     nodes = graph.vs.indices
     if graph.is_weighted():
-        edge_weights = {(edge.source, edge.target) : edge['weight'] for edge in graph.es()}
+        edge_weights = {(edge.source, edge.target) : edge[weight_attribute] for edge in graph.es()}
     else:
         edge_weights = None
     return nodes, edges, edge_weights
