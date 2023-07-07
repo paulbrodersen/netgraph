@@ -14,6 +14,7 @@ from ._utils import _save_cast_float_to_int, _get_unique_nodes
 
 def _handle_multigraphs(parser):
     """Raise a warning if the given graph appears to be a multigraph, and remove duplicate edges."""
+    @wraps(parser)
     def wrapped_parser(graph, *args, **kwargs):
         nodes, edges, edge_weight = parser(graph, *args, **kwargs)
 
