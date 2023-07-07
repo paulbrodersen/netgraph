@@ -43,6 +43,12 @@ def _handle_multigraphs(parser):
     return wrapped_parser
 
 
+def _parse_edge_list(edges):
+    """Ensures that the type of edges is a list, and each edge is a 2-tuple."""
+    # Edge list may be an array, or a list of lists. We want a list of tuples.
+    return [(source, target) for (source, target) in edges]
+
+
 @_handle_multigraphs
 def _parse_sparse_matrix_format(adjacency):
     """Parse graphs given in a sparse format, i.e. edge lists or sparse matrix representations."""
@@ -82,10 +88,17 @@ def _parse_sparse_matrix_format(adjacency):
         raise ValueError(msg)
 
 
-def _parse_edge_list(edges):
-    """Ensures that the type of edges is a list, and each edge is a 2-tuple."""
-    # Edge list may be an array, or a list of lists. We want a list of tuples.
-    return [(source, target) for (source, target) in edges]
+def _parse_adjacency_matrix(adjacency):
+    """Parse graphs given in adjacency matrix format, i.e. a full-rank matrix."""
+    sources, targets = np.where(adjacency)
+    edges = list(zip(sources.tolist(), targets.tolist()))
+    nodes = list(range(adjacency.shape[0]))
+    edge_weights = {(source, target): adjacency[source, target] for (source, target) in edges}
+
+    if len(set(list(edge_weights.values()))) == 1:
+        return nodes, edges, None
+    else:
+        return nodes, edges, edge_weights
 
 
 def _parse_nparray(graph):
@@ -101,19 +114,6 @@ def _parse_nparray(graph):
         msg += "\n\t-(V, V), where V is the number of nodes (i.e. full rank)"
         msg += f"\nHowever, the given graph had shape {graph.shape}."
         raise ValueError(msg)
-
-
-def _parse_adjacency_matrix(adjacency):
-    """Parse graphs given in adjacency matrix format, i.e. a full-rank matrix."""
-    sources, targets = np.where(adjacency)
-    edges = list(zip(sources.tolist(), targets.tolist()))
-    nodes = list(range(adjacency.shape[0]))
-    edge_weights = {(source, target): adjacency[source, target] for (source, target) in edges}
-
-    if len(set(list(edge_weights.values()))) == 1:
-        return nodes, edges, None
-    else:
-        return nodes, edges, edge_weights
 
 
 @_handle_multigraphs
