@@ -14,6 +14,14 @@ from netgraph._parser import (
     _parse_igraph_graph,
     _parse_graph_tool_graph,
     parse_graph,
+    _parse_multigraph_edge_list,
+    _parse_multigraph_sparse_matrix_format,
+    _parse_multigraph_adjacency_matrix,
+    _parse_multigraph_nparray,
+    _parse_multigraph_networkx_graph,
+    _parse_multigraph_igraph_graph,
+    _parse_multigraph_graph_tool_graph,
+    parse_multigraph,
 )
 
 
@@ -292,6 +300,268 @@ def test_parse_graph():
         (0, 1),
     ]
     for edge in desired_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+
+# --------------------------------------------------------------------------------
+# multi-graph parser tests
+
+
+def test_parse_multigraph_edge_list():
+    # 1) plain edge list as iterable of tuples
+    provided_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    returned_edges = _parse_multigraph_edge_list(provided_edges)
+    for edge in provided_edges:
+        assert edge in returned_edges
+
+    # 2) edge list as array
+    provided_edges = np.array([
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ])
+    returned_edges = _parse_multigraph_edge_list(provided_edges)
+    for edge in provided_edges:
+        assert tuple(edge) in returned_edges
+
+
+def test_parse_multigraph_sparse_matrix_format():
+    # 1) unweighted
+    provided_edges = np.array([
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ])
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_sparse_matrix_format(provided_edges)
+    for edge in provided_edges:
+        assert tuple(edge) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) weighted
+    provided_edges = np.array([
+        (0, 0, 0, 0.),
+        (0, 1, 0, 1.),
+        (0, 1, 1, 2.),
+    ])
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_sparse_matrix_format(provided_edges)
+    for edge in provided_edges:
+        assert tuple(edge[:3]) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert {(0, 0, 0), (0, 1, 0), (0, 1, 1)} == set(returned_weights.keys())
+    assert {0., 1., 2.} == set(returned_weights.values())
+
+
+def test_parse_multigraph_adjacency_matrix():
+    # 1) unweighted
+    provided_adjacency = np.zeros((2, 2, 2))
+    provided_adjacency[0, 0, 0] = 1
+    provided_adjacency[0, 1, 0] = 1
+    provided_adjacency[0, 1, 1] = 1
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_adjacency_matrix(provided_adjacency)
+    desired_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    for edge in desired_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) weighted
+    provided_adjacency = np.zeros((2, 2, 2))
+    provided_adjacency[0, 0, 0] = 1.
+    provided_adjacency[0, 1, 0] = 2.
+    provided_adjacency[0, 1, 1] = 3.
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_adjacency_matrix(provided_adjacency)
+    desired_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    for edge in desired_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert {(0, 0, 0), (0, 1, 0), (0, 1, 1)} == set(returned_weights.keys())
+    assert {1., 2., 3.} == set(returned_weights.values())
+
+
+def test_parse_multigraph_nparray():
+    # 1) sparse matrix
+    provided_edges = np.array([
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ])
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_nparray(provided_edges)
+    for edge in provided_edges:
+        assert tuple(edge) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) full-rank adjacency matrix
+    provided_adjacency = np.zeros((4, 4, 2))
+    provided_adjacency[0, 0, 0] = 1
+    provided_adjacency[0, 1, 0] = 1
+    provided_adjacency[0, 1, 1] = 1
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_nparray(provided_adjacency)
+    desired_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    for edge in desired_edges:
+        assert edge in returned_edges
+    assert {0, 1, 2, 3} == set(returned_nodes)
+    assert returned_weights is None
+
+
+def test_multigraph_networkx_graph():
+    import networkx
+    # 1) unweighted
+    provided_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    g = networkx.MultiGraph(provided_edges)
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_networkx_graph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for edge in provided_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) weighted
+    provided_edges = [
+        (0, 0, 0, 1.),
+        (0, 1, 0, 2.),
+        (0, 1, 1, 3.),
+    ]
+    g = networkx.MultiGraph()
+    g.add_edges_from([(source, target, eid, dict(weight=weight)) \
+                      for (source, target, eid, weight) in provided_edges])
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_networkx_graph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for (source, target, eid, _) in provided_edges:
+        assert (source, target, eid) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert {(0, 0, 0), (0, 1, 0), (0, 1, 1)} == set(returned_weights.keys())
+    assert {1., 2., 3.} == set(returned_weights.values())
+
+
+def test_multigraph_igraph_graph():
+    import igraph
+    # 1) unweighted
+    provided_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    g = igraph.Graph([edge[:2] for edge in provided_edges])
+    g.es["id"] = [edge[2] for edge in provided_edges]
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_igraph_graph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for edge in provided_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) weighted
+    provided_edges = [
+        (0, 0, 0, 1.),
+        (0, 1, 0, 2.),
+        (0, 1, 1, 3.),
+    ]
+    g = igraph.Graph([edge[:2] for edge in provided_edges])
+    g.es["id"] = [edge[2] for edge in provided_edges]
+    g.es["weight"] = [edge[3] for edge in provided_edges]
+    returned_nodes, returned_edges, returned_weights = \
+        _parse_multigraph_igraph_graph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for (source, target, eid, _) in provided_edges:
+        assert (source, target, eid) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert {(0, 0, 0), (0, 1, 0), (0, 1, 1)} == set(returned_weights.keys())
+    assert {1., 2., 3.} == set(returned_weights.values())
+
+
+def test_parse_multigraph():
+    # 1) sparse format
+    provided_edges = np.array([
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ])
+    returned_nodes, returned_edges, returned_weights = \
+        parse_multigraph(provided_edges)
+    for edge in provided_edges:
+        assert tuple(edge) in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 2) full-rank adjacency matrix
+    provided_adjacency = np.zeros((4, 4, 2))
+    provided_adjacency[0, 0, 0] = 1
+    provided_adjacency[0, 1, 0] = 1
+    provided_adjacency[0, 1, 1] = 1
+    returned_nodes, returned_edges, returned_weights = \
+        parse_multigraph(provided_adjacency)
+    desired_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    for edge in desired_edges:
+        assert edge in returned_edges
+    assert {0, 1, 2, 3} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 3) networkx
+    import networkx
+    provided_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    g = networkx.MultiGraph(provided_edges)
+    returned_nodes, returned_edges, returned_weights = \
+        parse_multigraph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for edge in provided_edges:
+        assert edge in returned_edges
+    assert {0, 1} == set(returned_nodes)
+    assert returned_weights is None
+
+    # 4) igraph
+    import igraph
+    provided_edges = [
+        (0, 0, 0),
+        (0, 1, 0),
+        (0, 1, 1),
+    ]
+    g = igraph.Graph([edge[:2] for edge in provided_edges])
+    g.es["id"] = [edge[2] for edge in provided_edges]
+    returned_nodes, returned_edges, returned_weights = \
+        parse_multigraph(g)
+    assert len(provided_edges) == len(returned_edges)
+    for edge in provided_edges:
         assert edge in returned_edges
     assert {0, 1} == set(returned_nodes)
     assert returned_weights is None
