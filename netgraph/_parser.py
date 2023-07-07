@@ -21,20 +21,22 @@ def _handle_multigraphs(parser):
     def wrapped_parser(graph, *args, **kwargs):
         nodes, edges, edge_weight = parser(graph, *args, **kwargs)
 
-        new_edges = list(set([(edge[0], edge[1]) for edge in edges]))
-        if len(new_edges) < len(edges):
-            msg = "Multi-graphs are not properly supported. Duplicate edges are plotted as a single edge; edge weights (if any) are summed."
+        unique_edges = list(set(edges))
+        if len(unique_edges) < len(edges):
+            msg = "The given graph data structure appears to be a multi-graph,"
+            msg += " however, this netgraph class does not properly support multi-graphs."
+            msg += " Instead, the multi-graph is converted into a weighted graph,"
+            msg += " in which duplicate edges are merged into one."
+            msg += " The corresponding edge weight is set to the number of duplicate edges;"
+            msg += " existing edge weights are discarded."
+            msg += " Use the `MultiGraph` class and subclasses to visualize all edges and their edge weights properly."
             warnings.warn(msg)
-            if edge_weight: # sum weights
-                new_edge_weight = dict()
-                for edge, weight in edge_weight.items():
-                    if (edge[0], edge[1]) in new_edge_weight:
-                        new_edge_weight[(edge[0], edge[1])] += weight
-                    else:
-                        new_edge_weight[(edge[0], edge[1])] = weight
-            else:
-                new_edge_weight = edge_weight
-            return nodes, new_edges, new_edge_weight
+
+            edge_weight = dict()
+            for edge in edges:
+                edge_weight[edge] = edge_weight.get(edge, 0) + 1
+
+            return nodes, unique_edges, edge_weight
 
         return nodes, edges, edge_weight
 
