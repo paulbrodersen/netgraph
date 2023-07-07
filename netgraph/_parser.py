@@ -9,7 +9,10 @@ import numpy as np
 
 from functools import wraps
 
-from ._utils import _save_cast_float_to_int, _get_unique_nodes
+from ._utils import (
+    _get_unique_nodes,
+    _save_cast_float_to_int,
+)
 
 
 def _handle_multigraphs(parser):
