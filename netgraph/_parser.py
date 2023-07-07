@@ -220,6 +220,9 @@ def parse_graph(graph):
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
 
 
+# --------------------------------------------------------------------------------
+
+
 def is_order_zero(graph):
     """Determine if a graph is an order zero graph, i.e. a graph with no nodes (and no edges)."""
     for check, parser in _check_to_parser.items():
@@ -251,4 +254,166 @@ def is_empty(graph):
             pass
     else:
         allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graph_tool.Graph']
+        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
+
+
+# --------------------------------------------------------------------------------
+# multi-graph parsers
+
+def _parse_multigraph_edge_list(edges):
+    """Ensures that the type of edges is a list, and each edge is a 2-tuple."""
+    # Edge list may be an array, or a list of lists. We want a list of tuples.
+    return [(source, target, eid) for (source, target, eid) in edges]
+
+
+def _parse_multigraph_sparse_matrix_format(adjacency):
+    """Parse graphs given in a sparse format, i.e. edge lists or sparse matrix representations."""
+    rows, columns = np.array(adjacency).shape
+
+    if columns == 3:
+        edges = _parse_multigraph_edge_list(adjacency)
+        nodes = _get_unique_nodes(edges)
+        return nodes, edges, None
+
+    elif columns == 4:
+        edge_weight = {(source, target, eid) : weight for (source, target, eid, weight) in adjacency}
+        edges = list(edge_weight.keys())
+        nodes = _get_unique_nodes(edges)
+
+        # In a sparse adjacency format with integer nodes and float weights,
+        # the type of nodes is promoted to the same type as weights.
+        # If all nodes can safely be demoted to ints, then we probably want to do that.
+        save = True
+        for node in nodes:
+            if not isinstance(_save_cast_float_to_int(node), int):
+                save = False
+                break
+        if save:
+            nodes = [_save_cast_float_to_int(node) for node in nodes]
+            edges = [(_save_cast_float_to_int(source), _save_cast_float_to_int(target), eid) for (source, target, eid) in edges]
+            edge_weight = {(_save_cast_float_to_int(source), _save_cast_float_to_int(target), eid) : weight for (source, target, eid), weight in edge_weight.items()}
+
+        if len(set(edge_weight.values())) > 1:
+            return nodes, edges, edge_weight
+        else:
+            return nodes, edges, None
+
+    else:
+        msg = "Multi-graph specification in sparse matrix format needs to consist of an iterable of tuples of length 3 or 4."
+        msg += "Got iterable of tuples of length {}.".format(columns)
+        raise ValueError(msg)
+
+
+def _parse_multigraph_adjacency_matrix(adjacency):
+    """Parse multi-graphs given in an adjacency matrix format."""
+    sources, targets, edge_ids = np.where(adjacency)
+    edges = list(zip(sources.tolist(), targets.tolist(), edge_ids.tolist()))
+    nodes = list(range(adjacency.shape[0]))
+    edge_weights = {(source, target, eid): adjacency[source, target, eid] for (source, target, eid) in edges}
+
+    if len(set(edge_weights.values())) == 1:
+        return nodes, edges, None
+    else:
+        return nodes, edges, edge_weights
+
+
+def _parse_multigraph_nparray(graph):
+    if np.ndim(graph) == 2:
+        rows, columns = graph.shape
+        if columns in (3, 4):
+            return _parse_multigraph_sparse_matrix_format(graph)
+    elif np.ndim(graph) == 3:
+        rows, columns, layers = graph.shape
+        if rows == columns:
+            return _parse_multigraph_adjacency_matrix(graph)
+
+    msg = "Could not interpret input graph."
+    msg += "\nIf a graph is specified as a numpy array, it has to have one of the following shapes:"
+    msg += "\n\t-(E, 3) or (E, 4), where E is the number of edges"
+    msg += "\n\t-(V, V, L), where V is the number of nodes and L is the number of layers (i.e. each layer is a full rank matrix)"
+    msg += f"\nHowever, the given graph had shape {graph.shape}."
+    raise ValueError(msg)
+
+
+# def _parse_multigraph_networkx_graph(graph, weight_attribute="weight"):
+#     """Parse graphs represented as networkx.Graph or related objects."""
+#     edges = list(graph.edges)
+#     nodes = list(graph.nodes)
+#     try:
+#         edge_weights = {edge : graph.get_edge_data(*edge)[weight_attribute] \
+#                         for edge in edges}
+#     except KeyError: # no weights
+#         edge_weights = None
+#     return nodes, edges, edge_weights
+_parse_multigraph_networkx_graph = _parse_networkx_graph.__wrapped__
+
+
+def _parse_multigraph_igraph_graph(graph, weight_attribute="weight", id_attribute="id"):
+    """Parse graphs given as igraph.Graph or related objects."""
+    edges = [(edge.source, edge.target, edge[id_attribute]) for edge in graph.es()]
+    nodes = graph.vs.indices
+    if graph.is_weighted():
+        edge_weights = {(edge.source, edge.target, edge[id_attribute]) : edge[weight_attribute] for edge in graph.es()}
+    else:
+        edge_weights = None
+    return nodes, edges, edge_weights
+
+
+def _parse_multigraph_graph_tool_graph(graph):
+    return NotImplementedError("Multi-graph plotting is currently not supported for graph-tool Graph objects.")
+
+
+def _is_networkx_multigraph(graph):
+    import networkx
+    return isinstance(graph, networkx.MultiGraph)
+
+
+_check_to_multigraph_parser = {
+    _is_listlike            : _parse_multigraph_sparse_matrix_format,
+    _is_nparray             : _parse_multigraph_nparray,
+    _is_networkx_multigraph : _parse_multigraph_networkx_graph,
+    _is_igraph              : _parse_multigraph_igraph_graph,
+    _is_graph_tool          : _parse_multigraph_graph_tool_graph,
+}
+
+
+def parse_multigraph(graph):
+    """Parse the given multi-graph format and convert it into a node list, edge list, and edge_weight dictionary.
+
+    Parameters
+    ----------
+    graph: various formats
+
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
+
+        - networkx.MultiGraph or igraph.Graph object
+
+    Returns
+    -------
+    nodes : list
+        List of V unique nodes.
+    edges: list of 2-tuples
+        List of E edges. Each tuple corresponds to an edge defined by (source node, target node).
+    edge_weight: dict edge : float or None
+        Dictionary mapping edges to weights. If the graph is unweighted, None is returned.
+
+    """
+    for check, parser in _check_to_multigraph_parser.items():
+        try:
+            if check(graph):
+                return parser(graph)
+        except ModuleNotFoundError:
+            pass
+    else:
+        allowed = ['list', 'tuple', 'set', 'networkx.MultiGraph', 'igraph.Graph']
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
