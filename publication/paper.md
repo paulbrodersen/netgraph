@@ -42,7 +42,7 @@ Netgraph is a Python library that aims to complement the existing network analys
 Additionally, links or edges between the nodes can be straight, curved (avoiding collisions with other nodes and edges), or bundled.
 However, new layout routines are added regularly to Netgraph; for an up-to-date list, consult the online documentation [here](https://netgraph.readthedocs.io/en/latest/node_layout.html).
 
-Uniquely among Python alternatives, Netgraph handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using Matplotlib [@Hunter:2007], a popular Python plotting library, and the resulting Matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard Matplotlib syntax. The visualisations can also be altered interactively: nodes and edges can be added on-the-fly through hotkeys, positioned using the mouse, and (re-)labelled through standard text-entry. For a comprehensive tutorial on Netgraph's interactive features, consult the online documentation [here](https://netgraph.readthedocs.io/en/latest/interactivity.html)
+Uniquely among Python alternatives, Netgraph handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using Matplotlib [@Hunter:2007], a popular Python plotting library, and the resulting Matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard Matplotlib syntax. The visualisations can also be altered interactively: nodes and edges can be added on-the-fly through hotkeys, positioned using the mouse, and (re-)labelled through standard text-entry. For a comprehensive tutorial on Netgraph's interactive features, consult the online documentation [here](https://netgraph.readthedocs.io/en/latest/interactivity.html).
 
 Netgraph is licensed under the General Public License version 3 (GPLv3). The repository is hosted on [GitHub](https://github.com/paulbrodersen/netgraph), and distributed via PyPI and conda-forge. It includes an extensive automated test suite that can be executed using pytest. The comprehensive documentation -- including a complete API reference as well as numerous examples and tutorials -- is hosted on [ReadTheDocs](https://netgraph.readthedocs.io).
 
@@ -54,7 +54,7 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 # A Basic Example
 
-The following script shows a minimum, working example. The graph structure is defined by an edge list, and the visualisation is created using (mostly) default parameters.
+The following script shows a minimum working example. The graph structure is defined by an edge list, and the visualisation is created using (mostly) default parameters.
 
 ![Basic example output](basic_example.png){width=50%}
 
