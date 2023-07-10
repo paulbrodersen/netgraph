@@ -141,6 +141,6 @@ However, network visualisations differ from other data visualisations in two asp
 
 # Acknowledgements
 
-We thank GitHub users adleris, Allan L. R. Hansen, chenghuzi, Hamed Mohammadpour, and Pablo for contributing various bug fixes.
+We thank GitHub users adleris, Allan L. R. Hansen, chenghuzi, Hamed Mohammadpour, and Pablo for contributing various bug fixes, as well as ortega2247 and idoby for their thoughtful reviews of earlier versions of this manuscript and their inspired suggestions, such as adding a section on "Key Design Decisions".
 
 # References
