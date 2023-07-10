@@ -1066,8 +1066,7 @@ class CurvedEdgeLayout(StraightEdgeLayout):
                         self.parallel_edges.append((source, target))
                 else:
                     other_edges.append((source, target))
-
-        self.nonloops = self.parallel_edges + other_edges
+            self.nonloops = self.parallel_edges + other_edges
 
 
     def get_nonloop_edge_paths(self, edges):
