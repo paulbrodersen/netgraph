@@ -48,8 +48,9 @@ Netgraph is licensed under the General Public License version 3 (GPLv3). The rep
 
 # Figures
 
-![](gallery_portrait_v5a.png){width=90%}
-![Netgraph's key features](gallery_portrait_v5b.png){width=90%}
+![Netgraph's node and edge layouts](gallery_portrait_v5a.png){width=90%}
+
+![Additional key features](gallery_portrait_v5b.png){width=90%}
 
 \pagebreak
 
