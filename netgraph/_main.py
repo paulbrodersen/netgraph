@@ -2163,7 +2163,7 @@ class EmphasizeOnClickGraph(Graph, EmphasizeOnClick):
         - networkx.Graph, igraph.Graph, or graph_tool.Graph object
 
     mouseover_highlight_mapping : dict or None, default None
-        Determines which nodes and/or edges are highlighted when hovering over any given node or edge.
+        Determines which nodes and/or edges are highlighted when clicking on any given node or edge.
         The keys of the dictionary are node and/or edge IDs, while the values are iterables of node and/or edge IDs.
         If the parameter is None, a default dictionary is constructed, which maps
 
