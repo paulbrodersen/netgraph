@@ -722,8 +722,8 @@ class BaseGraph(object):
                 head_length = 2 * edge_width[edge]
                 head_width = 3 * edge_width[edge]
             else:
-                head_length = 1e-10 # 0 throws error
-                head_width = 1e-10 # 0 throws error
+                head_length = 0
+                head_width = 0
 
             edge_artist = EdgeArtist(
                 midline     = edge_path[edge],
@@ -884,7 +884,8 @@ class BaseGraph(object):
             # Labels are centered on node artists.
             # Set fontsize such that labels fit the diameter of the node artists.
             size = self._get_font_size(node_labels, node_label_fontdict) * 0.75 # conservative fudge factor
-            node_label_fontdict.setdefault('size', size)
+            if ('size' not in node_label_fontdict) and ('fontsize' not in node_label_fontdict):
+                node_label_fontdict.setdefault('size', size)
 
         return node_label_fontdict
 
@@ -904,6 +905,8 @@ class BaseGraph(object):
 
         if 'size' in node_label_fontdict:
             size = rescale_factor * node_label_fontdict['size']
+        elif 'fontsize' in node_label_fontdict:
+            size = rescale_factor * node_label_fontdict['fontsize']
         else:
             size = rescale_factor * plt.rcParams['font.size']
         return size
@@ -1656,9 +1659,9 @@ class SelectableArtists(ClickableArtists):
         self._rect.set_visible(True)
         xlim = np.sort([self._x0, self._x1])
         ylim = np.sort([self._y0, self._y1])
-        self._rect.set_xy((xlim[0],ylim[0] ) )
-        self._rect.set_width(np.diff(xlim))
-        self._rect.set_height(np.diff(ylim))
+        self._rect.set_xy((xlim[0], ylim[0]))
+        self._rect.set_width(xlim[1] - xlim[0])
+        self._rect.set_height(ylim[1] - ylim[0])
         self.fig.canvas.draw_idle()
 
 
@@ -2068,7 +2071,11 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
             # not on any artist
             if (selected_artist is None) and self.deemphasized_artists:
                 for artist in self.deemphasized_artists:
-                    artist.set_alpha(self._base_alpha[artist])
+                    try:
+                        artist.set_alpha(self._base_alpha[artist])
+                    except KeyError:
+                        # This mitigates issue #66.
+                        pass
                 self.deemphasized_artists = []
                 self.fig.canvas.draw_idle()
 

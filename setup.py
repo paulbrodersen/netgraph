@@ -6,7 +6,7 @@ def read_file(filename):
     with open(os.path.join(os.path.dirname(__file__), filename)) as file:
         return file.read()
 
-version = '4.12.4'
+version = '4.12.12'
 
 setup(
     name='netgraph',
@@ -29,7 +29,10 @@ setup(
     ],
     platforms=['Platform Independent'],
     packages=find_packages(),
-    python_requires='>=3',
+    python_requires='>=3.6',
     install_requires=['numpy', 'matplotlib', 'scipy', 'rectangle-packer', 'grandalf'],
-    extras_require={'tests' : ['pytest', 'pytest-mpl']},
+    extras_require={
+        'tests' : ['pytest', 'pytest-mpl'],
+        'docs' : ['sphinx', 'sphinx-rtd-theme', 'numpydoc', 'sphinx-gallery', 'Pillow', 'networkx'],
+    },
 )

@@ -44,8 +44,7 @@ def _is_listlike(graph):
 @_handle_multigraphs
 def _parse_sparse_matrix_format(adjacency):
     """Parse graphs given in a sparse format, i.e. edge lists or sparse matrix representations."""
-    adjacency = np.array(adjacency)
-    rows, columns = adjacency.shape
+    rows, columns = np.array(adjacency).shape
 
     if columns == 2:
         edges = _parse_edge_list(adjacency)
@@ -53,9 +52,9 @@ def _parse_sparse_matrix_format(adjacency):
         return nodes, edges, None
 
     elif columns == 3:
-        edges = _parse_edge_list(adjacency[:, :2])
-        nodes = _get_unique_nodes(edges)
         edge_weight = {(source, target) : weight for (source, target, weight) in adjacency}
+        edges = list(edge_weight.keys())
+        nodes = _get_unique_nodes(edges)
 
         # In a sparse adjacency format with integer nodes and float weights,
         # the type of nodes is promoted to the same type as weights.
@@ -92,17 +91,17 @@ def _is_nparray(graph):
 
 
 def _parse_nparray(graph):
-        rows, columns = graph.shape
-        if columns in (2, 3):
-            return _parse_sparse_matrix_format(graph)
-        elif rows == columns:
-            return _parse_adjacency_matrix(graph)
-        else:
-            msg = "Could not interpret input graph."
-            msg += "\nIf a graph is specified as a numpy array, it has to have one of the following shapes:"
-            msg += "\n\t-(E, 2) or (E, 3), where E is the number of edges"
-            msg += "\n\t-(V, V), where V is the number of nodes (i.e. full rank)"
-            msg += f"However, the given graph had shape {graph.shape}."
+    rows, columns = graph.shape
+    if columns in (2, 3):
+        return _parse_sparse_matrix_format(graph)
+    elif rows == columns:
+        return _parse_adjacency_matrix(graph)
+    else:
+        msg = "Could not interpret input graph."
+        msg += "\nIf a graph is specified as a numpy array, it has to have one of the following shapes:"
+        msg += "\n\t-(E, 2) or (E, 3), where E is the number of edges"
+        msg += "\n\t-(V, V), where V is the number of nodes (i.e. full rank)"
+        msg += f"However, the given graph had shape {graph.shape}."
 
 
 def _parse_adjacency_matrix(adjacency):
@@ -222,5 +221,39 @@ def parse_graph(graph):
         except ModuleNotFoundError:
             pass
     else:
-        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graphtool.Graph']
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graph_tool.Graph']
+        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
+
+
+def is_order_zero(graph):
+    """Determine if a graph is an order zero graph, i.e. a graph with no nodes (and no edges)."""
+    for check, parser in _check_to_parser.items():
+        try:
+            if check(graph):
+                nodes, edges, _ = parser(graph)
+                if (not nodes) and (not edges):
+                    return True
+                else:
+                    return False
+        except ModuleNotFoundError:
+            pass
+    else:
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graph_tool.Graph']
+        raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
+
+
+def is_empty(graph):
+    """Determine if a graph is an empty graph, i.e. a graph with nodes but no edges."""
+    for check, parser in _check_to_parser.items():
+        try:
+            if check(graph):
+                nodes, edges, _ = parser(graph)
+                if nodes and (not edges):
+                    return True
+                else:
+                    return False
+        except ModuleNotFoundError:
+            pass
+    else:
+        allowed = ['list', 'tuple', 'set', 'networkx.Graph', 'igraph.Graph', 'graph_tool.Graph']
         raise NotImplementedError("Input graph must be one of: {}\nCurrently, type(graph) = {}".format("\n\n\t" + "\n\t".join(allowed), type(graph)))
