@@ -30,7 +30,7 @@ class BaseMultiGraph(BaseGraph):
     Parameters
     ----------
     edges : list
-        The edges of the graph, with each edge being represented by a (source node ID, target node ID, edge ID) tuple.
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID, edge key) tuple.
     nodes : list or None, default None
         List of nodes. Required argument if any node in the graph is unconnected.
         If None, `nodes` is initialised to the set of the flattened `edges`.

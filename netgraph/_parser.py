@@ -383,19 +383,16 @@ def parse_multigraph(graph):
     Parameters
     ----------
     graph: various formats
-
         Graph object to plot. Various input formats are supported.
         In order of precedence:
 
         - Edge list:
-          Iterable of (source, target) or (source, target, weight) tuples,
-          or equivalent (E, 2) or (E, 3) ndarray (where E is the number of edges).
+          Iterable of (source node ID, target node ID, edge key) or
+          (source node ID, target node ID, edge key, weight) tuples,
+          or equivalent (E, 3) or (E, 4) ndarray (where E is the number of edges).
         - Adjacency matrix:
-          Full-rank (V, V) ndarray (where V is the number of nodes/vertices).
+          A (V, V, L) ndarray (where V is the number of nodes/vertices, and L is the number of layers).
           The absence of a connection is indicated by a zero.
-
-          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
-
         - networkx.MultiGraph or igraph.Graph object
 
     Returns
