@@ -1969,6 +1969,15 @@ class AnnotateOnClick(object):
         self.annotated_artists.discard(artist)
 
 
+    def _redraw_annotations(self, event):
+        if event.inaxes == self.ax:
+            for artist in self.annotated_artists:
+                self._remove_annotation(artist)
+                placement = self._get_annotation_placement(artist)
+                self._add_annotation(artist, *placement)
+            self.fig.canvas.draw()
+
+
 class AnnotateOnClickGraph(Graph, AnnotateOnClick):
     """Combines `AnnotateOnClick` with the `Graph` class such that nodes or edges can have toggleable annotations."""
 
@@ -2412,12 +2421,3 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
             DraggableGraphWithGridMode._on_release(self, event)
             if self.artist_to_annotation:
                 self._redraw_annotations(event)
-
-
-    def _redraw_annotations(self, event):
-        if event.inaxes == self.ax:
-            for artist in self.annotated_artists:
-                self._remove_annotation(artist)
-                placement = self._get_annotation_placement(artist)
-                self._add_annotation(artist, *placement)
-            self.fig.canvas.draw()
