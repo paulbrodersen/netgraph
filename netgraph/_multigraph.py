@@ -11,6 +11,7 @@ from ._main import (
     BaseGraph,
     DraggableArtists,
     DraggableGraph,
+    DraggableGraphWithGridMode,
     _get_zorder,
     _get_color,
 )
@@ -565,3 +566,14 @@ class DraggableMultiGraph(MultiGraph, DraggableGraph, DraggableArtists):
         MultiGraph.__init__(self, *args, **kwargs)
         DraggableArtists.__init__(self, self.node_artists.values())
         self._setup_dragging_clicking_and_selecting()
+
+
+class DraggableMultiGraphWithGridMode(DraggableMultiGraph, DraggableGraphWithGridMode):
+    """
+    Implements a grid-mode, in which node positions are fixed to a grid.
+    To activate, press the letter 'g'.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._setup_grid_mode()
