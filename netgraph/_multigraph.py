@@ -552,28 +552,5 @@ class MultiGraph(BaseMultiGraph):
 
     """
 
-    def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
-
-        # Accept a variety of formats for 'graph' and convert to common denominator.
-        nodes, edges, edge_weight = parse_multigraph(graph)
-        kwargs.setdefault('nodes', nodes)
-
-        # Color and reorder edges for weighted graphs.
-        if edge_weight:
-            # If the graph is weighted, we want to visualise the weights using color.
-            # Edge width is another popular choice when visualising weighted networks,
-            # but if the variance in weights is large, this typically results in less
-            # visually pleasing results.
-            edge_color = _get_color(edge_weight, cmap=edge_cmap)
-
-            # Plotting darker edges over lighter edges typically results in visually
-            # more pleasing results. Here we hence specify the relative order in
-            # which edges are plotted according to the color of the edge.
-            edge_zorder = _get_zorder(edge_color)
-            node_zorder = np.max(list(edge_zorder.values())) + 1
-
-            kwargs.setdefault('edge_color', edge_color)
-            kwargs.setdefault('edge_zorder', edge_zorder)
-            kwargs.setdefault('node_zorder', node_zorder)
-
-        super().__init__(edges, *args, **kwargs)
+    def _parse_input(self, graph):
+        return parse_multigraph(graph)

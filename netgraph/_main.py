@@ -1155,7 +1155,7 @@ class Graph(BaseGraph):
     def __init__(self, graph, edge_cmap='RdGy', *args, **kwargs):
 
         # Accept a variety of formats for 'graph' and convert to common denominator.
-        nodes, edges, edge_weight = parse_graph(graph)
+        nodes, edges, edge_weight = self._parse_input(graph)
         kwargs.setdefault('nodes', nodes)
 
         # Color and reorder edges for weighted graphs.
@@ -1177,6 +1177,10 @@ class Graph(BaseGraph):
             kwargs.setdefault('node_zorder', node_zorder)
 
         super().__init__(edges, *args, **kwargs)
+
+
+    def _parse_input(self, graph):
+        return parse_graph(graph)
 
 
 def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
