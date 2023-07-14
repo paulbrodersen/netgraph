@@ -1858,7 +1858,6 @@ class AnnotateOnClick(object):
     """Show or hide annotations when clicking on matplotlib artists."""
 
     def __init__(self, artist_to_annotation, annotation_fontdict=None):
-
         self.artist_to_annotation = artist_to_annotation
         self.annotated_artists = set()
         self.artist_to_text_object = dict()
@@ -1870,11 +1869,22 @@ class AnnotateOnClick(object):
         if annotation_fontdict:
             self.annotation_fontdict.update(annotation_fontdict)
 
+        if not hasattr(self, "fig"):
+            try:
+                self.fig, = set(list(artist.figure for artist in artist_to_annotation))
+            except ValueError:
+                raise Exception("All artists have to be on the same figure!")
+
+        if not hasattr(self, "ax"):
+            try:
+                self.ax, = set(list(artist.axes for artist in artist_to_annotation))
+            except ValueError:
+                raise Exception("All artists have to be on the same axis!")
+
         self.fig.canvas.mpl_connect("button_release_event", self._on_release)
 
 
     def _on_release(self, event):
-
         if event.inaxes == self.ax:
 
             # clicked on already annotated artist
@@ -2040,15 +2050,17 @@ class TableOnClick(object):
                 self.table_fontsize = table_kwargs['fontsize']
             self.table_kwargs.update(table_kwargs)
 
-        try:
-            self.fig, = set(list(artist.figure for artist in artist_to_table))
-        except ValueError:
-            raise Exception("All artists have to be on the same figure!")
+        if not hasattr(self, "fig"):
+            try:
+                self.fig, = set(list(artist.figure for artist in artist_to_table))
+            except ValueError:
+                raise Exception("All artists have to be on the same figure!")
 
-        try:
-            self.ax, = set(list(artist.axes for artist in artist_to_table))
-        except ValueError:
-            raise Exception("All artists have to be on the same axis!")
+        if not hasattr(self, "ax"):
+            try:
+                self.ax, = set(list(artist.axes for artist in artist_to_table))
+            except ValueError:
+                raise Exception("All artists have to be on the same axis!")
 
         self.fig.canvas.mpl_connect("button_release_event", self._on_release)
 
@@ -2394,7 +2406,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
             DraggableGraphWithGridMode._on_release(self, event)
             if self.artist_to_annotation:
                 AnnotateOnClickGraph._on_release(self, event)
-            if hasattr(self, 'artist_to_table'):
+            if self.artist_to_table:
                 TableOnClickGraph._on_release(self, event)
         else:
             DraggableGraphWithGridMode._on_release(self, event)
