@@ -1515,14 +1515,15 @@ class DraggableGraph(Graph, DraggableArtists):
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
         DraggableArtists.__init__(self, self.node_artists.values())
+        self._setup_dragging_clicking_and_selecting()
 
+
+    def _setup_dragging_clicking_and_selecting(self):
         self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
-
         self._clickable_artists.extend(list(self.edge_artists.values()))
         self._selectable_artists.extend(list(self.edge_artists.values()))
         self._base_linewidth.update(dict([(artist, artist._lw_data) for artist in self.edge_artists.values()]))
         self._base_edgecolor.update(dict([(artist, artist.get_edgecolor()) for artist in self.edge_artists.values()]))
-
         # # trigger resize of labels when canvas size changes
         # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
@@ -1578,9 +1579,11 @@ class DraggableGraphWithGridMode(DraggableGraph):
     """
 
     def __init__(self, *args, **kwargs):
-
         super().__init__(*args, **kwargs)
+        self._setup_grid_mode()
 
+
+    def _setup_grid_mode(self):
         self.grid = False
         self.grid_dx = 0.05 * self.scale[0]
         self.grid_dy = 0.05 * self.scale[1]
@@ -1739,16 +1742,22 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
     def __init__(self, graph, mouseover_highlight_mapping=None, *args, **kwargs):
         Graph.__init__(self, graph, *args, **kwargs)
 
-        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
-        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
-        self.artist_to_key = dict(zip(artists, keys))
-        EmphasizeOnHover.__init__(self, artists)
-
-        if mouseover_highlight_mapping is None: # construct default mapping
-            self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
-        else: # this includes empty mappings!
+        self._setup_emphasis()
+        if mouseover_highlight_mapping is not None: # this includes empty mappings!
             self._check_mouseover_highlight_mapping(mouseover_highlight_mapping)
             self.mouseover_highlight_mapping = mouseover_highlight_mapping
+
+
+    def _setup_emphasis(self):
+        self.artist_to_key = self._map_artist_to_key()
+        EmphasizeOnHover.__init__(self, list(self.artist_to_key.keys()))
+        self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
+
+
+    def _map_artist_to_key(self):
+        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
+        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
+        return dict(zip(artists, keys))
 
 
     def _get_default_mouseover_highlight_mapping(self):
@@ -1952,18 +1961,31 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
+        self._setup_annotations(*args, **kwargs)
 
+
+    def _setup_annotations(self, *args, **kwargs):
+        if "annotations" in kwargs:
+            artist_to_annotation = self._map_artist_to_annotation(kwargs["annotations"])
+        else:
+            artist_to_annotation = dict()
+
+        if "annotation_fontdict" in kwargs:
+            AnnotateOnClick.__init__(self, artist_to_annotation, kwargs["annotation_fontdict"])
+        else:
+            AnnotateOnClick.__init__(self, artist_to_annotation)
+
+
+    def _map_artist_to_annotation(self, annotations):
         artist_to_annotation = dict()
-        if 'annotations' in kwargs:
-            for key, annotation in kwargs['annotations'].items():
-                if key in self.nodes:
-                    artist_to_annotation[self.node_artists[key]] = annotation
-                elif key in self.edges:
-                    artist_to_annotation[self.edge_artists[key]] = annotation
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
-
-        AnnotateOnClick.__init__(self, artist_to_annotation)
+        for key, annotation in kwargs['annotations'].items():
+            if key in self.nodes:
+                artist_to_annotation[self.node_artists[key]] = annotation
+            elif key in self.edges:
+                artist_to_annotation[self.edge_artists[key]] = annotation
+            else:
+                raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
+        return artist_to_annotation
 
 
     def _get_centroid(self):
@@ -2066,21 +2088,31 @@ class TableOnClickGraph(Graph, TableOnClick):
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
+        self._setup_table_annotations(*args, **kwargs)
 
-        artist_to_table = dict()
+
+    def _setup_table_annotations(self, *args, **kwargs):
         if 'tables' in kwargs:
-            for key, table in kwargs['tables'].items():
-                if key in self.nodes:
-                    artist_to_table[self.node_artists[key]] = table
-                elif key in self.edges:
-                    artist_to_table[self.edge_artists[key]] = table
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
+            artist_to_table = _map_artist_to_table(kwargs['tables'])
+        else:
+            artist_to_table = dict()
 
         if 'table_kwargs' in kwargs:
             TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
         else:
             TableOnClick.__init__(self, artist_to_table)
+
+
+    def _map_artist_to_table(self, tables):
+        artist_to_table = dict()
+        for key, table in tables.items():
+            if key in self.nodes:
+                artist_to_table[self.node_artists[key]] = table
+            elif key in self.edges:
+                artist_to_table[self.edge_artists[key]] = table
+            else:
+                raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
+        return artist_to_table
 
 
 class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
@@ -2343,46 +2375,10 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
     """
 
     def __init__(self, *args, **kwargs):
-
         DraggableGraphWithGridMode.__init__(self, *args, **kwargs)
-
-        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
-        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
-        self.artist_to_key = dict(zip(artists, keys))
-        EmphasizeOnHover.__init__(self, artists)
-        self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
-
-        artist_to_annotation = dict()
-        if 'annotations' in kwargs:
-            for key, annotation in kwargs['annotations'].items():
-                # Test membership of edges first, as edge keys may
-                # result in a ValueError when testing membership of nodes.
-                if key in self.edges:
-                    artist_to_annotation[self.edge_artists[key]] = annotation
-                elif key in self.nodes:
-                    artist_to_annotation[self.node_artists[key]] = annotation
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
-
-        if 'annotation_fontdict' in kwargs:
-            AnnotateOnClick.__init__(self, artist_to_annotation, kwargs['annotation_fontdict'])
-        else:
-            AnnotateOnClick.__init__(self, artist_to_annotation)
-
-        if 'tables' in kwargs:
-            artist_to_table = dict()
-            for key, table in kwargs['tables'].items():
-                if key in self.nodes:
-                    artist_to_table[self.node_artists[key]] = table
-                elif key in self.edges:
-                    artist_to_table[self.edge_artists[key]] = table
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
-
-            if 'table_kwargs' in kwargs:
-                TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
-            else:
-                TableOnClick.__init__(self, artist_to_table)
+        self._setup_emphasis()
+        self._setup_annotations(*args, **kwargs)
+        self._setup_table_annotations(*args, **kwargs)
 
 
     def _on_motion(self, event):

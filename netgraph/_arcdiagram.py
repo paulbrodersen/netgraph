@@ -458,21 +458,15 @@ class DraggableArcDiagram(ArcDiagram, DraggableGraph):
     def __init__(self, *args, **kwargs):
         ArcDiagram.__init__(self, *args, **kwargs)
         DraggableArtists.__init__(self, self.node_artists.values())
+        self._setup_dragging_clicking_and_selecting()
 
-        self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
-        self._clickable_artists.extend(list(self.edge_artists.values()))
-        self._selectable_artists.extend(list(self.edge_artists.values()))
-        self._base_linewidth.update(dict([(artist, artist._lw_data) for artist in self.edge_artists.values()]))
-        self._base_edgecolor.update(dict([(artist, artist.get_edgecolor()) for artist in self.edge_artists.values()]))
-
-        # # trigger resize of labels when canvas size changes
-        # self.fig.canvas.mpl_connect('resize_event', self._on_resize)
 
     def _update_node_positions(self, nodes, cursor_position):
         # cursor_position[1] = 0. # remove y-component to remain on the line
         for node in nodes:
             x, _ = cursor_position + self._offset[self.node_artists[node]]
             self.node_positions[node] = np.array([x, self.node_positions[node][1]])
+
 
     def _update_edges(self, edges):
         edge_paths = dict()
@@ -739,26 +733,8 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
 
         DraggableArcDiagram.__init__(self, *args, **kwargs)
 
-        artists = list(self.node_artists.values()) + list(self.edge_artists.values())
-        keys = list(self.node_artists.keys()) + list(self.edge_artists.keys())
-        self.artist_to_key = dict(zip(artists, keys))
-        EmphasizeOnHover.__init__(self, artists)
-        self.mouseover_highlight_mapping = self._get_default_mouseover_highlight_mapping()
-
-        artist_to_annotation = dict()
-        if 'annotations' in kwargs:
-            for key, annotation in kwargs['annotations'].items():
-                if key in self.nodes:
-                    artist_to_annotation[self.node_artists[key]] = annotation
-                elif key in self.edges:
-                    artist_to_annotation[self.edge_artists[key]] = annotation
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the annotation '{annotation}'.")
-
-        if 'annotation_fontdict' in kwargs:
-            AnnotateOnClick.__init__(self, artist_to_annotation, kwargs['annotation_fontdict'])
-        else:
-            AnnotateOnClick.__init__(self, artist_to_annotation)
+        self._setup_emphasis()
+        self._setup_annotations()
 
         if 'tables' in kwargs:
             artist_to_table = dict()
