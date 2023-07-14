@@ -9,6 +9,8 @@ import matplotlib.pyplot as plt
 
 from ._main import (
     BaseGraph,
+    DraggableArtists,
+    DraggableGraph,
     _get_zorder,
     _get_color,
 )
@@ -554,3 +556,12 @@ class MultiGraph(BaseMultiGraph):
 
     def _parse_input(self, graph):
         return parse_multigraph(graph)
+
+
+class DraggableMultiGraph(MultiGraph, DraggableGraph, DraggableArtists):
+    """Augments `MultiGraph` to support selection and dragging of node artists with the mouse."""
+
+    def __init__(self, *args, **kwargs):
+        MultiGraph.__init__(self, *args, **kwargs)
+        DraggableArtists.__init__(self, self.node_artists.values())
+        self._setup_dragging_clicking_and_selecting()
