@@ -1981,7 +1981,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
 
     def _map_artist_to_annotation(self, annotations):
         artist_to_annotation = dict()
-        for key, annotation in kwargs['annotations'].items():
+        for key, annotation in annotations.items():
             if key in self.nodes:
                 artist_to_annotation[self.node_artists[key]] = annotation
             elif key in self.edges:
