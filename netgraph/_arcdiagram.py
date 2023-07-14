@@ -456,8 +456,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
 class DraggableArcDiagram(ArcDiagram, DraggableGraph):
 
     def __init__(self, *args, **kwargs):
-        ArcDiagram.__init__(self, *args, **kwargs)
-        DraggableArtists.__init__(self, self.node_artists.values())
+        super().__init__(*args, **kwargs)
         self._setup_dragging_clicking_and_selecting()
 
 
@@ -730,26 +729,10 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
     """
 
     def __init__(self, *args, **kwargs):
-
-        DraggableArcDiagram.__init__(self, *args, **kwargs)
-
+        super().__init__(*args, **kwargs)
         self._setup_emphasis()
         self._setup_annotations()
-
-        if 'tables' in kwargs:
-            artist_to_table = dict()
-            for key, table in kwargs['tables'].items():
-                if key in self.nodes:
-                    artist_to_table[self.node_artists[key]] = table
-                elif key in self.edges:
-                    artist_to_table[self.edge_artists[key]] = table
-                else:
-                    raise ValueError(f"There is no node or edge with the ID {key} for the table '{table}'.")
-
-            if 'table_kwargs' in kwargs:
-                TableOnClick.__init__(self, artist_to_table, kwargs['table_kwargs'])
-            else:
-                TableOnClick.__init__(self, artist_to_table)
+        self._setup_table_annotations()
 
 
     def _on_motion(self, event):

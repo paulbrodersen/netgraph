@@ -1513,12 +1513,12 @@ class DraggableGraph(Graph, DraggableArtists):
     """Augments `Graph` to support selection and dragging of node artists with the mouse."""
 
     def __init__(self, *args, **kwargs):
-        Graph.__init__(self, *args, **kwargs)
-        DraggableArtists.__init__(self, self.node_artists.values())
+        super().__init__(*args, **kwargs)
         self._setup_dragging_clicking_and_selecting()
 
 
     def _setup_dragging_clicking_and_selecting(self):
+        DraggableArtists.__init__(self, self.node_artists.values())
         self._draggable_artist_to_node = dict(zip(self.node_artists.values(), self.node_artists.keys()))
         self._clickable_artists.extend(list(self.edge_artists.values()))
         self._selectable_artists.extend(list(self.edge_artists.values()))
