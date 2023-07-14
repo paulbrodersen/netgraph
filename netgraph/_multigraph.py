@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 
 from ._main import (
     BaseGraph,
+    Graph,
     DraggableArtists,
     DraggableGraph,
     DraggableGraphWithGridMode,
-    _get_zorder,
-    _get_color,
 )
 
 from ._parser import (
@@ -346,7 +345,7 @@ class BaseMultiGraph(BaseGraph):
             self.edge_artists[edge] = edge_artist
 
 
-class MultiGraph(BaseMultiGraph):
+class MultiGraph(BaseMultiGraph, Graph):
     """Parses the given graph data object and initialises the BaseGraph object.
 
     If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
@@ -554,6 +553,10 @@ class MultiGraph(BaseMultiGraph):
     BaseMultiGraph
 
     """
+
+    def __init__(self, *args, **kwargs):
+        Graph.__init__(self, *args, **kwargs)
+
 
     def _parse_input(self, graph):
         return parse_multigraph(graph)
