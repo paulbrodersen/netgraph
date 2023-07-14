@@ -13,6 +13,9 @@ from ._main import (
     DraggableArtists,
     DraggableGraph,
     DraggableGraphWithGridMode,
+    EmphasizeOnHoverGraph,
+    AnnotateOnClickGraph,
+    TableOnClickGraph,
 )
 
 from ._parser import (
