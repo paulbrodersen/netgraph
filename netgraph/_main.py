@@ -2117,7 +2117,7 @@ class TableOnClickGraph(Graph, TableOnClick):
 
     def _setup_table_annotations(self, *args, **kwargs):
         if 'tables' in kwargs:
-            artist_to_table = _map_artist_to_table(kwargs['tables'])
+            artist_to_table = self._map_artist_to_table(kwargs['tables'])
         else:
             artist_to_table = dict()
 
