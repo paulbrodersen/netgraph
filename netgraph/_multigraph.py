@@ -847,3 +847,21 @@ class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGra
         self._setup_emphasis()
         self._setup_annotations(*args, **kwargs)
         self._setup_table_annotations(*args, **kwargs)
+
+
+    def _on_motion(self, event):
+        DraggableMultiGraphWithGridMode._on_motion(self, event)
+        EmphasizeOnHoverGraph._on_motion(self, event)
+
+
+    def _on_release(self, event):
+        if self._currently_dragging is False:
+            DraggableMultiGraphWithGridMode._on_release(self, event)
+            if self.artist_to_annotation:
+                AnnotateOnClickGraph._on_release(self, event)
+            if self.artist_to_table:
+                TableOnClickGraph._on_release(self, event)
+        else:
+            DraggableMultiGraphWithGridMode._on_release(self, event)
+            if self.artist_to_annotation:
+                self._redraw_annotations(event)
