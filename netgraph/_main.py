@@ -1761,22 +1761,25 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
 
     def _get_default_mouseover_highlight_mapping(self):
+        """Construct default mapping:
+
+        - Nodes map to themselves, their neighbours, and any edges between them.
+        - Edges map to themselves, and their source and target node.
+
+        """
+
         mapping = dict()
 
-        # mapping for edges: source node, target node and the edge itself
-        for (source, target) in self.edges:
-            mapping[(source, target)] = [(source, target), source, target]
-
-        # mapping for nodes: the node itself, its neighbours, and any edges between them
-        adjacency_list = _edge_list_to_adjacency_list(self.edges, directed=False)
-        for node, neighbours in adjacency_list.items():
+        for node in self.nodes:
             mapping[node] = [node]
-            for neighbour in neighbours:
-                mapping[node].append(neighbour)
-                if (node, neighbour) in self.edge_artists:
-                    mapping[node].append((node, neighbour))
-                if (neighbour, node) in self.edge_artists:
-                    mapping[node].append((neighbour, node))
+
+        for edge in self.edges:
+            source, target = edge[:2]
+            mapping[source].append(edge)
+            mapping[source].append(target)
+            mapping[target].append(edge)
+            mapping[target].append(source)
+            mapping[edge] = [edge, source, target]
 
         return mapping
 
