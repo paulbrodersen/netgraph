@@ -23,14 +23,14 @@ bibliography: paper.bib
 
 # Statement of need
 
-The empirical study and scholarly analysis of networks have increased manifold in recent decades, fuelled by the new prominence of network structures in our lives (the web, social networks, artificial neural networks, ecological networks, etc.) and the data available on them. While there are several comprehensive Python libraries for network analysis such as NetworkX [@Hagberg:2008], igraph [@Csardi:2006], and graph-tool [@Peixoto:2014], their inbuilt visualisation capabilities lag behind specialised software solutions such as Graphviz [@Ellson:2002], Cytoscape [@Shannon:2003], or Gephi [@Bastian:2009]. However, although Python bindings for these applications exist in the form of PyGraphviz, py4cytoscape, and GephiStreamer, respectively, their outputs are not manipulable Python objects, which restricts customisation, limits their extensibility, and prevents a seamless integration within a wider Python application.
+The empirical study and scholarly analysis of networks have increased manifold in recent decades, fuelled by the new prominence of network structures in our lives (the web, social networks, artificial neural networks, ecological networks, etc.) and the data available on them. While there are several comprehensive Python libraries for network analysis such as NetworkX [@Hagberg:2008], igraph [@Csardi:2006], and graph-tool [@Peixoto:2014], their inbuilt visualisation capabilities lag behind specialised software solutions such as Graphviz [@Ellson:2002], Cytoscape [@Shannon:2003], and Gephi [@Bastian:2009]. However, although Python bindings for these applications exist in the form of PyGraphviz, py4cytoscape, and GephiStreamer, respectively, their outputs are not manipulable Python objects, which restricts customisation, limits their extensibility, and prevents a seamless integration within a wider Python application.
 
 # Summary
 
 Netgraph is a Python library that aims to complement the existing network analysis libraries with publication-quality visualisations within the Python ecosystem. To facilitate a seamless integration, Netgraph supports a variety of input formats, including NetworkX, igraph, and graph-tool Graph objects. At the time of writing, Netgraph provides the following node layout algorithms:
 
-- the Fruchterman-Reingold algorithm a.k.a. the "spring" layout,
-- the Sugiyama algorithm a.k.a. the "dot" layout for directed, acyclic graphs,
+- the Fruchterman-Reingold algorithm, a.k.a. the "spring" layout,
+- the Sugiyama algorithm, a.k.a. the "dot" layout for directed, acyclic graphs,
 - a radial tree layout for directed, acyclic graphs,
 - a circular node layout (with optional edge crossing reduction),
 - a bipartite node layout for bipartite graphs (with optional edge crossing reduction),
@@ -135,7 +135,7 @@ fig.canvas.draw()
 
 # Key Design Decisions
 
-The creation of Netgraph was motivated by the desire to make high-quality, easily customisable, and reproducible network visualisations, whilst maintaining an extensible code base. To that end, a key design decision was to have a single reference frame for all node artist and edge artist attributes that determine their extent (e.g. in the case of a circular node artist, its position and its radius).
+The creation of Netgraph was motivated by the desire to make high-quality, easily customisable, and reproducible network visualisations, whilst maintaining an extensible code base. To that end, a key design decision was to have a single reference frame for all node artist and edge artist attributes that determine their extent (e.g., in the case of a circular node artist, its position and its radius).
 
 Good data visualisations are both accurate and legible. The legibility of a visualisation is influenced predominantly by the size of the plot elements, and occlusions between them. However, there is often tension between these two requirements, as larger plot elements are more visible but also more likely to cause overlaps with other plot elements. Most data visualisation tools focus on accuracy and visibility. To that end, they operate in two reference frames: a data-derived reference frame and a display-derived reference frame. For example, in a standard line-plot, the data-derived reference frame determines the x and y values of the line. The thickness of the line, however, scales with the size of the display, and its width (measured in pixels) remains constant across different figure sizes and aspect ratios. Having two reference frames ensures that the line (1) is an accurate representation of the data, and (2) is visible and discernible independent of figure dimensions. The trade-off of this setup is that (1) the precise extents of plot elements can only be computed after the figure is initialised, and (2) occlusions are not managed and hence common, for example, if multiple lines are plotted in the same figure. Nevertheless, most network visualisation tools follow this standard. For example, NetworkX specifies node positions and edge paths in data coordinates, but uses display units for node sizes and edge widths.
 
