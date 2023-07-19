@@ -83,7 +83,7 @@ plt.show()
 
 Netgraph can be easily integrated into existing network analysis workflows as it accepts a variety of graph structures. The example below uses a NetworkX `Graph` object, but igraph and graph-tool objects are also valid inputs, as are plain edge lists and full-rank adjacency matrices. The output visualisations are created using Matplotlib and can hence form subplots in larger Matplotlib figures.
 
-Each visualisation can be customised in various ways. Most parameters can be set using a scalar or string. In this case, the value is applied to all relevant artists. To style different artists differently, supply a dictionary instead. Furthermore, node and edge artists are derived from `matplotlib.patches.PathPatch`; node and edge labels are `matplotlib.text.Text` instances. Hence all node artists, edge artists, and labels can be manipulated using standard matplotlib syntax after the initial draw.
+Each visualisation can be customised in various ways. Most parameters can be set using a scalar or string. In this case, the value is applied to all nodes or edges (depending on the parameter). To style each node or each edge differently, supply a dictionary instead. Furthermore, Netgraph's `NodeArtist` and `EdgeArtist` classes, i.e. the Python objects that instruct a renderer to paint nodes and edges onto the canvas, are derived from Matplotlib's `PathPatch` class; similarly, node and edge labels are Matplotlib `Text` instances. Hence all node artists, edge artists, and labels can be manipulated using standard matplotlib syntax after the initial draw.
 
 ![Advanced example output](advanced_example.png){width=50%}
 
