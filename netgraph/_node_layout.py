@@ -1690,7 +1690,7 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
-    edge_lengths : dict
+    edge_length : dict
         Mapping of edges to their lengths.
     node_size : scalar or dict, default 0.
         Size (radius) of nodes.
