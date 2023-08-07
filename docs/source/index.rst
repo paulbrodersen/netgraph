@@ -10,28 +10,38 @@ Netgraph
 
 .. image:: https://pepy.tech/badge/netgraph
 
-Netgraph is a python library that aims to complement existing network analysis libraries such as such as networkx_, igraph_, and graph-tool_ with publication-quality visualisations within the python ecosystem. To facilitate a seamless integration, netgraph supports a variety of input formats, including networkx, igraph, and graph-tool :code:`Graph` objects. Netgraph implements numerous node layout algorithms and several edge routing routines. Uniquely among python alternatives, it handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using matplotlib_, and the resulting matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard matplotlib syntax. Finally, netgraph also supports interactive changes: with the :code:`InteractiveGraph` class, nodes and edges can be positioned using the mouse, and the :code:`EditableGraph` class additionally supports insertion and deletion of nodes and edges as well as their (re-)labelling through standard text-entry.
+Netgraph is a Python library that aims to complement existing network analysis libraries such as such as networkx_, igraph_, and graph-tool_ with publication-quality visualisations within the Python ecosystem. To facilitate a seamless integration, Netgraph supports a variety of input formats, including networkx, igraph, and graph-tool :code:`Graph` objects. Netgraph implements numerous node layout algorithms and several edge routing routines. Uniquely among Python alternatives, it handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using Matplotlib_, and the resulting Matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard Matplotlib syntax. The visualisations can also be altered interactively: nodes and edges can be added on-the-fly through hotkeys, positioned using the mouse, and (re-)labelled through standard text-entry.
 
 .. _networkx: https://networkx.org/
 .. _igraph: https://igraph.org/
 .. _graph-tool: https://graph-tool.skewed.de/
-.. _matplotlib: https://matplotlib.org/
+.. _Matplotlib: https://matplotlib.org/
 
 
-Installation
-------------
+Citing Netgraph
+---------------
 
-From PyPI:
+If you use Netgraph in a scientific publication, I would appreciate citations to the following paper:
 
-.. code-block:: shell
 
-    pip install netgraph
+Brodersen, P. J. N., (2023). Netgraph: Publication-quality Network Visualisations in Python. Journal of Open Source Software, 8(87), 5372, https://doi.org/10.21105/joss.05372
 
-From conda-forge:
+
+Bibtex entry:
 
 .. code-block::
 
-    conda install -c conda-forge netgraph
+    @article{Brodersen2023,
+        doi     = {10.21105/joss.05372},
+        url     = {https://doi.org/10.21105/joss.05372},
+        year    = {2023}, publisher = {The Open Journal},
+        volume  = {8},
+        number  = {87},
+        pages   = {5372},
+        author  = {Paul J. N. Brodersen},
+        title   = {Netgraph: Publication-quality Network Visualisations in Python},
+        journal = {Journal of Open Source Software},
+    }
 
 
 Contributing & Support

@@ -1,10 +1,10 @@
 # Netgraph
 
-*Publication-quality network visualisations in python*
+*Publication-quality Network Visualisations in Python*
 
-[![Downloads](https://pepy.tech/badge/netgraph)](https://pepy.tech/project/netgraph) [![DOI](https://zenodo.org/badge/70009270.svg)](https://zenodo.org/badge/latestdoi/70009270)
+[![Downloads](https://pepy.tech/badge/netgraph)](https://pepy.tech/project/netgraph) [![DOI](https://zenodo.org/badge/70009270.svg)](https://zenodo.org/badge/latestdoi/70009270) [![DOI](https://joss.theoj.org/papers/10.21105/joss.05372/status.svg)](https://doi.org/10.21105/joss.05372)
 
-Netgraph is a python library that aims to complement existing network analysis libraries such as such as [networkx](https://networkx.org/), [igraph](https://igraph.org/), and [graph-tool](https://graph-tool.skewed.de/) with publication-quality visualisations within the python ecosystem. To facilitate a seamless integration, netgraph supports a variety of input formats, including networkx, igraph, and graph-tool `Graph` objects. Netgraph implements numerous node layout algorithms and several edge routing routines. Uniquely among python alternatives, it handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using [matplotlib](https://matplotlib.org/), and the resulting matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard matplotlib syntax. Finally, netgraph also supports interactive changes: with the `InteractiveGraph` class, nodes and edges can be positioned using the mouse, and the `EditableGraph` class additionally supports insertion and deletion of nodes and edges as well as their (re-)labelling through standard text-entry.
+Netgraph is a Python library that aims to complement existing network analysis libraries such as such as [networkx](https://networkx.org/), [igraph](https://igraph.org/), and [graph-tool](https://graph-tool.skewed.de/) with publication-quality visualisations within the Python ecosystem. To facilitate a seamless integration, Netgraph supports a variety of input formats, including networkx, igraph, and graph-tool `Graph` objects. Netgraph implements numerous node layout algorithms and several edge routing routines. Uniquely among Python alternatives, it handles networks with multiple components gracefully (which otherwise break most node layout routines), and it post-processes the output of the node layout and edge routing algorithms with several heuristics to increase the interpretability of the visualisation (reduction of overlaps between nodes, edges, and labels; edge crossing minimisation and edge unbundling where applicable). The highly customisable plots are created using [Matplotlib](https://matplotlib.org/), and the resulting Matplotlib objects are exposed in an easily queryable format such that they can be further manipulated and/or animated using standard Matplotlib syntax. Finally, Netgraph also supports interactive changes: with the `InteractiveGraph` class, nodes and edges can be positioned using the mouse, and the `EditableGraph` class additionally supports insertion and deletion of nodes and edges as well as their (re-)labelling through standard text-entry.
 
 ## Installation
 
@@ -14,7 +14,7 @@ Install the current release of `netgraph` from PyPI:
 pip install netgraph
 ```
 
-If you are using (Ana-)conda (or mamba), you can also obtain netgraph from conda-forge:
+If you are using (Ana-)conda (or mamba), you can also obtain Netgraph from conda-forge:
 
 ``` shell
 conda install -c conda-forge netgraph
@@ -23,7 +23,6 @@ conda install -c conda-forge netgraph
 ## Documentation
 
 Numerous tutorials, code examples, and a complete documentation of the API can be found on [ReadTheDocs](https://netgraph.readthedocs.io/en/latest/index.html).
-
 
 ## Quickstart
 
@@ -74,7 +73,7 @@ plt.show()
 plot_instance = EditableGraph(graph_data)
 plt.show()
 
-# Netgraph uses matplotlib for creating the visualisation.
+# Netgraph uses Matplotlib for creating the visualisation.
 # Node and edge artistis are derived from `matplotlib.patches.PathPatch`.
 # Node and edge labels are `matplotlib.text.Text` instances.
 # Standard matplotlib syntax applies.
@@ -96,28 +95,49 @@ help(InteractiveGraph)
 help(EditableGraph)
 ```
 
-
 ## Examples
 
 
 ![Example visualisations](./figures/gallery_portrait.png)
 
 
+## Citing Netgraph
+
+If you use Netgraph in a scientific publication, I would appreciate citations to the following paper:
+
+Brodersen, P. J. N., (2023). Netgraph: Publication-quality Network Visualisations in Python. Journal of Open Source Software, 8(87), 5372, https://doi.org/10.21105/joss.05372
+
+Bibtex entry:
+
+```bibtex
+@article{Brodersen2023,
+    doi     = {10.21105/joss.05372},
+    url     = {https://doi.org/10.21105/joss.05372},
+    year    = {2023}, publisher = {The Open Journal},
+    volume  = {8},
+    number  = {87},
+    pages   = {5372},
+    author  = {Paul J. N. Brodersen},
+    title   = {Netgraph: Publication-quality Network Visualisations in Python},
+    journal = {Journal of Open Source Software},
+}
+```
+
 ## Recent changes
 
 - 4.13.0 Wrote an article on Netgraph for the Journal of Open Source Software (latest draft in /publication).
-- 4.12.12 Expanded the documentation to cover installation of optional dependencies, automated testing, and troubleshooting issues with matplotlib event handling (issue #69).
+- 4.12.12 Expanded the documentation to cover installation of optional dependencies, automated testing, and troubleshooting issues with Matplotlib event handling (issue #69).
 - 4.12.11 Mitigated a bug in `EditableGraph` that occurred when deleting a node while hovering over an edge incident to that node (issue #66).
 - 4.12.10 Fixed a bug with automatic node label rescaling if the node label fontsize was specified using the `fontsize` keyword argument (instead of just `size`).
 - 4.12.9 Fixed a bug that occurred when the distance argument to `_shorten_line_by` was equal or smaller than zero.
 - 4.12.8 Fixed a bug that occurred with recent numpy versions when using multi-partite or shell layouts with un-equal numbers of nodes in each layer (issue #65).
-- 4.12.7 Fixed a bug that occurred with recent matplotlib versions when using the rectangle selector in `InteractiveGraph`.
+- 4.12.7 Fixed a bug that occurred with recent Matplotlib versions when using the rectangle selector in `InteractiveGraph`.
 - 4.12.6 Added support for graphs with nodes but no edges to `EditableGraph` (issue #62).
 - 4.12.5 Added support for empty graphs in `EditableGraph` (issue #62).
 - 4.12.4 Turned off clipping of self-loop paths.
 - 4.12.3 Bugfix: stopped overwriting `step` parameter in `get_community_layout`.
 - 4.12.2 Improved node positions rescaling for some layouts & standardised node position padding across all layouts.
-- 4.12.1 Fixed a bug/deprecation issue that occurred with new versions of matplotlib if an axis was provided (thanks @speedsmith!).
+- 4.12.1 Fixed a bug/deprecation issue that occurred with new versions of Matplotlib if an axis was provided (thanks @speedsmith!).
 - 4.12.0 Implemented the geometric node layout, which infers node positions from given edge lengths.
 - 4.11.8 Plotting of graphs with a single node is now actually supported. Thanks @Alexander-Wilms.
 - 4.11.7 Removed instances of (deprecated) np.float / np.int types (issue #58).
@@ -175,5 +195,5 @@ Finally, if you do email me, please be very patient. I rarely check
 the email account linked to my open source code, so I probably will
 not see your emails for several weeks, potentially longer. Also, I have a
 job that I love and that pays my bills, and thus takes priority. That
-being said, the blue little notification dot on github is surprisingly
+being said, the blue little notification dot on GitHub is surprisingly
 effective at getting my attention. So please just raise an issue.
