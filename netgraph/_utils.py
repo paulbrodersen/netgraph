@@ -22,6 +22,14 @@ def _save_cast_float_to_int(num):
     return num
 
 
+def _save_cast_str_to_int(string):
+    """Cast string to an integer if possible."""
+    try:
+        return int(string)
+    except:
+        return string
+
+
 def _get_unique_nodes(edges):
     """
     Parameters

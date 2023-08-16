@@ -4,6 +4,7 @@
 Implements multi-graph classes.
 """
 
+import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -36,7 +37,26 @@ from ._edge_layout import (
 
 from ._utils import (
     _simplify_multigraph,
+    _save_cast_str_to_int,
+    _invert_dict,
+    _get_unique_nodes,
 )
+
+
+# from: https://matplotlib.org/stable/tutorials/introductory/customizing.html#the-default-matplotlibrc-file
+MATPLOTLIB_RESERVED_KEYS = [
+    "f",
+    "h", "r", "home",
+    "left", "c", "backspace",
+    "right", "v",
+    "p",
+    "o",
+    "s",
+    "q",
+    "g", "G",
+    "l",
+    "k", "L",
+]
 
 
 class BaseMultiGraph(BaseGraph):
@@ -585,11 +605,138 @@ class DraggableMultiGraphWithGridMode(DraggableMultiGraph, DraggableGraphWithGri
         self._setup_grid_mode()
 
 
-class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """Extends the `MultiGraph` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
+class EmphasizeOnKeyPress(object):
+    """Emphasize groups of matplotlib artists by pressing the
+    corresponding key. Pressing escape removes any emphasis.
+
+    """
+
+    def __init__(self, artists, emphasis_group_to_artists):
+
+        self.emphasizeable_artists = artists
+        self._emphasis_group_to_artists = emphasis_group_to_artists
+        self._base_alpha = {artist : artist.get_alpha() for artist in self.emphasizeable_artists}
+        self.deemphasized_artists = []
+
+        conflicts = [group for group in self._emphasis_group_to_artists if group in MATPLOTLIB_RESERVED_KEYS]
+        if conflicts:
+            msg = f"The following emphasis group keys are reserved by Matplotlib: {conflicts}"
+            msg += "\nPressing these keys to emphasize the corresponding artists may have unintended side-effects."
+            warnings.warn(msg)
+
+        if not hasattr(self, "fig"):
+            try:
+                self.fig, = set(list(artist.figure for artist in artists))
+            except ValueError:
+                raise Exception("All artists have to be on the same figure!")
+
+        if not hasattr(self, "ax"):
+            try:
+                self.ax, = set(list(artist.axes for artist in artists))
+            except ValueError:
+                raise Exception("All artists have to be on the same axis!")
+
+        self.fig.canvas.mpl_connect("key_press_event", self._on_key_press)
+
+
+    def _on_key_press(self, event):
+        group = _save_cast_str_to_int(event.key)
+        if group in self._emphasis_group_to_artists:
+            self._emphasize_group(group)
+        elif group == "escape":
+            self._remove_emphasis()
+
+
+    def _emphasize_group(self, group):
+        for artist in self.emphasizeable_artists:
+            if (artist in self._emphasis_group_to_artists[group]):
+                if artist in self.deemphasized_artists:
+                    artist.set_alpha(self._base_alpha[artist])
+                    self.deemphasized_artists.remove(artist)
+            else:
+                if (artist not in self.deemphasized_artists):
+                    artist.set_alpha(self._base_alpha[artist]/5)
+                    self.deemphasized_artists.append(artist)
+        self.fig.canvas.draw_idle()
+
+
+    def _remove_emphasis(self):
+        for artist in self.deemphasized_artists:
+            artist.set_alpha(self._base_alpha[artist])
+        self.deemphasized_artists = []
+        self.fig.canvas.draw_idle()
+
+
+class CycleEmphasisOnKeyPress(EmphasizeOnKeyPress):
+    """Emphasize groups of matplotlib artists by pressing the
+    corresponding key. Alternatively, the 'up' and 'down' keys can be
+    used to cycle through the groups. Pressing escape removes any
+    emphasis.
+
+    """
+
+    def __init__(self, artists, emphasis_group_to_artists):
+        super().__init__(artists, emphasis_group_to_artists)
+        self._current_emphasis_group = list(emphasis_group_to_artists.keys())[-1]
+        self._index_to_emphasis_group = dict(enumerate(emphasis_group_to_artists))
+        self._emphasis_group_to_index = {v : k for k, v in self._index_to_emphasis_group.items()}
+
+
+    def _on_key_press(self, event):
+        group = _save_cast_str_to_int(event.key)
+        if group in self._emphasis_group_to_artists:
+            self._emphasize_group(group)
+        elif group == "up":
+            self._emphasize_group(self._cycle_emphasis_group(1))
+        elif group == "down":
+            self._emphasize_group(self._cycle_emphasis_group(-1))
+        elif group == "escape":
+            self._remove_emphasis()
+
+
+    def _emphasize_group(self, group):
+        super()._emphasize_group(group)
+        self._current_emphasis_group = group
+
+
+    def _cycle_emphasis_group(self, step):
+        last_idx = self._emphasis_group_to_index[self._current_emphasis_group]
+        next_idx = (last_idx + step) % len(self._emphasis_group_to_artists)
+        return self._index_to_emphasis_group[next_idx]
+
+
+class CycleEmphasisOnKeyPressGraph(Graph, CycleEmphasisOnKeyPress):
+
+    def __init__(self, *args, **kwargs):
+        Graph.__init__(self, *args, **kwargs)
+        self._setup_cycle_emphasis_on_key_press(*args, **kwargs)
+
+
+    def _setup_cycle_emphasis_on_key_press(self, *args, **kwargs):
+        if "emphasis_groups" in kwargs:
+            emphasis_groups = kwargs["emphasis_groups"]
+            emphasis_group_to_artists = dict()
+            for group, items in emphasis_groups.items():
+                artists = []
+                for item in items:
+                    if item in self.nodes:
+                        artists.append(self.node_artists[item])
+                    elif item in self.edges:
+                        artists.append(self.edge_artists[item])
+                    else:
+                        warnings.warn(f"'{item}' neither a valid node nor edge identifier.")
+                emphasis_group_to_artists[group] = artists
+            artists = list(self.node_artists.values()) + list(self.edge_artists.values())
+            CycleEmphasisOnKeyPress.__init__(self, artists, emphasis_group_to_artists)
+
+
+class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGraph, CycleEmphasisOnKeyPressGraph, AnnotateOnClickGraph, TableOnClickGraph):
+    """Extends the `MultiGraph` class to support node placement with
+    the mouse, emphasis of graph elements, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.
     - Nodes and edges are emphasized when hovering over them.
+    - If subsets of edges share the same edge key, and the edge key is an integer or a single letter, pressing that key emphasizes all corresponding edges. The up and down keys can be used to cycle through the different subsets. Pressing escape removes all emphasis.
     - Supports additional annotations that can be toggled on and off by clicking on the corresponding node or edge.
     - These annotations can also be tables.
 
@@ -845,8 +992,24 @@ class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGra
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._setup_emphasis()
+        self._setup_cycle_emphasis_on_key_press(*args, **kwargs)
         self._setup_annotations(*args, **kwargs)
         self._setup_table_annotations(*args, **kwargs)
+
+
+    def _setup_cycle_emphasis_on_key_press(self, *args, **kwargs):
+        emphasis_groups = dict()
+        for edge in self.edges:
+            key = edge[2] # i.e. the edge id
+            if key in emphasis_groups:
+                emphasis_groups[key].append(edge)
+            else:
+                emphasis_groups[key] = [edge]
+        for key, edges in emphasis_groups.items():
+            nodes = _get_unique_nodes(edges)
+            emphasis_groups[key] = nodes + edges
+        kwargs["emphasis_groups"] = emphasis_groups
+        super()._setup_cycle_emphasis_on_key_press(*args, **kwargs)
 
 
     def _on_motion(self, event):
