@@ -369,7 +369,7 @@ class BaseMultiGraph(BaseGraph):
 
 
 class MultiGraph(BaseMultiGraph, Graph):
-    """Parses the given graph data object and initialises the BaseMultiGraph object.
+    """Parses the given graph data object and initialises the `BaseMultiGraph` object.
 
     If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
 
@@ -731,7 +731,7 @@ class CycleEmphasisOnKeyPressGraph(Graph, CycleEmphasisOnKeyPress):
 
 
 class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGraph, CycleEmphasisOnKeyPressGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """Extends the MultiGraph class to support node placement with
+    """Extends the `MultiGraph` class to support node placement with
     the mouse, emphasis of graph elements, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.

@@ -942,7 +942,7 @@ class BaseGraph(object):
 
 
 class Graph(BaseGraph):
-    """Parses the given graph data object and initialises the BaseGraph object.
+    """Parses the given graph data object and initialises the `BaseGraph` object.
 
     If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
 
