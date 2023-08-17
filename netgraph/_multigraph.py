@@ -248,7 +248,7 @@ class BaseMultiGraph(BaseGraph):
 
     See also
     --------
-    MultiGraph
+    MultiGraph, InteractiveMultiGraph
 
     """
 
@@ -573,7 +573,7 @@ class MultiGraph(BaseMultiGraph, Graph):
 
     See also
     --------
-    BaseMultiGraph
+    BaseMultiGraph, InteractiveMultiGraph
 
     """
 
@@ -971,7 +971,7 @@ class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGra
 
     See also
     --------
-    Graph
+    BaseMultiGraph, MultiGraph
 
     Notes
     -----
