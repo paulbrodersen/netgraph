@@ -108,6 +108,12 @@ from ._main import (
     InteractiveGraph,
 )
 
+from ._multigraph import (
+    BaseMultiGraph,
+    MultiGraph,
+    InteractiveMultiGraph
+)
+
 from ._node_layout import (
     get_random_layout,
     get_fruchterman_reingold_layout,
@@ -142,10 +148,6 @@ from ._arcdiagram import (
 )
 
 from ._parser import parse_graph
-
-from ._multigraph import (
-    BaseMultiGraph,
-)
 
 __all__ = [
     'get_random_layout',
