@@ -470,6 +470,27 @@ Basic Examples
    :hidden:
 
    /sphinx_gallery_output/plot_22_large_graphs
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A multigraph is a graph that is permitted to have more than one edge with the same source and t...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_23_multigraphs_thumb.png
+     :alt: Multigraphs
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_23_multigraphs.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_23_multigraphs
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>
