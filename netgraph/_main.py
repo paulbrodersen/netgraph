@@ -65,6 +65,8 @@ from ._parser import parse_graph, _parse_edge_list, _is_directed
 
 BASE_SCALE = 1e-2
 DEFAULT_COLOR = '#2c404c' # '#677e8c' # '#121f26' # '#23343f' # 'k',
+RELATIVE_ARROW_HEAD_LENGTH = 3 # multiplier applied to edge width
+RELATIVE_ARROW_HEAD_WIDTH = 2 # ditto
 
 
 class BaseGraph(object):
@@ -637,8 +639,8 @@ class BaseGraph(object):
                 shape = 'full'
 
             if arrows:
-                head_length = 2 * edge_width[edge]
-                head_width = 3 * edge_width[edge]
+                head_length = RELATIVE_ARROW_HEAD_LENGTH * edge_width[edge]
+                head_width = RELATIVE_ARROW_HEAD_WIDTH * edge_width[edge]
             else:
                 head_length = 0
                 head_width = 0
