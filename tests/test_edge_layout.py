@@ -203,3 +203,12 @@ def test_variable_angle_selfloops():
           edge_layout_kwargs=dict(selfloop_angle=selfloop_angle)
     )
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_single_selfloop():
+    fig, ax = plt.subplots()
+    # Graph([(0, 0)], edge_layout="straight", ax=ax)
+    # Graph([(0, 0)], edge_layout="curved", ax=ax)
+    Graph([(0, 0)], edge_layout="arc", ax=ax)
+    return fig

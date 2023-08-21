@@ -903,6 +903,8 @@ class StraightEdgeLayout(object):
             self.selfloop_radius = _normalize_numeric_argument(selfloop_radius, self.selfloops, 'selfloop_radius')
             if selfloop_angle is not None: # can be zero!
                 self.selfloop_angle = _normalize_numeric_argument(selfloop_angle, self.selfloops, 'selfloop_angle', allow_none=True)
+            elif (selfloop_angle is None) and (not self.nonloops):
+                self.selfloop_angle = _normalize_numeric_argument(np.pi/2, self.selfloops, 'selfloop_angle', allow_none=True)
 
         self.edge_paths = dict()
 
