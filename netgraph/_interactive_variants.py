@@ -18,10 +18,16 @@ try:
     from ._line_supercover import line_supercover
     from ._artists import NodeArtist, EdgeArtist
     from ._parser import is_order_zero, is_empty, parse_graph
+    from ._multigraph import InteractiveMultiGraph
 except ValueError:
     from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
     from _parser import is_order_zero, is_empty, parse_graph
+    from _multigraph import InteractiveMultiGraph
+
+
+DEFAULT_EDGE = (0, 1)
+DEFAULT_EDGE_KEY = 0
 
 
 class NascentEdge(plt.Line2D):
@@ -586,3 +592,134 @@ class EditableGraph(MutableGraph):
         elif key == 'backspace':
             text_object.set_text(text_object.get_text()[:-1])
         self.fig.canvas.draw_idle()
+
+
+class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
+    """Extends `InteractiveMultiGraph` to support the addition or removal of nodes and edges.
+
+    - Double clicking on two nodes successively will create an edge between them.
+    - Pressing 'insert' or '+' will add a new node to the graph.
+    - Pressing 'delete' or '-' will remove selected nodes and edges.
+    - Pressing '@' will reverse the direction of selected edges.
+
+    Notes
+    -----
+    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    This also applies to adding new edges, which additionally inherit the edge key from the last selected edge.
+    If no node or edge has been previously selected the first created node or edge artist will be used instead.
+
+    See also
+    --------
+    InteractiveMultiGraph
+
+    """
+
+    def __init__(self, *args, **kwargs):
+
+        if is_order_zero(args[0]):
+            # The graph is order-zero, i.e. it has no edges and no nodes.
+            # We hence initialise with a single edge, which populates
+            # - last_selected_node_properties
+            # - last_selected_edge_properties
+            # with the chosen parameters.
+            # We then delete the edge and the two nodes and return the empty canvas.
+            source, target = DEFAULT_EDGE
+            edge = (source, target, DEFAULT_EDGE_KEY)
+            super().__init__([edge], *args[1:], **kwargs)
+            self._initialize_data_structures()
+            self._delete_edge(edge)
+            self._delete_node(source)
+            self._delete_node(target)
+
+        elif is_empty(args[0]):
+            # The graph is empty, i.e. it has at least one node but no edges.
+            nodes, _, _ = parse_graph(args[0])
+            if len(nodes) > 1:
+                edge = (nodes[0], nodes[1], DEFAULT_EDGE_KEY)
+                super().__init__([edge], nodes=nodes, *args[1:], **kwargs)
+                self._initialize_data_structures()
+                self._delete_edge(edge)
+            else: # single node
+                node = nodes[0]
+                dummy = 0 if node != 0 else 1
+                edge = (node, dummy, DEFAULT_EDGE_KEY)
+                super().__init__([edge], *args[1:], **kwargs)
+                self._initialize_data_structures()
+                self._delete_edge(edge)
+                self._delete_node(dummy)
+        else:
+            super().__init__(*args, **kwargs)
+            self._initialize_data_structures()
+
+        # Ignore data limits and return full canvas.
+        xmin, ymin = self.origin
+        dx, dy = self.scale
+        self.ax.axis([xmin, xmin+dx, ymin, ymin+dy])
+
+        self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
+
+
+    def _initialize_data_structures(self):
+        super()._initialize_data_structures()
+        self._last_selected_edge_key = self.edges[0][2]
+
+
+    def _add_or_remove_nascent_edge(self, event):
+        for node, artist in self.node_artists.items():
+            if artist.contains(event)[0]:
+                if self._nascent_edge:
+                    # connect edge to target node
+                    edge = (self._nascent_edge.source, node, self._last_selected_edge_key)
+                    if edge not in self.edges:
+                        self._add_edge(edge)
+                        self._update_edges([edge])
+                    else:
+                        print("Edge already exists!")
+                    self._remove_nascent_edge()
+                else:
+                    self._nascent_edge = self._add_nascent_edge(node)
+                break
+        else:
+            if self._nascent_edge:
+                self._remove_nascent_edge()
+
+
+    def _add_edge(self, edge, edge_properties=None):
+        # TODO: support non-straight edge paths when initializing the new edge.
+        # Currently, we circumvent the problem by calling _update_edges after edge creation.
+        source, target, key = edge
+        path = np.array([self.node_positions[source], self.node_positions[target]])
+
+        # create artist
+        if not edge_properties:
+            edge_properties = self._last_selected_edge_properties
+
+        artist = EdgeArtist(midline=path, shape="full", **edge_properties)
+
+        self._reverse_edge_artists[artist] = edge
+
+        # update data structures in parent classes
+        # 1) InteractiveGraph
+        # 2a) DraggableGraph
+        # None
+        # 2b) EmphasizeOnHoverGraph
+        self.artist_to_key[artist] = edge
+        # 2c) AnnotateOnClickGraph
+        # None
+        # 3a) Graph
+        # None
+        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
+        self._clickable_artists.append(artist)
+        self._selectable_artists.append(artist)
+        self._base_linewidth[artist] = artist._lw_data
+        self._base_edgecolor[artist] = artist.get_edgecolor()
+        # 3c) EmphasizeOnHover
+        self.emphasizeable_artists.append(artist)
+        self._base_alpha[artist] = artist.get_alpha()
+        # 3d) AnnotateOnClick
+        # None
+        # 4) BaseGraph
+        self.edges.append(edge)
+        self.edge_paths[edge] = path
+        self.edge_artists[edge] = artist
+        self.ax.add_patch(artist)
