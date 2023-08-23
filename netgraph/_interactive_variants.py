@@ -142,7 +142,7 @@ class MutableGraph(InteractiveGraph):
                     # connect edge to target node
                     if (self._nascent_edge.source, node) not in self.edges:
                         self._add_edge((self._nascent_edge.source, node))
-                        self._update_edges([(self._nascent_edge.source, node)])
+                        self.edge_layout.update()
                     else:
                         print("Edge already exists!")
                     self._remove_nascent_edge()
@@ -217,7 +217,7 @@ class MutableGraph(InteractiveGraph):
             return
 
         # create node ID; use smallest unused int
-        node = 0
+        node = len(self.nodes)
         while node in self.node_positions.keys():
             node += 1
 
@@ -231,7 +231,7 @@ class MutableGraph(InteractiveGraph):
         else:
             node_properties = self._last_selected_node_properties
 
-        artist = NodeArtist(xy = pos, **node_properties)
+        artist = NodeArtist(xy=pos, **node_properties)
 
         self._reverse_node_artists[artist] = node
 
@@ -263,6 +263,8 @@ class MutableGraph(InteractiveGraph):
         self.ax.add_patch(artist)
         # self.node_label_artists # TODO (potentially)
         # self.node_label_offset  # TODO (potentially)
+        # 5) edge layout engine
+        self.edge_layout.add_node(node, pos)
 
 
     def _set_position_of_newly_created_node(self, x, y):
@@ -281,6 +283,8 @@ class MutableGraph(InteractiveGraph):
         # delete nodes
         for node in nodes:
             self._delete_node(node)
+
+        self.edge_layout.update()
 
 
     def _delete_node(self, node):
@@ -329,6 +333,8 @@ class MutableGraph(InteractiveGraph):
                 del self.node_label_offset[node]
         artist.remove()
 
+        self.edge_layout.delete_node(node)
+
 
     def _add_edge(self, edge, edge_properties=None):
         # TODO: support non-straight edge paths when initializing the new edge.
@@ -376,6 +382,8 @@ class MutableGraph(InteractiveGraph):
         self.edge_paths[edge] = path
         self.edge_artists[edge] = artist
         self.ax.add_patch(artist)
+        # 5) edge layout
+        self.edge_layout.add_edge(edge)
 
 
     def _delete_edges(self):
@@ -430,6 +438,8 @@ class MutableGraph(InteractiveGraph):
                 del self.edge_label_artists[edge]
         # TODO remove edge data
         artist.remove()
+        # 5) edge layout
+        self.edge_layout.delete_edge(edge)
 
 
     def _reverse_edges(self):
@@ -444,6 +454,8 @@ class MutableGraph(InteractiveGraph):
 
         for edge, properties in zip(edges, edge_properties):
             self._add_edge(edge[::-1], properties)
+
+        self.edge_layout.update()
 
 
 class EditableGraph(MutableGraph):

@@ -942,7 +942,9 @@ class StraightEdgeLayout(object):
         self.edge_paths.update(self.selfloop_edge_paths)
 
 
-    def update(self, stale_nodes):
+    def update(self, stale_nodes=None):
+        if stale_nodes is None: # all
+            stale_nodes = self.node_positions
         stale_nonloops = [(source, target) for source, target in self.nonloops \
                           if (source in stale_nodes) or (target in stale_nodes)]
         stale_selfloops = [(source, target) for source, target in self.selfloops \
@@ -977,6 +979,34 @@ class StraightEdgeLayout(object):
         self.selfloop_edge_paths.update(new_selfloop_edge_paths)
         self.edge_paths.update(new_selfloop_edge_paths)
         return new_selfloop_edge_paths
+
+
+    def add_node(self, node, position):
+        # self.node_positions[node] = position
+        pass
+
+
+    def delete_node(self, node):
+        # del self.node_positions[node]
+        pass
+
+
+    def add_edge(self, edge):
+        source, target = edge
+        if source == target:
+            self.selfloops.append(edge)
+        else:
+            self.nonloops.append(edge)
+        # self.edges.append(edge)
+
+
+    def delete_edge(self, edge):
+        source, target = edge
+        if source == target:
+            self.selfloops.remove(edge)
+        else:
+            self.nonloops.remove(edge)
+        # self.edges.remove(edge)
 
 
 class ArcEdgeLayout(StraightEdgeLayout):
