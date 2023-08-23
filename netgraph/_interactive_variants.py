@@ -174,13 +174,15 @@ class MutableGraph(InteractiveGraph):
 
     def _extract_node_properties(self, node_artist):
         return dict(
-            shape     = node_artist.shape,
-            size      = node_artist.size,
-            facecolor = node_artist.get_facecolor(),
-            edgecolor = self._base_edgecolor[node_artist],
-            linewidth = self._base_linewidth[node_artist],
-            alpha     = self._base_alpha[node_artist],
-            zorder    = node_artist.get_zorder()
+            path                 = node_artist._path,
+            orientation          = node_artist.orientation,
+            linewidth_correction = node_artist.linewidth_correction,
+            size                 = node_artist.size,
+            facecolor            = node_artist.get_facecolor(),
+            edgecolor            = self._base_edgecolor[node_artist],
+            linewidth            = self._base_linewidth[node_artist],
+            alpha                = self._base_alpha[node_artist],
+            zorder               = node_artist.get_zorder(),
         )
 
 
@@ -193,7 +195,8 @@ class MutableGraph(InteractiveGraph):
             head_width  = edge_artist.head_width,
             edgecolor   = self._base_edgecolor[edge_artist],
             linewidth   = self._base_linewidth[edge_artist],
-            offset      = edge_artist.offset, # TODO: need to get node_size of target node instead
+            head_offset = edge_artist.head_offset, # TODO: change to target node size
+            tail_offset = edge_artist.tail_offset, # TODO: change to source node size
             curved      = edge_artist.curved,
             zorder      = edge_artist.get_zorder(),
         )
