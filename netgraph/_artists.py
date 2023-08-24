@@ -239,6 +239,9 @@ class EdgeArtist(PathPatchDataUnits):
     head_offset : float, default 0.
         For non-zero offset values, the end of the edge is offset from the target node.
         The distance is calculated along the midline.
+    tail_offset : float, default 0.
+        For non-zero offset values, the start of the edge is offset from the source node.
+        The distance is calculated along the midline.
     shape : {'full', 'left', 'right'}, default 'full'
         The shape of the arrow.
         For shapes 'left' and 'right' the arrow only one half of the arrow is plotted.
