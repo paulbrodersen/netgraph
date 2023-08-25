@@ -19,11 +19,13 @@ try:
     from ._artists import NodeArtist, EdgeArtist
     from ._parser import is_order_zero, is_empty, parse_graph
     from ._multigraph import InteractiveMultiGraph
+    from ._artists import NodeArtist, CircularNodeArtist, RegularPolygonNodeArtist
 except ValueError:
     from _main import InteractiveGraph, BASE_SCALE
     from _line_supercover import line_supercover
     from _parser import is_order_zero, is_empty, parse_graph
     from _multigraph import InteractiveMultiGraph
+    from _artists import NodeArtist, CircularNodeArtist, RegularPolygonNodeArtist
 
 
 DEFAULT_EDGE = (0, 1)
@@ -108,6 +110,7 @@ class MutableGraph(InteractiveGraph):
         self._reverse_node_artists = {artist : node for node, artist in self.node_artists.items()}
         self._reverse_edge_artists = {artist : edge for edge, artist in self.edge_artists.items()}
         self._last_selected_node_properties = self._extract_node_properties(next(iter(self.node_artists.values())))
+        self._last_selected_node_type = type(next(iter(self.node_artists.values())))
         self._last_selected_edge_properties = self._extract_edge_properties(next(iter(self.edge_artists.values())))
         self._nascent_edge = None
 
@@ -147,7 +150,7 @@ class MutableGraph(InteractiveGraph):
                 if self._nascent_edge:
                     # connect edge to target node
                     if (self._nascent_edge.source, node) not in self.edges:
-                        self._add_edge((self._nascent_edge.source, node))
+                        self._add_edge(self._nascent_edge.source, node)
                         self.edge_layout.update()
                     else:
                         print("Edge already exists!")
@@ -174,22 +177,30 @@ class MutableGraph(InteractiveGraph):
     def _extract_artist_properties(self, artist):
         if isinstance(artist, NodeArtist):
             self._last_selected_node_properties = self._extract_node_properties(artist)
+            self._last_selected_node_type = type(artist)
         elif isinstance(artist, EdgeArtist):
             self._last_selected_edge_properties = self._extract_edge_properties(artist)
 
 
     def _extract_node_properties(self, node_artist):
-        return dict(
-            path                 = node_artist._path,
-            orientation          = node_artist.orientation,
-            linewidth_correction = node_artist.linewidth_correction,
+        properties = dict(
             size                 = node_artist.size,
+            linewidth            = self._base_linewidth[node_artist],
             facecolor            = node_artist.get_facecolor(),
             edgecolor            = self._base_edgecolor[node_artist],
-            linewidth            = self._base_linewidth[node_artist],
             alpha                = self._base_alpha[node_artist],
             zorder               = node_artist.get_zorder(),
         )
+        if isinstance(node_artist, CircularNodeArtist):
+            pass
+        elif isinstance(node_artist, RegularPolygonNodeArtist):
+            properties["orientation"] = node_artist.orientation
+            properties["total_vertices"] = len(node_artist._path) - 1
+        else: # NodeArtist
+            properties["path"] = node_artist._path
+            properties["orientation"] = node_artist.orientation
+            properties["linewidth_correction"] = node_artist.linewidth_correction
+        return properties
 
 
     def _extract_edge_properties(self, edge_artist):
@@ -234,14 +245,19 @@ class MutableGraph(InteractiveGraph):
         # if none is selected, use a random artist
         if self._selected_artists:
             node_properties = self._extract_node_properties(self._selected_artists[-1])
+            node_type = type(self._selected_artists[-1])
         else:
             node_properties = self._last_selected_node_properties
+            node_type = self._last_selected_node_type
 
-        artist = NodeArtist(xy=pos, **node_properties)
+        artist = node_type(xy=pos, **node_properties)
+        self.ax.add_patch(artist)
+        self._expand_node_data_structures(node, artist, pos)
 
+
+    def _expand_node_data_structures(self, node, artist, pos):
+        # 0) MutableGraph
         self._reverse_node_artists[artist] = node
-
-        # Update data structures in parent classes:
         # 1) InteractiveGraph
         # 2a) DraggableGraph
         self._draggable_artist_to_node[artist] = node
@@ -266,7 +282,6 @@ class MutableGraph(InteractiveGraph):
         self.nodes.append(node)
         self.node_positions[node] = pos
         self.node_artists[node] = artist
-        self.ax.add_patch(artist)
         # self.node_label_artists # TODO (potentially)
         # self.node_label_offset  # TODO (potentially)
         # 5) edge layout engine
@@ -296,10 +311,13 @@ class MutableGraph(InteractiveGraph):
     def _delete_node(self, node):
         # print(f"Deleting node {node}.")
         artist = self.node_artists[node]
+        self._contract_node_data_structures(node, artist)
+        artist.remove()
 
+
+    def _contract_node_data_structures(self, node, artist):
+        # 0) MutableGraph
         del self._reverse_node_artists[artist]
-
-        # Update data structures in parent classes:
         # 1) InteractiveGraph
         # None
         # 2a) DraggableGraph
@@ -337,21 +355,15 @@ class MutableGraph(InteractiveGraph):
         if hasattr(self, 'node_label_offset'):
             if node in self.node_label_offset:
                 del self.node_label_offset[node]
-        artist.remove()
-
         self.edge_layout.delete_node(node)
 
 
-    def _add_edge(self, edge, edge_properties=None):
+    def _add_edge(self, source, target, edge_properties=None):
         # TODO: support non-straight edge paths when initializing the new edge.
         # Currently, we circumvent the problem by calling _update_edges after edge creation.
-        source, target = edge
         path = np.array([self.node_positions[source], self.node_positions[target]])
 
         # create artist
-        if not edge_properties:
-            edge_properties = self._last_selected_edge_properties
-
         if (target, source) in self.edges:
             shape = 'right'
             self.edge_artists[(target, source)].shape = 'right'
@@ -359,11 +371,18 @@ class MutableGraph(InteractiveGraph):
         else:
             shape = 'full'
 
+        if not edge_properties:
+            edge_properties = self._last_selected_edge_properties
+
         artist = EdgeArtist(midline=path, shape=shape, **edge_properties)
+        self.ax.add_patch(artist)
 
+        self._expand_edge_data_structures((source, target), artist, path)
+
+
+    def _expand_edge_data_structures(self, edge, artist, path):
+        # 0) MutableGraph
         self._reverse_edge_artists[artist] = edge
-
-        # update data structures in parent classes
         # 1) InteractiveGraph
         # 2a) DraggableGraph
         # None
@@ -387,9 +406,8 @@ class MutableGraph(InteractiveGraph):
         self.edges.append(edge)
         self.edge_paths[edge] = path
         self.edge_artists[edge] = artist
-        self.ax.add_patch(artist)
         # 5) edge layout
-        self.edge_layout.add_edge(edge)
+        self.edge_layout.add_edge(edge[:2])
 
 
     def _delete_edges(self):
@@ -399,15 +417,19 @@ class MutableGraph(InteractiveGraph):
 
 
     def _delete_edge(self, edge):
-        artist = self.edge_artists[edge]
-        del self._reverse_edge_artists[artist]
-
         source, target = edge
         if (target, source) in self.edges:
             self.edge_artists[(target, source)].shape = 'full'
             self.edge_artists[(target, source)]._update_path()
 
-        # update data structures in parent classes
+        artist = self.edge_artists[edge]
+        self._contract_edge_data_structures(edge, artist)
+        artist.remove()
+
+
+    def _contract_edge_data_structures(self, edge, artist):
+        # 0) MutableGraph
+        del self._reverse_edge_artists[artist]
         # 1) InteractiveGraph
         # None
         # 2a) DraggableGraph
@@ -443,7 +465,6 @@ class MutableGraph(InteractiveGraph):
                 self.edge_label_artists[edge].remove()
                 del self.edge_label_artists[edge]
         # TODO remove edge data
-        artist.remove()
         # 5) edge layout
         self.edge_layout.delete_edge(edge)
 
@@ -459,7 +480,7 @@ class MutableGraph(InteractiveGraph):
             self._delete_edge(edge)
 
         for edge, properties in zip(edges, edge_properties):
-            self._add_edge(edge[::-1], properties)
+            self._add_edge(edge[1], edge[0], properties)
 
         self.edge_layout.update()
 
@@ -699,42 +720,38 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
                 self._remove_nascent_edge()
 
 
-    def _add_edge(self, edge, edge_properties=None):
+    def _on_key_press(self, event):
+        InteractiveMultiGraph._on_key_press(self, event)
+        MutableGraph._on_key_press(self, event)
+
+
+    def _add_edge(self, source, target, key=None, edge_properties=None):
         # TODO: support non-straight edge paths when initializing the new edge.
         # Currently, we circumvent the problem by calling _update_edges after edge creation.
-        source, target, key = edge
         path = np.array([self.node_positions[source], self.node_positions[target]])
 
         # create artist
         if not edge_properties:
             edge_properties = self._last_selected_edge_properties
-
         artist = EdgeArtist(midline=path, shape="full", **edge_properties)
-
-        self._reverse_edge_artists[artist] = edge
-
-        # update data structures in parent classes
-        # 1) InteractiveGraph
-        # 2a) DraggableGraph
-        # None
-        # 2b) EmphasizeOnHoverGraph
-        self.artist_to_key[artist] = edge
-        # 2c) AnnotateOnClickGraph
-        # None
-        # 3a) Graph
-        # None
-        # 3b) ClickableArtists, SelectableArtists, DraggableArtists
-        self._clickable_artists.append(artist)
-        self._selectable_artists.append(artist)
-        self._base_linewidth[artist] = artist._lw_data
-        self._base_edgecolor[artist] = artist.get_edgecolor()
-        # 3c) EmphasizeOnHover
-        self.emphasizeable_artists.append(artist)
-        self._base_alpha[artist] = artist.get_alpha()
-        # 3d) AnnotateOnClick
-        # None
-        # 4) BaseGraph
-        self.edges.append(edge)
-        self.edge_paths[edge] = path
-        self.edge_artists[edge] = artist
         self.ax.add_patch(artist)
+
+        if key is None:
+            key = self._last_selected_edge_key
+        self._expand_edge_data_structures((source, target, key), artist, path)
+
+
+    def _reverse_edges(self):
+        edges = [self._reverse_edge_artists[artist] for artist in self._selected_artists if isinstance(artist, EdgeArtist)]
+        edge_properties = [self._extract_edge_properties(self.edge_artists[edge]) for edge in edges]
+
+        # delete old edges;
+        # note this step has to be completed before creating new edges,
+        # as bi-directional edges can pose a problem otherwise
+        for edge in edges:
+            self._delete_edge(edge)
+
+        for edge, properties in zip(edges, edge_properties):
+            self._add_edge(edge[1], edge[0], edge[2], properties)
+
+        self.edge_layout.update()
