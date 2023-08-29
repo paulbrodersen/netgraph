@@ -1001,6 +1001,10 @@ class StraightEdgeLayout(object):
         source, target = edge
         if source == target:
             self.selfloops.append(edge)
+            if self.selfloop_radius:
+                self.selfloop_radius[edge] = np.median(list(self.selfloop_radius.values()))
+            else:
+                self.selfloop_radius[edge] = 0.1
         else:
             self.nonloops.append(edge)
         # self.edges.append(edge)
