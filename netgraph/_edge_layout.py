@@ -1228,6 +1228,8 @@ def _expand_nonloop_edge_paths(edge_paths, edge_to_ids, edge_width):
             path = _shorten_spline_by(path[::-1], delta)[::-1]
             # converge on source and target nodes
             path = np.vstack([tail_position, path, head_position])
+            # resample -- otherwise, a bug occurs where short paths loose their offset
+            path = _resample_spline(path, max(len(base_path), 20))
             # assign
             expanded_edge_paths[(source, target, eid)] = path
 
