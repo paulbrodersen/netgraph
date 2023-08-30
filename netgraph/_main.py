@@ -332,11 +332,10 @@ class BaseGraph(object):
                         node_shape, self.node_size, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
-        self.edge_paths, self.edge_layout = self._initialize_edge_layout(
-            edge_layout, edge_layout_kwargs)
+        self.edge_layout = self._initialize_edge_layout(edge_layout, edge_layout_kwargs)
         self.edge_artists = dict()
-        self.draw_edges(self.edges, self.edge_paths, edge_width, edge_color, edge_alpha,
-                        edge_zorder, arrows, self.node_artists)
+        self.draw_edges(self.edges, self.edge_layout.edge_paths, edge_width,
+            edge_color, edge_alpha, edge_zorder, arrows, self.node_artists)
 
         # This function needs to be called before any font sizes are adjusted,
         # as the axis dimensions affect the effective font size.
@@ -682,7 +681,7 @@ class BaseGraph(object):
 
     def _update_edge_artists(self, edge_paths=None):
         if edge_paths is None:
-            edge_paths = self.edge_paths
+            edge_paths = self.edge_layout.edge_paths
 
         for edge, path in edge_paths.items():
             self.edge_artists[edge].update_midline(path)
@@ -815,7 +814,8 @@ class BaseGraph(object):
     def _update_node_label_offsets(self, total_samples_per_edge=100):
         anchors = np.array([self.node_positions[node] for node in self.node_label_offset.keys()])
         offsets = np.array(list(self.node_label_offset.values()))
-        avoid = np.concatenate([_resample_spline(path, total_samples_per_edge) for path in self.edge_paths.values()], axis=0)
+        avoid = np.concatenate([_resample_spline(path, total_samples_per_edge) \
+                                for path in self.edge_layout.edge_paths.values()], axis=0)
         optimal_offsets = _get_optimal_offsets(anchors, offsets, avoid)
 
         for ii, node in enumerate(self.node_label_offset):
