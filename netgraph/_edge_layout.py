@@ -917,36 +917,6 @@ class StraightEdgeLayout(object):
         self.selfloop_edge_paths = dict()
 
 
-    def get_nonloop_edge_paths(self, edges):
-        return _get_straight_nonloop_edge_paths(
-            edges, self.node_positions)
-
-
-    def approximate_nonloop_edge_paths(self, edges):
-        return _get_straight_nonloop_edge_paths(
-            edges, self.node_positions)
-
-
-    def get_selfloop_edge_paths(self, edges):
-        if hasattr(self, "selfloop_angle"):
-            selfloop_angle = self.selfloop_angle
-        else:
-            selfloop_angle = _get_optimal_selfloop_angles(
-                self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
-        return _get_straight_selfloop_edge_paths(
-            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
-
-
-    def approximate_selfloop_edge_paths(self, edges):
-        if hasattr(self, "selfloop_angle"):
-            selfloop_angle = self.selfloop_angle
-        else:
-            selfloop_angle = _get_decent_selfloop_angles(
-                edges, self.node_positions)
-        return _get_straight_selfloop_edge_paths(
-            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
-
-
     def get(self, stale_nodes=None, approximate=False):
         if stale_nodes is not None: # all
             stale_nodes = self.node_positions
@@ -978,6 +948,36 @@ class StraightEdgeLayout(object):
             self.edge_paths.update(new_selfloop_edge_paths)
 
         return new_edge_paths
+
+
+    def get_nonloop_edge_paths(self, edges):
+        return _get_straight_nonloop_edge_paths(
+            edges, self.node_positions)
+
+
+    def approximate_nonloop_edge_paths(self, edges):
+        return _get_straight_nonloop_edge_paths(
+            edges, self.node_positions)
+
+
+    def get_selfloop_edge_paths(self, edges):
+        if hasattr(self, "selfloop_angle"):
+            selfloop_angle = self.selfloop_angle
+        else:
+            selfloop_angle = _get_optimal_selfloop_angles(
+                self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
+        return _get_straight_selfloop_edge_paths(
+            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
+
+
+    def approximate_selfloop_edge_paths(self, edges):
+        if hasattr(self, "selfloop_angle"):
+            selfloop_angle = self.selfloop_angle
+        else:
+            selfloop_angle = _get_decent_selfloop_angles(
+                edges, self.node_positions)
+        return _get_straight_selfloop_edge_paths(
+            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
 
 
     def add_node(self, node, position):
@@ -1015,8 +1015,13 @@ class StraightEdgeLayout(object):
 class ArcEdgeLayout(StraightEdgeLayout):
 
     def __init__(self, edges, node_positions, selfloop_radius=0.1, selfloop_angle=np.pi/2, rad=1.):
-        super().__init__(edges, node_positions, selfloop_radius, selfloop_angle)
         self.rad = rad
+        super().__init__(
+            edges,
+            node_positions,
+            selfloop_radius,
+            selfloop_angle,
+        )
 
 
     def get_nonloop_edge_paths(self, edges):
@@ -1032,9 +1037,17 @@ class ArcEdgeLayout(StraightEdgeLayout):
             selfloop_angle = self.selfloop_angle
         else:
             selfloop_angle = _get_optimal_selfloop_angles(
-                self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
+                self.selfloops,
+                self.selfloop_radius,
+                self.node_positions,
+                self.nonloop_edge_paths
+            )
         return  _get_arced_selfloop_edge_paths(
-            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
+            edges,
+            self.node_positions,
+            self.selfloop_radius,
+            selfloop_angle,
+        )
 
 
     def approximate_selfloop_edge_paths(self, edges):
@@ -1044,15 +1057,23 @@ class ArcEdgeLayout(StraightEdgeLayout):
             selfloop_angle = _get_decent_selfloop_angles(
                 edges, self.node_positions)
         return  _get_arced_selfloop_edge_paths(
-            edges, self.node_positions, self.selfloop_radius, selfloop_angle)
+            edges,
+            self.node_positions,
+            self.selfloop_radius,
+            selfloop_angle,
+        )
 
 
 class ArcDiagramEdgeLayout(ArcEdgeLayout):
 
     def __init__(self, edges, node_positions, selfloop_radius=0.1, selfloop_angle=np.pi/2, rad=1., above=True):
-        super().__init__(edges, node_positions, selfloop_radius=selfloop_radius, selfloop_angle=selfloop_angle, rad=rad)
         self.above = above
-
+        super().__init__(
+            edges, node_positions,
+            selfloop_radius=selfloop_radius,
+            selfloop_angle=selfloop_angle,
+            rad=rad
+        )
 
     def get_nonloop_edge_paths(self, edges):
         edge_paths = super().get_nonloop_edge_paths(edges)
