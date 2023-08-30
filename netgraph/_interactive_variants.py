@@ -406,7 +406,6 @@ class MutableGraph(InteractiveGraph):
         # None
         # 4) BaseGraph
         self.edges.append(edge)
-        self.edge_paths[edge] = path
         self.edge_artists[edge] = artist
         # 5) edge layout
         self.edge_layout.add_edge(edge[:2])
@@ -460,7 +459,6 @@ class MutableGraph(InteractiveGraph):
             del self.artist_to_annotation[artist]
         # 4) BaseGraph
         self.edges.remove(edge)
-        del self.edge_paths[edge]
         del self.edge_artists[edge]
         if hasattr(self, 'edge_label_artists'):
             if edge in self.edge_label_artists:

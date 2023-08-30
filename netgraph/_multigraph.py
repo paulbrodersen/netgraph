@@ -299,7 +299,7 @@ class BaseMultiGraph(BaseGraph):
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
-        return edge_paths, edge_layout
+        return edge_layout
 
 
     def draw_edges(self, edges, edge_path, edge_width, edge_color, edge_alpha,

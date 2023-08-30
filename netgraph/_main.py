@@ -499,7 +499,7 @@ class BaseGraph(object):
                 edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             else:
                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
-            edge_paths = edge_layout.get()
+            edge_layout.get()
 
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
@@ -511,7 +511,7 @@ class BaseGraph(object):
         else:
             raise TypeError("Variable `edge_layout` either a string or a dict mapping edges to edge paths.")
 
-        return edge_paths, edge_layout
+        return edge_layout
 
 
     def _initialize_axis(self, ax):
