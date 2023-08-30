@@ -288,7 +288,7 @@ class BaseMultiGraph(BaseGraph):
                 edge_layout = MultiGraphArcDiagramEdgeLayout(self.edges, self.node_positions, self.edge_width, **edge_layout_kwargs)
             else:
                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
-            edge_paths = edge_layout.compute()
+            edge_paths = edge_layout.get()
 
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')

@@ -151,7 +151,7 @@ class MutableGraph(InteractiveGraph):
                     # connect edge to target node
                     if (self._nascent_edge.source, node) not in self.edges:
                         self._add_edge(self._nascent_edge.source, node)
-                        self.edge_layout.update()
+                        self.edge_layout.get()
                     else:
                         print("Edge already exists!")
                     self._remove_nascent_edge()
@@ -305,7 +305,7 @@ class MutableGraph(InteractiveGraph):
         for node in nodes:
             self._delete_node(node)
 
-        self.edge_layout.update()
+        self.edge_layout.get()
 
 
     def _delete_node(self, node):
@@ -482,7 +482,7 @@ class MutableGraph(InteractiveGraph):
         for edge, properties in zip(edges, edge_properties):
             self._add_edge(edge[1], edge[0], properties)
 
-        self.edge_layout.update()
+        self.edge_layout.get()
 
 
 class EditableGraph(MutableGraph):
@@ -754,4 +754,4 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
         for edge, properties in zip(edges, edge_properties):
             self._add_edge(edge[1], edge[0], edge[2], properties)
 
-        self.edge_layout.update()
+        self.edge_layout.get()

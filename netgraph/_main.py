@@ -500,7 +500,7 @@ class BaseGraph(object):
                 edge_layout = ArcDiagramEdgeLayout(self.edges, self.node_positions, **edge_layout_kwargs)
             else:
                 raise NotImplementedError(f"Variable edge_layout one of 'straight', 'curved', 'bundled', or 'arc', not {edge_layout}")
-            edge_paths = edge_layout.compute()
+            edge_paths = edge_layout.get()
 
         elif isinstance(edge_layout, dict):
             _check_completeness(edge_layout, self.edges, 'edge_layout')
@@ -1541,10 +1541,10 @@ class DraggableGraph(Graph, DraggableArtists):
         if hasattr(self, 'node_label_artists'):
             self._update_node_label_positions()
 
-        edge_paths = self.edge_layout.update(nodes)
+        edge_paths = self.edge_layout.get(nodes, approximate=True)
         self._update_edge_artists(edge_paths)
         if hasattr(self, 'edge_label_artists'):
-            self._update_edge_label_positions(edge_paths)
+            self._update_edge_label_positions(edge_paths.keys())
 
         self.fig.canvas.draw_idle()
 
@@ -1560,10 +1560,10 @@ class DraggableGraph(Graph, DraggableArtists):
 
     def _on_release(self, event):
         if self._currently_dragging:
-            edge_paths = self.edge_layout.compute()
+            edge_paths = self.edge_layout.get()
             self._update_edge_artists(edge_paths)
             if hasattr(self, 'edge_label_artists'): # move edge labels
-                self._update_edge_label_positions(edge_paths)
+                self._update_edge_label_positions(edge_paths.keys())
 
         super()._on_release(event)
 
@@ -1630,7 +1630,7 @@ class DraggableGraphWithGridMode(DraggableGraph):
             if hasattr(self, 'node_label_artists'):
                 self._update_node_label_positions()
 
-            edge_paths = self.edge_layout.compute()
+            edge_paths = self.edge_layout.get()
             self._update_edge_artists(edge_paths)
             if hasattr(self, 'edge_label_artists'): # move edge labels
                 self._update_edge_label_positions(edges)
