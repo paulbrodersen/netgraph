@@ -338,15 +338,19 @@ def _get_parallel_line(path, delta):
 
     """
 
-    # initialise output
-    orthogonal_unit_vector = np.zeros_like(path)
+    if not _are_collinear(path):
+        # initialise output
+        orthogonal_unit_vector = np.zeros_like(path)
 
-    tangents = path[2:] - path[:-2] # using the central difference approximation
-    orthogonal_unit_vector[1:-1] = _get_orthogonal_unit_vector(tangents)
+        tangents = path[2:] - path[:-2] # using the central difference approximation
+        orthogonal_unit_vector[1:-1] = _get_orthogonal_unit_vector(tangents)
 
-    # handle start and end points
-    orthogonal_unit_vector[ 0] = _get_orthogonal_unit_vector(np.atleast_2d([path[ 1] - path[ 0]]))
-    orthogonal_unit_vector[-1] = _get_orthogonal_unit_vector(np.atleast_2d([path[-1] - path[-2]]))
+        # handle start and end points
+        orthogonal_unit_vector[ 0] = _get_orthogonal_unit_vector(np.atleast_2d([path[ 1] - path[ 0]]))
+        orthogonal_unit_vector[-1] = _get_orthogonal_unit_vector(np.atleast_2d([path[-1] - path[-2]]))
+
+    else:
+        orthogonal_unit_vector = _get_orthogonal_unit_vector(np.atleast_2d([path[-1] - path[0]]))
 
     return path + delta * orthogonal_unit_vector
 
