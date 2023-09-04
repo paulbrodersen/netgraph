@@ -144,6 +144,7 @@ class MutableGraph(InteractiveGraph):
 
             if event.dblclick:
                 self._add_or_remove_nascent_edge(event)
+                self.fig.canvas.draw_idle()
 
 
     def _add_or_remove_nascent_edge(self, event):
@@ -154,6 +155,7 @@ class MutableGraph(InteractiveGraph):
                     if (self._nascent_edge.source, node) not in self.edges:
                         self._add_edge(self._nascent_edge.source, node)
                         self.edge_layout.get()
+                        self._update_edge_artists()
                     else:
                         print("Edge already exists!")
                     self._remove_nascent_edge()
@@ -478,6 +480,7 @@ class MutableGraph(InteractiveGraph):
             self._add_edge(edge[1], edge[0], properties)
 
         self.edge_layout.get()
+        self._update_edge_artists()
 
 
 class EditableGraph(MutableGraph):
@@ -776,3 +779,4 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
             self._add_edge(edge[1], edge[0], edge[2], properties)
 
         self.edge_layout.get()
+        self._update_edge_artists()
