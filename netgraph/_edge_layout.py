@@ -963,9 +963,12 @@ class StraightEdgeLayout(object):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
-        else:
+        elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
+        else:
+            selfloop_angle = _get_decent_selfloop_angles(
+                edges, self.node_positions)
         return _get_straight_selfloop_edge_paths(
             edges, self.node_positions, self.selfloop_radius, selfloop_angle)
 
@@ -1040,13 +1043,16 @@ class ArcEdgeLayout(StraightEdgeLayout):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
-        else:
+        elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops,
                 self.selfloop_radius,
                 self.node_positions,
                 self.nonloop_edge_paths
             )
+        else:
+            selfloop_angle = _get_decent_selfloop_angles(
+                edges, self.node_positions)
         return  _get_arced_selfloop_edge_paths(
             edges,
             self.node_positions,
@@ -1182,9 +1188,13 @@ class CurvedEdgeLayout(StraightEdgeLayout):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
-        else:
+        elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
+        else:
+            selfloop_angle = _get_decent_selfloop_angles(
+                edges, self.node_positions)
+
         return  _get_curved_selfloop_edge_paths(
             edges, self.node_positions, self.selfloop_radius, selfloop_angle,
             self.origin, self.scale, self.k, self.initial_temperature,
