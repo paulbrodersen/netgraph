@@ -299,15 +299,13 @@ class MutableGraph(InteractiveGraph):
         nodes = [self._reverse_node_artists[artist] for artist in self._selected_artists if isinstance(artist, NodeArtist)]
 
         # delete edges to and from selected nodes
-        edges = [(source, target) for (source, target) in self.edges if ((source in nodes) or (target in nodes))]
+        edges = [edge for edge in self.edges if ((edge[0] in nodes) or (edge[1] in nodes))]
         for edge in edges:
             self._delete_edge(edge)
 
         # delete nodes
         for node in nodes:
             self._delete_node(node)
-
-        self.edge_layout.get()
 
 
     def _delete_node(self, node):
@@ -378,8 +376,8 @@ class MutableGraph(InteractiveGraph):
 
         artist = EdgeArtist(midline=path, shape=shape, **edge_properties)
         self.ax.add_patch(artist)
-
         self._expand_edge_data_structures((source, target), artist, path)
+        self.edge_layout.add_edge((source, target))
 
 
     def _expand_edge_data_structures(self, edge, artist, path):
@@ -407,8 +405,6 @@ class MutableGraph(InteractiveGraph):
         # 4) BaseGraph
         self.edges.append(edge)
         self.edge_artists[edge] = artist
-        # 5) edge layout
-        self.edge_layout.add_edge(edge[:2])
 
 
     def _delete_edges(self):
@@ -426,6 +422,7 @@ class MutableGraph(InteractiveGraph):
         artist = self.edge_artists[edge]
         self._contract_edge_data_structures(edge, artist)
         artist.remove()
+        self.edge_layout.delete_edge(edge)
 
 
     def _contract_edge_data_structures(self, edge, artist):
@@ -465,8 +462,6 @@ class MutableGraph(InteractiveGraph):
                 self.edge_label_artists[edge].remove()
                 del self.edge_label_artists[edge]
         # TODO remove edge data
-        # 5) edge layout
-        self.edge_layout.delete_edge(edge)
 
 
     def _reverse_edges(self):
@@ -702,6 +697,21 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
         self._last_selected_edge_key = self.edges[0][2]
 
 
+    def _extract_artist_properties(self, artist):
+        super()._extract_artist_properties(artist)
+        if isinstance(artist, EdgeArtist):
+            self._last_selected_edge_key = self._reverse_edge_artists[artist][2]
+
+
+    def _on_motion(self, event):
+        super()._on_motion(event)
+
+        if event.inaxes == self.ax:
+            if self._nascent_edge:
+                self._nascent_edge._update(event.xdata, event.ydata)
+                self.fig.canvas.draw_idle()
+
+
     def _add_or_remove_nascent_edge(self, event):
         for node, artist in self.node_artists.items():
             if artist.contains(event)[0]:
@@ -709,10 +719,11 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
                     # connect edge to target node
                     edge = (self._nascent_edge.source, node, self._last_selected_edge_key)
                     if edge not in self.edges:
-                        self._add_edge(edge)
-                        self._update_edges([edge])
+                        self._add_edge(*edge)
+                        self.edge_layout.get()
+                        self._update_edge_artists()
                     else:
-                        print("Edge already exists!")
+                        print(f"Edge already exists: {edge}")
                     self._remove_nascent_edge()
                 else:
                     self._nascent_edge = self._add_nascent_edge(node)
@@ -741,6 +752,14 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
         if key is None:
             key = self._last_selected_edge_key
         self._expand_edge_data_structures((source, target, key), artist, path)
+        self.edge_layout.add_edge((source, target, key), edge_properties["width"])
+
+
+    def _delete_edge(self, edge):
+        artist = self.edge_artists[edge]
+        self._contract_edge_data_structures(edge, artist)
+        artist.remove()
+        self.edge_layout.delete_edge(edge)
 
 
     def _reverse_edges(self):

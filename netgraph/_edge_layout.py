@@ -1004,11 +1004,16 @@ class StraightEdgeLayout(object):
 
 
     def delete_edge(self, edge):
-        source, target = edge
+        source, target = edge[:2]
         if source == target:
             self.selfloops.remove(edge)
+            del self.selfloop_radius[edge]
+            del self.selfloop_edge_paths[edge]
+            del self.edge_paths[edge]
         else:
             self.nonloops.remove(edge)
+            del self.nonloop_edge_paths[edge]
+            del self.edge_paths[edge]
         # self.edges.remove(edge)
 
 
@@ -1293,26 +1298,63 @@ def _expand_selfloop_edge_paths(edge_paths, edge_to_ids, edge_width, selfloop_ra
 
 class _MultiGraphEdgeLayout(object):
 
+
     def __init__(self, edges, node_positions, edge_width, *args, **kwargs):
         self.edge_width = edge_width
         self.edge_to_ids = _map_multigraph_edges_to_ids(edges)
         super().__init__(sorted(self.edge_to_ids.keys()), node_positions, *args, **kwargs)
 
+
     def get_nonloop_edge_paths(self, *args, **kwargs):
         edge_paths = super().get_nonloop_edge_paths(*args, **kwargs)
         return _expand_nonloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width)
+
 
     def approximate_nonloop_edge_paths(self, *args, **kwargs):
         edge_paths = super().approximate_nonloop_edge_paths(*args, **kwargs)
         return _expand_nonloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width)
 
+
     def get_selfloop_edge_paths(self, *args, **kwargs):
         edge_paths = super().get_selfloop_edge_paths(*args, **kwargs)
         return _expand_selfloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width, self.selfloop_radius)
 
+
     def approximate_selfloop_edge_paths(self, *args, **kwargs):
         edge_paths = super().approximate_selfloop_edge_paths(*args, **kwargs)
         return _expand_selfloop_edge_paths(edge_paths, self.edge_to_ids, self.edge_width, self.selfloop_radius)
+
+
+    def add_edge(self, edge, width):
+        source, target, key = edge
+        self.edge_width[edge] = width
+        if (source, target) in self.edge_to_ids:
+            self.edge_to_ids[(source, target)].append(key)
+        else:
+            self.edge_to_ids[(source, target)] = [key]
+        return super().add_edge(edge[:2])
+
+
+    def delete_edge(self, edge):
+        source, target, key = edge
+        del self.edge_width[edge]
+        self.edge_to_ids[(source, target)].remove(key)
+
+        if source == target:
+            del self.selfloop_edge_paths[edge]
+            del self.edge_paths[edge]
+        else:
+            del self.nonloop_edge_paths[edge]
+            del self.edge_paths[edge]
+
+        if not self.edge_to_ids[(source, target)]:
+            del self.edge_to_ids[(source, target)]
+            if source == target:
+                self.selfloops.remove((source, target))
+                del self.selfloop_radius[(source, target)]
+            else:
+                self.nonloops.remove((source, target))
+            # self.edges.remove(edge)
 
 
 class MultiGraphStraightEdgeLayout(_MultiGraphEdgeLayout, StraightEdgeLayout):
