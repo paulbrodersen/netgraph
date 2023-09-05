@@ -360,10 +360,20 @@ class MutableGraph(InteractiveGraph):
         self.edge_layout.delete_node(node)
 
 
+
     def _add_edge(self, source, target, edge_properties=None):
-        # TODO: support non-straight edge paths when initializing the new edge.
-        # Currently, we circumvent the problem by calling _update_edges after edge creation.
-        path = np.array([self.node_positions[source], self.node_positions[target]])
+
+        edge = (source, target)
+
+        if not edge_properties:
+            edge_properties = self._last_selected_edge_properties
+
+        self.edge_layout.add_edge(edge)
+        if source != target:
+            edge_paths = self.edge_layout.approximate_nonloop_edge_paths([edge])
+        else:
+            edge_paths = self.edge_layout.approximate_selfloop_edge_paths([edge])
+        path = edge_paths[edge]
 
         # create artist
         if (target, source) in self.edges:
@@ -373,13 +383,12 @@ class MutableGraph(InteractiveGraph):
         else:
             shape = 'full'
 
-        if not edge_properties:
-            edge_properties = self._last_selected_edge_properties
-
-        artist = EdgeArtist(midline=path, shape=shape, **edge_properties)
+        # create artist
+        artist = EdgeArtist(midline=path, shape="full", **edge_properties)
         self.ax.add_patch(artist)
-        self._expand_edge_data_structures((source, target), artist, path)
-        self.edge_layout.add_edge((source, target))
+
+        # bookkeeping
+        self._expand_edge_data_structures(edge, artist, path)
 
 
     def _expand_edge_data_structures(self, edge, artist, path):
@@ -742,20 +751,28 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
 
 
     def _add_edge(self, source, target, key=None, edge_properties=None):
-        # TODO: support non-straight edge paths when initializing the new edge.
-        # Currently, we circumvent the problem by calling _update_edges after edge creation.
-        path = np.array([self.node_positions[source], self.node_positions[target]])
-
-        # create artist
-        if not edge_properties:
-            edge_properties = self._last_selected_edge_properties
-        artist = EdgeArtist(midline=path, shape="full", **edge_properties)
-        self.ax.add_patch(artist)
 
         if key is None:
             key = self._last_selected_edge_key
-        self._expand_edge_data_structures((source, target, key), artist, path)
-        self.edge_layout.add_edge((source, target, key), edge_properties["width"])
+        edge = (source, target, key)
+
+        if not edge_properties:
+            edge_properties = self._last_selected_edge_properties
+
+        # path = np.array([self.node_positions[source], self.node_positions[target]])
+        self.edge_layout.add_edge(edge, edge_properties["width"])
+        if source != target:
+            edge_paths = self.edge_layout.approximate_nonloop_edge_paths([(source, target)])
+        else:
+            edge_paths = self.edge_layout.approximate_selfloop_edge_paths([(source, target)])
+        path = edge_paths[edge]
+
+        # create artist
+        artist = EdgeArtist(midline=path, shape="full", **edge_properties)
+        self.ax.add_patch(artist)
+
+        # bookkeeping
+        self._expand_edge_data_structures(edge, artist, path)
 
 
     def _delete_edge(self, edge):
