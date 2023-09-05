@@ -1692,8 +1692,17 @@ class EmphasizeOnHover(object):
 
     def _reset_emphasis(self):
         for artist in self.deemphasized_artists:
-            artist.set_alpha(self._base_alpha[artist])
-        self.deemphasized_artists = []
+            try:
+                artist.set_alpha(self._base_alpha[artist])
+            except KeyError:
+                # This is a workaround for a bug in MutableGraph that occurs when:
+                # 1) The user selects an artist.
+                # 2) The user moves the mouse and hovers over a different artist that results in de-emphasizing the selected artist.
+                # 3) The user deletes the selected artist.
+                # In theory, self.deemphasized_artists should be updated on node/edge removal.
+                # In practice, it still contains the artist when this function is called.
+                pass
+        self.deemphasized_artists.clear()
         self.fig.canvas.draw_idle()
 
 
