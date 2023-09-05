@@ -1667,28 +1667,34 @@ class EmphasizeOnHover(object):
 
 
     def _on_motion(self, event):
-
         if event.inaxes == self.ax:
-            # on artist
-            selected_artist = None
-            for artist in self.emphasizeable_artists:
-                if artist.contains(event)[0]: # returns two arguments for some reason
-                    selected_artist = artist
-                    break
+            artist = self._is_on_artist(event)
+            if artist:
+                self._emphasize(artist)
+            elif self.deemphasized_artists:
+                self._reset_emphasis()
 
-            if selected_artist:
-                for artist in self.emphasizeable_artists:
-                    if artist is not selected_artist:
-                        artist.set_alpha(self._base_alpha[artist]/5)
-                        self.deemphasized_artists.append(artist)
-                self.fig.canvas.draw_idle()
 
-            # not on any artist
-            if (selected_artist is None) and self.deemphasized_artists:
-                for artist in self.deemphasized_artists:
-                    artist.set_alpha(self._base_alpha[artist])
-                self.deemphasized_artists = []
-                self.fig.canvas.draw_idle()
+    def _is_on_artist(self, event):
+        for artist in self.emphasizeable_artists:
+            if artist.contains(event)[0]: # returns two arguments for some reason
+                return artist
+        return None
+
+
+    def _emphasize(self, artist_to_emphasize):
+        for artist in self.emphasizeable_artists:
+            if artist is not artist_to_emphasize:
+                artist.set_alpha(self._base_alpha[artist]/5)
+                self.deemphasized_artists.append(artist)
+        self.fig.canvas.draw_idle()
+
+
+    def _reset_emphasis(self):
+        for artist in self.deemphasized_artists:
+            artist.set_alpha(self._base_alpha[artist])
+        self.deemphasized_artists = []
+        self.fig.canvas.draw_idle()
 
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
@@ -1821,39 +1827,21 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
             raise ValueError(msg)
 
 
-    def _on_motion(self, event):
+    def _emphasize(self, selected_artist):
+        key = self.artist_to_key[selected_artist]
+        if key in self.mouseover_highlight_mapping:
+            emphasized_artists = []
+            for value in self.mouseover_highlight_mapping[key]:
+                if value in self.node_artists:
+                    emphasized_artists.append(self.node_artists[value])
+                elif value in self.edge_artists:
+                    emphasized_artists.append(self.edge_artists[value])
 
-        if event.inaxes == self.ax:
-
-            # determine if the cursor is on an artist
-            selected_artist = None
             for artist in self.emphasizeable_artists:
-                if artist.contains(event)[0]: # returns bool, {} for some reason
-                    selected_artist = artist
-                    break
-
-            if selected_artist:
-                key = self.artist_to_key[artist]
-                if key in self.mouseover_highlight_mapping:
-                    emphasized_artists = []
-                    for value in self.mouseover_highlight_mapping[key]:
-                        if value in self.node_artists:
-                            emphasized_artists.append(self.node_artists[value])
-                        elif value in self.edge_artists:
-                            emphasized_artists.append(self.edge_artists[value])
-
-                    for artist in self.emphasizeable_artists:
-                        if artist not in emphasized_artists:
-                            artist.set_alpha(self._base_alpha[artist]/5)
-                            self.deemphasized_artists.append(artist)
-                    self.fig.canvas.draw_idle()
-
-            # not on any artist
-            if (selected_artist is None) and self.deemphasized_artists:
-                for artist in self.deemphasized_artists:
-                    artist.set_alpha(self._base_alpha[artist])
-                self.deemphasized_artists = []
-                self.fig.canvas.draw_idle()
+                if artist not in emphasized_artists:
+                    artist.set_alpha(self._base_alpha[artist]/5)
+                    self.deemphasized_artists.append(artist)
+            self.fig.canvas.draw_idle()
 
 
 class AnnotateOnClick(object):
