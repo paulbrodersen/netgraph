@@ -526,29 +526,36 @@ class EditableGraph(MutableGraph):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # initiate node and edge label data structures if they don't exist
         if not hasattr(self, 'node_label_artists'):
-            node_labels = {node : '' for node in self.nodes}
-            self.node_label_fontdict = self._initialize_node_label_fontdict(
-                kwargs.get('node_label_fontdict'), node_labels, kwargs.get('node_label_offset', (0., 0.)))
-            self.node_label_offset, self._recompute_node_label_offsets =\
-                self._initialize_node_label_offset(node_labels, kwargs.get('node_label_offset', (0., 0.)))
-            if self._recompute_node_label_offsets:
-                self._update_node_label_offsets()
-            self.node_label_artists = dict()
-            self.draw_node_labels(node_labels, self.node_label_fontdict)
+            self._initialize_empty_node_labels(kwargs)
 
         if not hasattr(self, 'edge_label_artists'):
-            edge_labels = {edge : '' for edge in self.edges}
-            self.edge_label_fontdict = self._initialize_edge_label_fontdict(kwargs.get('edge_label_fontdict'))
-            self.edge_label_position = kwargs.get('edge_label_position', 0.5)
-            self.edge_label_rotate = kwargs.get('edge_label_rotate', True)
-            self.edge_label_artists = dict()
-            self.draw_edge_labels(edge_labels, self.edge_label_position,
-                                  self.edge_label_rotate, self.edge_label_fontdict)
+            self._initialize_empty_edge_labels(kwargs)
 
         self._currently_writing_labels = False
         self._currently_writing_annotations = False
+
+
+    def _initialize_empty_node_labels(self, kwargs):
+        node_labels = {node : '' for node in self.nodes}
+        self.node_label_fontdict = self._initialize_node_label_fontdict(
+            kwargs.get('node_label_fontdict'), node_labels, kwargs.get('node_label_offset', (0., 0.)))
+        self.node_label_offset, self._recompute_node_label_offsets =\
+            self._initialize_node_label_offset(node_labels, kwargs.get('node_label_offset', (0., 0.)))
+        if self._recompute_node_label_offsets:
+            self._update_node_label_offsets()
+        self.node_label_artists = dict()
+        self.draw_node_labels(node_labels, self.node_label_fontdict)
+
+
+    def _initialize_empty_edge_labels(self, kwargs):
+        edge_labels = {edge : '' for edge in self.edges}
+        self.edge_label_fontdict = self._initialize_edge_label_fontdict(kwargs.get('edge_label_fontdict'))
+        self.edge_label_position = kwargs.get('edge_label_position', 0.5)
+        self.edge_label_rotate = kwargs.get('edge_label_rotate', True)
+        self.edge_label_artists = dict()
+        self.draw_edge_labels(edge_labels, self.edge_label_position,
+                              self.edge_label_rotate, self.edge_label_fontdict)
 
 
     def _on_key_press(self, event):
@@ -801,3 +808,23 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
 
         self.edge_layout.get()
         self._update_edge_artists()
+
+
+class EditableMultiGraph(MutableMultiGraph, EditableGraph):
+
+    def __init__(self, *args, **kwargs):
+        MutableMultiGraph.__init__(self, *args, **kwargs)
+
+        if not hasattr(self, 'node_label_artists'):
+            self._initialize_empty_node_labels(kwargs)
+
+        if not hasattr(self, 'edge_label_artists'):
+            self._initialize_empty_edge_labels(kwargs)
+
+        self._currently_writing_labels = False
+        self._currently_writing_annotations = False
+
+
+    def _on_key_press(self, event):
+        MutableMultiGraph._on_key_press(self, event)
+        EditableGraph._on_key_press(self, event)
