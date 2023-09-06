@@ -575,7 +575,7 @@ class EditableGraph(MutableGraph):
         self._currently_writing_labels = False
         self._currently_writing_annotations = False
         self.fig.canvas.manager.key_press_handler_id \
-            = self.fig.canvas.mpl_connect('key_press_event', self.fig.canvas.manager.key_press)
+            = self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
         print('Finished writing.')
 
 
