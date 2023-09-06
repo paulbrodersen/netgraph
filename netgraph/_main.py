@@ -904,43 +904,28 @@ class BaseGraph(object):
 
 
     def _update_edge_label_positions(self, edges):
+        for edge in edges:
+            if edge in self.edge_label_artists:
+                x, y = _get_point_along_spline(
+                    self.edge_artists[edge].midline,
+                    self.edge_label_position
+                )
+                self.edge_label_artists[edge].set_position((x, y))
 
-        labeled_edges = [edge for edge in edges if edge in self.edge_label_artists]
-
-        for (n1, n2) in labeled_edges:
-
-            edge_artist = self.edge_artists[(n1, n2)]
-
-            if edge_artist.curved:
-                x, y = _get_point_along_spline(edge_artist.midline, self.edge_label_position)
-                dx, dy = _get_tangent_at_point(edge_artist.midline, self.edge_label_position)
-
-            elif not edge_artist.curved and (n1 != n2):
-                (x1, y1) = self.node_positions[n1]
-                (x2, y2) = self.node_positions[n2]
-
-                if (n2, n1) in self.edges: # i.e. bidirectional edge
-                    x1, y1, x2, y2 = _shift_edge(x1, y1, x2, y2, delta=1.5*self.edge_artists[(n1, n2)].width)
-
-                x, y = (x1 * self.edge_label_position + x2 * (1.0 - self.edge_label_position),
-                        y1 * self.edge_label_position + y2 * (1.0 - self.edge_label_position))
-                dx, dy = x2 - x1, y2 - y1
-
-            else: # self-loop but edge is straight so we skip it
-                pass
-
-            self.edge_label_artists[(n1, n2)].set_position((x, y))
-
-            if self.edge_label_rotate:
-                angle = _get_angle(dx, dy, radians=True)
-                # make label orientation "right-side-up"
-                if angle > 90:
-                    angle -= 180
-                if angle < -90:
-                    angle += 180
-                # transform data coordinate angle to screen coordinate angle
-                trans_angle = self.ax.transData.transform_angles(np.array((angle,)), np.atleast_2d((x, y)))[0]
-                self.edge_label_artists[(n1, n2)].set_rotation(trans_angle)
+                if self.edge_label_rotate:
+                    dx, dy = _get_tangent_at_point(
+                        self.edge_artists[edge].midline,
+                        self.edge_label_position
+                    )
+                    angle = _get_angle(dx, dy, radians=True)
+                    # make label orientation "right-side-up"
+                    if angle > 90:
+                        angle -= 180
+                    if angle < -90:
+                        angle += 180
+                    # transform data coordinate angle to screen coordinate angle
+                    trans_angle = self.ax.transData.transform_angles(np.array((angle,)), np.atleast_2d((x, y)))[0]
+                    self.edge_label_artists[edge].set_rotation(trans_angle)
 
 
 class Graph(BaseGraph):
