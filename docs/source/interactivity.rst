@@ -3,7 +3,7 @@
 Interactive Graphs
 ==================
 
-Algorithmically finding a visually pleasing graph layout is hard. This is demonstrated by the plethora of different algorithms in use (if graph layout was a solved problem, there would only be one algorithm). To ameliorate this problem, this module contains an :code:`InteractiveGraph` class, which allows node positions to be tweaked with the mouse after an initial draw.
+Algorithmically finding a visually pleasing graph layout is hard. This is demonstrated by the plethora of different algorithms in use (if graph layout was a solved problem, there would only be one algorithm). To ameliorate this problem, this module contains interactive graph classes (:code:`InteractiveGraph`, :code:`InteractiveMultiGraph`, and :code:`InteractiveArcDiagram`), which allow node positions to be tweaked with the mouse after an initial draw.
 
   - Individual nodes and edges can be selected using the left-click.
   - Multiple nodes and or edges can be selected by holding :code:`control` while clicking, or by using the rectangle/window selector.
@@ -39,7 +39,7 @@ Algorithmically finding a visually pleasing graph layout is hard. This is demons
     plt.show()
 
 
-There is also some experimental support for editing the graph elements interactively using the :code:`EditableGraph` class.
+There is also some experimental support for editing graph elements interactively in the :code:`EditableGraph`, :code:`EditableMultiGraph`, and :code:`EditableArcDiagram` classes.
 
     - Pressing :code:`insert` or :code:`+` will add a new node to the graph.
     - Double clicking on two nodes successively will create an edge between them.
