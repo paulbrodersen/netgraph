@@ -111,7 +111,21 @@ from ._main import (
 from ._multigraph import (
     BaseMultiGraph,
     MultiGraph,
-    InteractiveMultiGraph
+    InteractiveMultiGraph,
+)
+
+from ._interactive_variants import (
+    MutableGraph,
+    EditableGraph,
+    MutableMultiGraph,
+    EditableMultiGraph,
+)
+
+from ._arcdiagram import (
+    BaseArcDiagram,
+    ArcDiagram,
+    InteractiveArcDiagram,
+    EditableArcDiagram,
 )
 
 from ._node_layout import (
@@ -135,18 +149,6 @@ from ._edge_layout import (
     get_bundled_edge_paths,
 )
 
-from ._interactive_variants import (
-    MutableGraph,
-    EditableGraph,
-)
-
-from ._arcdiagram import (
-    BaseArcDiagram,
-    ArcDiagram,
-    InteractiveArcDiagram,
-    EditableArcDiagram,
-)
-
 from ._parser import parse_graph
 
 __all__ = [
@@ -164,12 +166,18 @@ __all__ = [
     'get_curved_edge_paths',
     'get_bundled_edge_paths',
     'get_arced_edge_paths',
-    'Basegraph',
+    'parse_graph',
+    'BaseGraph',
     'Graph',
     'InteractiveGraph',
     'MutableGraph',
     'EditableGraph',
-    'parse_graph',
+    'BaseMultiGraph',
+    'MultiGraph',
+    'InteractiveMultiGraph',
+    'MutableMultiGraph',
+    'EditableMultiGraph',
+    'BaseArcDiagram',
     'ArcDiagram',
     'InteractiveArcDiagram',
     'MutableArcDiagram',
