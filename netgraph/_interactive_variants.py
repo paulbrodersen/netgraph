@@ -535,6 +535,11 @@ class EditableGraph(MutableGraph):
         self._currently_writing_labels = False
         self._currently_writing_annotations = False
 
+        # restore deprecated self.fig.canvas.manager.key_press method
+        # https://github.com/matplotlib/matplotlib/issues/26713#issuecomment-1709938648
+        from matplotlib import backend_bases
+        self.fig.canvas.manager.key_press = backend_bases.key_press_handler
+
 
     def _initialize_empty_node_labels(self, kwargs):
         node_labels = {node : '' for node in self.nodes}
@@ -582,7 +587,7 @@ class EditableGraph(MutableGraph):
         self._currently_writing_labels = False
         self._currently_writing_annotations = False
         self.fig.canvas.manager.key_press_handler_id \
-            = self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
+            = self.fig.canvas.mpl_connect('key_press_event', self.fig.canvas.manager.key_press)
         print('Finished writing.')
 
 
@@ -823,6 +828,11 @@ class EditableMultiGraph(MutableMultiGraph, EditableGraph):
 
         self._currently_writing_labels = False
         self._currently_writing_annotations = False
+
+        # restore deprecated self.fig.canvas.manager.key_press method
+        # https://github.com/matplotlib/matplotlib/issues/26713#issuecomment-1709938648
+        from matplotlib import backend_bases
+        self.fig.canvas.manager.key_press = backend_bases.key_press_handler
 
 
     def _on_key_press(self, event):
