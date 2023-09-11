@@ -60,12 +60,8 @@ def _handle_multiple_components(layout_function):
                     components.append([node])
 
         if len(components) > 1:
-            if layout_function.__name__ == 'get_linear_layout':
-                return get_layout_for_multiple_components(
-                    edges, components, layout_function, mode='side-by-side', *args, **kwargs)
-            else:
-                return get_layout_for_multiple_components(
-                    edges, components, layout_function, mode='packed', *args, **kwargs)
+            return get_layout_for_multiple_components(
+                edges, components, layout_function, *args, **kwargs)
         else:
             return layout_function(edges, *args, **kwargs)
 
@@ -73,7 +69,7 @@ def _handle_multiple_components(layout_function):
 
 
 def get_layout_for_multiple_components(edges, components, layout_function,
-                                       origin, scale, mode='packed', *args, **kwargs):
+                                       origin, scale, *args, **kwargs):
     """Determine suitable bounding box dimensions and placement for each
     component in the graph, and then compute the layout of each
     individual component given the constraint of the bounding box.
@@ -91,12 +87,6 @@ def get_layout_for_multiple_components(edges, components, layout_function,
         The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-    mode : str, default 'packed'
-        The way in which individual components are arranged w.r.t. each other.
-        One of:
-
-        - 'packed'       : Use rectangle packing to tightly arrange components.
-        - 'side-by-side' : Components are arranged next to each other.
 
     *args, **kwargs
         Passed through to layout_function
@@ -108,16 +98,7 @@ def get_layout_for_multiple_components(edges, components, layout_function,
 
     """
 
-    if mode == 'packed':
-        bboxes = _get_packed_component_bboxes(components, origin, scale)
-    elif mode == 'side-by-side':
-        bboxes = _get_side_by_side_component_bboxes(components, origin, scale)
-    else:
-        msg = "Variable 'mode' is one of:"
-        msg += "\n    - 'packed'"
-        msg += "\n    - 'side-by-side'"
-        msg += f"\nCurrent value: '{mode}'"
-        raise ValueError(msg)
+    bboxes = _get_packed_component_bboxes(components, origin, scale)
 
     node_positions = dict()
     for ii, (component, bbox) in enumerate(zip(components, bboxes)):
@@ -1085,7 +1066,6 @@ def _get_centroid(polygon):
     return np.mean(polygon, axis=0)
 
 
-@_handle_multiple_components
 def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Linear node layout.
 
