@@ -797,8 +797,8 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
             ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     node_order : list or None, default None
-        The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
-        Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
+        The ordering of nodes (left-to-right).
+        Implies :code:`reduce_edge_crossings` is :code:`False`.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
 
@@ -807,40 +807,34 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
-    Notes
-    -----
-    If you would like to compute a circular layout for a multi-component graph,
-    in which all nodes are arranged within one circle (and not each component
-    within its own circle), then use the following function call:
-
-    .. code::
-
-        node_positions = get_circular_layout.__wrapped__(edges, ..., reduce_edge_crossings=False)
-
-    Be sure to turn off edge crossing reduction, as it is not properly supported
-    in this case and may lead to unexpected behavior.
+    See also
+    --------
+    _get_preorderd_circular_layout
 
     References
     ----------
     .. [Baur2005] Baur & Brandes (2005) Crossing reduction in circular layouts.
 
     """
-    nodes = _get_unique_nodes(edges)
-    center = np.array(origin) + 0.5 * np.array(scale)
-    radius = np.min(scale) / 2
-    radius *= (1 - pad_by) # fudge factor to make space for self-loops, annotations, etc
-    positions = _get_n_points_on_a_circle(center, radius, len(nodes), start_angle=0)
+    nodes = sorted(_get_unique_nodes(edges))
 
     if node_order:
         nodes = [node for node in node_order if node in nodes]
-
-    if reduce_edge_crossings:
+    elif reduce_edge_crossings:
         if not _is_complete(edges):
             # remove self-loops as these should have no bearing on the solution
             edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
 
-    return dict(zip(nodes, positions))
+    return _get_preorderd_circular_layout(nodes, origin, scale, pad_by)
+
+
+def _get_preordered_circular_layout(node_order, origin, scale, pad_by=0.05):
+    center = np.array(origin) + 0.5 * np.array(scale)
+    radius = np.min(scale) / 2
+    radius *= (1 - pad_by) # fudge factor to make space for self-loops, annotations, etc
+    positions = _get_n_points_on_a_circle(center, radius, len(node_order), start_angle=0)
+    return dict(zip(node_order, positions))
 
 
 def _is_complete(edges):
@@ -1116,8 +1110,8 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
             ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     node_order : list or None, default None
-        The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
-        Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
+        The ordering of nodes (left-to-right).
+        Implies :code:`reduce_edge_crossings` is :code:`False`.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
 
@@ -1126,34 +1120,39 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
 
+    See also
+    --------
+    _get_preordered_linear_layout
+
     References
     ----------
     .. [Baur2005] Baur & Brandes (2005) Crossing reduction in circular layouts.
 
     """
 
-    nodes = _get_unique_nodes(edges)
-    total_nodes = len(nodes)
-    x = np.linspace(origin[0] + pad_by * scale[0], origin[0] + (1 - pad_by) * scale[0], total_nodes)
-    y = np.full(total_nodes, origin[1] + 0.5 * scale[1])
-    positions = np.c_[x, y]
+    nodes = sorted(_get_unique_nodes(edges))
 
     if node_order:
         nodes = [node for node in node_order if node in nodes]
-
-    if reduce_edge_crossings:
+    elif reduce_edge_crossings:
         if not _is_complete(edges):
             # remove self-loops as these should have no bearing on the solution
             edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
-
             # The algorithm in _reduce_crossings assumes that nodes are arranged in a circle.
             # As a consequence, when nodes are arranged along a line, a community may be split
             # with members on both ends of the line.
             # Here we find a better split by minimising the total edge length.
             nodes = _minimize_total_edge_length(nodes, edges)
 
-    return dict(zip(nodes, positions))
+    return _get_preordered_linear_layout(nodes, origin, scale, pad_by)
+
+
+def _get_preordered_linear_layout(node_order, origin, scale, pad_by=0.05):
+    total_nodes = len(node_order)
+    x = np.linspace(origin[0] + pad_by * scale[0], origin[0] + (1 - pad_by) * scale[0], total_nodes)
+    y = np.full(total_nodes, origin[1] + 0.5 * scale[1])
+    return dict(zip(node_order, np.c_[x, y]))
 
 
 def _minimize_total_edge_length(nodes, edges):
