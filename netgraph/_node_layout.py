@@ -336,13 +336,12 @@ def get_fruchterman_reingold_layout(edges,
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -609,13 +608,12 @@ def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_si
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -712,13 +710,12 @@ def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -1108,13 +1105,12 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     node_order : list or None, default None
         The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
@@ -1193,13 +1189,12 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
@@ -1346,13 +1341,12 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
@@ -1462,13 +1456,12 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), pad
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     reduce_edge_crossings : bool, default True
         If True, attempts to reduce edge crossings via the algorithm outlined in [Eades1994]_.
@@ -1546,13 +1539,12 @@ def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), 
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     Returns
     -------
@@ -1725,8 +1717,13 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
         Padding around node positions to reduce clipping of the node artists with the frame,
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
-        xmin, xmax = origin[0] + pad_by * scale[0], origin[0] + scale[0] - pad_by * scale[0]
-        ymin, ymax = origin[1] + pad_by * scale[1], origin[1] + scale[1] - pad_by * scale[1]
+
+        .. code::
+
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     Returns
     -------
