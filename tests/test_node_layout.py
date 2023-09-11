@@ -11,6 +11,9 @@ from itertools import combinations
 from random import choice
 
 from netgraph._main import Graph
+from netgraph._node_layout import (
+    get_circular_layout,
+)
 from toy_graphs import (
     cycle,
     unbalanced_tree,
@@ -161,6 +164,15 @@ def test_circular_layout_with_multiple_components(multi_component_graph):
     nodes, edges = multi_component_graph
     fig, ax = plt.subplots()
     Graph(edges, nodes=nodes, node_size=1, edge_width=0.3, node_layout='circular', ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_circular_layout_wrapped(multi_component_graph):
+    nodes, edges = multi_component_graph
+    node_positions = get_circular_layout.__wrapped__(edges, reduce_edge_crossings=False)
+    fig, ax = plt.subplots()
+    Graph(edges, node_size=1, edge_width=0.3, node_layout=node_positions, ax=ax)
     return fig
 
 

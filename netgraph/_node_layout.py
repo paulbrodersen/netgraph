@@ -789,13 +789,12 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        :code:`xmin = origin[0] + pad_by * scale[0]`
+        .. code::
 
-        :code:`xmax = origin[0] + scale[0] - pad_by * scale[0]`
-
-        :code:`ymin = origin[1] + pad_by * scale[1]`
-
-        :code:`ymax = origin[1] + scale[1] - pad_by * scale[1]`
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     node_order : list or None, default None
         The (initial) ordering of nodes (counter-clockwise) before layout optimisation.
@@ -807,6 +806,19 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
     -------
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    Notes
+    -----
+    If you would like to compute a circular layout for a multi-component graph,
+    in which all nodes are arranged within one circle (and not each component
+    within its own circle), then use the following function call:
+
+    .. code::
+
+        node_positions = get_circular_layout.__wrapped__(edges, ..., reduce_edge_crossings=False)
+
+    Be sure to turn off edge crossing reduction, as it is not properly supported
+    in this case and may lead to unexpected behavior.
 
     References
     ----------
