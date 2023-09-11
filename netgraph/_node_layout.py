@@ -9,7 +9,7 @@ import warnings
 import itertools
 import numpy as np
 
-from functools import wraps
+from functools import wraps, partial
 from itertools import combinations, product
 from scipy.spatial import Voronoi
 from scipy.spatial.distance import cdist, pdist, squareform
@@ -35,14 +35,14 @@ from ._utils import (
 DEBUG = False
 
 
-def _handle_multiple_components(layout_function):
+def _handle_multiple_components(layout_function, packing_function):
     """Most layout algorithms only handle graphs that consist of a giant
     single component, and fail to find a suitable layout if the graph
     consists of more than component. This decorator wraps a given
     layout function such that if the graph contains more than one
-    component, the layout is first applied to each individual
+    component, the layout is first computed for each individual
     component, and then the component layouts are combined using
-    rectangle packing.
+    the packing function.
 
     """
 
@@ -61,14 +61,15 @@ def _handle_multiple_components(layout_function):
 
         if len(components) > 1:
             return get_layout_for_multiple_components(
-                edges, components, layout_function, *args, **kwargs)
+                edges, components, layout_function, packing_function, *args, **kwargs)
         else:
             return layout_function(edges, *args, **kwargs)
 
     return wrapped_layout_function
 
 
-def get_layout_for_multiple_components(edges, components, layout_function,
+def get_layout_for_multiple_components(edges, components,
+                                       layout_function, packing_function,
                                        origin, scale, *args, **kwargs):
     """Determine suitable bounding box dimensions and placement for each
     component in the graph, and then compute the layout of each
@@ -81,10 +82,12 @@ def get_layout_for_multiple_components(edges, components, layout_function,
     components : list of sets
         The connected components of the graph.
     layout_function : function
-        Handle to the function computing the relative positions of each node within a component.
-        The args and kwargs are passed through to this function.
+        The function used to compute the relative positions of each node within a component.
+        The arguments and key-word arguments are passed through to this function.
+    packing_function : function
+        The function used to arrange component layouts w.r.t. each other.
     origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
 
@@ -98,7 +101,7 @@ def get_layout_for_multiple_components(edges, components, layout_function,
 
     """
 
-    bboxes = _get_packed_component_bboxes(components, origin, scale)
+    bboxes = packing_function(components, origin, scale)
 
     node_positions = dict()
     for ii, (component, bbox) in enumerate(zip(components, bboxes)):
@@ -113,7 +116,7 @@ def get_layout_for_multiple_components(edges, components, layout_function,
     return node_positions
 
 
-def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.1):
+def _get_packed_component_bboxes(components, origin, scale, pad_by=0.1, power=0.8):
     """Partition the canvas given by origin and scale into bounding boxes, one for each component.
 
     Use rectangle packing to tightly arrange bounding boxes.
@@ -123,9 +126,21 @@ def _get_packed_component_bboxes(components, origin, scale, power=0.8, pad_by=0.
     components : list of sets
         The connected components of the graph.
     origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+    pad_by : float, default 0.05
+        Padding around node positions to reduce clipping of the node artists with the frame,
+        and to create space for routing curved edges including self-loops around nodes.
+        This results in the following bounding box:
+
+        .. code::
+
+            xmin = origin[0] + pad_by * scale[0]
+            ymin = origin[1] + pad_by * scale[1]
+            xmax = origin[0] + scale[0] - pad_by * scale[0]
+            ymax = origin[1] + scale[1] - pad_by * scale[1]
+
     power : float, default 0.8
         The dimensions each bounding box are given by |V|^power by |V|^power,
         where |V| are the total number of nodes.
@@ -201,55 +216,8 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
     return shifted_bboxes
 
 
-def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
-    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
-
-    Position bounding boxes next to each other.
-
-    Parameters
-    ----------
-    components : list of sets
-        The connected components of the graph.
-    origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple
-        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-
-    Returns
-    -------
-    bboxes : list of tuples
-        The (left, bottom, width height) bounding boxes for each component.
-
-    """
-
-    relative_dimensions = [(len(component), 1) for component in components]
-
-    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
-    # We choose a padding proportional to the dimensions of the largest box.
-    maximum_dimensions = np.max(relative_dimensions, axis=0)
-    pad_x, pad_y = pad_by * maximum_dimensions
-    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
-
-    x = 0
-    origins = []
-    for (dx, _) in padded_dimensions:
-        origins.append((x, 0))
-        x += dx
-
-    bboxes = [(x, y, width, height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
-
-    # rescale boxes to canvas, effectively reversing the upscaling
-    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
-
-    if DEBUG:
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Rectangle
-        fig, ax = plt.subplots(1,1)
-        for bbox in bboxes:
-            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
-        plt.show()
-
-    return bboxes
+_rectangle_pack_multiple_components = \
+    partial(_handle_multiple_components, packing_function=_get_packed_component_bboxes)
 
 
 def _get_fr_repulsion(distance, direction, k):
@@ -277,7 +245,7 @@ def _get_fr_attraction(distance, direction, adjacency, k):
     return np.sum(vectors, axis=0)
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_fruchterman_reingold_layout(edges,
                                     edge_weights        = None,
                                     k                   = None,
@@ -309,7 +277,7 @@ def get_fruchterman_reingold_layout(edges,
     k : float or None, default None
         Expected mean edge length. If None, initialized to the sqrt(area / total nodes).
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -563,13 +531,13 @@ def _rescale_to_frame(node_positions, origin, scale):
     return node_positions
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_random_layout(edges, origin=(0,0), scale=(1,1)):
     nodes = _get_unique_nodes(edges)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_size=3, total_iterations=3):
     """'Dot' or Sugiyama node layout.
 
@@ -581,7 +549,7 @@ def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_si
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -671,7 +639,7 @@ class vertex_view(object):
         self.h = h
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_size=3, total_iterations=3):
     """Radial tree layout.
 
@@ -683,7 +651,7 @@ def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -748,7 +716,7 @@ def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node
     return node_positions
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Circular node layout.
 
@@ -759,7 +727,7 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1066,6 +1034,57 @@ def _get_centroid(polygon):
     return np.mean(polygon, axis=0)
 
 
+def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
+    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Position bounding boxes next to each other.
+
+    Parameters
+    ----------
+    components : list of sets
+        The connected components of the graph.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+
+    Returns
+    -------
+    bboxes : list of tuples
+        The (left, bottom, width height) bounding boxes for each component.
+
+    """
+
+    relative_dimensions = [(len(component), 1) for component in components]
+
+    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
+    # We choose a padding proportional to the dimensions of the largest box.
+    maximum_dimensions = np.max(relative_dimensions, axis=0)
+    pad_x, pad_y = pad_by * maximum_dimensions
+    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
+
+    x = 0
+    origins = []
+    for (dx, _) in padded_dimensions:
+        origins.append((x, 0))
+        x += dx
+
+    bboxes = [(x, y, width, height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
+
+    # rescale boxes to canvas, effectively reversing the upscaling
+    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    if DEBUG:
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        fig, ax = plt.subplots(1,1)
+        for bbox in bboxes:
+            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+        plt.show()
+
+    return bboxes
+
+
 def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Linear node layout.
 
@@ -1077,7 +1096,7 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1161,7 +1180,7 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
         The two layers of the graph. If None, a two-coloring is used to separate the nodes into two subsets.
         However, if the graph consists of multiple components, this partitioning into two layers is ambiguous, as multiple solutions exist.
     origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1313,7 +1332,7 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
         A list of x-coordinates, one for each layer.
         If None provided, layers are placed evenly between origin[0] and origin[0] + scale[0].
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1428,7 +1447,7 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), pad
         List of radii, one for each shell.
         If None, radii are chosen such that the shells are evenly spaced within the bounding box defined by origin and scale.
     origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1489,7 +1508,7 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), pad
     return node_positions
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), pad_by=0.05):
     """Community node layout for modular graphs.
 
@@ -1511,7 +1530,7 @@ def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), 
     node_to_community : dict
         The network partition, which maps each node ID to a community ID.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
@@ -1666,7 +1685,7 @@ def _rotate(angle, points, origin=(0, 0)):
     return np.squeeze((R @ (points.T-origin.T) + origin.T).T)
 
 
-@_handle_multiple_components
+@_rectangle_pack_multiple_components
 def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 0), scale=(1, 1), pad_by=0.05):
     """Node layout for defined edge lengths but unknown node positions.
 
@@ -1690,7 +1709,7 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
     tolerance : float, default 1e-3
         The tolerance of the cost function. Small values increase the accuracy, large values improve the computation time.
     origin : tuple, default (0, 0)
-        The (float x, float y) coordinates corresponding to the lower left hand corner of the bounding box specifying the extent of the canvas.
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
         The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
     pad_by : float, default 0.05
