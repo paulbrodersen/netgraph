@@ -216,8 +216,62 @@ def _rescale_bboxes_to_canvas(bboxes, origin, scale):
     return shifted_bboxes
 
 
+def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
+    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
+
+    Position bounding boxes next to each other.
+
+    Parameters
+    ----------
+    components : list of sets
+        The connected components of the graph.
+    origin : tuple
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
+    scale : tuple
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+
+    Returns
+    -------
+    bboxes : list of tuples
+        The (left, bottom, width height) bounding boxes for each component.
+
+    """
+
+    relative_dimensions = [(len(component), 1) for component in components]
+
+    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
+    # We choose a padding proportional to the dimensions of the largest box.
+    maximum_dimensions = np.max(relative_dimensions, axis=0)
+    pad_x, pad_y = pad_by * maximum_dimensions
+    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
+
+    x = 0
+    origins = []
+    for (dx, _) in padded_dimensions:
+        origins.append((x, 0))
+        x += dx
+
+    bboxes = [(x, y, width, height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
+
+    # rescale boxes to canvas, effectively reversing the upscaling
+    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
+
+    if DEBUG:
+        import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        fig, ax = plt.subplots(1,1)
+        for bbox in bboxes:
+            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
+        plt.show()
+
+    return bboxes
+
+
 _rectangle_pack_multiple_components = \
     partial(_handle_multiple_components, packing_function=_get_packed_component_bboxes)
+
+_arrange_multiple_components_side_by_side = \
+    partial(_handle_multiple_components, packing_function=_get_side_by_side_component_bboxes)
 
 
 def _get_fr_repulsion(distance, direction, k):
@@ -1034,57 +1088,7 @@ def _get_centroid(polygon):
     return np.mean(polygon, axis=0)
 
 
-def _get_side_by_side_component_bboxes(components, origin, scale, pad_by=0.05):
-    """Partition the canvas given by origin and scale into bounding boxes, one for each component.
-
-    Position bounding boxes next to each other.
-
-    Parameters
-    ----------
-    components : list of sets
-        The connected components of the graph.
-    origin : tuple
-        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
-    scale : tuple
-        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
-
-    Returns
-    -------
-    bboxes : list of tuples
-        The (left, bottom, width height) bounding boxes for each component.
-
-    """
-
-    relative_dimensions = [(len(component), 1) for component in components]
-
-    # Add a padding between boxes, such that nodes cannot end up touching in the final layout.
-    # We choose a padding proportional to the dimensions of the largest box.
-    maximum_dimensions = np.max(relative_dimensions, axis=0)
-    pad_x, pad_y = pad_by * maximum_dimensions
-    padded_dimensions = [(width + pad_x, height + pad_y) for (width, height) in relative_dimensions]
-
-    x = 0
-    origins = []
-    for (dx, _) in padded_dimensions:
-        origins.append((x, 0))
-        x += dx
-
-    bboxes = [(x, y, width, height) for (x, y), (width, height) in zip(origins, relative_dimensions)]
-
-    # rescale boxes to canvas, effectively reversing the upscaling
-    bboxes = _rescale_bboxes_to_canvas(bboxes, origin, scale)
-
-    if DEBUG:
-        import matplotlib.pyplot as plt
-        from matplotlib.patches import Rectangle
-        fig, ax = plt.subplots(1,1)
-        for bbox in bboxes:
-            ax.add_artist(Rectangle(bbox[:2], bbox[2], bbox[3], color=np.random.rand(3)))
-        plt.show()
-
-    return bboxes
-
-
+@_arrange_multiple_components_side_by_side
 def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_order=None, reduce_edge_crossings=True):
     """Linear node layout.
 
@@ -1116,7 +1120,6 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
         Set :code:`reduce_edge_crossings` to :code:`False` to skip optimisation and retain the given node order in the returned layout.
     reduce_edge_crossings : bool, default True
         If True, attempts to minimize edge crossings via the algorithm outlined in [Baur2005]_.
-
 
     Returns
     -------
