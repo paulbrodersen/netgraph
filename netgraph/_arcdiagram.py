@@ -27,6 +27,7 @@ from ._interactive_variants import (
 )
 from ._node_layout import (
     get_linear_layout,
+    _get_preordered_linear_layout,
 )
 from ._utils import (
     _bspline,
@@ -226,6 +227,26 @@ class BaseArcDiagram(BaseGraph):
         else:
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', True)
         super().__init__(edges, nodes=nodes, node_layout=node_layout, edge_layout='arc', *args, **kwargs)
+
+
+    def _get_node_positions(self, node_layout, node_layout_kwargs, edges):
+        if len(self.nodes) == 1:
+            return {self.nodes[0]: np.array([self.origin[0] + 0.5 * self.scale[0], self.origin[1] + 0.5 * self.scale[1]])}
+        elif node_layout == 'linear':
+            if node_layout_kwargs["node_order"]:
+                node_order = node_layout_kwargs["node_order"]
+                pad_by = node_layout_kwargs.get("pad_by", 0.05)
+                return _get_preordered_linear_layout(
+                    node_order, origin=self.origin, scale=self.scale, pad_by=pad_by)
+            else:
+                return get_linear_layout(
+                    edges, nodes=self.nodes, origin=self.origin, scale=self.scale, **node_layout_kwargs)
+        else:
+            implemented = ['linear']
+            msg = f"Node layout {node_layout} not implemented. Available layouts are:"
+            for method in implemented:
+                msg += f"\n\t{method}"
+            raise NotImplementedError(msg)
 
 
 class ArcDiagram(BaseArcDiagram, Graph):

@@ -66,3 +66,17 @@ def test_ArcDiagram_with_weights():
     fig, ax = plt.subplots()
     ArcDiagram([(0, 1, 1.), (1, 2, -1.), (2, 3, 0.5), (3, 1, -0.5)], ax=ax)
     return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_BaseArcDiagram_with_multiple_components():
+    fig, ax = plt.subplots()
+    BaseArcDiagram([(0, 2), (1, 3)], node_labels=True, ax=ax)
+    return fig
+
+
+@pytest.mark.mpl_image_compare
+def test_BaseArcDiagram_with_multiple_components_and_custom_node_order():
+    fig, ax = plt.subplots()
+    BaseArcDiagram([(0, 2), (1, 3)], node_order=[0, 1, 2, 3], node_labels=True, ax=ax)
+    return fig
