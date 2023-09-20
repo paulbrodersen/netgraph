@@ -63,34 +63,34 @@ class MutableGraph(InteractiveGraph):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, graph, *args, **kwargs):
 
-        if is_order_zero(args[0]):
+        if is_order_zero(graph):
             # The graph is order-zero, i.e. it has no edges and no nodes.
             # We hence initialise with a single edge, which populates
             # - last_selected_node_properties
             # - last_selected_edge_properties
             # with the chosen parameters.
             # We then delete the edge and the two nodes and return the empty canvas.
-            super().__init__([(0, 1)], *args[1:], **kwargs)
+            super().__init__([(0, 1)], *args, **kwargs)
             self._initialize_data_structures()
             self._delete_edge((0, 1))
             self._delete_node(0)
             self._delete_node(1)
 
-        elif is_empty(args[0]):
+        elif is_empty(graph):
             # The graph is empty, i.e. it has at least one node but no edges.
-            nodes, _, _ = parse_graph(args[0])
+            nodes, _, _ = parse_graph(graph)
             if len(nodes) > 1:
                 edge = (nodes[0], nodes[1])
-                super().__init__([edge], nodes=nodes, *args[1:], **kwargs)
+                super().__init__([edge], nodes=nodes, *args, **kwargs)
                 self._initialize_data_structures()
                 self._delete_edge(edge)
             else: # single node
                 node = nodes[0]
                 dummy = 0 if node != 0 else 1
                 edge = (node, dummy)
-                super().__init__([edge], *args[1:], **kwargs)
+                super().__init__([edge], *args, **kwargs)
                 self._initialize_data_structures()
                 self._delete_edge(edge)
                 self._delete_node(dummy)
@@ -673,9 +673,9 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, graph, *args, **kwargs):
 
-        if is_order_zero(args[0]):
+        if is_order_zero(graph):
             # The graph is order-zero, i.e. it has no edges and no nodes.
             # We hence initialise with a single edge, which populates
             # - last_selected_node_properties
@@ -684,25 +684,25 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
             # We then delete the edge and the two nodes and return the empty canvas.
             source, target = DEFAULT_EDGE
             edge = (source, target, DEFAULT_EDGE_KEY)
-            super().__init__([edge], *args[1:], **kwargs)
+            super().__init__([edge], *args, **kwargs)
             self._initialize_data_structures()
             self._delete_edge(edge)
             self._delete_node(source)
             self._delete_node(target)
 
-        elif is_empty(args[0]):
+        elif is_empty(graph):
             # The graph is empty, i.e. it has at least one node but no edges.
-            nodes, _, _ = parse_graph(args[0])
+            nodes, _, _ = parse_graph(graph)
             if len(nodes) > 1:
                 edge = (nodes[0], nodes[1], DEFAULT_EDGE_KEY)
-                super().__init__([edge], nodes=nodes, *args[1:], **kwargs)
+                super().__init__([edge], nodes=nodes, *args, **kwargs)
                 self._initialize_data_structures()
                 self._delete_edge(edge)
             else: # single node
                 node = nodes[0]
                 dummy = 0 if node != 0 else 1
                 edge = (node, dummy, DEFAULT_EDGE_KEY)
-                super().__init__([edge], *args[1:], **kwargs)
+                super().__init__([edge], *args, **kwargs)
                 self._initialize_data_structures()
                 self._delete_edge(edge)
                 self._delete_node(dummy)
