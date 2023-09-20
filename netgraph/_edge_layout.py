@@ -420,7 +420,6 @@ def _optimize_control_point_positions(
 def _expand_edges(edge_to_control_points):
     """Create a new, expanded edge list, in which each edge is split into multiple segments.
     There are total_control_points + 1 segments / edges for each original edge.
-
     """
     expanded_edges = []
     for (source, target), control_points in edge_to_control_points.items():

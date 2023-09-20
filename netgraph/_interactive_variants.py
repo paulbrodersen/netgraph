@@ -45,21 +45,53 @@ class NascentEdge(plt.Line2D):
 
 
 class MutableGraph(InteractiveGraph):
-    """Extends `InteractiveGraph` to support the addition or removal of nodes and edges.
+    """Extends :py:class:`InteractiveGraph` to support the addition or removal of nodes and edges.
 
     - Double clicking on two nodes successively will create an edge between them.
     - Pressing 'insert' or '+' will add a new node to the graph.
     - Pressing 'delete' or '-' will remove selected nodes and edges.
     - Pressing '@' will reverse the direction of selected edges.
 
-    Notes
-    -----
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`InteractiveGraph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
     See also
     --------
-    InteractiveGraph
+    :py:class:`InteractiveGraph`, :py:class:`EditableGraph`, :py:class:`MutableMultiGraph`
 
     """
 
@@ -497,7 +529,7 @@ class MutableGraph(InteractiveGraph):
 
 
 class EditableGraph(MutableGraph):
-    """Extends `InteractiveGraph` to support adding, deleting, and editing graph elements interactively.
+    """Extends :py:class:`InteractiveGraph` to support adding, deleting, and editing graph elements interactively.
 
     a) Addition and removal of nodes and edges:
 
@@ -512,14 +544,46 @@ class EditableGraph(MutableGraph):
     - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
     - Terminate either action by pressing 'enter' or 'alt'+'enter' a second time.
 
-    Notes
-    -----
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`InteractiveGraph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
     See also
     --------
-    InteractiveGraph
+    :py:class:`InteractiveGraph`, :py:class:`EditableMultiGraph`
 
     """
 
@@ -654,22 +718,52 @@ class EditableGraph(MutableGraph):
 
 
 class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
-    """Extends `InteractiveMultiGraph` to support the addition or removal of nodes and edges.
+    """Extends :py:class:`InteractiveMultiGraph` to support the addition or removal of nodes and edges.
 
     - Double clicking on two nodes successively will create an edge between them.
     - Pressing 'insert' or '+' will add a new node to the graph.
     - Pressing 'delete' or '-' will remove selected nodes and edges.
     - Pressing '@' will reverse the direction of selected edges.
 
-    Notes
-    -----
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     This also applies to adding new edges, which additionally inherit the edge key from the last selected edge.
     If no node or edge has been previously selected the first created node or edge artist will be used instead.
 
+    Parameters
+    ----------
+    graph: various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source node ID, target node ID, edge key) or
+          (source node ID, target node ID, edge key, weight) tuples,
+          or equivalent (E, 3) or (E, 4) ndarray (where E is the number of edges).
+        - Adjacency matrix:
+          A (V, V, L) ndarray, where V is the number of nodes/vertices, and L is the number of layers.
+          The absence of a connection is indicated by a zero.
+        - networkx.MultiGraph or igraph.Graph object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`InteractiveMultiGraph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
     See also
     --------
-    InteractiveMultiGraph
+    :py:class:`InteractiveMultiGraph`, :py:class:`MutableGraph`, :py:class:`EditableMultiGraph`
 
     """
 
@@ -816,7 +910,7 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
 
 
 class EditableMultiGraph(MutableMultiGraph, EditableGraph):
-    """Extends `InteractiveMultiGraph` to support adding, deleting, and editing graph elements interactively.
+    """Extends :py:class:`InteractiveMultiGraph` to support adding, deleting, and editing graph elements interactively.
 
     a) Addition and removal of nodes and edges:
 
@@ -831,14 +925,44 @@ class EditableMultiGraph(MutableMultiGraph, EditableGraph):
     - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
     - Terminate either action by pressing 'enter' or 'alt'+'enter' a second time.
 
-    Notes
-    -----
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
+    Parameters
+    ----------
+    graph: various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source node ID, target node ID, edge key) or
+          (source node ID, target node ID, edge key, weight) tuples,
+          or equivalent (E, 3) or (E, 4) ndarray (where E is the number of edges).
+        - Adjacency matrix:
+          A (V, V, L) ndarray, where V is the number of nodes/vertices, and L is the number of layers.
+          The absence of a connection is indicated by a zero.
+        - networkx.MultiGraph or igraph.Graph object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`InteractiveMultiGraph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
     See also
     --------
-    InteractiveMultiGraph
+    :py:class:`InteractiveMultiGraph`, :py:class:`EditableGraph`
 
     """
 

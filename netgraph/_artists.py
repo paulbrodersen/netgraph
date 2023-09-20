@@ -73,7 +73,7 @@ class NodeArtist(PathPatchDataUnits):
 
     See also
     --------
-    CircularNodeArtist, RegularPolygonArtist
+    :py:class:`CircularNodeArtist`, :py:class:`RegularPolygonArtist`
 
     """
 
@@ -170,7 +170,7 @@ class RegularPolygonNodeArtist(NodeArtist):
 
     See also
     --------
-    NodeArtist, CircularNodeArtist
+    :py:class:`NodeArtist`, py:class:`CircularNodeArtist`
 
     """
 
@@ -196,7 +196,7 @@ class CircularNodeArtist(NodeArtist):
 
     See also
     --------
-    NodeArtist, RegularPolygonArtist
+    py:class:`NodeArtist`, :py:class:`RegularPolygonArtist`
 
     """
 

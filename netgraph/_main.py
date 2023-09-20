@@ -80,7 +80,7 @@ class BaseGraph(object):
         List of nodes. Required argument if any node in the graph is unconnected.
         If None, `nodes` is initialised to the set of the flattened `edges`.
     node_layout : str or dict, default 'spring'
-        If `node_layout` is a string, the node positions are computed using the indicated method:
+        If a string, the node positions are computed using the indicated method:
 
         - 'random'       : place nodes in random positions;
         - 'circular'     : place nodes regularly spaced on a circle;
@@ -93,21 +93,21 @@ class BaseGraph(object):
         - 'shell'        : place nodes regularly spaced on concentric circles;
         - 'geometric'    : place nodes according to the length of the edges between them.
 
-        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+        If a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_random_layout
-        - get_circular_layout
-        - get_fruchterman_reingold_layout
-        - get_sugiyama_layout
-        - get_radial_tree_layout
-        - get_community_layout
-        - get_bipartite_layout
-        - get_multipartite_layout
-        - get_shell_layout
-        - get_geometric_layout
+        - :py:func:`get_random_layout`
+        - :py:func:`get_circular_layout`
+        - :py:func:`get_fruchterman_reingold_layout`
+        - :py:func:`get_sugiyama_layout`
+        - :py:func:`get_radial_tree_layout`
+        - :py:func:`get_community_layout`
+        - :py:func:`get_bipartite_layout`
+        - :py:func:`get_multipartite_layout`
+        - :py:func:`get_shell_layout`
+        - :py:func:`get_geometric_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -119,20 +119,20 @@ class BaseGraph(object):
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default {DEFAULT_COLOR}
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -159,20 +159,20 @@ class BaseGraph(object):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
-    edge_color : matplotlib color specification or dict, default {DEFAULT_COLOR}
+    edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Edge color.
         If the type is a string or RGBA array, all edges have the same color.
         If the type is dict, maps each edge to an individual color.
@@ -193,8 +193,8 @@ class BaseGraph(object):
 
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
-        - 'arc'      : draw edges as arcs with a fixed curvature
         - 'bundled'  : draw edges as edge bundles
+        - 'arc'      : draw edges as arcs with a fixed curvature
 
         If edge_layout is a dict, the keys are edges and the values are edge paths
         in the form iterables of (x, y) tuples, the edge segments.
@@ -202,9 +202,10 @@ class BaseGraph(object):
         Keyword arguments passed to edge layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_straight_edge_paths
-        - get_curved_edge_paths
-        - get_bundled_edge_paths
+        - :py:func:`get_straight_edge_paths`
+        - :py:func:`get_curved_edge_paths`
+        - :py:func:`get_bundled_edge_paths`
+        - :py:func:`get_arced_edge_paths`
 
     edge_labels : bool or dict, default False
         If False, the edges are unlabelled.
@@ -226,12 +227,12 @@ class BaseGraph(object):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
     origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
@@ -258,7 +259,7 @@ class BaseGraph(object):
 
     See also
     --------
-    Graph, InteractiveGraph
+    :py:class:`Graph`, :py:class:`BaseMultiGraph`, :py:class:`BaseArcDiagram`
 
     """
 
@@ -762,10 +763,11 @@ class BaseGraph(object):
             Keyword arguments passed to matplotlib.text.Text.
             For a full list of available arguments see the matplotlib documentation.
             The following default values differ from the defaults for matplotlib.text.Text:
-                - size (adjusted to fit into node artists if offset is (0, 0))
-                - horizontalalignment (default here: 'center')
-                - verticalalignment (default here: 'center')
-                - clip_on (default here: False)
+
+                - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+                - :code:`horizontalalignment` (default here: :code:`'center'`)
+                - :code:`verticalalignment` (default here: :code:`'center'`)
+                - :code:`clip_on` (default here: :code:`False`)
 
         Returns
         -------
@@ -847,9 +849,11 @@ class BaseGraph(object):
             Only edges in the dictionary are labelled.
         edge_label_position : float
             Relative position along the edge where the label is placed.
-                head   : 0.
-                centre : 0.5
-                tail   : 1.
+
+                - head   : 0.
+                - centre : 0.5
+                - tail   : 1.
+
         edge_label_rotate : bool
             If True, edge labels are rotated such that they have the same orientation as their corresponding edge.
             If False, edge labels are not rotated; the angle of the text is parallel to the axis.
@@ -929,7 +933,7 @@ class BaseGraph(object):
 
 
 class Graph(BaseGraph):
-    """Parses the given graph data object and initialises the `BaseGraph` object.
+    """Parses the given graph data object and initialises the :py:class:`BaseGraph` object.
 
     If the given graph includes edge weights, then these are mapped to colors using the `edge_cmap` parameter.
 
@@ -946,12 +950,12 @@ class Graph(BaseGraph):
           Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
           The absence of a connection is indicated by a zero.
 
-          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
 
     node_layout : str or dict, default 'spring'
-        If `node_layout` is a string, the node positions are computed using the indicated method:
+        If a string, the node positions are computed using the indicated method:
 
         - 'random'       : place nodes in random positions;
         - 'circular'     : place nodes regularly spaced on a circle;
@@ -964,21 +968,21 @@ class Graph(BaseGraph):
         - 'shell'        : place nodes regularly spaced on concentric circles;
         - 'geometric'    : place nodes according to the length of the edges between them.
 
-        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+        If a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_random_layout
-        - get_circular_layout
-        - get_fruchterman_reingold_layout
-        - get_sugiyama_layout
-        - get_radial_tree_layout
-        - get_community_layout
-        - get_bipartite_layout
-        - get_multipartite_layout
-        - get_shell_layout
-        - get_geometric_layout
+        - :py:func:`get_random_layout`
+        - :py:func:`get_circular_layout`
+        - :py:func:`get_fruchterman_reingold_layout`
+        - :py:func:`get_sugiyama_layout`
+        - :py:func:`get_radial_tree_layout`
+        - :py:func:`get_community_layout`
+        - :py:func:`get_bipartite_layout`
+        - :py:func:`get_multipartite_layout`
+        - :py:func:`get_shell_layout`
+        - :py:func:`get_geometric_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -990,20 +994,20 @@ class Graph(BaseGraph):
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        .. note: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -1030,18 +1034,18 @@ class Graph(BaseGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
@@ -1074,15 +1078,19 @@ class Graph(BaseGraph):
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
         - 'bundled'  : draw edges as edge bundles
+        - 'arc'      : draw edges as arcs with a fixed curvature
 
         If edge_layout is a dict, the keys are edges and the values are edge paths
         in the form iterables of (x, y) tuples, the edge segments.
     edge_layout_kwargs : dict, default None
         Keyword arguments passed to edge layout functions.
         See the documentation of the following functions for a full description of available options:
-        - get_straight_edge_paths
-        - get_curved_edge_paths
-        - get_bundled_edge_paths
+
+        - :py:func:`get_straight_edge_paths`
+        - :py:func:`get_curved_edge_paths`
+        - :py:func:`get_bundled_edge_paths`
+        - :py:func:`get_arced_edge_paths`
+
     edge_labels : bool or dict, default False
         If False, the edges are unlabelled.
         If True, the edges are labelled with their edge IDs.
@@ -1103,12 +1111,12 @@ class Graph(BaseGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
     origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
@@ -1135,7 +1143,7 @@ class Graph(BaseGraph):
 
     See also
     --------
-    BaseGraph, InteractiveGraph
+    :py:class:`BaseGraph`, :py:class:`InteractiveGraph`, :py:class:`MultiGraph`, :py:class:`ArcDiagram`
 
     """
 
@@ -1172,6 +1180,7 @@ class Graph(BaseGraph):
 
 def _get_color(mydict, cmap='RdGy', vmin=None, vmax=None):
     """Map positive and negative floats to a diverging colormap, such that
+
     - the midpoint of the colormap corresponds to a value of 0., and
     - values above and below the midpoint are mapped linearly and in equal measure
       to increases in color intensity.
@@ -1250,8 +1259,8 @@ def rgba_to_grayscale(r, g, b, a=1):
 class ClickableArtists(object):
     """Implements selection of matplotlib artists via the mouse left click (+/- ctrl or command key).
 
-    Notes:
-    ------
+    Notes
+    -----
     Adapted from: https://stackoverflow.com/a/47312637/2912349
 
     """
@@ -1337,10 +1346,10 @@ class ClickableArtists(object):
 
 
 class SelectableArtists(ClickableArtists):
-    """Augments ClickableArtists with a rectangle selector.
+    """Augments :py:class:`ClickableArtists` with a rectangle selector.
 
-    Notes:
-    ------
+    Notes
+    -----
     Adapted from: https://stackoverflow.com/a/47312637/2912349
 
     """
@@ -1435,10 +1444,10 @@ class SelectableArtists(ClickableArtists):
 
 
 class DraggableArtists(SelectableArtists):
-    """Augments SelectableArtists to support dragging of artists by holding the left mouse button.
+    """Augments :py:class:`SelectableArtists` to support dragging of artists by holding the left mouse button.
 
-    Notes:
-    ------
+    Notes
+    -----
     Adapted from: https://stackoverflow.com/a/47312637/2912349
 
     """
@@ -1497,7 +1506,48 @@ class DraggableArtists(SelectableArtists):
 
 
 class DraggableGraph(Graph, DraggableArtists):
-    """Augments `Graph` to support selection and dragging of node artists with the mouse."""
+    """
+    Augments :py:class:`Graph` to support selection and dragging of node artists with the mouse.
+
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`Graph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
+    See also
+    --------
+    :py:class:`Graph`, :py:class:`DraggableArtists`, :py:class:`InteractiveGraph`
+
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1561,8 +1611,47 @@ class DraggableGraph(Graph, DraggableArtists):
 
 class DraggableGraphWithGridMode(DraggableGraph):
     """
-    Implements a grid-mode, in which node positions are fixed to a grid.
+    Adds a grid-mode to :py:class:`DraggableGraph`, in which node positions are fixed to a grid.
     To activate, press the letter 'g'.
+
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`Graph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
+    See also
+    --------
+    :py:class:`DraggableGraph`, :py:class:`InteractiveGraph`
+
     """
 
     def __init__(self, *args, **kwargs):
@@ -1692,7 +1781,8 @@ class EmphasizeOnHover(object):
 
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
-    """Combines `EmphasizeOnHover` with the `Graph` class such that nodes are emphasized when hovering over them with the mouse.
+    """Combines :py:class:`EmphasizeOnHover` with the :py:class:`Graph` class
+    such that nodes are emphasized when hovering over them with the mouse.
 
     Parameters
     ----------
@@ -1707,9 +1797,9 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
           Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
           The absence of a connection is indicated by a zero.
 
-          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.**
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
 
     mouseover_highlight_mapping : dict or None, default None
         Determines which nodes and/or edges are highlighted when hovering over any given node or edge.
@@ -1720,7 +1810,8 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
         - nodes to themselves as well as their immediate neighbours and any edges between them.
 
     *args, **kwargs
-        Parameters passed through to `Graph`. See its documentation for a full list of available arguments.
+        Parameters passed through to :py:class:`Graph`.
+        See its documentation for a full list of available arguments.
 
     Attributes
     ----------
@@ -1737,7 +1828,7 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
 
     See also
     --------
-    Graph
+    :py:class:`Graph`, :py:class:`EmphasizeOnHover`, :py:class:`InteractiveGraph`
 
     """
 
@@ -1963,7 +2054,66 @@ class AnnotateOnClick(object):
 
 
 class AnnotateOnClickGraph(Graph, AnnotateOnClick):
-    """Combines `AnnotateOnClick` with the `Graph` class such that nodes or edges can have toggleable annotations."""
+    """Combines :py:class:`AnnotateOnClick` with the :py:class:`Graph` class
+    such that nodes or edges can have toggleable annotations.
+
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    annotations : dict
+        Mapping of nodes or edges to strings or dictionaries, the annotations.
+        The visibility of the annotations can be toggled on or off by clicking on the corresponding node or edge.
+
+        .. code-block::
+
+           annotations = {
+               0      : 'Normal node',
+               1      : {s : 'Less important node', fontsize : 2},
+               2      : {s : 'Very important node', fontcolor : 'red'},
+               (0, 1) : 'Normal edge',
+               (1, 2) : {s : 'Less important edge', fontsize : 2},
+               (2, 0) : {s : 'Very important edge', fontcolor : 'red'},
+           }
+
+    annotation_fontdict : dict
+        Keyword arguments passed to matplotlib.text.Text if only the annotation string is given.
+        For a full list of available arguments see the matplotlib documentation.
+    *args, **kwargs
+        Parameters passed through to :py:class:`Graph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
+    See also
+    --------
+    :py:class:`Graph`, :py:class:`AnnotateOnClick`, :py:class:`InteractiveGraph`
+
+    """
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2092,7 +2242,53 @@ class TableOnClick(object):
 
 
 class TableOnClickGraph(Graph, TableOnClick):
-    """Combines `TableOnClick` with the `Graph` class such that nodes or edges can have toggleable tabular annotations."""
+    """Combines :py:class:`TableOnClick` with :py:class:`Graph`
+    such that nodes or edges can have toggleable tabular annotations.
+
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    tables : dict node/edge : pandas dataframe
+        Mapping of nodes and/or edges to pandas dataframes.
+        The visibility of the tables that can toggled on or off by clicking on the corresponding node or edge.
+    table_kwargs : dict
+        Keyword arguments passed to matplotlib.pyplot.table.
+    *args, **kwargs
+        Parameters passed through to :py:class:`Graph`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
+    See also
+    --------
+    :py:class:`Graph`, :py:class:`TableOnClick`, :py:class:`InteractiveGraph`
+
+    """
 
     def __init__(self, *args, **kwargs):
         Graph.__init__(self, *args, **kwargs)
@@ -2124,7 +2320,8 @@ class TableOnClickGraph(Graph, TableOnClick):
 
 
 class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """Extends the `Graph` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
+    """Extends the :py:class:`Graph` to support node placement with the mouse,
+    emphasis of graph elements when hovering over them, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.
     - Nodes and edges are emphasized when hovering over them.
@@ -2146,10 +2343,10 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
 
           .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
 
-        - networkx.Graph, igraph.Graph, or graph_tool.Graph object
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
 
     node_layout : str or dict, default 'spring'
-        If `node_layout` is a string, the node positions are computed using the indicated method:
+        If a string, the node positions are computed using the indicated method:
 
         - 'random'       : place nodes in random positions;
         - 'circular'     : place nodes regularly spaced on a circle;
@@ -2162,21 +2359,21 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         - 'shell'        : place nodes regularly spaced on concentric circles;
         - 'geometric'    : place nodes according to the length of the edges between them.
 
-        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+        If a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_random_layout
-        - get_circular_layout
-        - get_fruchterman_reingold_layout
-        - get_sugiyama_layout
-        - get_radial_tree_layout
-        - get_community_layout
-        - get_bipartite_layout
-        - get_multipartite_layout
-        - get_shell_layout
-        - get_geometric_layout
+        - :py:func:`get_random_layout`
+        - :py:func:`get_circular_layout`
+        - :py:func:`get_fruchterman_reingold_layout`
+        - :py:func:`get_sugiyama_layout`
+        - :py:func:`get_radial_tree_layout`
+        - :py:func:`get_community_layout`
+        - :py:func:`get_bipartite_layout`
+        - :py:func:`get_multipartite_layout`
+        - :py:func:`get_shell_layout`
+        - :py:func:`get_geometric_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -2188,19 +2385,20 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
-    node_edge_width : float or dict, default 0.5ayout        Line width of node marker border.
+    node_edge_width : float or dict, default 0.5
+        Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        ..note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -2227,18 +2425,18 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
@@ -2271,6 +2469,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         - 'straight' : draw edges as straight lines
         - 'curved'   : draw edges as curved splines; the spline control points are optimised to avoid other nodes and edges
         - 'bundled'  : draw edges as edge bundles
+        - 'arc'      : draw edges as arcs with a fixed curvature
 
         If edge_layout is a dict, the keys are edges and the values are edge paths
         in the form iterables of (x, y) tuples, the edge segments.
@@ -2278,9 +2477,10 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         Keyword arguments passed to edge layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_straight_edge_paths
-        - get_curved_edge_paths
-        - get_bundled_edge_paths
+        - :py:func:`get_straight_edge_paths`
+        - :py:func:`get_curved_edge_paths`
+        - :py:func:`get_bundled_edge_paths`
+        - :py:func:`get_arced_edge_paths`
 
     edge_labels : bool or dict, default False
         If False, the edges are unlabelled.
@@ -2302,18 +2502,28 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
+    origin : tuple, default (0., 0.)
+        The lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1., 1.)
+        The width and height of the bounding box specifying the extent of the canvas.
+    prettify : bool, default True
+        If True, despine and remove ticks and tick labels.
+        Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
     annotations : dict
         Mapping of nodes or edges to strings or dictionaries, the annotations.
         The visibility of the annotations can be toggled on or off by clicking on the corresponding node or edge.
 
-        .. line-block::
+        .. code-block::
+
            annotations = {
                0      : 'Normal node',
                1      : {s : 'Less important node', fontsize : 2},
@@ -2326,28 +2536,11 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
     annotation_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text if only the annotation string is given.
         For a full list of available arguments see the matplotlib documentation.
-        The following default values differ from the defaults for matplotlib.text.Text:
-
-        - horizontalalignment (depends on node position or edge orientation),
-        - verticalalignment (depends on node position or edge orientation),
-        - clip_on (default here: False),
-        - backgroundcolor (default here: 'white'),
-        - zorder (default here: inf),
-
     tables : dict node/edge : pandas dataframe
         Mapping of nodes and/or edges to pandas dataframes.
         The visibility of the tables that can toggled on or off by clicking on the corresponding node or edge.
     table_kwargs : dict
         Keyword arguments passed to matplotlib.pyplot.table.
-    origin : tuple, default (0., 0.)
-        The lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple, default (1., 1.)
-        The width and height of the bounding box specifying the extent of the canvas.
-    prettify : bool, default True
-        If True, despine and remove ticks and tick labels.
-        Set figure background to white. Set axis aspect to equal.
-    ax : matplotlib.axis instance or None, default None
-        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
     Attributes
     ----------
@@ -2364,7 +2557,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
 
     See also
     --------
-    Graph
+    :py:class:`Graph`, :py:class:`EditableGraph`, :py:class:`InteractiveMultiGraph`, :py:class:`InteractiveArcDiagram`
 
     Notes
     -----

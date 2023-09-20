@@ -61,7 +61,7 @@ class BaseArcDiagram(BaseGraph):
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_linear_layout
+        - :py:func:`get_linear_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -73,20 +73,20 @@ class BaseArcDiagram(BaseGraph):
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        ..note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -113,30 +113,21 @@ class BaseArcDiagram(BaseGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
-    edge_cmap : matplotlib color map (default 'RdGy')
-        Color map used to map edge weights to edge colors. Should be diverging.
-        If edge weights are strictly positive, weights are mapped to the
-        left hand side of the color map with vmin=0 and vmax=np.max(weights).
-        If edge weights are positive and negative, then weights are mapped
-        to colors such that a weight of zero corresponds to the center of the
-        color map; the boundaries are set to +/- the maximum absolute weight.
-        If the graph is unweighted or the edge colors are specified explicitly,
-        this parameter is ignored.
-    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
-        Edge color. If provided explicitly, overrides `edge_cmap`.
+    edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
+        Edge color.
         If the type is a string or RGBA array, all edges have the same color.
         If the type is dict, maps each edge to an individual color.
     edge_alpha : float or dict, default 1.
@@ -145,14 +136,14 @@ class BaseArcDiagram(BaseGraph):
         If the type is dict, maps each edge to an individual transparency.
     edge_zorder : int or dict, default 1
         Order in which to plot the edges.
-        If the type is an int, all nodes have the same zorder.
-        If the type is dict, maps each node to an individual zorder.
-        If None, the edges will be plotted in the order they appear in 'adjacency'.
+        If the type is an int, all edges have the same zorder.
+        If the type is dict, maps each edge to an individual zorder.
+        If None, the edges will be plotted in the order they appear in the 'graph' argument.
         Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths`.
+        Keyword arguments passed to :py:func:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -182,12 +173,12 @@ class BaseArcDiagram(BaseGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
     origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
@@ -214,7 +205,7 @@ class BaseArcDiagram(BaseGraph):
 
     See also
     --------
-    BaseGraph, ArcDiagram, InteractiveArcDiagram, EditableArcDiagram
+    :py:class:`BaseGraph`, :py:class:`ArcDiagram`
 
     """
 
@@ -251,7 +242,7 @@ class BaseArcDiagram(BaseGraph):
 
 class ArcDiagram(BaseArcDiagram, Graph):
     """
-    Parses the given graph data object and initialises the BaseArcDiagram object.
+    Parses the given graph data object and initialises the :py:class:`BaseArcDiagram` object.
 
     Parameters
     ----------
@@ -286,7 +277,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_linear_layout
+        - :py:func:`get_linear_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -298,20 +289,20 @@ class ArcDiagram(BaseArcDiagram, Graph):
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        ..note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -338,18 +329,18 @@ class ArcDiagram(BaseArcDiagram, Graph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
@@ -360,8 +351,8 @@ class ArcDiagram(BaseArcDiagram, Graph):
         color map; the boundaries are set to +/- the maximum absolute weight.
         If the graph is unweighted or the edge colors are specified explicitly,
         this parameter is ignored.
-    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
-        Edge color. If provided explicitly, overrides `edge_cmap`.
+    edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
+        Edge color.
         If the type is a string or RGBA array, all edges have the same color.
         If the type is dict, maps each edge to an individual color.
     edge_alpha : float or dict, default 1.
@@ -370,14 +361,14 @@ class ArcDiagram(BaseArcDiagram, Graph):
         If the type is dict, maps each edge to an individual transparency.
     edge_zorder : int or dict, default 1
         Order in which to plot the edges.
-        If the type is an int, all nodes have the same zorder.
-        If the type is dict, maps each node to an individual zorder.
-        If None, the edges will be plotted in the order they appear in 'adjacency'.
+        If the type is an int, all edges have the same zorder.
+        If the type is dict, maps each edge to an individual zorder.
+        If None, the edges will be plotted in the order they appear in the 'graph' argument.
         Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths`.
+        Keyword arguments passed to :py:func:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -407,12 +398,12 @@ class ArcDiagram(BaseArcDiagram, Graph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
     origin : tuple, default (0., 0.)
         The lower left hand corner of the bounding box specifying the extent of the canvas.
@@ -439,7 +430,7 @@ class ArcDiagram(BaseArcDiagram, Graph):
 
     See also
     --------
-    Graph, InteractiveArcDiagram, EditableArcDiagram
+    :py:class:`BaseArcDiagram`, :py:class:`Graph`, :py:class:`InteractiveArcDiagram`
 
     """
 
@@ -478,7 +469,7 @@ class DraggableArcDiagram(ArcDiagram, DraggableGraph):
 
 
 class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
-    """Extends the `ArcDiagram` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
+    """Extends the :py:class:`ArcDiagram` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
 
     - Nodes can be selected and dragged around with the mouse.
     - Nodes and edges are emphasized when hovering over them.
@@ -518,12 +509,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_random_layout
-        - get_circular_layout
-        - get_fruchterman_reingold_layout
-        - get_sugiyama_layout
-        - get_community_layout
-        - get_linear_layout
+        - :py:func:`get_linear_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -535,20 +521,20 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        ..note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -575,18 +561,18 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
@@ -597,8 +583,8 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         color map; the boundaries are set to +/- the maximum absolute weight.
         If the graph is unweighted or the edge colors are specified explicitly,
         this parameter is ignored.
-    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
-        Edge color. If provided explicitly, overrides `edge_cmap`.
+    edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
+        Edge color.
         If the type is a string or RGBA array, all edges have the same color.
         If the type is dict, maps each edge to an individual color.
     edge_alpha : float or dict, default 1.
@@ -607,14 +593,14 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         If the type is dict, maps each edge to an individual transparency.
     edge_zorder : int or dict, default 1
         Order in which to plot the edges.
-        If the type is an int, all nodes have the same zorder.
-        If the type is dict, maps each node to an individual zorder.
-        If None, the edges will be plotted in the order they appear in 'adjacency'.
+        If the type is an int, all edges have the same zorder.
+        If the type is dict, maps each edge to an individual zorder.
+        If None, the edges will be plotted in the order they appear in the 'graph' argument.
         Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths`.
+        Keyword arguments passed to :py:func:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -644,18 +630,28 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
+    origin : tuple, default (0., 0.)
+        The lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1., 1.)
+        The width and height of the bounding box specifying the extent of the canvas.
+    prettify : bool, default True
+        If True, despine and remove ticks and tick labels.
+        Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
     annotations : dict
         Mapping of nodes or edges to strings or dictionaries, the annotations.
         The visibility of the annotations can be toggled on or off by clicking on the corresponding node or edge.
 
-        .. line-block::
+        .. code-block::
+
            annotations = {
                0      : 'Normal node',
                1      : {s : 'Less important node', fontsize : 2},
@@ -681,15 +677,6 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
         The visibility of the tables that can toggled on or off by clicking on the corresponding node or edge.
     table_kwargs : dict
         Keyword arguments passed to matplotlib.pyplot.table.
-    origin : tuple, default (0., 0.)
-        The lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple, default (1., 1.)
-        The width and height of the bounding box specifying the extent of the canvas.
-    prettify : bool, default True
-        If True, despine and remove ticks and tick labels.
-        Set figure background to white. Set axis aspect to equal.
-    ax : matplotlib.axis instance or None, default None
-        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
 
     Attributes
     ----------
@@ -706,7 +693,7 @@ class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, Annotate
 
     See also
     --------
-    ArcDiagram, EditableArcDiagram
+    :py:class:`ArcDiagram`, :py:class:`EditableArcDiagram`
 
     Notes
     -----
@@ -780,7 +767,7 @@ class NascentEdge(plt.Line2D):
 
 
 class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
-    """Extends `InteractiveArcDiagram` to support the addition or removal of nodes and edges.
+    """Extends :py:class:`InteractiveArcDiagram` to support the addition or removal of nodes and edges.
 
     - Double clicking on two nodes successively will create an edge between them.
     - Pressing 'insert' or '+' will add a new node to the graph.
@@ -790,9 +777,43 @@ class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
     When adding a new node, the properties of the last selected node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
+    Parameters
+    ----------
+    graph : various formats
+        Graph object to plot. Various input formats are supported.
+        In order of precedence:
+
+        - Edge list:
+          Iterable of (source, target) or (source, target, weight) tuples,
+          or equivalent (E, 2) or (E, 3) ndarray, where E is the number of edges.
+        - Adjacency matrix:
+          Full-rank (V, V) ndarray, where V is the number of nodes/vertices.
+          The absence of a connection is indicated by a zero.
+
+          .. note:: If V <= 3, any (2, 2) or (3, 3) matrices will be interpreted as edge lists.
+
+        - :code:`networkx.Graph`, :code:`igraph.Graph`, or :code:`graph_tool.Graph` object
+
+    *args, **kwargs
+        Parameters passed through to :py:class:`InteractiveArcDiagram`.
+        See its documentation for a full list of available arguments.
+
+    Attributes
+    ----------
+    node_artists : dict
+        Mapping of node IDs to matplotlib PathPatch artists.
+    edge_artists : dict
+        Mapping of edge IDs to matplotlib PathPatch artists.
+    node_label_artists : dict
+        Mapping of node IDs to matplotlib text objects (if applicable).
+    edge_label_artists : dict
+        Mapping of edge IDs to matplotlib text objects (if applicable).
+    node_positions : dict node : (x, y) tuple
+        Mapping of node IDs to node positions.
+
     See also
     --------
-    ArcDiagram, InteractiveArcDiagram, EditableArcDiagram
+    :py:class:`InteractiveArcDiagram`, :py:class:`MutableGraph`, :py:class:`EditableArcDiagram`
 
     """
 
@@ -846,7 +867,7 @@ class MutableArcDiagram(InteractiveArcDiagram, MutableGraph):
 
 
 class EditableArcDiagram(MutableArcDiagram, EditableGraph):
-    """Extends `InteractiveArcDiagram` to support adding, deleting, and editing graph elements interactively.
+    """Extends :py:class:`InteractiveArcDiagram` to support adding, deleting, and editing graph elements interactively.
 
     a) Addition and removal of nodes and edges:
 
@@ -893,16 +914,17 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         - 'linear'    : place nodes one a horizontal line
 
         If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
+    node_layout : str or dict, default 'linear'
+        If `node_layout` is a string, the node positions are computed using the indicated method:
+
+        - 'linear'    : place nodes one a horizontal line
+
+        If `node_layout` is a dict, keys are nodes and values are (x, y) positions.
     node_layout_kwargs : dict or None, default None
         Keyword arguments passed to node layout functions.
         See the documentation of the following functions for a full description of available options:
 
-        - get_random_layout
-        - get_circular_layout
-        - get_fruchterman_reingold_layout
-        - get_sugiyama_layout
-        - get_community_layout
-        - get_linear_layout
+        - :py:func:`get_linear_layout`
 
     node_shape : str or dict, default 'o'
         Node shape.
@@ -914,20 +936,20 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         If the type is float, all nodes will have the same size.
         If the type is dict, maps each node to an individual size.
 
-        .. note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
         If the type is float, all nodes have the same line width.
         If the type is dict, maps each node to an individual line width.
 
-        ..note:: Values are rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     node_color : matplotlib color specification or dict, default 'w'
         Node color.
         If the type is a string or RGBA array, all nodes have the same color.
         If the type is dict, maps each node to an individual color.
-    node_edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
+    node_edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
         Node edge color.
         If the type is a string or RGBA array, all nodes have the same edge color.
         If the type is dict, maps each node to an individual edge color.
@@ -954,18 +976,18 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - size (adjusted to fit into node artists if offset is (0, 0))
-        - horizontalalignment (default here: 'center')
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False)
-        - zorder (default here: inf)
+        - :code:`size` (adjusted to fit into node artists if offset is (0, 0))
+        - :code:`horizontalalignment` (default here: :code:`'center'`)
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: :code:`False`)
+        - :code:`zorder` (default here: :code:`inf`)
 
     edge_width : float or dict, default 1.
         Width of edges.
         If the type is a float, all edges have the same width.
         If the type is dict, maps each edge to an individual width.
 
-        .. note:: Value is rescaled by BASE_SCALE (1e-2) to be compatible with layout routines in igraph and networkx.
+        .. note:: Value is rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
 
     edge_cmap : matplotlib color map (default 'RdGy')
         Color map used to map edge weights to edge colors. Should be diverging.
@@ -976,8 +998,8 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         color map; the boundaries are set to +/- the maximum absolute weight.
         If the graph is unweighted or the edge colors are specified explicitly,
         this parameter is ignored.
-    edge_color : matplotlib color specification or dict, default DEFAULT_COLOR
-        Edge color. If provided explicitly, overrides `edge_cmap`.
+    edge_color : matplotlib color specification or dict, default :py:const:`DEFAULT_COLOR`
+        Edge color.
         If the type is a string or RGBA array, all edges have the same color.
         If the type is dict, maps each edge to an individual color.
     edge_alpha : float or dict, default 1.
@@ -986,14 +1008,14 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         If the type is dict, maps each edge to an individual transparency.
     edge_zorder : int or dict, default 1
         Order in which to plot the edges.
-        If the type is an int, all nodes have the same zorder.
-        If the type is dict, maps each node to an individual zorder.
-        If None, the edges will be plotted in the order they appear in 'adjacency'.
+        If the type is an int, all edges have the same zorder.
+        If the type is dict, maps each edge to an individual zorder.
+        If None, the edges will be plotted in the order they appear in the 'graph' argument.
         Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
     arrows : bool, default False
         If True, draw edges with arrow heads.
     edge_layout_kwargs : dict, default None
-        Keyword arguments passed to :code:`get_arced_edge_paths`.
+        Keyword arguments passed to :py:func:`get_arced_edge_paths`.
         Possible keyword arguments are:
 
         - :code:`rad` : float, default 1.
@@ -1023,18 +1045,28 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
         For a full list of available arguments see the matplotlib documentation.
         The following default values differ from the defaults for matplotlib.text.Text:
 
-        - horizontalalignment (default here: 'center'),
-        - verticalalignment (default here: 'center')
-        - clip_on (default here: False),
-        - bbox (default here: dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0)),
-        - zorder (default here: inf),
-        - rotation (determined by edge_label_rotate argument)
+        - :code:`horizontalalignment` (default here: :code:`'center'`),
+        - :code:`verticalalignment` (default here: :code:`'center'`)
+        - :code:`clip_on` (default here: code:`False`),
+        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`zorder` (default here: :code:`inf`),
+        - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
+    origin : tuple, default (0., 0.)
+        The lower left hand corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1., 1.)
+        The width and height of the bounding box specifying the extent of the canvas.
+    prettify : bool, default True
+        If True, despine and remove ticks and tick labels.
+        Set figure background to white. Set axis aspect to equal.
+    ax : matplotlib.axis instance or None, default None
+        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
     annotations : dict
         Mapping of nodes or edges to strings or dictionaries, the annotations.
         The visibility of the annotations can be toggled on or off by clicking on the corresponding node or edge.
 
-        .. line-block::
+        .. code-block::
+
            annotations = {
                0      : 'Normal node',
                1      : {s : 'Less important node', fontsize : 2},
@@ -1047,28 +1079,12 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
     annotation_fontdict : dict
         Keyword arguments passed to matplotlib.text.Text if only the annotation string is given.
         For a full list of available arguments see the matplotlib documentation.
-        The following default values differ from the defaults for matplotlib.text.Text:
-
-        - horizontalalignment (depends on node position or edge orientation),
-        - verticalalignment (depends on node position or edge orientation),
-        - clip_on (default here: False),
-        - backgroundcolor (default here: 'white'),
-        - zorder (default here: inf),
-
     tables : dict node/edge : pandas dataframe
         Mapping of nodes and/or edges to pandas dataframes.
         The visibility of the tables that can toggled on or off by clicking on the corresponding node or edge.
     table_kwargs : dict
         Keyword arguments passed to matplotlib.pyplot.table.
-    origin : tuple, default (0., 0.)
-        The lower left hand corner of the bounding box specifying the extent of the canvas.
-    scale : tuple, default (1., 1.)
-        The width and height of the bounding box specifying the extent of the canvas.
-    prettify : bool, default True
-        If True, despine and remove ticks and tick labels.
-        Set figure background to white. Set axis aspect to equal.
-    ax : matplotlib.axis instance or None, default None
-        Axis to plot onto; if none specified, one will be instantiated with plt.gca().
+
 
     Attributes
     ----------
@@ -1099,7 +1115,7 @@ class EditableArcDiagram(MutableArcDiagram, EditableGraph):
 
     See also
     --------
-    ArcDiagram, InteractiveArcDiagram
+    :py:class:`InteractiveArcDiagram`, :py:class:`EditableGraph`
 
     """
 

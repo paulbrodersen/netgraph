@@ -339,12 +339,12 @@ def get_fruchterman_reingold_layout(edges,
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        .. code::
+        .. code-block::
 
-            xmin = origin[0] + pad_by * scale[0]
-            ymin = origin[1] + pad_by * scale[1]
-            xmax = origin[0] + scale[0] - pad_by * scale[0]
-            ymax = origin[1] + scale[1] - pad_by * scale[1]
+           xmin = origin[0] + pad_by * scale[0]
+           ymin = origin[1] + pad_by * scale[1]
+           xmax = origin[0] + scale[0] - pad_by * scale[0]
+           ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -611,12 +611,12 @@ def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_si
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        .. code::
+        .. code-block::
 
-            xmin = origin[0] + pad_by * scale[0]
-            ymin = origin[1] + pad_by * scale[1]
-            xmax = origin[0] + scale[0] - pad_by * scale[0]
-            ymax = origin[1] + scale[1] - pad_by * scale[1]
+           xmin = origin[0] + pad_by * scale[0]
+           ymin = origin[1] + pad_by * scale[1]
+           xmax = origin[0] + scale[0] - pad_by * scale[0]
+           ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -713,12 +713,12 @@ def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        .. code::
+        .. code-block::
 
-            xmin = origin[0] + pad_by * scale[0]
-            ymin = origin[1] + pad_by * scale[1]
-            xmax = origin[0] + scale[0] - pad_by * scale[0]
-            ymax = origin[1] + scale[1] - pad_by * scale[1]
+           xmin = origin[0] + pad_by * scale[0]
+           ymin = origin[1] + pad_by * scale[1]
+           xmax = origin[0] + scale[0] - pad_by * scale[0]
+           ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     total_iterations : int, default 50
         Number of iterations.
@@ -789,12 +789,12 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        .. code::
+        .. code-block::
 
-            xmin = origin[0] + pad_by * scale[0]
-            ymin = origin[1] + pad_by * scale[1]
-            xmax = origin[0] + scale[0] - pad_by * scale[0]
-            ymax = origin[1] + scale[1] - pad_by * scale[1]
+           xmin = origin[0] + pad_by * scale[0]
+           ymin = origin[1] + pad_by * scale[1]
+           xmax = origin[0] + scale[0] - pad_by * scale[0]
+           ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     node_order : list or None, default None
         The ordering of nodes (left-to-right).
@@ -809,7 +809,7 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
 
     See also
     --------
-    _get_preorderd_circular_layout
+    :py:func:`_get_preorderd_circular_layout`
 
     References
     ----------
@@ -974,10 +974,10 @@ def _swap_values(arr, value_1, value_2):
 
 
 def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.1, total_iterations=10):
-    """Use a constrained version of Lloyds algorithm to move nodes apart from each other.
+    """Use a constrained version of Lloyd's algorithm to move nodes apart from each other.
 
-    See also
-    --------
+    References
+    ----------
     https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
     """
 
@@ -1002,10 +1002,10 @@ def _reduce_node_overlap(node_positions, origin, scale, fixed_nodes=None, eta=0.
 
 
 def _remove_node_overlap(node_positions, node_size, origin, scale, fixed_nodes=None, tolerance=1e-6, maximum_iterations=100):
-    """Uses a constrained variation of Lloyds algorithm to move nodes apart from each other until none overlap."
+    """Uses a constrained variation of Lloyd's algorithm to move nodes apart from each other until none overlap."
 
-    See also
-    --------
+    References
+    ----------
     https://en.wikipedia.org/wiki/Lloyd%27s_algorithm
 
     """
@@ -1719,12 +1719,12 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
         and to create space for routing curved edges including self-loops around nodes.
         This results in the following bounding box:
 
-        .. code::
+        .. code-block::
 
-            xmin = origin[0] + pad_by * scale[0]
-            ymin = origin[1] + pad_by * scale[1]
-            xmax = origin[0] + scale[0] - pad_by * scale[0]
-            ymax = origin[1] + scale[1] - pad_by * scale[1]
+           xmin = origin[0] + pad_by * scale[0]
+           ymin = origin[1] + pad_by * scale[1]
+           xmax = origin[0] + scale[0] - pad_by * scale[0]
+           ymax = origin[1] + scale[1] - pad_by * scale[1]
 
     Returns
     -------

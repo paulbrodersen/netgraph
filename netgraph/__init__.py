@@ -103,6 +103,8 @@ __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
 from ._main import (
+    BASE_SCALE,
+    DEFAULT_COLOR,
     BaseGraph,
     Graph,
     InteractiveGraph,
@@ -167,6 +169,8 @@ __all__ = [
     'get_bundled_edge_paths',
     'get_arced_edge_paths',
     'parse_graph',
+    'BASE_SCALE',
+    'DEFAULT_COLOR',
     'BaseGraph',
     'Graph',
     'InteractiveGraph',
