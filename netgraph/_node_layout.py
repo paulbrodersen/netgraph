@@ -826,7 +826,7 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
             edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
 
-    return _get_preorderd_circular_layout(nodes, origin, scale, pad_by)
+    return _get_preordered_circular_layout(nodes, origin, scale, pad_by)
 
 
 def _get_preordered_circular_layout(node_order, origin, scale, pad_by=0.05):
