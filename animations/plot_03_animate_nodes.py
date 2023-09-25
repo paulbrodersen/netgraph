@@ -24,8 +24,12 @@ node_values = np.random.rand(total_frames, total_nodes)
 cmap = plt.cm.viridis
 
 fig, ax = plt.subplots()
-g = Graph(adjacency_matrix, edge_width=1.5, arrows=True, ax=ax)
-ax.axis([0, 1, 0, 1])
+g = Graph(adjacency_matrix,
+          node_layout="circular",
+          node_layout_kwargs=dict(reduce_edge_crossings=False),
+          arrows=True,
+          ax=ax
+)
 
 def update(ii):
     for node, artist in g.node_artists.items():

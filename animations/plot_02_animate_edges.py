@@ -33,7 +33,13 @@ weight_matrix /= vmax - vmin
 cmap = plt.cm.RdGy
 
 fig, ax = plt.subplots()
-g = Graph(adjacency_matrix, edge_cmap=cmap, arrows=True, ax=ax)
+g = Graph(adjacency_matrix,
+          node_layout="circular",
+          node_layout_kwargs=dict(reduce_edge_crossings=False),
+          edge_cmap=cmap,
+          arrows=True,
+          ax=ax
+)
 
 def update(ii):
     artists = []
@@ -41,7 +47,7 @@ def update(ii):
         w = weight_matrix[ii, jj, kk]
         artist = g.edge_artists[(jj, kk)]
         artist.set_facecolor(cmap(w))
-        artist.update_width(0.03 * np.abs(w-0.5)) # np.abs(w-0.5) so that large negative edges are also wide
+        artist.update_width(0.03 * np.abs(w-0.5)) # np.abs(w-0.5) ensures that large negative edges are also wide
         artists.append(artist)
     return artists
 

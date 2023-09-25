@@ -19,8 +19,13 @@ total_frames = 5
 total_nodes = 10
 adjacency_matrix = np.random.rand(total_frames, total_nodes, total_nodes) < 0.25
 
+# Initiate the network fully connected.
+# Rather than having to add or remove edge artists,
+# we can then simply set them visible or invisible.
+initial_adjacency = np.ones((total_nodes, total_nodes))
+
 fig, ax = plt.subplots()
-g = Graph(np.ones((total_nodes, total_nodes)), edge_width=1.5, arrows=True, ax=ax) # initialise with fully connected graph
+g = Graph(initial_adjacency, node_layout="circular", arrows=True, ax=ax)
 
 def update(ii):
     for (jj, kk), artist in g.edge_artists.items():
