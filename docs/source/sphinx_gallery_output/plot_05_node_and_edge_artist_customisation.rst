@@ -45,7 +45,7 @@ The shape, size, and colour of edge representations can be controlled via the fo
 - :code:`edge_zorder` : node zorder; artists with higher z-order occlude artists with lower z-order
 - :code:`arrows` : boolean flag that turn the drawing of arrow heads on or off
 
-All node and edge artist properties can be specified in three ways:
+Most node and edge artist properties can be specified in three ways:
 
 .. GENERATED FROM PYTHON SOURCE LINES 34-35
 
@@ -146,7 +146,7 @@ such that any of its methods can be used to modify node and edge artists propert
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.272 seconds)
+   **Total running time of the script:** ( 0 minutes  0.816 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_05_node_and_edge_artist_customisation.py:

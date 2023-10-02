@@ -18,10 +18,19 @@
 .. _sphx_glr_sphinx_gallery_output_plot_10_community_layout.py:
 
 
-Community Node Layout / Bundled Edges
+Community Node Layout / Edge Bundling
 =====================================
 
-.. GENERATED FROM PYTHON SOURCE LINES 6-40
+Networks often contain groups of nodes, which share some property and
+are typically more densely connected with each other than with nodes outside of that group.
+A typical example are friendship groups within the wider facebook graph of acquaintances.
+
+Here we emphasise the modular structure of a graph by using the the :code:`community` node layout,
+which places nodes belonging to the same community close to each other,
+by giving nodes from the same community the same colour, and
+by using edge bundling, which tends to de-emphasize the connectivity between different parts of a network.
+
+.. GENERATED FROM PYTHON SOURCE LINES 15-48
 
 .. code-block:: default
 
@@ -47,7 +56,6 @@ Community Node Layout / Bundled Edges
         0 : 'tab:blue',
         1 : 'tab:orange',
         2 : 'tab:green',
-        3 : 'tab:red',
     }
     node_color = {node: community_to_color[community_id] for node, community_id in node_to_community.items()}
 
@@ -71,29 +79,27 @@ Community Node Layout / Bundled Edges
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 41-43
+.. GENERATED FROM PYTHON SOURCE LINES 49-63
 
-Alternatively, the best partition into communities can be inferred, for example
-using the Louvain algorithm (:code:`pip install python-louvain`):
+Unlike in the example above, the community structure of a graph is often not known but has to be inferred.
+For an overview of available community detection algorithms, see `Porter et al. (2009) Communities in networks`.
+Community detection algorithms are outside the scope of the Netgraph library,
+but many are available in networkx_, igraph_, and graph-tool_.
+Do note that community detection has been a rapidly evolving field and
+that classic algorithms such as Newman-Girvan or Louvain may not be the best available choices nowadays.
+For an opinionated but very readable introduction into recent developments in this area,
+see the blog_ of Tiago de Paula Peixoto, the author of the graph-tool library.
 
-.. GENERATED FROM PYTHON SOURCE LINES 43-46
-
-.. code-block:: default
-
-
-    from community import community_louvain
-    node_to_community = community_louvain.best_partition(g)
-
-
-
-
-
-
+.. _Porter et al. (2009) Communities in networks: https://doi.org/10.48550/arXiv.0902.3788
+.. _networkx: https://networkx.org/documentation/stable/reference/algorithms/community.html
+.. _igraph: https://igraph.org/c/doc/igraph-Community.html
+.. _graph-tool: https://graph-tool.skewed.de/static/doc/demos/inference/inference.html
+.. _blog: https://skewed.de/tiago/blog/modularity-harmful
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 3 minutes  29.683 seconds)
+   **Total running time of the script:** ( 3 minutes  5.962 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_10_community_layout.py:

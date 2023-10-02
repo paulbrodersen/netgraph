@@ -18,12 +18,12 @@
 .. _sphx_glr_sphinx_gallery_output_plot_02_directed_network.py:
 
 
-Directed Graphs
-===============
+Directed Graphs (MWE)
+=====================
 
-Default visualisation for a directed graph.
+A minimal working example to visualise a directed graph using default parameters.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-33
+.. GENERATED FROM PYTHON SOURCE LINES 8-39
 
 
 
@@ -43,6 +43,11 @@ Default visualisation for a directed graph.
 
     from netgraph import Graph
 
+    # Define the graph; here we use an edge list but we could also have used
+    # - a full rank matrix (numpy array) with ones and zeros,
+    # - a networkx Graph object,
+    # - an igraph Graph object, or
+    # - a graph-tool Graph object.
     cube = [
         (0, 1),
         (1, 2),
@@ -61,13 +66,14 @@ Default visualisation for a directed graph.
         (3, 7)
     ]
 
-    Graph(cube, edge_width=2., arrows=True)
+    # Set the `arrows` flag to true to indicate the directions of the edges.
+    Graph(cube, arrows=True)
     plt.show()
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.158 seconds)
+   **Total running time of the script:** ( 0 minutes  0.417 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_02_directed_network.py:

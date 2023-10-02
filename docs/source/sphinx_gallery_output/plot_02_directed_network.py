@@ -1,15 +1,20 @@
 #!/usr/bin/env python
 """
-Directed Graphs
-===============
+Directed Graphs (MWE)
+=====================
 
-Default visualisation for a directed graph.
+A minimal working example to visualise a directed graph using default parameters.
 """
 
 import matplotlib.pyplot as plt
 
 from netgraph import Graph
 
+# Define the graph; here we use an edge list but we could also have used
+# - a full rank matrix (numpy array) with ones and zeros,
+# - a networkx Graph object,
+# - an igraph Graph object, or
+# - a graph-tool Graph object.
 cube = [
     (0, 1),
     (1, 2),
@@ -28,5 +33,6 @@ cube = [
     (3, 7)
 ]
 
-Graph(cube, edge_width=2., arrows=True)
+# Set the `arrows` flag to true to indicate the directions of the edges.
+Graph(cube, arrows=True)
 plt.show()

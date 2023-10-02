@@ -3,9 +3,10 @@
 Custom Node Positions and Edge Paths
 ====================================
 
-Node positions can be set explicitly by using a dictionary that maps
+Typically, node and edge layouts are specified using a strings,
+e.g. with :code:`node_layout='spring', edge_layout='curved'`.
+However, node positions can be set explicitly by using a dictionary that maps
 node IDs to (x, y) coordinates as the :code:`node_layout` keyword argument.
-
 Analogously, edge paths can be set explicitly by using a dictionary that maps
 edge IDs to ndarray of (x, y) coordinates as the :code:`edge_layout` keyword argument.
 """

@@ -27,7 +27,20 @@ unbalanced_tree = [
     (5, 14),
     (5, 15)
 ]
+Graph(unbalanced_tree, node_labels=True, node_layout='circular')
+plt.show()
 
-Graph(unbalanced_tree, node_layout='circular')
+################################################################################
+# For large graphs, this process can be slow. To skip edge crossing minimisation,
+# set :code:`reduce_edge_crossings` to :code:`False`:
 
+Graph(unbalanced_tree, node_labels=True,
+      node_layout='circular', node_layout_kwargs=dict(reduce_edge_crossings=False))
+plt.show()
+
+################################################################################
+# You can also specify the node order directly:
+
+Graph(unbalanced_tree, node_labels=True, node_layout='circular',
+      node_layout_kwargs=dict(node_order=[0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15]))
 plt.show()

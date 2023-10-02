@@ -21,8 +21,8 @@
 Node and Edge Labels
 ====================
 
-Labels
-------
+Label Text
+----------
 
 If the variables :code:`node_labels` and :code:`edge_labels` are set to :code:`True`,
 the nodes and edges are labelled with the corresponding node and edge IDs.
@@ -34,7 +34,7 @@ Styling
 
 The contents of the variables :code:`node_label_fontdict` and :code:`edge_label_fontdict`
 are passed to :code:`matplotlib.text.Text` to stylise the node label and edge label text objects.
-Consult the :code:`matplotlib.text.Text` documentation for a full list of available options.
+Consult the :code:`matplotlib.text.Text` documentation_ for a full list of available options.
 By default, the following values differ from the defaults for :code:`matplotlib.text.Text`:
 
 - size (adjusted to fit into node artists if no :code:`node_label_offset` is used)
@@ -43,6 +43,8 @@ By default, the following values differ from the defaults for :code:`matplotlib.
 - clip_on (default here: :code:`False`)
 - zorder (default here: :code:`inf`)
 
+.. _documentation: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.text.html
+
 Positioning
 -----------
 
@@ -50,9 +52,9 @@ Edge labels are always centred on the corresponding edges.
 The position of the edge label along the edge can be controlled using the
 :code:`edge_label_position` argument:
 
-- :code:`0.0` : edge labels are placed at the head of the edge
-- :code:`0.5` : edge labels are placed at the centre of the edge (default)
-- :code:`1.0` : edge labels are placed at the tail of the edge
+- :code:`edge_label_position = 0.0` : edge labels are placed at the head of the edge
+- :code:`edge_label_position = 0.5` : edge labels are placed at the centre of the edge (default)
+- :code:`edge_label_position = 1.0` : edge labels are placed at the tail of the edge
 
 If :code:`edge_label_rotate` is True (default), edge labels are rotated such
 that they have the same orientation as their edge.
@@ -65,7 +67,7 @@ node labels are offset by the corresponding amounts.
 If :code:`node_label_offset` is a float, netgraph attempts to place node labels
 within that distance from node centres while avoiding collisions with node and edges.
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-78
+.. GENERATED FROM PYTHON SOURCE LINES 53-80
 
 .. code-block:: default
 
@@ -86,16 +88,15 @@ within that distance from node centres while avoiding collisions with node and e
         2 : np.array([0.8, 0.2]),
     }
 
-    g = Graph(
-        triangle,
-        node_layout=node_positions, edge_layout='curved', edge_layout_kwargs=dict(k=0.025),
-        node_labels={0 : 'a', 1 : 'b', 2 : 'c'},
-        edge_labels=True, edge_label_fontdict=dict(fontweight='bold'),
-        ax=ax1,
-    )
+    g = Graph(triangle,
+              node_layout=node_positions,
+              edge_layout='curved', edge_layout_kwargs=dict(bundle_parallel_edges=False),
+              node_labels={0 : 'a', 1 : 'b', 2 : 'c'},
+              edge_labels=True, edge_label_fontdict=dict(fontweight='bold'),
+              ax=ax1)
 
     h = Graph(nx.complete_graph(7), edge_width=0.5, node_labels=True,
-          node_label_fontdict=dict(size=14), node_label_offset=0.075, ax=ax2)
+              node_label_fontdict=dict(size=14), node_label_offset=0.075, ax=ax2)
 
 
 
@@ -109,12 +110,12 @@ within that distance from node centres while avoiding collisions with node and e
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 79-81
+.. GENERATED FROM PYTHON SOURCE LINES 81-83
 
 Node and edge label properties can also be changed individually after an
 initial draw using the standard :code:`matplotlib.text.Text` methods:
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-88
+.. GENERATED FROM PYTHON SOURCE LINES 83-90
 
 .. code-block:: default
 
@@ -135,7 +136,7 @@ initial draw using the standard :code:`matplotlib.text.Text` methods:
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.558 seconds)
+   **Total running time of the script:** ( 0 minutes  1.777 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_06_labels.py:

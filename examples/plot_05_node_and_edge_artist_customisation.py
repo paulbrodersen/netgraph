@@ -27,7 +27,7 @@ The shape, size, and colour of edge representations can be controlled via the fo
 - :code:`edge_zorder` : node zorder; artists with higher z-order occlude artists with lower z-order
 - :code:`arrows` : boolean flag that turn the drawing of arrow heads on or off
 
-All node and edge artist properties can be specified in three ways:
+Most node and edge artist properties can be specified in three ways:
 """
 
 ################################################################################

@@ -18,12 +18,12 @@
 .. _sphx_glr_sphinx_gallery_output_plot_01_default.py:
 
 
-Default Design
-==============
+Unweighted & Undirected Graphs (MWE)
+=====================================
 
-Default visualisation for an unweighted graph.
+A minimal working example to visualise an unweighted graph using default parameters.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-30
+.. GENERATED FROM PYTHON SOURCE LINES 8-38
 
 
 
@@ -43,6 +43,11 @@ Default visualisation for an unweighted graph.
 
     from netgraph import Graph
 
+    # Define the graph; here we use an edge list but we could also have used
+    # - a full rank matrix (numpy array) with ones and zeros,
+    # - a networkx Graph object,
+    # - an igraph Graph object, or
+    # - a graph-tool Graph object.
     cube = [
         (0, 1),
         (1, 2),
@@ -58,13 +63,16 @@ Default visualisation for an unweighted graph.
         (3, 7)
     ]
 
+    # Pass the graph data structure to netgraph.
     Graph(cube)
+
+    # Raise the resulting matplotlib figure to display the results.
     plt.show()
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.141 seconds)
+   **Total running time of the script:** ( 0 minutes  0.449 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_01_default.py:

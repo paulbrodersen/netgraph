@@ -3,13 +3,17 @@
 Weighted Graphs (1)
 ===================
 
-Default visualisation for a weighted graph.
+A minimal working example to visualise a weighted & directed graph using default parameters.
 """
 
 import matplotlib.pyplot as plt
 
 from netgraph import Graph
 
+# Define the graph; here we use an edge list but we could also have used
+# - a full rank matrix (numpy array) with more than one unique non-zero entry,
+# - a networkx Graph object with edges with a 'weight' attribute, or
+# - an igraph Graph object with edges with a 'weight' attribute.
 weighted_cube = [
     (0, 1, -0.1),
     (1, 2, -0.2),
@@ -28,13 +32,14 @@ weighted_cube = [
     (3, 7,  0.4)
 ]
 
-cmap = 'RdGy'
-Graph(weighted_cube, edge_cmap=cmap, edge_width=2., arrows=True)
+Graph(weighted_cube, arrows=True)
 plt.show()
 
 ################################################################################
-# By default, different edge weights are represented by different colors.
-# The default colormap is :code:`'RdGy'` but any diverging matplotlib colormap can be used:
+# By default, if the graph appears to be weighted and the :code:`edge_color`
+# parameter is left unspecified by the user, Netgraph represents different edge
+# weights using different colors. The default colormap is :code:`'RdGy'`,
+# but any diverging matplotlib colormap can be used:
 #
 # - :code:`'PiYG'`
 # - :code:`'PRGn'`
@@ -49,11 +54,12 @@ plt.show()
 # - :code:`'bwr'`
 # - :code:`'seismic'`
 #
-# If edge weights are strictly positive, weights are mapped to the
+# Note that Netgraph maps edge weights to colors such that a weight of zero
+# always corresponds to the center of the color map.
+# If all edge weights are strictly positive, weights are mapped to the
 # left hand side of the color map with :code:`vmin=0` and :code:`vmax=np.max(weights)`.
-# If edge weights are positive and negative, then weights are mapped to colors
-# such that a weight of zero corresponds to the center of the color map;
-# the boundaries are set to +/- the maximum absolute weight.
+# If edge weights are positive and negative, then the vmin and vmax boundaries
+# are set to +/- the maximum absolute weight.
 #
 # Custom diverging colormaps can be created using matploltib's :code:`LinearSegmentedColormap`:
 

@@ -23,18 +23,7 @@ Circular node layout
 
 The circular node layout routine in netgraph uses the Baur-Brandes algorithm to reduce edge crossings.
 
-.. GENERATED FROM PYTHON SOURCE LINES 8-34
-
-
-
-.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_001.png
-   :alt: plot 09 circular layout
-   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_001.png
-   :class: sphx-glr-single-img
-
-
-
-
+.. GENERATED FROM PYTHON SOURCE LINES 8-33
 
 .. code-block:: default
 
@@ -60,15 +49,75 @@ The circular node layout routine in netgraph uses the Baur-Brandes algorithm to 
         (5, 14),
         (5, 15)
     ]
-
-    Graph(unbalanced_tree, node_layout='circular')
-
+    Graph(unbalanced_tree, node_labels=True, node_layout='circular')
     plt.show()
+
+
+
+
+.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_001.png
+   :alt: plot 09 circular layout
+   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_001.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 34-36
+
+For large graphs, this process can be slow. To skip edge crossing minimisation,
+set :code:`reduce_edge_crossings` to :code:`False`:
+
+.. GENERATED FROM PYTHON SOURCE LINES 36-41
+
+.. code-block:: default
+
+
+    Graph(unbalanced_tree, node_labels=True,
+          node_layout='circular', node_layout_kwargs=dict(reduce_edge_crossings=False))
+    plt.show()
+
+
+
+
+.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_002.png
+   :alt: plot 09 circular layout
+   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_002.png
+   :class: sphx-glr-single-img
+
+
+
+
+
+.. GENERATED FROM PYTHON SOURCE LINES 42-43
+
+You can also specify the node order directly:
+
+.. GENERATED FROM PYTHON SOURCE LINES 43-47
+
+.. code-block:: default
+
+
+    Graph(unbalanced_tree, node_labels=True, node_layout='circular',
+          node_layout_kwargs=dict(node_order=[0, 2, 4, 6, 8, 10, 12, 14, 1, 3, 5, 7, 9, 11, 13, 15]))
+    plt.show()
+
+
+
+.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_003.png
+   :alt: plot 09 circular layout
+   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_09_circular_layout_003.png
+   :class: sphx-glr-single-img
+
+
+
+
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.902 seconds)
+   **Total running time of the script:** ( 0 minutes  13.502 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_09_circular_layout.py:

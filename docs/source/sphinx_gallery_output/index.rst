@@ -11,12 +11,12 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for an unweighted graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="A minimal working example to visualise an unweighted graph using default parameters.">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_01_default_thumb.png
-     :alt: Default Design
+     :alt: Unweighted & Undirected Graphs (MWE)
 
      :ref:`sphx_glr_sphinx_gallery_output_plot_01_default.py`
 
@@ -32,12 +32,12 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a directed graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="A minimal working example to visualise a directed graph using default parameters.">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_02_directed_network_thumb.png
-     :alt: Directed Graphs
+     :alt: Directed Graphs (MWE)
 
      :ref:`sphx_glr_sphinx_gallery_output_plot_02_directed_network.py`
 
@@ -53,7 +53,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Default visualisation for a weighted graph.">
+    <div class="sphx-glr-thumbcontainer" tooltip="A minimal working example to visualise a weighted &amp; directed graph using default parameters.">
 
 .. only:: html
 
@@ -74,7 +74,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Alternative visualisation for a weighted graph using edge widths to represent the absolute edge...">
+    <div class="sphx-glr-thumbcontainer" tooltip="An alternative visualisation for a weighted graph using edge widths to represent the absolute e...">
 
 .. only:: html
 
@@ -116,7 +116,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Labels ------">
+    <div class="sphx-glr-thumbcontainer" tooltip="Label Text ----------">
 
 .. only:: html
 
@@ -137,7 +137,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Node positions can be set explicitly by using a dictionary that maps node IDs to (x, y) coordin...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Typically, node and edge layouts are specified using a strings, e.g. with node_layout=&#x27;spring&#x27;,...">
 
 .. only:: html
 
@@ -200,12 +200,12 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Community Node Layout / Bundled Edges">
+    <div class="sphx-glr-thumbcontainer" tooltip="Networks often contain groups of nodes, which share some property and are typically more densel...">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_10_community_layout_thumb.png
-     :alt: Community Node Layout / Bundled Edges
+     :alt: Community Node Layout / Edge Bundling
 
      :ref:`sphx_glr_sphinx_gallery_output_plot_10_community_layout.py`
 
