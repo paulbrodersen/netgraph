@@ -230,7 +230,7 @@ class BaseGraph(object):
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
@@ -828,9 +828,7 @@ class BaseGraph(object):
         if edge_label_fontdict is None:
             edge_label_fontdict = dict()
 
-        edge_label_fontdict.setdefault('bbox', dict(boxstyle='round',
-                                                    ec=(1.0, 1.0, 1.0),
-                                                    fc=(1.0, 1.0, 1.0)))
+        edge_label_fontdict.setdefault('bbox', dict(color="white", pad=0))
         edge_label_fontdict.setdefault('horizontalalignment', 'center')
         edge_label_fontdict.setdefault('verticalalignment', 'center')
         edge_label_fontdict.setdefault('clip_on', False)
@@ -1114,7 +1112,7 @@ class Graph(BaseGraph):
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
@@ -2505,7 +2503,7 @@ class InteractiveGraph(DraggableGraphWithGridMode, EmphasizeOnHoverGraph, Annota
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 

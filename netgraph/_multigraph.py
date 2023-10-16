@@ -220,7 +220,7 @@ class BaseMultiGraph(BaseGraph):
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
@@ -540,7 +540,7 @@ class MultiGraph(BaseMultiGraph, Graph):
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
@@ -985,7 +985,7 @@ class InteractiveMultiGraph(DraggableMultiGraphWithGridMode, EmphasizeOnHoverGra
         - :code:`horizontalalignment` (default here: :code:`'center'`),
         - :code:`verticalalignment` (default here: :code:`'center'`)
         - :code:`clip_on` (default here: code:`False`),
-        - :code:`bbox` (default here: :code:`dict(boxstyle='round', ec=(1.0, 1.0, 1.0), fc=(1.0, 1.0, 1.0))`,
+        - :code:`bbox` (default here: :code:`dict(color='white', pad=0)`,
         - :code:`zorder` (default here: :code:`inf`),
         - :code:`rotation` (determined by :code:`edge_label_rotate` argument)
 
