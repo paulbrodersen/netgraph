@@ -127,7 +127,7 @@ class MutableGraph(InteractiveGraph):
                 self._delete_edge(edge)
                 self._delete_node(dummy)
         else:
-            super().__init__(*args, **kwargs)
+            super().__init__(graph, *args, **kwargs)
             self._initialize_data_structures()
 
         # Ignore data limits and return full canvas.
