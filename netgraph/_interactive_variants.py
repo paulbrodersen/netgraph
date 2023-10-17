@@ -134,7 +134,8 @@ class MutableGraph(InteractiveGraph):
         xmin, ymin = self.origin
         dx, dy = self.scale
         self.ax.axis([xmin, xmin+dx, ymin, ymin+dy])
-        self._rescale_node_labels()
+        if self.autoscale_node_labels:
+            self._rescale_node_labels()
         self.fig.canvas.draw()
 
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
@@ -808,7 +809,8 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
         xmin, ymin = self.origin
         dx, dy = self.scale
         self.ax.axis([xmin, xmin+dx, ymin, ymin+dy])
-        self._rescale_node_labels()
+        if self.autoscale_node_labels:
+            self._rescale_node_labels()
         self.fig.canvas.draw()
 
         self.fig.canvas.mpl_connect('key_press_event', self._on_key_press)
