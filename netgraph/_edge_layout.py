@@ -434,7 +434,7 @@ def _get_fr_repulsion_variant(distance, direction, k):
 
     This is a variant of the implementation in the original FR
     algorithm, in as much as repulsion only acts between fixed nodes
-    and mobile nodes, not between fixed nodes and other fixed nodes.
+    and mobile nodes, not between mobile nodes and other mobile nodes.
     """
     total_mobile = distance.shape[1]
     distance = distance[total_mobile:]
