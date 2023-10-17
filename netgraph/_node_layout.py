@@ -1514,16 +1514,12 @@ def get_shell_layout(edges, shells, radii=None, origin=(0, 0), scale=(1, 1), pad
 def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), pad_by=0.05):
     """Community node layout for modular graphs.
 
-    This implements the following steps:
+    This layout is based on ideas presented in [Traud2009], and involves the following steps:
 
-    1. Position the communities with respect to each other:
-       Create a new, weighted graph, where each node corresponds to a community,
-       and the weights correspond to the number of edges between communities.
-       Determine the centroid of each community using the FR algorithm, i.e. a spring layout.
-    2. Position the nodes within each community:
-       For each community, create a new graph. Find a layout for the subgraph.
-    3. Combine positions computed in in 1) and 3).
-    4. Rotate communities around their centroid to reduce the length of the edges between them.
+      1. Position the communities with respect to each other: create a new, weighted graph, where each node corresponds to a community, and the weights correspond to the number of edges between communities, and compute a layout for this community graph.
+      2. Position the nodes within each community: for each community, create a subgraph. Find a layout for the subgraph.
+      3. Combine positions from step 1 & 2 such that node positions are dominated by the corresponding community position and refined by their position within the community subgraph.
+      4. Rotate communities to reduce the length of inter-community edges.
 
     Parameters
     ----------
@@ -1551,6 +1547,10 @@ def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), 
     -------
     node_positions : dict
         Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+
+    References
+    ----------
+    .. [Traud2009] Traud et al. (2009) Visualization of communities in networks. https://doi.org/10.1063/1.3194108
 
     """
 
