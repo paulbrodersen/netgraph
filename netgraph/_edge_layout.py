@@ -1104,7 +1104,7 @@ class ArcDiagramEdgeLayout(ArcEdgeLayout):
 
 
     def approximate_selfloop_edge_paths(self, edges):
-        edge_paths = super().approxiamte_selfloop_edge_paths(edges)
+        edge_paths = super().approximate_selfloop_edge_paths(edges)
         edge_paths = _lateralize_arced_edge_paths(edge_paths, self.node_positions, self.above)
         return edge_paths
 
