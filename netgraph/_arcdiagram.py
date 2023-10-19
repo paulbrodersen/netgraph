@@ -459,15 +459,6 @@ class DraggableArcDiagram(ArcDiagram, DraggableGraph):
             self.node_positions[node] = np.array([x, self.node_positions[node][1]])
 
 
-    def _update_edges(self, edges):
-        edge_paths = dict()
-        edge_paths.update(self._update_arced_edge_paths([(source, target) for (source, target) in edges if source != target]))
-        edge_paths.update(self._update_selfloop_paths([(source, target) for (source, target) in edges if source == target]))
-        edge_paths = _lateralize_arced_edge_paths(edge_paths, self.node_positions, self.above)
-        self.edge_paths.update(edge_paths)
-        self._update_edge_artists(edge_paths)
-
-
 class InteractiveArcDiagram(DraggableArcDiagram, EmphasizeOnHoverGraph, AnnotateOnClickGraph, TableOnClickGraph):
     """Extends the :py:class:`ArcDiagram` class to support node placement with the mouse, emphasis of graph elements when hovering over them, and toggleable annotations.
 
