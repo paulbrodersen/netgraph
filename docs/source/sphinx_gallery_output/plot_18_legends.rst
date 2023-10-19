@@ -21,10 +21,10 @@
 Node and Edge Legends
 =====================
 
-Legends for node or edge properties can be created through the use of matplotlib proxy artists.
-For a comprehensive guide, see the `matplotlib legend guide`_.
+Netgraph node and edge artists cannot be handed directly to matplotlib to create a legend.
+Instead, legends for node or edge properties have to be created through the use of `matplotlib proxy artists`_.
 
-.. _matplotlib legend guide: https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#proxy-legend-handles
+.. _matplotlib proxy artists: https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#proxy-legend-handles
 
 .. GENERATED FROM PYTHON SOURCE LINES 12-102
 
@@ -135,7 +135,7 @@ For a comprehensive guide, see the `matplotlib legend guide`_.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.519 seconds)
+   **Total running time of the script:** ( 0 minutes  1.786 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_18_legends.py:

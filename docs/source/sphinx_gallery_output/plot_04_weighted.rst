@@ -71,7 +71,7 @@ the absolute edge weight, and colour to represent the sign of the weight.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.423 seconds)
+   **Total running time of the script:** ( 0 minutes  0.500 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_04_weighted.py:

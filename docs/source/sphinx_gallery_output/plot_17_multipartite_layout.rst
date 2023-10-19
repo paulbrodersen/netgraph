@@ -21,7 +21,7 @@
 Multi-partite & shell node layouts
 ==================================
 
-Draw a multi-partite in successive layers or in concentric circles.
+Draw a multi-partite graph in successive layers or in concentric circles.
 
 .. GENERATED FROM PYTHON SOURCE LINES 10-12
 
@@ -68,9 +68,8 @@ The :code:`layers` argument indicates in which layer each node is plotted, as we
 
  .. code-block:: none
 
-    /home/paul/src/netgraph/netgraph/_parser.py:23: UserWarning: Multi-graphs are not properly supported. Duplicate edges are plotted as a single edge; edge weights (if any) are summed.
+    /home/paul/src/netgraph/netgraph/_parser.py:33: UserWarning: The given graph data structure appears to be a multi-graph, however, this netgraph class does not properly support multi-graphs. Instead, the multi-graph is converted into a weighted graph, in which duplicate edges are merged into one. The corresponding edge weight is set to the number of duplicate edges; existing edge weights are discarded. Use the `MultiGraph` class and subclasses to visualize all edges and their edge weights properly.
       warnings.warn(msg)
-    <string>:6: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
 
 
 
@@ -123,8 +122,7 @@ call the layout function directly and swap x and y coordinates of the node posit
 
  .. code-block:: none
 
-    <string>:6: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
-    /home/paul/src/netgraph/netgraph/_parser.py:23: UserWarning: Multi-graphs are not properly supported. Duplicate edges are plotted as a single edge; edge weights (if any) are summed.
+    /home/paul/src/netgraph/netgraph/_parser.py:33: UserWarning: The given graph data structure appears to be a multi-graph, however, this netgraph class does not properly support multi-graphs. Instead, the multi-graph is converted into a weighted graph, in which duplicate edges are merged into one. The corresponding edge weight is set to the number of duplicate edges; existing edge weights are discarded. Use the `MultiGraph` class and subclasses to visualize all edges and their edge weights properly.
       warnings.warn(msg)
 
 
@@ -174,9 +172,8 @@ The :code:`shells` argument indicates in which circle each node is plotted, as w
 
  .. code-block:: none
 
-    /home/paul/src/netgraph/netgraph/_parser.py:23: UserWarning: Multi-graphs are not properly supported. Duplicate edges are plotted as a single edge; edge weights (if any) are summed.
+    /home/paul/src/netgraph/netgraph/_parser.py:33: UserWarning: The given graph data structure appears to be a multi-graph, however, this netgraph class does not properly support multi-graphs. Instead, the multi-graph is converted into a weighted graph, in which duplicate edges are merged into one. The corresponding edge weight is set to the number of duplicate edges; existing edge weights are discarded. Use the `MultiGraph` class and subclasses to visualize all edges and their edge weights properly.
       warnings.warn(msg)
-    <string>:6: VisibleDeprecationWarning: Creating an ndarray from ragged nested sequences (which is a list-or-tuple of lists-or-tuples-or ndarrays with different lengths or shapes) is deprecated. If you meant to do this, you must specify 'dtype=object' when creating the ndarray
 
 
 
@@ -184,7 +181,7 @@ The :code:`shells` argument indicates in which circle each node is plotted, as w
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.550 seconds)
+   **Total running time of the script:** ( 0 minutes  2.040 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_17_multipartite_layout.py:

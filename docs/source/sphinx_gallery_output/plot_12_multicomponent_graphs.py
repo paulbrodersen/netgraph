@@ -3,11 +3,13 @@
 Graphs with Multiple Components
 ===============================
 
-For each component, netgraph computes the node and edge layouts separately,
-and then arranges the individual components with respect to each other using
-`rectangle packing`__.
+Many node layout algorithms are only properly defined for connected graphs,
+and yield bad results when applied to graphs with multiple components.
+To circumvent this issue, Netgraph computes the node layout separately for each component,
+and then arranges the individual components with respect to each other using `rectangle packing`__.
 
 .. __ : https://github.com/Penlect/rectangle-packer
+
 """
 
 import matplotlib.pyplot as plt

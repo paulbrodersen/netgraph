@@ -3,10 +3,10 @@
 Node and Edge Legends
 =====================
 
-Legends for node or edge properties can be created through the use of matplotlib proxy artists.
-For a comprehensive guide, see the `matplotlib legend guide`_.
+Netgraph node and edge artists cannot be handed directly to matplotlib to create a legend.
+Instead, legends for node or edge properties have to be created through the use of `matplotlib proxy artists`_.
 
-.. _matplotlib legend guide: https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#proxy-legend-handles
+.. _matplotlib proxy artists: https://matplotlib.org/stable/tutorials/intermediate/legend_guide.html#proxy-legend-handles
 
 """
 

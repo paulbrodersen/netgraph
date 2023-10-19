@@ -221,7 +221,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Curved edges are repelled by nodes and other edges. This reduces node/edge and edge/edge occlus...">
+    <div class="sphx-glr-thumbcontainer" tooltip="In the &#x27;curved&#x27; edge layout, edges are repelled by nodes. This reduces node/edge occlusions. If...">
 
 .. only:: html
 
@@ -242,7 +242,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="For each component, netgraph computes the node and edge layouts separately, and then arranges t...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Many node layout algorithms are only properly defined for connected graphs, and yield bad resul...">
 
 .. only:: html
 
@@ -347,7 +347,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Draw a multi-partite in successive layers or in concentric circles.">
+    <div class="sphx-glr-thumbcontainer" tooltip="Draw a multi-partite graph in successive layers or in concentric circles.">
 
 .. only:: html
 
@@ -368,7 +368,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Legends for node or edge properties can be created through the use of matplotlib proxy artists....">
+    <div class="sphx-glr-thumbcontainer" tooltip="Netgraph node and edge artists cannot be handed directly to matplotlib to create a legend. Inst...">
 
 .. only:: html
 
@@ -410,7 +410,7 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Infer node positions given the length of the edges between them.">
+    <div class="sphx-glr-thumbcontainer" tooltip="The &#x27;geometric&#x27; node layout uses non-linear optimisation to infer node positions given the leng...">
 
 .. only:: html
 
@@ -431,12 +431,12 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Example adapted from https://xkcd.com/1195/.">
+    <div class="sphx-glr-thumbcontainer" tooltip="While Netgraph is not designed to make flowcharts, it can be used for that purpose. Simply defi...">
 
 .. only:: html
 
  .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_21_flowchart_thumb.png
-     :alt: Flowchart
+     :alt: Flowcharts
 
      :ref:`sphx_glr_sphinx_gallery_output_plot_21_flowchart.py`
 

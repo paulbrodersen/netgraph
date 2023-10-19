@@ -3,7 +3,7 @@
 Multi-partite & shell node layouts
 ==================================
 
-Draw a multi-partite in successive layers or in concentric circles.
+Draw a multi-partite graph in successive layers or in concentric circles.
 """
 
 ################################################################################

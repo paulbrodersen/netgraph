@@ -21,8 +21,7 @@
 Highlight paths
 ===============
 
-
-.. GENERATED FROM PYTHON SOURCE LINES 7-41
+.. GENERATED FROM PYTHON SOURCE LINES 7-43
 
 
 
@@ -57,8 +56,9 @@ Highlight paths
     path = nx.shortest_path(g, 33, 66)
 
     for node in path:
-        plot_instance.node_artists[node].radius = 1.5 * 1e-2
-        plot_instance.node_artists[node].set_color('orange')
+        node_artist = plot_instance.node_artists[node]
+        node_artist.size *= 2
+        node_artist.set_color('orange')
 
     for ii, node_1 in enumerate(path[:-1]):
         node_2 = path[ii+1]
@@ -66,16 +66,17 @@ Highlight paths
             edge = (node_1, node_2)
         else: # the edge is specified in reverse node order
             edge = (node_2, node_1)
-        plot_instance.edge_artists[edge].update_width(0.5 * 1e-2)
-        plot_instance.edge_artists[edge].set_color('red')
-        plot_instance.edge_artists[edge].set_alpha(1.0)
+        edge_artist = plot_instance.edge_artists[edge]
+        edge_artist.update_width(2 * edge_artist.width)
+        edge_artist.set_color('red')
+        edge_artist.set_alpha(1.0)
 
     plt.show()
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.680 seconds)
+   **Total running time of the script:** ( 0 minutes  3.315 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_15_highlight_paths.py:

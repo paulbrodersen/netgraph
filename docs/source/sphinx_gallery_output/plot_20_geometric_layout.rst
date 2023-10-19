@@ -21,9 +21,13 @@
 Geometric node layout
 =====================
 
-Infer node positions given the length of the edges between them.
+The 'geometric' node layout uses non-linear optimisation to infer node
+positions given the length of the edges between them. Note that while
+the relative node positions can often be recovered quite well such
+that the shape of the network is preserved, the orientation of the
+network as a whole is completely arbitrary.
 
-.. GENERATED FROM PYTHON SOURCE LINES 9-51
+.. GENERATED FROM PYTHON SOURCE LINES 13-55
 
 
 
@@ -45,7 +49,7 @@ Infer node positions given the length of the edges between them.
 
     from netgraph import Graph
 
-    # create a random geometric graph
+    # Create a random geometric graph and plot the graph using the original node positions.
     g = nx.random_geometric_graph(50, 0.3, seed=2)
     original_positions = nx.get_node_attributes(g, 'pos')
 
@@ -60,14 +64,14 @@ Infer node positions given the length of the edges between them.
     ax1.axis([0, 1, 0, 1])
     ax1.set_title('Original node positions')
 
-    # compute edge lengths
+    # Compute edge lengths.
     edge_length = dict()
     for (source, target) in g.edges:
         x1, y1 = original_positions[source]
         x2, y2 = original_positions[target]
         edge_length[(source, target)] = np.sqrt((x2 - x1)**2 + (y2 - y1)**2)
 
-    # use non-linear optimisation to infer node positions given the edge lengths
+    # Plot the graph using node positions inferred from edge lengths.
     Graph(g,
           node_layout="geometric",
           node_layout_kwargs=dict(edge_length=edge_length, tol=1e-3),
@@ -84,7 +88,7 @@ Infer node positions given the length of the edges between them.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  5.051 seconds)
+   **Total running time of the script:** ( 0 minutes  6.120 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_20_geometric_layout.py:

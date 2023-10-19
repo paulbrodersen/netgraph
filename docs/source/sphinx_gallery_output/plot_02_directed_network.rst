@@ -73,7 +73,7 @@ A minimal working example to visualise a directed graph using default parameters
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.417 seconds)
+   **Total running time of the script:** ( 0 minutes  0.453 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_02_directed_network.py:

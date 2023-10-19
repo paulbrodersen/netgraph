@@ -21,7 +21,7 @@
 Arc Diagrams
 ============
 
-.. GENERATED FROM PYTHON SOURCE LINES 6-35
+.. GENERATED FROM PYTHON SOURCE LINES 6-18
 
 .. code-block:: default
 
@@ -31,27 +31,10 @@ Arc Diagrams
 
     from netgraph import ArcDiagram
 
-    # Create a modular graph.
-    partition_sizes = [5, 6, 7]
-    g = nx.random_partition_graph(partition_sizes, 1, 0.1)
+    n = 20
+    g = nx.random_tree(n, seed=42)
 
-    # Create a dictionary that maps nodes to the community they belong to,
-    # and set the node colors accordingly.
-    node_to_community = dict()
-    node = 0
-    for community_id, size in enumerate(partition_sizes):
-        for _ in range(size):
-            node_to_community[node] = community_id
-            node += 1
-
-    community_to_color = {
-        0 : 'tab:blue',
-        1 : 'tab:orange',
-        2 : 'tab:green',
-    }
-    node_color = {node: community_to_color[community_id] for node, community_id in node_to_community.items()}
-
-    ArcDiagram(g, node_size=1, node_color=node_color, node_edge_width=0, edge_alpha=1., edge_width=0.1)
+    ArcDiagram(g, node_labels=True, node_size=1, node_edge_width=0.1, edge_width=0.1)
     plt.show()
 
 
@@ -69,25 +52,27 @@ Arc Diagrams
 
  .. code-block:: none
 
-    /home/paul/src/netgraph/netgraph/_node_layout.py:847: UserWarning: Maximum number of iterations reached. Aborting further node layout optimisations.
+    /home/paul/src/netgraph/netgraph/_node_layout.py:961: UserWarning: Maximum number of iterations reached. Aborting further node layout optimisations.
       warnings.warn("Maximum number of iterations reached. Aborting further node layout optimisations.")
 
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 36-40
+.. GENERATED FROM PYTHON SOURCE LINES 19-23
 
 By default, ArcDiagram optimises the node order such that the number of edge crossings is minimised.
 For larger graphs, this process can take a long time.
 The node order can be set explicitly using the :code:`node_order` argument.
 In this case, no optimisation is attempted.
 
-.. GENERATED FROM PYTHON SOURCE LINES 40-42
+.. GENERATED FROM PYTHON SOURCE LINES 23-27
 
 .. code-block:: default
 
 
-    ArcDiagram(g, node_order=range(len(g)), node_size=1, node_color=node_color, node_edge_width=0, edge_alpha=1., edge_width=0.1)
+    ArcDiagram(g, node_order=range(n), node_labels=True, node_size=1, node_edge_width=0.1, edge_width=0.1)
+    plt.show()
+
 
 
 
@@ -97,21 +82,47 @@ In this case, no optimisation is attempted.
    :class: sphx-glr-single-img
 
 
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
 
 
-    <netgraph._arcdiagram.ArcDiagram object at 0x7f034f543d30>
+
+.. GENERATED FROM PYTHON SOURCE LINES 28-30
+
+Arc diagrams are useful to compare two networks with the same number of nodes,
+for example, the connectivity in the same network before and after some changes.
+
+.. GENERATED FROM PYTHON SOURCE LINES 30-43
+
+.. code-block:: default
+
+
+    # Swap a few edges in the original graph. As this occurs in-place, we first make a copy.
+    h = g.copy()
+    nx.double_edge_swap(h, nswap=3)
+
+    # Visualise the changes in connectivity by plotting the two configurations above and below the center line.
+    # Highlight edges that were removed in red; new edges are shown in blue.
+    fig, ax = plt.subplots()
+    edge_color = {edge : "tab:red" if edge not in h.edges() else "lightgray" for edge in g.edges()}
+    ArcDiagram(g, above=False, node_order=range(n), node_size=1, node_edge_width=0.1, edge_color=edge_color, edge_width=0.5, ax=ax)
+    edge_color = {edge : "tab:blue" if edge not in g.edges() else "lightgray" for edge in h.edges()}
+    ArcDiagram(h, above=True,  node_order=range(n), node_size=1, node_edge_width=0.1, edge_color=edge_color, edge_width=0.5, ax=ax)
+    plt.show()
+
+
+
+.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_13_arcdiagram_003.png
+   :alt: plot 13 arcdiagram
+   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_13_arcdiagram_003.png
+   :class: sphx-glr-single-img
+
+
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  0.919 seconds)
+   **Total running time of the script:** ( 1 minutes  42.428 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_13_arcdiagram.py:

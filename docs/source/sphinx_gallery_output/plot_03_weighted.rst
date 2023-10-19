@@ -115,7 +115,7 @@ Custom diverging colormaps can be created using matploltib's :code:`LinearSegmen
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.413 seconds)
+   **Total running time of the script:** ( 0 minutes  0.516 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_03_weighted.py:
