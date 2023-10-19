@@ -126,6 +126,7 @@ class MutableGraph(InteractiveGraph):
                 self._initialize_data_structures()
                 self._delete_edge(edge)
                 self._delete_node(dummy)
+
         else:
             super().__init__(graph, *args, **kwargs)
             self._initialize_data_structures()
@@ -609,7 +610,7 @@ class EditableGraph(MutableGraph):
     def _initialize_empty_node_labels(self, kwargs):
         node_labels = {node : '' for node in self.nodes}
         self.node_label_fontdict = self._initialize_node_label_fontdict(
-            kwargs.get('node_label_fontdict'), node_labels, kwargs.get('node_label_offset', (0., 0.)))
+            kwargs.get('node_label_fontdict', None))
         self.node_label_offset, self._recompute_node_label_offsets =\
             self._initialize_node_label_offset(node_labels, kwargs.get('node_label_offset', (0., 0.)))
         if self._recompute_node_label_offsets:
