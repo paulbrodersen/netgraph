@@ -217,6 +217,8 @@ class BaseArcDiagram(BaseGraph):
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', False)
         else:
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', True)
+        kwargs.setdefault("edge_layout_kwargs", dict())
+        kwargs["edge_layout_kwargs"].setdefault("above", above)
         super().__init__(edges, nodes=nodes, node_layout=node_layout, edge_layout='arc', *args, **kwargs)
 
 
@@ -442,6 +444,8 @@ class ArcDiagram(BaseArcDiagram, Graph):
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', False)
         else:
             kwargs['node_layout_kwargs'].setdefault('reduce_edge_crossings', True)
+        kwargs.setdefault("edge_layout_kwargs", dict())
+        kwargs["edge_layout_kwargs"].setdefault("above", above)
         Graph.__init__(self, graph, node_layout=node_layout, edge_layout='arc', *args, **kwargs)
 
 
