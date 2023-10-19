@@ -72,6 +72,15 @@ Most node and edge artist properties can be specified in three ways:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_05_node_and_edge_artist_customisation.py:41: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
@@ -102,6 +111,15 @@ Most node and edge artist properties can be specified in three ways:
    :srcset: /sphinx_gallery_output/images/sphx_glr_plot_05_node_and_edge_artist_customisation_002.png
    :class: sphx-glr-single-img
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_05_node_and_edge_artist_customisation.py:54: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
 
@@ -140,13 +158,22 @@ such that any of its methods can be used to modify node and edge artists propert
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_05_node_and_edge_artist_customisation.py:67: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.816 seconds)
+   **Total running time of the script:** ( 0 minutes  0.623 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_05_node_and_edge_artist_customisation.py:

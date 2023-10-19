@@ -5,10 +5,10 @@
 
 Computation times
 =================
-**00:00.500** total execution time for **sphinx_gallery_output** files:
+**00:09.683** total execution time for **sphinx_gallery_output** files:
 
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_04_weighted.py` (``plot_04_weighted.py``)                                                     | 00:00.500 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_13_geometric_layout.py` (``plot_13_geometric_layout.py``)                                     | 00:09.683 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_sphinx_gallery_output_plot_01_default.py` (``plot_01_default.py``)                                                       | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
@@ -16,41 +16,41 @@ Computation times
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_sphinx_gallery_output_plot_03_weighted.py` (``plot_03_weighted.py``)                                                     | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
+| :ref:`sphx_glr_sphinx_gallery_output_plot_04_weighted.py` (``plot_04_weighted.py``)                                                     | 00:00.000 | 0.0 MB |
++-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_sphinx_gallery_output_plot_05_node_and_edge_artist_customisation.py` (``plot_05_node_and_edge_artist_customisation.py``) | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_06_labels.py` (``plot_06_labels.py``)                                                         | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_06_highlight_paths.py` (``plot_06_highlight_paths.py``)                                       | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_07_custom_layout.py` (``plot_07_custom_layout.py``)                                           | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_07_labels.py` (``plot_07_labels.py``)                                                         | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_08_dot_layout.py` (``plot_08_dot_layout.py``)                                                 | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_08_legends.py` (``plot_08_legends.py``)                                                       | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_sphinx_gallery_output_plot_09_circular_layout.py` (``plot_09_circular_layout.py``)                                       | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_10_community_layout.py` (``plot_10_community_layout.py``)                                     | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_10_dot_layout.py` (``plot_10_dot_layout.py``)                                                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_11_curved_edge_layout.py` (``plot_11_curved_edge_layout.py``)                                 | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_11_bipartite_layout.py` (``plot_11_bipartite_layout.py``)                                     | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_12_multicomponent_graphs.py` (``plot_12_multicomponent_graphs.py``)                           | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_12_multipartite_layout.py` (``plot_12_multipartite_layout.py``)                               | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_13_arcdiagram.py` (``plot_13_arcdiagram.py``)                                                 | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_14_community_layout.py` (``plot_14_community_layout.py``)                                     | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_14_bipartite_layout.py` (``plot_14_bipartite_layout.py``)                                     | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_15_curved_edge_layout.py` (``plot_15_curved_edge_layout.py``)                                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_15_highlight_paths.py` (``plot_15_highlight_paths.py``)                                       | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_16_custom_layout.py` (``plot_16_custom_layout.py``)                                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_16_pyqt.py` (``plot_16_pyqt.py``)                                                             | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_17_multicomponent_graphs.py` (``plot_17_multicomponent_graphs.py``)                           | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_17_multipartite_layout.py` (``plot_17_multipartite_layout.py``)                               | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_18_multigraphs.py` (``plot_18_multigraphs.py``)                                               | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_18_legends.py` (``plot_18_legends.py``)                                                       | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_19_arcdiagram.py` (``plot_19_arcdiagram.py``)                                                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_19_hyperlinks.py` (``plot_19_hyperlinks.py``)                                                 | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_20_flowchart.py` (``plot_20_flowchart.py``)                                                   | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_20_geometric_layout.py` (``plot_20_geometric_layout.py``)                                     | 00:00.000 | 0.0 MB |
-+-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_21_flowchart.py` (``plot_21_flowchart.py``)                                                   | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_21_hyperlinks.py` (``plot_21_hyperlinks.py``)                                                 | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
 | :ref:`sphx_glr_sphinx_gallery_output_plot_22_large_graphs.py` (``plot_22_large_graphs.py``)                                             | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+
-| :ref:`sphx_glr_sphinx_gallery_output_plot_23_multigraphs.py` (``plot_23_multigraphs.py``)                                               | 00:00.000 | 0.0 MB |
+| :ref:`sphx_glr_sphinx_gallery_output_plot_23_pyqt.py` (``plot_23_pyqt.py``)                                                             | 00:00.000 | 0.0 MB |
 +-----------------------------------------------------------------------------------------------------------------------------------------+-----------+--------+

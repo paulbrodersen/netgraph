@@ -57,8 +57,10 @@ any structure in the graph.
 
  .. code-block:: none
 
-    /home/paul/src/netgraph/netgraph/_main.py:395: UserWarning: The graph may be too large to visualize meaningfully. There are only available 62 pixels per edge. This number is unlikely to be sufficient to render the edges without many overlaps, resulting in a 'hairball'. For comparison, each letter in this sentence is likely rendered using 200-400 pixels.
+    /home/paul/src/netgraph/netgraph/_main.py:404: UserWarning: The graph may be too large to visualize meaningfully. There are only available 62 pixels per edge. This number is unlikely to be sufficient to render the edges without many overlaps, resulting in a 'hairball'. For comparison, each letter in this sentence is likely rendered using 200-400 pixels.
       warnings.warn(msg)
+    /home/paul/src/netgraph/examples/plot_22_large_graphs.py:22: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
 
@@ -155,8 +157,10 @@ other communities.
 
  .. code-block:: none
 
-    /home/paul/src/netgraph/netgraph/_main.py:395: UserWarning: The graph may be too large to visualize meaningfully. There are only available 51 pixels per edge. This number is unlikely to be sufficient to render the edges without many overlaps, resulting in a 'hairball'. For comparison, each letter in this sentence is likely rendered using 200-400 pixels.
+    /home/paul/src/netgraph/netgraph/_main.py:404: UserWarning: The graph may be too large to visualize meaningfully. There are only available 51 pixels per edge. This number is unlikely to be sufficient to render the edges without many overlaps, resulting in a 'hairball'. For comparison, each letter in this sentence is likely rendered using 200-400 pixels.
       warnings.warn(msg)
+    /home/paul/src/netgraph/examples/plot_22_large_graphs.py:93: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
 
@@ -236,6 +240,22 @@ subgraph, the simplest solution is to plot each component separately.
          :srcset: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_005.png
          :class: sphx-glr-multi-img
 
+    *
+
+      .. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_006.png
+         :alt: Component 4
+         :srcset: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_006.png
+         :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_22_large_graphs.py:122: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
 
@@ -263,11 +283,20 @@ their immediate vicinity.
 
 
 
-.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_006.png
-   :alt: Vicinity of Hub Node 250
-   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_006.png
+.. image-sg:: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_007.png
+   :alt: Vicinity of Hub Node 204
+   :srcset: /sphinx_gallery_output/images/sphx_glr_plot_22_large_graphs_007.png
    :class: sphx-glr-single-img
 
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_22_large_graphs.py:136: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
 
@@ -304,7 +333,7 @@ scope of netgraph, which is a library to create link-diagrams.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 2 minutes  43.442 seconds)
+   **Total running time of the script:** ( 2 minutes  18.998 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_22_large_graphs.py:

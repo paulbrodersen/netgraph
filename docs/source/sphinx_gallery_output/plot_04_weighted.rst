@@ -34,8 +34,21 @@ the absolute edge weight, and colour to represent the sign of the weight.
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_04_weighted.py:36: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
+
+
+
+
+|
 
 .. code-block:: default
 
@@ -71,7 +84,7 @@ the absolute edge weight, and colour to represent the sign of the weight.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.500 seconds)
+   **Total running time of the script:** ( 0 minutes  0.367 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_04_weighted.py:

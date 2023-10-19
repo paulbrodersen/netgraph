@@ -116,14 +116,35 @@ Basic Examples
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbcontainer" tooltip="Highlight paths">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_06_highlight_paths_thumb.png
+     :alt: Highlight paths
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_06_highlight_paths.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_06_highlight_paths
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="Label Text ----------">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_06_labels_thumb.png
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_07_labels_thumb.png
      :alt: Node and Edge Labels
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_06_labels.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_07_labels.py`
 
 .. raw:: html
 
@@ -133,39 +154,18 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_06_labels
+   /sphinx_gallery_output/plot_07_labels
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Typically, node and edge layouts are specified using a strings, e.g. with node_layout=&#x27;spring&#x27;,...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Netgraph node and edge artists cannot be handed directly to matplotlib to create a legend. Inst...">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_07_custom_layout_thumb.png
-     :alt: Custom Node Positions and Edge Paths
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_08_legends_thumb.png
+     :alt: Node and Edge Legends
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_07_custom_layout.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_07_custom_layout
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Plot a tree or other directed, acyclic graph with the &#x27;dot&#x27; or &#x27;radial&#x27; node layout. Netgraph u...">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_08_dot_layout_thumb.png
-     :alt: Dot and radial node layouts
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_08_dot_layout.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_08_legends.py`
 
 .. raw:: html
 
@@ -175,7 +175,7 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_08_dot_layout
+   /sphinx_gallery_output/plot_08_legends
 
 .. raw:: html
 
@@ -200,14 +200,14 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Networks often contain groups of nodes, which share some property and are typically more densel...">
+    <div class="sphx-glr-thumbcontainer" tooltip="Plot a tree or other directed, acyclic graph with the &#x27;dot&#x27; or &#x27;radial&#x27; node layout. Netgraph u...">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_10_community_layout_thumb.png
-     :alt: Community Node Layout / Edge Bundling
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_10_dot_layout_thumb.png
+     :alt: Dot and radial node layouts
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_10_community_layout.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_10_dot_layout.py`
 
 .. raw:: html
 
@@ -217,70 +217,7 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_10_community_layout
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="In the &#x27;curved&#x27; edge layout, edges are repelled by nodes. This reduces node/edge occlusions. If...">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_11_curved_edge_layout_thumb.png
-     :alt: Curved Edges
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_11_curved_edge_layout.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_11_curved_edge_layout
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Many node layout algorithms are only properly defined for connected graphs, and yield bad resul...">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_12_multicomponent_graphs_thumb.png
-     :alt: Graphs with Multiple Components
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_12_multicomponent_graphs.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_12_multicomponent_graphs
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Arc Diagrams">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_13_arcdiagram_thumb.png
-     :alt: Arc Diagrams
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_13_arcdiagram.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_13_arcdiagram
+   /sphinx_gallery_output/plot_10_dot_layout
 
 .. raw:: html
 
@@ -288,10 +225,10 @@ Basic Examples
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_14_bipartite_layout_thumb.png
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_11_bipartite_layout_thumb.png
      :alt: Bipartite node layout
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_14_bipartite_layout.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_11_bipartite_layout.py`
 
 .. raw:: html
 
@@ -301,49 +238,7 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_14_bipartite_layout
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Highlight paths">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_15_highlight_paths_thumb.png
-     :alt: Highlight paths
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_15_highlight_paths.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_15_highlight_paths
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="A minimal(-ish) working example using PyQt5. Courtesy of github user LBeghini_.">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_16_pyqt_thumb.png
-     :alt: PyQt example
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_16_pyqt.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_16_pyqt
+   /sphinx_gallery_output/plot_11_bipartite_layout
 
 .. raw:: html
 
@@ -351,10 +246,10 @@ Basic Examples
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_17_multipartite_layout_thumb.png
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_12_multipartite_layout_thumb.png
      :alt: Multi-partite & shell node layouts
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_17_multipartite_layout.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_12_multipartite_layout.py`
 
 .. raw:: html
 
@@ -364,49 +259,7 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_17_multipartite_layout
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Netgraph node and edge artists cannot be handed directly to matplotlib to create a legend. Inst...">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_18_legends_thumb.png
-     :alt: Node and Edge Legends
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_18_legends.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_18_legends
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Non-interactive figures -----------------------">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_19_hyperlinks_thumb.png
-     :alt: Hyperlinks
-
-     :ref:`sphx_glr_sphinx_gallery_output_plot_19_hyperlinks.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_output/plot_19_hyperlinks
+   /sphinx_gallery_output/plot_12_multipartite_layout
 
 .. raw:: html
 
@@ -414,10 +267,10 @@ Basic Examples
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_20_geometric_layout_thumb.png
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_13_geometric_layout_thumb.png
      :alt: Geometric node layout
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_20_geometric_layout.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_13_geometric_layout.py`
 
 .. raw:: html
 
@@ -427,7 +280,133 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_20_geometric_layout
+   /sphinx_gallery_output/plot_13_geometric_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Networks often contain groups of nodes, which share some property and are typically more densel...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_14_community_layout_thumb.png
+     :alt: Community Node Layout / Edge Bundling
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_14_community_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_14_community_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="In the &#x27;curved&#x27; edge layout, edges are repelled by nodes. This reduces node/edge occlusions. If...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_15_curved_edge_layout_thumb.png
+     :alt: Curved Edges
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_15_curved_edge_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_15_curved_edge_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Typically, node and edge layouts are specified using a strings, e.g. with node_layout=&#x27;spring&#x27;,...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_16_custom_layout_thumb.png
+     :alt: Custom Node Positions and Edge Paths
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_16_custom_layout.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_16_custom_layout
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Many node layout algorithms are only properly defined for connected graphs, and yield bad resul...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_17_multicomponent_graphs_thumb.png
+     :alt: Graphs with Multiple Components
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_17_multicomponent_graphs.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_17_multicomponent_graphs
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="A multigraph is a graph that is permitted to have more than one edge with the same source and t...">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_18_multigraphs_thumb.png
+     :alt: Multigraphs
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_18_multigraphs.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_18_multigraphs
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Arc Diagrams">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_19_arcdiagram_thumb.png
+     :alt: Arc Diagrams
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_19_arcdiagram.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_19_arcdiagram
 
 .. raw:: html
 
@@ -435,10 +414,10 @@ Basic Examples
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_21_flowchart_thumb.png
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_20_flowchart_thumb.png
      :alt: Flowcharts
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_21_flowchart.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_20_flowchart.py`
 
 .. raw:: html
 
@@ -448,7 +427,28 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_21_flowchart
+   /sphinx_gallery_output/plot_20_flowchart
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Non-interactive figures -----------------------">
+
+.. only:: html
+
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_21_hyperlinks_thumb.png
+     :alt: Hyperlinks
+
+     :ref:`sphx_glr_sphinx_gallery_output_plot_21_hyperlinks.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /sphinx_gallery_output/plot_21_hyperlinks
 
 .. raw:: html
 
@@ -473,14 +473,14 @@ Basic Examples
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="A multigraph is a graph that is permitted to have more than one edge with the same source and t...">
+    <div class="sphx-glr-thumbcontainer" tooltip="A minimal(-ish) working example using PyQt5. Courtesy of github user LBeghini_.">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_23_multigraphs_thumb.png
-     :alt: Multigraphs
+ .. figure:: /sphinx_gallery_output/images/thumb/sphx_glr_plot_23_pyqt_thumb.png
+     :alt: PyQt example
 
-     :ref:`sphx_glr_sphinx_gallery_output_plot_23_multigraphs.py`
+     :ref:`sphx_glr_sphinx_gallery_output_plot_23_pyqt.py`
 
 .. raw:: html
 
@@ -490,7 +490,7 @@ Basic Examples
 .. toctree::
    :hidden:
 
-   /sphinx_gallery_output/plot_23_multigraphs
+   /sphinx_gallery_output/plot_23_pyqt
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

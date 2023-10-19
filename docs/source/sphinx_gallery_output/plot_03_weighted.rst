@@ -66,6 +66,15 @@ A minimal working example to visualise a weighted & directed graph using default
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_03_weighted.py:36: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
@@ -115,7 +124,7 @@ Custom diverging colormaps can be created using matploltib's :code:`LinearSegmen
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.516 seconds)
+   **Total running time of the script:** ( 0 minutes  0.374 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_03_weighted.py:

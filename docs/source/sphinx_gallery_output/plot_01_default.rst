@@ -33,8 +33,21 @@ A minimal working example to visualise an unweighted graph using default paramet
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_01_default.py:37: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
+
+
+
+
+|
 
 .. code-block:: default
 
@@ -72,7 +85,7 @@ A minimal working example to visualise an unweighted graph using default paramet
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.449 seconds)
+   **Total running time of the script:** ( 0 minutes  0.396 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_01_default.py:

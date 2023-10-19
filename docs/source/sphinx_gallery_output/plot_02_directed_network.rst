@@ -33,8 +33,21 @@ A minimal working example to visualise a directed graph using default parameters
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_02_directed_network.py:38: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
 
 
+
+
+
+
+|
 
 .. code-block:: default
 
@@ -73,7 +86,7 @@ A minimal working example to visualise a directed graph using default parameters
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.453 seconds)
+   **Total running time of the script:** ( 0 minutes  0.341 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_02_directed_network.py:

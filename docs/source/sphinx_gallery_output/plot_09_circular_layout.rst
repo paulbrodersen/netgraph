@@ -61,6 +61,15 @@ The circular node layout routine in netgraph uses the Baur-Brandes algorithm to 
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_09_circular_layout.py:31: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
@@ -87,6 +96,15 @@ set :code:`reduce_edge_crossings` to :code:`False`:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_09_circular_layout.py:39: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
@@ -111,13 +129,22 @@ You can also specify the node order directly:
    :class: sphx-glr-single-img
 
 
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    /home/paul/src/netgraph/examples/plot_09_circular_layout.py:46: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+      plt.show()
+
 
 
 
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  13.502 seconds)
+   **Total running time of the script:** ( 0 minutes  13.616 seconds)
 
 
 .. _sphx_glr_download_sphinx_gallery_output_plot_09_circular_layout.py:
