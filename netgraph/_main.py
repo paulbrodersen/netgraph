@@ -358,6 +358,8 @@ class BaseGraph(object):
             if self.autoscale_node_labels:
                 self._rescale_node_labels()
                 self.fig.canvas.mpl_connect('resize_event', self._on_resize)
+        else:
+            self.autoscale_node_labels = False
 
         if edge_labels:
             if isinstance(edge_labels, bool):
