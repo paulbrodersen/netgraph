@@ -195,22 +195,23 @@ def _bspline(cv, n=100, degree=5, periodic=False):
     return spl(np.linspace(0,max_param,n))
 
 
-def _get_angle(dx, dy, radians=False):
+def _get_angle(dx, dy, radians=True):
     """Angle of a vector in 2D."""
     angle = np.arctan2(dy, dx)
     if radians:
-        angle *= 360 / (2.0 * np.pi)
-    return angle
+        return angle
+    else:
+        return angle * 360 / (2.0 * np.pi)
 
 
-def _get_interior_angle_between(v1, v2, radians=False):
+def _get_interior_angle_between(v1, v2, radians=True):
     """Returns the interior angle between vectors v1 and v2.
 
     Parameters
     ----------
     v1, v2 : numpy.array
         The vectors in question.
-    radians : bool, default False
+    radians : bool, default True
         If True, return the angle in radians (otherwise it is in degrees).
 
     Returns
@@ -241,8 +242,9 @@ def _get_interior_angle_between(v1, v2, radians=False):
     v2_u = _get_unit_vector(v2)
     angle = np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
     if radians:
-        angle *= 360 / (2 * np.pi)
-    return angle
+        return angle
+    else:
+        return angle * 360 / (2 * np.pi)
 
 
 def _get_unit_vector(vector):
@@ -250,14 +252,14 @@ def _get_unit_vector(vector):
     return vector / np.linalg.norm(vector)
 
 
-def _get_signed_angle_between(v1, v2, radians=False):
+def _get_signed_angle_between(v1, v2, radians=True):
     """Returns the signed angle between vectors v1 and v2.
 
     Parameters
     ----------
     v1, v2 : numpy.array
         The vectors in question.
-    radians : bool, default False
+    radians : bool, default True
         If True, return the angle in radians (otherwise it is in degrees).
 
     Returns
@@ -281,8 +283,9 @@ def _get_signed_angle_between(v1, v2, radians=False):
     det = x1*y2 - y1*x2
     angle = np.arctan2(det, dot)
     if radians:
-        angle *= 360 / (2 * np.pi)
-    return angle
+        return angle
+    else:
+        return angle * 360 / (2 * np.pi)
 
 
 def _get_n_points_on_a_circle(xy, radius, n, start_angle=0):

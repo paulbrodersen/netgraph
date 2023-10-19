@@ -883,7 +883,7 @@ class BaseGraph(object):
 
                 # get tangent in degrees
                 dx, dy = _get_tangent_at_point(edge_artist.midline, edge_label_position)
-                angle = _get_angle(dx, dy, radians=True)
+                angle = _get_angle(dx, dy, radians=False)
 
                 # make label orientation "right-side-up"
                 if angle > 90:
@@ -921,7 +921,7 @@ class BaseGraph(object):
                         self.edge_artists[edge].midline,
                         self.edge_label_position
                     )
-                    angle = _get_angle(dx, dy, radians=True)
+                    angle = _get_angle(dx, dy, radians=False)
                     # make label orientation "right-side-up"
                     if angle > 90:
                         angle -= 180
@@ -2004,7 +2004,7 @@ class AnnotateOnClick(object):
 
     def _get_text_alignment(self, vector):
         dx, dy = vector
-        angle = _get_angle(dx, dy, radians=True) % 360
+        angle = _get_angle(dx, dy, radians=False) % 360
 
         if (45 <= angle < 135):
             horizontalalignment = 'center'
@@ -2167,7 +2167,7 @@ class AnnotateOnClickGraph(Graph, AnnotateOnClick):
         tangent = _get_tangent_at_point(artist.midline, 0.5)
         orthogonal_vector = _get_orthogonal_unit_vector(np.atleast_2d(tangent)).ravel()
         vector_pointing_outwards = self._get_vector_pointing_outwards(midpoint)
-        if _get_interior_angle_between(orthogonal_vector, vector_pointing_outwards, radians=True) > 90:
+        if _get_interior_angle_between(orthogonal_vector, vector_pointing_outwards, radians=False) > 90:
             orthogonal_vector *= -1
 
         x, y = midpoint + 2 * artist.width * orthogonal_vector
