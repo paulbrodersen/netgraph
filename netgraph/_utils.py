@@ -931,8 +931,7 @@ def _get_total_pixels(fig):
 
 
 def _simplify_multigraph(edges):
-    # return sorted(_map_multigraph_source_target_pairs_to_edge_ids(edges))
-    return sorted({(source, target) for source, target, _ in edges})
+    return {(source, target) for source, target, _ in edges}
 
 
 def _map_multigraph_edges_to_ids(edges):

@@ -1311,7 +1311,7 @@ class _MultiGraphEdgeLayout(object):
     def __init__(self, edges, node_positions, edge_width, *args, **kwargs):
         self.edge_width = edge_width
         self.edge_to_ids = _map_multigraph_edges_to_ids(edges)
-        super().__init__(sorted(self.edge_to_ids.keys()), node_positions, *args, **kwargs)
+        super().__init__(list(self.edge_to_ids.keys()), node_positions, *args, **kwargs)
 
 
     def get_nonloop_edge_paths(self, *args, **kwargs):

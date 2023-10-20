@@ -816,7 +816,7 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
     .. [Baur2005] Baur & Brandes (2005) Crossing reduction in circular layouts.
 
     """
-    nodes = sorted(_get_unique_nodes(edges))
+    nodes = _get_unique_nodes(edges)
 
     if node_order:
         nodes = [node for node in node_order if node in nodes]
@@ -825,6 +825,11 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
             # remove self-loops as these should have no bearing on the solution
             edges = [(source, target) for source, target in edges if source != target]
             nodes = _reduce_crossings(edges)
+    else:
+        try: # emulate networkx behavior
+            nodes = sorted(nodes)
+        except TypeError: # probably due to mixed node types
+            pass
 
     return _get_preordered_circular_layout(nodes, origin, scale, pad_by)
 
@@ -1130,7 +1135,7 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
 
     """
 
-    nodes = sorted(_get_unique_nodes(edges))
+    nodes = _get_unique_nodes(edges)
 
     if node_order:
         nodes = [node for node in node_order if node in nodes]
@@ -1144,6 +1149,11 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
             # with members on both ends of the line.
             # Here we find a better split by minimising the total edge length.
             nodes = _minimize_total_edge_length(nodes, edges)
+    else:
+        try:
+            nodes = sorted(nodes)
+        except TypeError: # probably due to mixed node types
+            pass
 
     return _get_preordered_linear_layout(nodes, origin, scale, pad_by)
 
