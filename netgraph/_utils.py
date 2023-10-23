@@ -931,7 +931,7 @@ def _get_total_pixels(fig):
 
 
 def _simplify_multigraph(edges):
-    return {(source, target) for source, target, _ in edges}
+    return list({(source, target) for source, target, _ in edges})
 
 
 def _map_multigraph_edges_to_ids(edges):
