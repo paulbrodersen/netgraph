@@ -126,7 +126,7 @@ from ._interactive_multigraph_classes import (
     EditableMultiGraph,
 )
 
-from ._arcdiagram import (
+from ._arcdiagram_classes import (
     BaseArcDiagram,
     ArcDiagram,
     InteractiveArcDiagram,

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test _named.py.
+Test _arcdiagram_classes.py.
 """
 
 import pytest
