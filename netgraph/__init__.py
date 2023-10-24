@@ -115,7 +115,7 @@ from ._interactive_graph_classes import (
     EditableGraph,
 )
 
-from ._multigraph import (
+from ._multigraph_classes import (
     BaseMultiGraph,
     MultiGraph,
 )
