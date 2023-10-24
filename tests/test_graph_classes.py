@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 """
-Test _main.py.
+Test _graph_classes.py.
 """
 
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from netgraph._main import Graph
-from netgraph._artists import Path
+from matplotlib.path import Path
+from netgraph import Graph
 from toy_graphs import cube, cycle
 
 np.random.seed(42)

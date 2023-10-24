@@ -102,25 +102,25 @@ __version__ = "4.12.10"
 __author__ = "Paul Brodersen"
 __email__ = "paulbrodersen+netgraph@gmail.com"
 
-from ._main import (
+from ._graph_classes import (
     BASE_SCALE,
     DEFAULT_COLOR,
     BaseGraph,
     Graph,
+)
+
+from ._interactive_graph_classes import (
     InteractiveGraph,
+    MutableGraph,
+    EditableGraph,
+    MutableMultiGraph,
+    EditableMultiGraph,
 )
 
 from ._multigraph import (
     BaseMultiGraph,
     MultiGraph,
     InteractiveMultiGraph,
-)
-
-from ._interactive_variants import (
-    MutableGraph,
-    EditableGraph,
-    MutableMultiGraph,
-    EditableMultiGraph,
 )
 
 from ._arcdiagram import (
