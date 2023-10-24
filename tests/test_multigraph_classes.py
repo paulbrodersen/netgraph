@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from netgraph._multigraph_classes import (
+from netgraph import (
     BaseMultiGraph,
     MultiGraph,
 )

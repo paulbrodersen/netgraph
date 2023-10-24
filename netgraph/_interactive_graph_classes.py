@@ -25,7 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backend_bases import key_press_handler
 
-from ._main import BASE_SCALE, Graph
+from ._graph_classes import BASE_SCALE, Graph
 from ._artists import (
     NodeArtist,
     CircularNodeArtist,

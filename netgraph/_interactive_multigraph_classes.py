@@ -21,6 +21,7 @@ import warnings
 import numpy as np
 import matplotlib.pyplot as plt
 
+from ._graph_classes import Graph
 from ._interactive_graph_classes import (
     DraggableArtists,
     DraggableGraph,

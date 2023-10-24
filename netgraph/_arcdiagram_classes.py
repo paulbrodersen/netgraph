@@ -6,7 +6,7 @@ Implements the BaseArcDiagram and ArcDiagram classes.
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ._main import BaseGraph, Graph
+from ._graph_classes import BaseGraph, Graph
 from ._node_layout import get_linear_layout, _get_preordered_linear_layout
 
 

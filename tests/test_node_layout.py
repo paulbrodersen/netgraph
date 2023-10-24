@@ -10,10 +10,7 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 from random import choice
 
-from netgraph._main import Graph
-from netgraph._node_layout import (
-    get_circular_layout,
-)
+from netgraph import Graph, get_circular_layout
 from toy_graphs import (
     cycle,
     unbalanced_tree,

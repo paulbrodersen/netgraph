@@ -6,7 +6,7 @@ Implements the BaseMultiGraph and MultiGraph classes.
 
 import matplotlib.pyplot as plt
 
-from ._main import BaseGraph, Graph
+from ._graph_classes import BaseGraph, Graph
 from ._parser import parse_multigraph, _parse_multigraph_edge_list
 from ._artists import EdgeArtist
 from ._edge_layout import (

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.patches import ConnectionStyle
 
-from _arcdiagram_classes import ArcDiagram
+from ._arcdiagram_classes import ArcDiagram
 from ._interactive_graph_classes import (
     DraggableGraph,
     EmphasizeOnHoverGraph,
