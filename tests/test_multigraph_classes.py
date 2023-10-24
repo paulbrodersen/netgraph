@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 """
-Test _multigraph.py.
+Test _multigraph_classes.py.
 """
 
 import pytest
 import numpy as np
 import matplotlib.pyplot as plt
 
-from netgraph._multigraph import (
+from netgraph._multigraph_classes import (
     BaseMultiGraph,
     MultiGraph,
 )

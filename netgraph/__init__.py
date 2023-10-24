@@ -113,14 +113,17 @@ from ._interactive_graph_classes import (
     InteractiveGraph,
     MutableGraph,
     EditableGraph,
-    MutableMultiGraph,
-    EditableMultiGraph,
 )
 
 from ._multigraph import (
     BaseMultiGraph,
     MultiGraph,
+)
+
+from ._interactive_multigraph_classes import (
     InteractiveMultiGraph,
+    MutableMultiGraph,
+    EditableMultiGraph,
 )
 
 from ._arcdiagram import (
