@@ -129,7 +129,11 @@ from ._interactive_multigraph_classes import (
 from ._arcdiagram_classes import (
     BaseArcDiagram,
     ArcDiagram,
+)
+
+from ._interactive_arcdiagram_classes import (
     InteractiveArcDiagram,
+    MutableArcDiagram,
     EditableArcDiagram,
 )
 
