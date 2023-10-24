@@ -40,7 +40,6 @@ from ._utils import (
     _get_tangent_at_point,
 )
 from ._parser import is_order_zero, is_empty, parse_graph
-from ._multigraph import InteractiveMultiGraph
 
 
 DEFAULT_EDGE = (0, 1)
