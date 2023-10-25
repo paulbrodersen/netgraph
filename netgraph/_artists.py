@@ -95,15 +95,18 @@ class NodeArtist(PathPatchDataUnits):
             .rotate(self.orientation) \
             .translate(*self.xy)
 
+    def _contains_points(self, points):
+        return self.transformed_path.contains_points(points)
+
     def get_head_offset(self, edge_path):
         # Determine edge path points that are within node shape path.
-        is_overlapping = self._path.contains_points(edge_path, transform=self.get_patch_transform())
+        is_overlapping = self._contains_points(edge_path)
 
         if np.all(is_overlapping):
             import warnings
             warnings.warn("Node artist completely overlaps edge path!")
             return np.inf
-        elif np.any(is_overlapping):
+        elif is_overlapping[-1]: # np.any(is_overlapping):
             # Resample segment consisting of last point that is not enclosed and first point that is.
             # idx = np.where(is_overlapping)[0][0] # This approach fails for self-loops.
             # segment = edge_path[[idx-1, idx]]
@@ -115,7 +118,7 @@ class NodeArtist(PathPatchDataUnits):
             resampled = np.c_[np.linspace(x[0], x[1], 100), np.linspace(y[0], y[1], 100)]
 
             # Determine last resampled point that is not enclosed and compute distance to center.
-            is_overlapping = self._path.contains_points(resampled, transform=self.get_patch_transform())
+            is_overlapping = self._contains_points(resampled)
             idx = np.where(is_overlapping)[0][0] - 1
             offset = np.linalg.norm(edge_path[-1] - resampled[idx])
             return offset
