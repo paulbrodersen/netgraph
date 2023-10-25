@@ -83,8 +83,7 @@ class NodeArtist(PathPatchDataUnits):
         self.size = size
         self.orientation = orientation
         self.linewidth_correction = linewidth_correction
-        if not hasattr(self, "scale_by"):
-            self.scale_by = self.size / _get_radius(self._path)
+        self.scale_by = 1 / _get_radius(self._path)
         self._patch_transform = transforms.Affine2D()
         super().__init__(path=self._path, **kwargs)
         self.transformed_path = self._path.transformed(self.get_patch_transform())
@@ -179,7 +178,6 @@ class RegularPolygonNodeArtist(NodeArtist):
 
     def __init__(self, total_vertices, orientation, xy, size, **kwargs):
         path = Path.unit_regular_polygon(total_vertices)
-        self.scale_by = 1
         linewidth_correction = 2 * np.sin(np.pi/total_vertices) # derives from the ratio between a side and the radius in a regular polygon.
         super().__init__(path, xy, size, orientation=orientation, linewidth_correction=linewidth_correction, **kwargs)
 
@@ -205,7 +203,6 @@ class CircularNodeArtist(NodeArtist):
 
     def __init__(self, xy, size, **kwargs):
         path = Path.circle()
-        self.scale_by = 1
         super().__init__(path, xy, size, **kwargs)
 
     def get_head_offset(self, edge_path):

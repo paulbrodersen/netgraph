@@ -74,6 +74,36 @@ def test_NodeArtist():
 
 
 @pytest.mark.mpl_image_compare
+def test_NodeArtist_scale_by():
+    vertices = np.array([[ 0.44833333, -2.75444444],
+                         [-0.78166667, -1.28444444],
+                         [-2.88166667,  1.81555556],
+                         [-0.75666667,  1.81555556],
+                         [-0.28166667,  0.96555556],
+                         [ 1.06833333,  3.01555556],
+                         [ 1.86833333, -0.13444444],
+                         [ 0.86833333, -0.68444444],
+                         [ 0.44833333, -2.75444444]])
+    codes = (1, 4, 4, 4, 2, 4, 4, 4, 79)
+    path = Path(vertices, codes)
+
+    fig, ax = plt.subplots()
+
+    sizes = [0.5, 1, 2]
+    x, y = 0, 0
+    for size in sizes:
+        x += 1.1 * size
+        ax.add_patch(plt.Circle((x, y), size, alpha=0.1, linewidth=0))
+        ax.add_patch(NodeArtist(path, xy=(x, y), size=size, linewidth=0))
+        x += 1.1 * size # yes, again
+
+    ax.axis([0, x, -1.1 * max(sizes), 1.1 * max(sizes)])
+    ax.set_aspect('equal')
+
+    return fig
+
+
+@pytest.mark.mpl_image_compare
 def test_RegularPolygonNodeArtist():
 
     fig, (ax1, ax2) = plt.subplots(1, 2, sharex=True, sharey=True)
