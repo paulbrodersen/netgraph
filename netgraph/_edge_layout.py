@@ -909,7 +909,7 @@ class StraightEdgeLayout(object):
             if selfloop_angle is not None: # can be zero!
                 self.selfloop_angle = _normalize_numeric_argument(selfloop_angle, self.selfloops, 'selfloop_angle', allow_none=True)
             elif (selfloop_angle is None) and (not self.nonloops):
-                self.selfloop_angle = _normalize_numeric_argument(np.pi/2, self.selfloops, 'selfloop_angle', allow_none=True)
+                self.selfloop_angle = _normalize_numeric_argument(np.pi/2, self.selfloops, 'selfloop_angle')
 
         self.edge_paths = dict()
         self.nonloop_edge_paths = dict()
@@ -962,6 +962,15 @@ class StraightEdgeLayout(object):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
+            if None in selfloop_angle.values():
+                selfloop_angle.update(
+                    _get_optimal_selfloop_angles(
+                        [edge for edge, angle in selfloop_angle.items() if isinstance(angle, type(None))],
+                        self.selfloop_radius,
+                        self.node_positions,
+                        self.nonloop_edge_paths,
+                    )
+                )
         elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)
@@ -975,6 +984,13 @@ class StraightEdgeLayout(object):
     def approximate_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
+            if None in selfloop_angle.values():
+                selfloop_angle.update(
+                    _get_decent_selfloop_angles(
+                        [edge for edge, angle in selfloop_angle.items() if isinstance(angle, type(None))],
+                        self.node_positions,
+                    )
+                )
         else:
             selfloop_angle = _get_decent_selfloop_angles(
                 edges, self.node_positions)
@@ -1042,6 +1058,15 @@ class ArcEdgeLayout(StraightEdgeLayout):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
+            if None in selfloop_angle.values():
+                selfloop_angle.update(
+                    _get_optimal_selfloop_angles(
+                        [edge for edge, angle in selfloop_angle.items() if isinstance(angle, type(None))],
+                        self.selfloop_radius,
+                        self.node_positions,
+                        self.nonloop_edge_paths,
+                    )
+                )
         elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops,
@@ -1063,6 +1088,13 @@ class ArcEdgeLayout(StraightEdgeLayout):
     def approximate_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
+            if None in selfloop_angle.values():
+                selfloop_angle.update(
+                    _get_decent_selfloop_angles(
+                        [edge for edge, angle in selfloop_angle.items() if isinstance(angle, type(None))],
+                        self.node_positions,
+                    )
+                )
         else:
             selfloop_angle = _get_decent_selfloop_angles(
                 edges, self.node_positions)
@@ -1187,6 +1219,14 @@ class CurvedEdgeLayout(StraightEdgeLayout):
     def get_selfloop_edge_paths(self, edges):
         if hasattr(self, "selfloop_angle"):
             selfloop_angle = self.selfloop_angle
+            if None in selfloop_angle.values():
+                selfloop_angle.update(
+                    _get_optimal_selfloop_angles(
+                        [edge for edge, angle in selfloop_angle.items() if isinstance(angle, type(None))],
+                        self.selfloop_radius,
+                        self.node_positions,
+                        self.nonloop_edge_paths)
+                )
         elif self.nonloops:
             selfloop_angle = _get_optimal_selfloop_angles(
                 self.selfloops, self.selfloop_radius, self.node_positions, self.nonloop_edge_paths)

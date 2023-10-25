@@ -192,7 +192,7 @@ def test_variable_angle_selfloops():
     selfloop_angle = {
         (0, 0) : np.pi,
         (1, 1) : None,
-        (2, 2) : 0,
+        (2, 2) : -np.pi/2,
     }
     fig, ax = plt.subplots()
     Graph(edges,
