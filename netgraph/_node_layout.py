@@ -1246,15 +1246,15 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
     origin = np.array(origin) + pad_by * np.array(scale)
     scale = np.array(scale) * (1 - 2 * pad_by)
 
-    if len(left) > len(right):
+    # determine the spacing between nodes within a subset
+    if len(edges) == 1:
+        spacing = 1.
+    elif len(left) > len(right):
         spacing = scale[1] / (len(left) - 1)
     else:
-        try:
-            spacing = scale[1] / (len(right) - 1)
-        except ZeroDivisionError:
-            # The graph consists of a single edge.
-            spacing = 1.
+        spacing = scale[1] / (len(right) - 1)
 
+    # set node positions
     node_positions = dict()
     for subset, xx in ((left, origin[0]), (right, origin[0] + scale[0])):
         y = spacing * np.arange(len(subset))

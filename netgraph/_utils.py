@@ -702,8 +702,14 @@ def _bfs(adjacency_list, start):
 def _get_gradient_and_intercept(p1, p2):
     x1, y1 = p1
     x2, y2 = p2
-    gradient = (y2 - y1) / (x2 - x1)
-    intercept = (x2 * y1 - x1 * y2) / (x2 - x1)
+    if x1 != x2:
+        gradient = (y2 - y1) / (x2 - x1)
+        intercept = (x2 * y1 - x1 * y2) / (x2 - x1)
+    elif (x1 == x2) and (y1 != y2):
+        gradient = np.sign(y2 - y1) * np.inf
+        intercept = x1
+    else:
+        gradient, intercept = np.nan, np.nan
     return gradient, intercept
 
 
@@ -725,22 +731,31 @@ def _reflect_across_line(points, gradient, intercept):
 
     Notes
     -----
-    Adapted from https://stackoverflow.com/a/45769740/2912349
+    Adapted from https://stackoverflow.com/a/3307181/2912349
 
     """
     x0, y0 = points.T
-    d = (x0 + (y0 - intercept) * gradient) / (1 + gradient**2)
-    x1 = 2 * d - x0
-    y1 = 2 * d * gradient - y0 + 2 * intercept
-    return np.c_[x1, y1]
+    if not np.isinf(gradient):
+        d = (x0 + (y0 - intercept) * gradient) / (1 + gradient**2)
+        x1 = 2 * d - x0
+        y1 = 2 * d * gradient - y0 + 2 * intercept
+        return np.c_[x1, y1]
+    else:
+        x1 = x0 + 2 * (intercept - x0)
+        return np.c_[x1, y0]
 
 
 def _are_collinear(points, tol=None):
     "Test if the given points are collinear."
-    points = np.array(points)
-    points -= points.mean(axis=0)[np.newaxis, :]
-    rank = matrix_rank(points, tol=tol)
-    return rank == 1
+    if np.any(np.isnan(points)):
+        raise ValueError("`points` may not contain `NaN` values!")
+    elif np.any(np.isinf(points)):
+        raise ValueError("`points` may not contain `inf` values!")
+    else:
+        points = np.array(points)
+        points -= points.mean(axis=0)[np.newaxis, :]
+        rank = matrix_rank(points, tol=tol)
+        return rank == 1
 
 
 def _convert_polar_to_cartesian_coordinates(rho, phi):
