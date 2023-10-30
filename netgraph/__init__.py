@@ -160,7 +160,12 @@ from ._edge_layout import (
 
 from ._parser import parse_graph
 
+
 __all__ = [
+    'BASE_SCALE',
+    'DEFAULT_COLOR',
+    'BaseGraph',
+    'Graph',
     'get_random_layout',
     'get_fruchterman_reingold_layout',
     'get_sugiyama_layout',
@@ -169,17 +174,13 @@ __all__ = [
     'get_linear_layout',
     'get_bipartite_layout',
     'get_multipartite_layout',
+    'get_shell_layout',
     'get_community_layout',
     'get_geometric_layout',
     'get_straight_edge_paths',
     'get_curved_edge_paths',
-    'get_bundled_edge_paths',
     'get_arced_edge_paths',
-    'parse_graph',
-    'BASE_SCALE',
-    'DEFAULT_COLOR',
-    'BaseGraph',
-    'Graph',
+    'get_bundled_edge_paths',
     'InteractiveGraph',
     'MutableGraph',
     'EditableGraph',
@@ -193,4 +194,5 @@ __all__ = [
     'InteractiveArcDiagram',
     'MutableArcDiagram',
     'EditableArcDiagram',
+    'parse_graph',
 ]
