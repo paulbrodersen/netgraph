@@ -297,6 +297,13 @@ class BaseGraph(object):
         edge_alpha      = self._normalize_numeric_argument(edge_alpha, self.edges, 'edge_alpha')
         edge_zorder     = self._normalize_numeric_argument(edge_zorder, self.edges, 'edge_zorder')
 
+        for node in self.nodes:
+            if (node_size[node] < node_edge_width[node]) & (node_color[node] != node_edge_color[node]):
+                msg  = f"The border around the node {node} is broader than its radius."
+                msg += f" The node will mostly have the color of the border ({node_edge_color[node]}), even though a different face color was specified ({node_color[node]})."
+                msg += f" To address this issue, reduce the value given for `node_edge_width`."
+                warnings.warn(msg)
+
         # Rescale.
         node_size = self._rescale(node_size, BASE_SCALE)
         node_edge_width = self._rescale(node_edge_width, BASE_SCALE)
