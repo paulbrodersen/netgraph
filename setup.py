@@ -6,7 +6,7 @@ def read_file(filename):
     with open(os.path.join(os.path.dirname(__file__), filename)) as file:
         return file.read()
 
-version = '4.13.1'
+version = '4.13.2'
 
 setup(
     name='netgraph',
