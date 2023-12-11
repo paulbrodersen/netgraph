@@ -125,6 +125,7 @@ Bibtex entry:
 
 ## Recent changes
 
+- 4.13.1 Improved initialization of `k` parameter in `get_fruchterman_reingold_layout` (issue #79).
 - 4.13.0 Wrote an article on Netgraph for the Journal of Open Source Software (latest draft in /publication).
 - 4.12.12 Expanded the documentation to cover installation of optional dependencies, automated testing, and troubleshooting issues with Matplotlib event handling (issue #69).
 - 4.12.11 Mitigated a bug in `EditableGraph` that occurred when deleting a node while hovering over an edge incident to that node (issue #66).
