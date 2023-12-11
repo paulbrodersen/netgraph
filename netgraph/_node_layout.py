@@ -449,7 +449,8 @@ def get_fruchterman_reingold_layout(edges,
         fixed_node_sizes = np.array([])
 
     if k is None:
-        area = np.product(scale)
+        # area = np.product(scale)
+        area = np.pi * (min(scale) / 2) ** 2
         k = np.sqrt(area / float(total_nodes))
 
     temperatures = _get_temperature_decay(initial_temperature, total_iterations)
