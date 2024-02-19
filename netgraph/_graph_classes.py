@@ -864,12 +864,6 @@ class BaseGraph(object):
 
             edge_artist = self.edge_artists[edge]
 
-            if self._is_selfloop(edge) and (edge_artist.curved is False):
-                msg = "Plotting of edge labels for self-loops not supported for straight edges."
-                msg += "\nIgnoring edge with label: {}".format(label)
-                warnings.warn(msg)
-                continue
-
             x, y = _get_point_along_spline(edge_artist.midline, edge_label_position)
 
             if edge_label_rotate:

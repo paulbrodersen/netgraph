@@ -1810,6 +1810,13 @@ class MutableGraph(InteractiveGraph):
         # 4) BaseGraph
         self.edges.append(edge)
         self.edge_artists[edge] = artist
+        if hasattr(self, 'edge_label_artists'):
+            self.draw_edge_labels(
+                {edge : ""},
+                self.edge_label_position,
+                self.edge_label_rotate,
+                self.edge_label_fontdict,
+            )
 
 
     def _delete_edges(self):
