@@ -1436,7 +1436,7 @@ def get_multipartite_layout(edges, layers, layer_positions=None, origin=(0, 0), 
 def _get_node_positions_within_layer(node_order, node_spacing, layer_position, origin, scale):
     node_positions = dict()
     xx = layer_position
-    y = node_spacing * np.arange(len(node_order))
+    y = node_spacing * np.arange(len(node_spacing))
     y -= np.mean(y)
     y += origin[1] + scale[1] / 2
     for node, yy in zip(node_order, y):
