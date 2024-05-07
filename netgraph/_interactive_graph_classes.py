@@ -1650,6 +1650,8 @@ class MutableGraph(InteractiveGraph):
         self.ax.add_patch(artist)
         self._expand_node_data_structures(node, artist, pos)
 
+        return node
+
 
     def _expand_node_data_structures(self, node, artist, pos):
         # 0) MutableGraph
@@ -1783,6 +1785,8 @@ class MutableGraph(InteractiveGraph):
 
         # bookkeeping
         self._expand_edge_data_structures(edge, artist, path)
+
+        return edge
 
 
     def _expand_edge_data_structures(self, edge, artist, path):
