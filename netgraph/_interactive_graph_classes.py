@@ -1524,8 +1524,10 @@ class MutableGraph(InteractiveGraph):
 
 
     def _on_press(self, event):
-        # TODO : trigger this code on any node or edge selection;
-        # clicking on a node or edge is just one of the ways to select them
+        # TODO : Potentially trigger this code on any node or edge selection;
+        # clicking on a node or edge is just one of the ways to select them.
+        # NOTE: However, clicking on an artist is guaranteed to be deliberate,
+        # whereas other forms of selecting an artist are not.
         super()._on_press(event)
 
         if event.inaxes == self.ax:
@@ -1637,16 +1639,9 @@ class MutableGraph(InteractiveGraph):
         # get position of cursor place node at cursor position
         pos = self._set_position_of_newly_created_node(event.xdata, event.ydata)
 
-        # copy attributes of last selected artist;
-        # if none is selected, use a random artist
-        for artist in self._selected_artists[::-1]:
-            if isinstance(artist, NodeArtist):
-                node_properties = self._extract_node_properties(artist)
-                node_type = type(artist)
-                break
-        else:
-            node_properties = self._last_selected_node_properties
-            node_type = self._last_selected_node_type
+        # copy attributes of last selected artist
+        node_properties = self._last_selected_node_properties
+        node_type = self._last_selected_node_type
 
         artist = node_type(xy=pos, **node_properties)
         self.ax.add_patch(artist)
