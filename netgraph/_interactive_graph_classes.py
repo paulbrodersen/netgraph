@@ -1410,8 +1410,8 @@ class MutableGraph(InteractiveGraph):
     - Pressing 'delete' or '-' will remove selected nodes and edges.
     - Pressing '@' will reverse the direction of selected edges.
 
-    When adding a new node, the properties of the last selected node will be used to style the node artist.
-    Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
+    When adding a new node, the properties of the last clicked node will be used to style the node artist.
+    Ditto for edges. If no node or edge has been previously selected, the first created node or edge artist will be used.
 
     Parameters
     ----------
@@ -1912,7 +1912,7 @@ class EditableGraph(MutableGraph):
     - To create or edit an annotation, select the node (or edge) artist, press 'alt'+'enter', and type.
     - Terminate either action by pressing 'enter' or 'alt'+'enter' a second time.
 
-    When adding a new node, the properties of the last selected node will be used to style the node artist.
+    When adding a new node, the properties of the last clicked node will be used to style the node artist.
     Ditto for edges. If no node or edge has been previously selected the first created node or edge artist will be used.
 
     Parameters

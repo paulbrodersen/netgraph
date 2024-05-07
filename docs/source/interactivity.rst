@@ -46,7 +46,7 @@ There is also some experimental support for editing graph elements interactively
     - Pressing :code:`delete` or :code:`-` will remove selected nodes and edges.
     - Pressing :code:`@` will reverse the direction of selected edges.
 
-When adding a new node, the properties of the last selected node will be used to style the node artist. Ditto for edges. If no node or edge has been previously selected, the first created node or edge artist will be used.
+When adding a new node, the properties of the last clicked node will be used to style the node artist. Ditto for edges. If no node or edge has been previously selected, the first created node or edge artist will be used.
 
 .. image:: https://media.giphy.com/media/TyiS2Pl1z9CFqYMYe7/giphy.gif
     :width: 400
