@@ -1639,9 +1639,11 @@ class MutableGraph(InteractiveGraph):
 
         # copy attributes of last selected artist;
         # if none is selected, use a random artist
-        if self._selected_artists:
-            node_properties = self._extract_node_properties(self._selected_artists[-1])
-            node_type = type(self._selected_artists[-1])
+        for artist in self._selected_artists[::-1]:
+            if isinstance(artist, NodeArtist):
+                node_properties = self._extract_node_properties(artist)
+                node_type = type(artist)
+                break
         else:
             node_properties = self._last_selected_node_properties
             node_type = self._last_selected_node_type
