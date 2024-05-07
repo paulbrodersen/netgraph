@@ -735,6 +735,8 @@ class MutableMultiGraph(InteractiveMultiGraph, MutableGraph):
         # bookkeeping
         self._expand_edge_data_structures(edge, artist, path)
 
+        return edge
+
 
     def _delete_edge(self, edge):
         artist = self.edge_artists[edge]
