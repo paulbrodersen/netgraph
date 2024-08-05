@@ -255,6 +255,7 @@ class BaseGraph(object):
                  node_layout_kwargs=None,
                  node_shape='o',
                  node_size=3.,
+                 node_hatch="",
                  node_edge_width=0.5,
                  node_color='w',
                  node_edge_color=DEFAULT_COLOR,
@@ -287,6 +288,7 @@ class BaseGraph(object):
         # Convert all node and edge parameters to dictionaries.
         node_shape      = self._normalize_string_argument(node_shape, self.nodes, 'node_shape')
         node_size       = self._normalize_numeric_argument(node_size, self.nodes, 'node_size')
+        node_hatch      = self._normalize_string_argument(node_hatch, self.nodes, 'node_hatch')
         node_edge_width = self._normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
         node_color      = self._normalize_color_argument(node_color, self.nodes, 'node_color')
         node_edge_color = self._normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
@@ -329,7 +331,7 @@ class BaseGraph(object):
 
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
-                        node_shape, node_size, node_edge_width,
+                        node_shape, node_size, node_hatch, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
         # This function needs to be called before any font sizes are adjusted,
@@ -573,7 +575,7 @@ class BaseGraph(object):
             raise TypeError(f"Variable 'ax' either None or a matplotlib axis instance. However, type(ax) is {type(ax)}.")
 
 
-    def draw_nodes(self, nodes, node_positions, node_shape, node_size,
+    def draw_nodes(self, nodes, node_positions, node_shape, node_size, node_hatch,
                    node_edge_width, node_color, node_edge_color, node_alpha,
                    node_zorder):
         """Draw or update node artists.
@@ -610,6 +612,7 @@ class BaseGraph(object):
             node_artist = NodeArtist(shape=node_shape[node],
                                      xy=node_positions[node],
                                      radius=node_size[node],
+                                     hatch=node_hatch[node],
                                      facecolor=node_color[node],
                                      edgecolor=node_edge_color[node],
                                      linewidth=node_edge_width[node],
