@@ -17,6 +17,7 @@ from ._utils import (
     _make_pretty,
     _rank,
     _normalize_numeric_argument,
+    _normalize_string_argument,
     _normalize_color_argument,
     _normalize_shape_argument,
     _rescale_dict_values,
@@ -113,6 +114,12 @@ class BaseGraph(object):
         If the type is dict, maps each node to an individual size.
 
         .. note:: Values are rescaled by :py:const:`BASE_SCALE` (0.01) to be compatible with layout routines in igraph and networkx.
+    node_hatch : str or dict, default ""
+        Node hatch pattern.
+        If the type is str, all nodes have the same hatch pattern.
+        If the type is dict, maps each node to an individual hatch pattern.
+
+        Refer to https://matplotlib.org/stable/gallery/shapes_and_collections/hatch_style_reference.html for available hatch patterns.
 
     node_edge_width : float or dict, default 0.5
         Line width of node marker border.
@@ -262,6 +269,7 @@ class BaseGraph(object):
                  node_layout_kwargs=None,
                  node_shape='o',
                  node_size=3.,
+                 node_hatch="",
                  node_edge_width=0.5,
                  node_color='w',
                  node_edge_color=DEFAULT_COLOR,
@@ -298,6 +306,7 @@ class BaseGraph(object):
         # Convert all node and edge parameters to dictionaries.
         node_shape      = _normalize_shape_argument(node_shape, self.nodes, 'node_shape')
         node_size       = _normalize_numeric_argument(node_size, self.nodes, 'node_size')
+        node_hatch      = _normalize_string_argument(node_hatch, self.nodes, 'node_hatch')
         node_edge_width = _normalize_numeric_argument(node_edge_width, self.nodes, 'node_edge_width')
         node_color      = _normalize_color_argument(node_color, self.nodes, 'node_color')
         node_edge_color = _normalize_color_argument(node_edge_color, self.nodes, 'node_edge_color')
@@ -323,7 +332,7 @@ class BaseGraph(object):
             node_layout, node_layout_kwargs)
         self.node_artists = dict()
         self.draw_nodes(self.nodes, self.node_positions,
-                        node_shape, self.node_size, node_edge_width,
+                        node_shape, self.node_size, node_hatch, node_edge_width,
                         node_color, node_edge_color, node_alpha, node_zorder)
 
         self.edge_layout = self._initialize_edge_layout(edge_layout, edge_layout_kwargs)
@@ -519,7 +528,7 @@ class BaseGraph(object):
             raise TypeError(f"Variable 'ax' either None or a matplotlib axis instance. However, type(ax) is {type(ax)}.")
 
 
-    def draw_nodes(self, nodes, node_positions, node_shape, node_size,
+    def draw_nodes(self, nodes, node_positions, node_shape, node_size,  node_hatch,
                    node_edge_width, node_color, node_edge_color, node_alpha,
                    node_zorder):
         """Draw or update node artists.
@@ -535,6 +544,8 @@ class BaseGraph(object):
             Specification is as for matplotlib.scatter marker, i.e. one of 'so^>v<dph8'.
         node_size : dict
             Mapping of nodes to sizes.
+        node_hatch : dict
+            Mapping of nodes to hatch patterns.
         node_edge_width : dict
             Mapping of nodes to marker edge widths.
         node_color : dict
@@ -558,6 +569,7 @@ class BaseGraph(object):
             kwargs = dict(
                 xy        = node_positions[node],
                 size      = node_size[node],
+                hatch     = node_hatch[node],
                 facecolor = node_color[node],
                 edgecolor = node_edge_color[node],
                 linewidth = node_edge_width[node],
