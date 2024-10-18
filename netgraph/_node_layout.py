@@ -326,6 +326,9 @@ def get_fruchterman_reingold_layout(edges,
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     edge_weights : dict
         Mapping of edges to edge weights.
     k : float or None, default None
@@ -587,6 +590,28 @@ def _rescale_to_frame(node_positions, origin, scale):
 
 @_rectangle_pack_multiple_components
 def get_random_layout(edges, origin=(0,0), scale=(1,1)):
+    """Random node layout.
+
+    Based on the origin and scale parameter, assigns uniformly at random selected x and y coordinates to each node.
+
+    Parameters
+    ----------
+    edges : list
+        The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
+    origin : tuple, default (0, 0)
+        The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
+    scale : tuple, default (1, 1)
+        The (float x, float y) dimensions representing the width and height of the bounding box specifying the extent of the canvas.
+
+    Returns
+    -------
+    node_positions : dict
+        Dictionary mapping each node ID to (float x, float y) tuple, the node position.
+    """
+
     nodes = _get_unique_nodes(edges)
     return {node : np.random.rand(2) * scale + origin for node in nodes}
 
@@ -602,6 +627,9 @@ def get_sugiyama_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_si
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
@@ -704,6 +732,9 @@ def get_radial_tree_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
@@ -780,6 +811,9 @@ def get_circular_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_or
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
@@ -1098,6 +1132,9 @@ def get_linear_layout(edges, origin=(0, 0), scale=(1, 1), pad_by=0.05, node_orde
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     origin : tuple, default (0, 0)
         The (float x, float y) coordinates corresponding to the lower left corner of the bounding box specifying the extent of the canvas.
     scale : tuple, default (1, 1)
@@ -1188,6 +1225,9 @@ def get_bipartite_layout(edges, nodes=None, subsets=None, origin=(0, 0), scale=(
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     subsets : list
         The two layers of the graph. If None, a two-coloring is used to separate the nodes into two subsets.
         However, if the graph consists of multiple components, this partitioning into two layers is ambiguous, as multiple solutions exist.
@@ -1535,6 +1575,9 @@ def get_community_layout(edges, node_to_community, origin=(0, 0), scale=(1, 1), 
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     node_to_community : dict
         The network partition, which maps each node ID to a community ID.
     origin : tuple, default (0, 0)
@@ -1712,6 +1755,9 @@ def get_geometric_layout(edges, edge_length, node_size=0., tol=1e-3, origin=(0, 
     ----------
     edges : list
         The edges of the graph, with each edge being represented by a (source node ID, target node ID) tuple.
+    nodes : list or None, default None
+        List of nodes. Required argument if any node in the graph is unconnected.
+        If None, `nodes` is initialised to the set of the flattened `edges`.
     edge_lengths : dict
         Mapping of edges to their lengths.
     node_size : scalar or dict, default 0.
