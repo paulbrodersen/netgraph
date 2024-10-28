@@ -1,9 +1,5 @@
 :orphan:
 
-
-
-.. _sphx_glr_sphinx_gallery_animations:
-
 Animation Examples
 ==================
 
@@ -11,14 +7,62 @@ Animation Examples
 
 .. raw:: html
 
+    <div class="sphx-glr-thumbnails">
+
+.. thumbnail-parent-div-open
+
+.. raw:: html
+
     <div class="sphx-glr-thumbcontainer" tooltip="The simplest way to visualise changes in connectivity is to reveal or hide nodes and edges as t...">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_01_mwe_animation_thumb.gif
-     :alt: Changes in Connectivity
+  .. image:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_01_mwe_animation_thumb.gif
+    :alt:
 
-     :ref:`sphx_glr_sphinx_gallery_animations_plot_01_mwe_animation.py`
+  :ref:`sphx_glr_sphinx_gallery_animations_plot_01_mwe_animation.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Changes in Connectivity</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="Here we show how to manipulate the color, transparency, and extent of node and edge artists to ...">
+
+.. only:: html
+
+  .. image:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_02_additional_effects_thumb.gif
+    :alt:
+
+  :ref:`sphx_glr_sphinx_gallery_animations_plot_02_additional_effects.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Changes in Node and Edge Properties</div>
+    </div>
+
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="For dynamic networks, the available data is often quite granular, and the large differences bet...">
+
+.. only:: html
+
+  .. image:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_03_smooth_animations_thumb.gif
+    :alt:
+
+  :ref:`sphx_glr_sphinx_gallery_animations_plot_03_smooth_animations.py`
+
+.. raw:: html
+
+      <div class="sphx-glr-thumbnail-title">Smooth Animations</div>
+    </div>
+
+
+.. thumbnail-parent-div-close
 
 .. raw:: html
 
@@ -29,69 +73,21 @@ Animation Examples
    :hidden:
 
    /sphinx_gallery_animations/plot_01_mwe_animation
-
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="Here we show how to manipulate the color, transparency, and extent of node and edge artists to ...">
-
-.. only:: html
-
- .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_02_additional_effects_thumb.gif
-     :alt: Changes in Node and Edge Properties
-
-     :ref:`sphx_glr_sphinx_gallery_animations_plot_02_additional_effects.py`
-
-.. raw:: html
-
-    </div>
-
-
-.. toctree::
-   :hidden:
-
    /sphinx_gallery_animations/plot_02_additional_effects
+   /sphinx_gallery_animations/plot_03_smooth_animations
 
-.. raw:: html
-
-    <div class="sphx-glr-thumbcontainer" tooltip="For dynamic networks, the available data is often quite granular, and the large differences bet...">
 
 .. only:: html
 
- .. figure:: /sphinx_gallery_animations/images/thumb/sphx_glr_plot_03_smooth_animations_thumb.gif
-     :alt: Smooth Animations
+  .. container:: sphx-glr-footer sphx-glr-footer-gallery
 
-     :ref:`sphx_glr_sphinx_gallery_animations_plot_03_smooth_animations.py`
+    .. container:: sphx-glr-download sphx-glr-download-python
 
-.. raw:: html
+      :download:`Download all examples in Python source code: sphinx_gallery_animations_python.zip </sphinx_gallery_animations/sphinx_gallery_animations_python.zip>`
 
-    </div>
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
-.. toctree::
-   :hidden:
-
-   /sphinx_gallery_animations/plot_03_smooth_animations
-.. raw:: html
-
-    <div class="sphx-glr-clear"></div>
-
-
-
-.. only :: html
-
- .. container:: sphx-glr-footer
-    :class: sphx-glr-footer-gallery
-
-
-  .. container:: sphx-glr-download sphx-glr-download-python
-
-    :download:`Download all examples in Python source code: sphinx_gallery_animations_python.zip </sphinx_gallery_animations/sphinx_gallery_animations_python.zip>`
-
-
-
-  .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-    :download:`Download all examples in Jupyter notebooks: sphinx_gallery_animations_jupyter.zip </sphinx_gallery_animations/sphinx_gallery_animations_jupyter.zip>`
+      :download:`Download all examples in Jupyter notebooks: sphinx_gallery_animations_jupyter.zip </sphinx_gallery_animations/sphinx_gallery_animations_jupyter.zip>`
 
 
 .. only:: html

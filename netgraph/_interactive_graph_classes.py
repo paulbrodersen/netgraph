@@ -2,8 +2,13 @@
 # -*- coding: utf-8 -*-
 
 """
-Implements the InteractiveGraph, MutableGraph, and EditableGraph classes,
-as well as the following helper classes:
+Implements the following module-level classes:
+
+  - InteractiveGraph
+  - MutableGraph
+  - EditableGraph
+
+As well as the following helper classes:
 
   - ClickableArtists
   - SelectableArtists
@@ -572,7 +577,10 @@ class EmphasizeOnHover(object):
 
 class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
     """Combines :py:class:`EmphasizeOnHover` with the :py:class:`Graph` class
-    such that nodes are emphasized when hovering over them with the mouse.
+    such that nodes and edges are emphasized when hovering over them with the mouse.
+
+    - Hovering over a node highlights the node, its neighbours, and any edges between them.
+    - Hovering over an edge highlights the edge, and its source and target node.
 
     Parameters
     ----------
@@ -646,8 +654,8 @@ class EmphasizeOnHoverGraph(Graph, EmphasizeOnHover):
     def _get_default_mouseover_highlight_mapping(self):
         """Construct default mapping:
 
-        - Nodes map to themselves, their neighbours, and any edges between them.
-        - Edges map to themselves, and their source and target node.
+        - Nodes map to themselves, its neighbours, and any edges between them.
+        - Edges map to themselves, and its source and target node.
 
         """
 
