@@ -169,8 +169,8 @@ class BaseGraph(object):
         If the type is dict, maps each edge to an individual transparency.
     edge_zorder : int or dict, default 1
         Order in which to plot the edges.
-        If the type is an int, all nodes have the same zorder.
-        If the type is dict, maps each node to an individual zorder.
+        If the type is an int, all edges have the same zorder.
+        If the type is dict, maps each edge to an individual zorder.
         If None, the edges will be plotted in the order they appear in 'adjacency'.
         Hint: graphs typically appear more visually pleasing if darker edges are plotted on top of lighter edges.
     arrows : bool, default False
