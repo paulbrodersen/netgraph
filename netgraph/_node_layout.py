@@ -1713,14 +1713,14 @@ def _rotate_communities(edges, node_to_community, community_centroids, node_posi
             r = community_centroids[community] - node_positions[source]
             delta = node_positions[target] - node_positions[source]
             F = delta * np.linalg.norm(delta) # direction * distance**2
-            community_torque[community] += np.cross(r, F)
+            community_torque[community] += _np_cross_2d(r, F)
 
             # target
             community = node_to_community[target]
             r = community_centroids[community] - node_positions[target]
             delta = node_positions[source] - node_positions[target]
             F = delta * np.linalg.norm(delta)
-            community_torque[community] += np.cross(r, F)
+            community_torque[community] += _np_cross_2d(r, F)
 
         # update node positions
         for node, community in node_to_community.items():
@@ -1729,6 +1729,10 @@ def _rotate_communities(edges, node_to_community, community_centroids, node_posi
                                            community_centroids[community])
 
     return node_positions
+
+
+def _np_cross_2d(a, b):
+    return a[0]*b[1] - a[1]*b[0]
 
 
 def _rotate(angle, points, origin=(0, 0)):
